@@ -1,0 +1,672 @@
+"use client";
+
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
+import { tasks, runReferenceFunction } from "@/lib/tasks";
+import type { Task, Difficulty, TestCaseCategory } from "@/lib/tasks";
+import type { TestCase, EvaluationResult } from "@/lib/evaluator";
+import { evaluateTestCases } from "@/lib/evaluator";
+import { UndoStack } from "@/lib/undo-stack";
+import {
+  saveProgress,
+  loadProgress,
+  saveCurrentSession,
+  loadCurrentSession,
+  exportAllProgress,
+  importAllProgress,
+  clearAllProgress,
+  saveAttempt,
+  loadAttemptHistory,
+  saveStreak,
+  loadStreak,
+  getTaskBestCoverage,
+  type TaskProgress,
+  type AttemptRecord,
+} from "@/lib/storage";
+import { checkAndUnlockAchievements, achievements as allAchievements } from "@/lib/achievements";
+import { AchievementToast } from "@/components/achievements-panel";
+
+export type TabValue = "tasks" | "trainer" | "results" | "statistics" | "exam" | "theory";
+export type SortMode = "По номеру" | "По имени" | "По сложности";
+export type DifficultyFilter = "Все" | Difficulty;
+
+export interface TrainerState {
+  activeTab: TabValue;
+  selectedTask: Task | null;
+  testCases: TestCase[];
+  evaluationResult: EvaluationResult | null;
+  savedProgress: Record<number, TaskProgress>;
+  showConfetti: boolean;
+  showShortcuts: boolean;
+  attemptHistory: AttemptRecord[];
+  streak: { currentStreak: number; longestStreak: number; lastActiveDate: string };
+  resetDialogOpen: boolean;
+  difficultyFilter: DifficultyFilter;
+  sortMode: SortMode;
+  searchQuery: string;
+}
+
+export function useTrainerState() {
+  const [activeTab, setActiveTab] = useState<TabValue>("tasks");
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null);
+  const [savedProgress, setSavedProgress] = useState<Record<number, TaskProgress>>(() => {
+    if (typeof window !== "undefined") {
+      return loadProgress();
+    }
+    return {};
+  });
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [attemptHistory, setAttemptHistory] = useState<AttemptRecord[]>(() => loadAttemptHistory());
+  const [streak, setStreak] = useState(() => loadStreak());
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>("Все");
+  const [sortMode, setSortMode] = useState<SortMode>("По номеру");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Undo/Redo
+  const undoStackRef = useRef(new UndoStack<TestCase[]>());
+  const undoStack = undoStackRef.current;
+
+  const pushUndoSnapshot = useCallback(() => {
+    undoStack.push([...testCases]);
+  }, [testCases, undoStack]);
+
+  const handleUndo = useCallback(() => {
+    const prev = undoStack.undo();
+    if (prev) {
+      setTestCases(prev);
+      if (selectedTask) {
+        saveCurrentSession(selectedTask.id, prev);
+      }
+      toast.info("Действие отменено");
+    }
+  }, [undoStack, selectedTask]);
+
+  const handleRedo = useCallback(() => {
+    const next = undoStack.redo();
+    if (next) {
+      setTestCases(next);
+      if (selectedTask) {
+        saveCurrentSession(selectedTask.id, next);
+      }
+      toast.info("Действие возвращено");
+    }
+  }, [undoStack, selectedTask]);
+
+  // Computed values
+  const completedCount = useMemo(() => {
+    return Object.keys(savedProgress).length;
+  }, [savedProgress]);
+
+  const taskBestCoverage = useMemo(() => {
+    const map: Record<number, { bestEc: number; bestBv: number }> = {};
+    for (const task of tasks) {
+      map[task.id] = getTaskBestCoverage(task.id);
+    }
+    return map;
+  }, [attemptHistory]);
+
+  const filteredTasks = useMemo(() => {
+    let filtered = tasks;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (t) => t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)
+      );
+    }
+
+    if (difficultyFilter !== "Все") {
+      filtered = filtered.filter((t) => t.difficulty === difficultyFilter);
+    }
+
+    const difficultyOrder: Record<Difficulty, number> = { "Легко": 1, "Средне": 2, "Сложно": 3 };
+
+    switch (sortMode) {
+      case "По номеру":
+        return [...filtered].sort((a, b) => a.id - b.id);
+      case "По имени":
+        return [...filtered].sort((a, b) => a.name.localeCompare(b.name, "ru"));
+      case "По сложности":
+        return [...filtered].sort(
+          (a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
+        );
+      default:
+        return filtered;
+    }
+  }, [difficultyFilter, sortMode, searchQuery]);
+
+  // Task selection
+  const handleSelectTask = useCallback(
+    (task: Task) => {
+      setSelectedTask(task);
+      setEvaluationResult(null);
+      setActiveTab("trainer");
+
+      const savedSession = loadCurrentSession(task.id);
+      if (savedSession && savedSession.length > 0) {
+        setTestCases(savedSession);
+      } else {
+        setTestCases([]);
+      }
+
+      undoStack.clear();
+    },
+    [undoStack]
+  );
+
+  // Test case operations
+  const handleAddTestCase = useCallback(
+    (inputs: string[], expected: string, category: TestCaseCategory, comment: string) => {
+      const inputKey = inputs.join("||");
+      const isDuplicate = testCases.some((tc) => tc.inputs.join("||") === inputKey);
+
+      if (isDuplicate) {
+        toast.warning("Такие входные данные уже есть в списке тест-кейсов");
+        return;
+      }
+
+      pushUndoSnapshot();
+
+      const newCase: TestCase = {
+        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        inputs,
+        expectedOutput: expected,
+        category,
+        comment,
+      };
+
+      setTestCases((prev) => {
+        const updated = [...prev, newCase];
+        if (selectedTask) {
+          saveCurrentSession(selectedTask.id, updated);
+        }
+        return updated;
+      });
+
+      toast.success("Тест-кейс добавлен");
+    },
+    [selectedTask, testCases, pushUndoSnapshot]
+  );
+
+  const handleRemoveTestCase = useCallback(
+    (id: string) => {
+      const tc = testCases.find((t) => t.id === id);
+      pushUndoSnapshot();
+
+      setTestCases((prev) => {
+        const updated = prev.filter((t) => t.id !== id);
+        if (selectedTask) {
+          saveCurrentSession(selectedTask.id, updated);
+        }
+        return updated;
+      });
+
+      if (tc) {
+        toast.info("Тест-кейс удалён", {
+          action: {
+            label: "Отменить",
+            onClick: () => {
+              setTestCases((prev) => {
+                const restored = [...prev, tc];
+                if (selectedTask) {
+                  saveCurrentSession(selectedTask.id, restored);
+                }
+                return restored;
+              });
+              toast.success("Тест-кейс восстановлен");
+            },
+          },
+          duration: 5000,
+        });
+      }
+    },
+    [selectedTask, testCases, pushUndoSnapshot]
+  );
+
+  const handleReorderTestCases = useCallback(
+    (reordered: TestCase[]) => {
+      pushUndoSnapshot();
+      setTestCases(reordered);
+      if (selectedTask) {
+        saveCurrentSession(selectedTask.id, reordered);
+      }
+    },
+    [selectedTask, pushUndoSnapshot]
+  );
+
+  const handleEditTestCase = useCallback(
+    (
+      id: string,
+      updates: Partial<{
+        inputs: string[];
+        expectedOutput: string;
+        category: TestCaseCategory;
+        comment: string;
+      }>
+    ) => {
+      pushUndoSnapshot();
+      setTestCases((prev) => {
+        const updated = prev.map((tc) => (tc.id === id ? { ...tc, ...updates } : tc));
+        if (selectedTask) {
+          saveCurrentSession(selectedTask.id, updated);
+        }
+        return updated;
+      });
+      toast.success("Тест-кейс обновлён");
+    },
+    [selectedTask, pushUndoSnapshot]
+  );
+
+  const handleDuplicateTestCase = useCallback(
+    (id: string) => {
+      const tc = testCases.find((t) => t.id === id);
+      if (!tc) return;
+
+      pushUndoSnapshot();
+
+      const clone: TestCase = {
+        ...tc,
+        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        comment: tc.comment ? `${tc.comment} (копия)` : "копия",
+      };
+
+      setTestCases((prev) => {
+        const idx = prev.findIndex((t) => t.id === id);
+        const updated = [...prev];
+        updated.splice(idx + 1, 0, clone);
+        if (selectedTask) {
+          saveCurrentSession(selectedTask.id, updated);
+        }
+        return updated;
+      });
+
+      toast.success("Тест-кейс дублирован");
+    },
+    [testCases, selectedTask, pushUndoSnapshot]
+  );
+
+  const handleBulkRemove = useCallback(
+    (ids: string[]) => {
+      pushUndoSnapshot();
+      setTestCases((prev) => {
+        const updated = prev.filter((t) => !ids.includes(t.id));
+        if (selectedTask) {
+          saveCurrentSession(selectedTask.id, updated);
+        }
+        return updated;
+      });
+      toast.success(`Удалено тест-кейсов: ${ids.length}`);
+    },
+    [selectedTask, pushUndoSnapshot]
+  );
+
+  // Parse input for reference function
+  const parseInputForRef = useCallback((v: string) => {
+    const trimmed = v.trim();
+    if (trimmed === "true" || trimmed === "да" || trimmed === "верно") return true;
+    if (trimmed === "false" || trimmed === "нет" || trimmed === "неверно") return false;
+    if (trimmed === "null") return null;
+    const num = Number(trimmed);
+    if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
+    try {
+      const p = JSON.parse(trimmed);
+      if (typeof p === "object") return p;
+    } catch {}
+    return trimmed;
+  }, []);
+
+  // Generate test case from equivalence class
+  const generateTestCaseFromEc = useCallback(
+    (ec: { id: string; name: string; description: string; exampleValues: unknown[] }) => {
+      if (!selectedTask || ec.exampleValues.length === 0) return null;
+
+      const exampleValue = ec.exampleValues[0];
+      const inputs = Array.isArray(exampleValue) ? exampleValue.map(String) : [String(exampleValue)];
+      const parsedInputs = inputs.map(parseInputForRef);
+
+      const { result: fnResult, error: fnError } = runReferenceFunction(selectedTask.id, parsedInputs);
+
+      let expectedOutput = fnError
+        ? `Ошибка: ${fnError}`
+        : typeof fnResult === "object"
+          ? JSON.stringify(fnResult)
+          : String(fnResult);
+
+      let category: TestCaseCategory = "Нормальное значение";
+      const desc = ec.description.toLowerCase();
+      if (
+        desc.includes("ошибк") ||
+        desc.includes("недопустим") ||
+        desc.includes("переполнен") ||
+        desc.includes("неверный")
+      ) {
+        category = fnError ? "Исключение" : "Нормальное значение";
+      }
+      if (desc.includes("границ") || desc.includes("миним") || desc.includes("максим")) {
+        category = "Граничное значение";
+      }
+
+      return {
+        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        inputs,
+        expectedOutput,
+        category,
+        comment: `Подсказка: ${ec.name}`,
+      };
+    },
+    [selectedTask, parseInputForRef]
+  );
+
+  const handleShowHint = useCallback(() => {
+    if (!selectedTask) return;
+
+    const result = evaluateTestCases(selectedTask, testCases);
+    if (result.uncoveredEcIds.length === 0) {
+      toast.info("Все классы эквивалентности уже покрыты!");
+      return;
+    }
+
+    const randomEcId =
+      result.uncoveredEcIds[Math.floor(Math.random() * result.uncoveredEcIds.length)];
+    const ec = selectedTask.equivalenceClasses.find((e) => e.id === randomEcId);
+    if (!ec) return;
+
+    const newCase = generateTestCaseFromEc(ec);
+    if (!newCase) return;
+
+    pushUndoSnapshot();
+    setTestCases((prev) => {
+      const updated = [...prev, newCase];
+      if (selectedTask) {
+        saveCurrentSession(selectedTask.id, updated);
+      }
+      return updated;
+    });
+
+    toast.success(`Подсказка: добавлен тест для «${ec.name}»`);
+  }, [selectedTask, testCases, generateTestCaseFromEc, pushUndoSnapshot]);
+
+  const handleFillAllEc = useCallback(() => {
+    if (!selectedTask) return;
+
+    const result = evaluateTestCases(selectedTask, testCases);
+    const uncoveredIds = result.uncoveredEcIds;
+    if (uncoveredIds.length === 0) {
+      toast.info("Все классы эквивалентности уже покрыты!");
+      return;
+    }
+
+    const newCases: TestCase[] = [];
+    for (const ecId of uncoveredIds) {
+      const ec = selectedTask.equivalenceClasses.find((e) => e.id === ecId);
+      if (!ec) continue;
+      const tc = generateTestCaseFromEc(ec);
+      if (tc) newCases.push(tc);
+    }
+
+    if (newCases.length === 0) {
+      toast.warning("Не удалось сгенерировать тест-кейсы");
+      return;
+    }
+
+    pushUndoSnapshot();
+    setTestCases((prev) => {
+      const updated = [...prev, ...newCases];
+      if (selectedTask) {
+        saveCurrentSession(selectedTask.id, updated);
+      }
+      return updated;
+    });
+
+    toast.success(`Добавлено ${newCases.length} тест-кейс(ов) для покрытия всех EC`);
+  }, [selectedTask, testCases, generateTestCaseFromEc, pushUndoSnapshot]);
+
+  // Submit evaluation
+  const handleSubmit = useCallback(() => {
+    if (!selectedTask || testCases.length === 0) return;
+
+    const result = evaluateTestCases(selectedTask, testCases);
+    setEvaluationResult(result);
+    setActiveTab("results");
+
+    saveProgress(selectedTask.id, result.overallScore, testCases);
+    setSavedProgress(loadProgress());
+
+    saveAttempt({
+      taskId: selectedTask.id,
+      score: result.overallScore,
+      ecCoverage: result.ecCoverage,
+      bvCoverage: result.boundaryCoverage,
+      correctnessScore: result.correctnessScore,
+      timestamp: Date.now(),
+      testCasesCount: testCases.length,
+    });
+    setAttemptHistory(loadAttemptHistory());
+
+    const updatedStreak = saveStreak();
+    setStreak(updatedStreak);
+
+    // Check achievements
+    const history = loadAttemptHistory();
+    const progress = loadProgress();
+
+    const maxEc = history.reduce((max, h) => Math.max(max, h.ecCoverage ?? 0), 0);
+    const maxBv = history.reduce((max, h) => Math.max(max, h.bvCoverage ?? 0), 0);
+
+    const examScores = history.filter((h) => h.testCasesCount > 0);
+    const examsCompleted = examScores.length;
+    const examAvgScore =
+      examsCompleted > 0
+        ? Math.round(examScores.reduce((s, h) => s + h.score, 0) / examsCompleted)
+        : 0;
+
+    const context = {
+      completedTasks: Object.keys(progress).length,
+      totalTasks: tasks.length,
+      bestScores: Object.fromEntries(
+        Object.entries(progress).map(([id, p]) => [id, p.score])
+      ),
+      totalAttempts: history.length,
+      perfectScores: Object.values(progress).filter((p) => p.score >= 100).length,
+      attemptHistory: history.map((h) => ({
+        taskId: h.taskId,
+        score: h.score,
+        timestamp: h.timestamp,
+      })),
+      maxEcCoverage: maxEc,
+      maxBvCoverage: maxBv,
+      examsCompleted,
+      examAvgScore,
+    };
+
+    const newlyUnlocked = checkAndUnlockAchievements(context);
+    if (newlyUnlocked.length > 0) {
+      window.dispatchEvent(new Event("achievements-updated"));
+      for (const id of newlyUnlocked) {
+        const ach = allAchievements.find((a) => a.id === id);
+        if (ach) {
+          toast.custom(() => <AchievementToast achievement={ach} />, { duration: 5000 });
+        }
+      }
+    }
+
+    toast.success(`Проверка завершена! Оценка: ${result.overallScore}%`);
+
+    if (result.overallScore >= 90) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3500);
+    }
+  }, [selectedTask, testCases]);
+
+  // Reset current task
+  const handleReset = useCallback(() => {
+    setTestCases([]);
+    setEvaluationResult(null);
+    setActiveTab("trainer");
+
+    if (selectedTask) {
+      saveCurrentSession(selectedTask.id, []);
+    }
+    undoStack.clear();
+  }, [selectedTask, undoStack]);
+
+  // Reset all progress
+  const handleResetAllProgress = useCallback(() => {
+    clearAllProgress();
+    setSavedProgress({});
+    setTestCases([]);
+    setEvaluationResult(null);
+    setSelectedTask(null);
+    setActiveTab("tasks");
+    setStreak({ currentStreak: 0, longestStreak: 0, lastActiveDate: "" });
+    setAttemptHistory([]);
+    undoStack.clear();
+    setResetDialogOpen(false);
+    toast.success("Весь прогресс сброшен");
+  }, [undoStack]);
+
+  // Export/Import
+  const handleExportProgress = useCallback(() => {
+    const json = exportAllProgress();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `test-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Прогресс экспортирован");
+  }, []);
+
+  const handleImportProgress = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = reader.result as string;
+        if (importAllProgress(text)) {
+          setSavedProgress(loadProgress());
+          setStreak(loadStreak());
+          setAttemptHistory(loadAttemptHistory());
+          toast.success("Прогресс импортирован");
+        } else {
+          toast.error("Не удалось импортировать прогресс");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, []);
+
+  const handleBackToTasks = useCallback(() => {
+    setActiveTab("tasks");
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (activeTab === "trainer" && selectedTask && testCases.length > 0) {
+          handleSubmit();
+        }
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key === "Z" || e.key === "z" || e.key === "Я" || e.key === "я")
+      ) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === "Z" || e.key === "z" || e.key === "Я" || e.key === "я")
+      ) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+
+      if (activeTab === "tasks" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= tasks.length) {
+          e.preventDefault();
+          const task = tasks.find((t) => t.id === num);
+          if (task) {
+            handleSelectTask(task);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask]);
+
+  return {
+    // State
+    activeTab,
+    selectedTask,
+    testCases,
+    evaluationResult,
+    savedProgress,
+    showConfetti,
+    showShortcuts,
+    attemptHistory,
+    streak,
+    resetDialogOpen,
+    difficultyFilter,
+    sortMode,
+    searchQuery,
+    // Computed
+    completedCount,
+    taskBestCoverage,
+    filteredTasks,
+    // Setters
+    setActiveTab,
+    setResetDialogOpen,
+    setDifficultyFilter,
+    setSortMode,
+    setSearchQuery,
+    setShowShortcuts,
+    // Actions
+    handleSelectTask,
+    handleAddTestCase,
+    handleRemoveTestCase,
+    handleReorderTestCases,
+    handleEditTestCase,
+    handleDuplicateTestCase,
+    handleBulkRemove,
+    handleSubmit,
+    handleReset,
+    handleResetAllProgress,
+    handleExportProgress,
+    handleImportProgress,
+    handleBackToTasks,
+    handleShowHint,
+    handleFillAllEc,
+    handleUndo,
+    handleRedo,
+  };
+}
