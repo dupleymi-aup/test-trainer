@@ -163,8 +163,8 @@ export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
       const row = [
         String(idx + 1),
         `"${r.testCase.inputs.join(", ")}"`,
-        `"${r.testCase.expectedOutput.replace(/"/g, '"')}"`,
-        `"${r.actualOutput.replace(/"/g, '"')}"`,
+        `"${r.testCase.expectedOutput.replace(/"/g, '""')}"`,
+        `"${r.actualOutput.replace(/"/g, '""')}"`,
         r.isCorrect ? "Верно" : "Неверно",
         `"${r.coveredClasses.join(", ")}"`,
       ];

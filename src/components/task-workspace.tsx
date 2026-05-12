@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,32 +26,56 @@ interface TaskWorkspaceProps {
 function highlightCode(code: string): React.ReactNode {
   const lines = code.split("\n");
   return lines.map((line, i) => {
-    let highlighted = line;
-
     // Comments (// ...)
-    if (highlighted.trimStart().startsWith("//")) {
-      return <span key={i} className="text-gray-500 italic">{highlighted}</span>;
+    if (line.trimStart().startsWith("//")) {
+      return (
+        <span key={i}>
+          <span className="text-gray-500 italic">{line}</span>
+          {i < lines.length - 1 && "\n"}
+        </span>
+      );
     }
 
-    // Strings
-    highlighted = highlighted.replace(/(["'`])(?:(?!\1).)*\1/g, (match) => {
-      return `<span class="text-emerald-400">${match}</span>`;
+    // Escape HTML to prevent injection and broken markup
+    let html = line
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // Extract strings into placeholders so keywords/numbers inside them stay untouched
+    const strings: string[] = [];
+    html = html.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (match) => {
+      strings.push(match);
+      return `\u0000STR${strings.length - 1}\u0000`;
     });
+
+    // Function names
+    html = html.replace(/\b([a-zA-Z_]\w*)\s*\(/g, '<span class="text-blue-400">$1</span>(');
 
     // Keywords
     const keywords = ["function", "return", "if", "else", "throw", "const", "let", "var", "new", "typeof", "for", "while", "true", "false", "null", "undefined"];
     for (const kw of keywords) {
       const regex = new RegExp(`\\b(${kw})\\b`, "g");
-      highlighted = highlighted.replace(regex, '<span class="text-purple-400">$1</span>');
+      html = html.replace(regex, '<span class="text-purple-400">$1</span>');
     }
 
     // Numbers
-    highlighted = highlighted.replace(/\b(\d+\.?\d*)\b/g, '<span class="text-amber-400">$1</span>');
+    html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="text-amber-400">$1</span>');
 
-    // Function names
-    highlighted = highlighted.replace(/\b([a-zA-Z_]\w*)\s*\(/g, '<span class="text-blue-400">$1</span>(');
+    // Restore strings with highlighting
+    strings.forEach((str, idx) => {
+      html = html.replace(
+        `\u0000STR${idx}\u0000`,
+        `<span class="text-emerald-400">${str}</span>`
+      );
+    });
 
-    return <span key={i} dangerouslySetInnerHTML={{ __html: highlighted }} />;
+    return (
+      <span key={i}>
+        <span dangerouslySetInnerHTML={{ __html: html }} />
+        {i < lines.length - 1 && "\n"}
+      </span>
+    );
   });
 }
 
@@ -60,10 +84,12 @@ export function TaskWorkspace({ task }: TaskWorkspaceProps) {
   const [note, setNote] = useState(() => loadTaskNote(task.id));
   const [taskNoteId, setTaskNoteId] = useState(task.id);
 
-  if (taskNoteId !== task.id) {
-    setTaskNoteId(task.id);
-    setNote(loadTaskNote(task.id));
-  }
+  useEffect(() => {
+    if (taskNoteId !== task.id) {
+      setTaskNoteId(task.id);
+      setNote(loadTaskNote(task.id));
+    }
+  }, [task.id, taskNoteId]);
 
   const handleBlur = () => {
     saveTaskNote(task.id, note);
