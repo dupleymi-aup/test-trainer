@@ -40,6 +40,7 @@ import { categoryColors } from "@/lib/constants";
 interface ResultsPanelProps {
   result: EvaluationResult | null;
   onReset: () => void;
+  bestScore?: number;
 }
 
 function ScoreCircle({
@@ -152,7 +153,7 @@ function formatResultsAsText(result: EvaluationResult): string {
   return lines.join("\n");
 }
 
-export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
+export function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) {
   const [copied, setCopied] = useState(false);
 
   const handleExportCsv = () => {
@@ -235,6 +236,17 @@ export function ResultsPanel({ result, onReset }: ResultsPanelProps) {
             <p className="text-sm text-muted-foreground mt-1">
               Задание: {result.task.name}
             </p>
+            {bestScore !== undefined && bestScore > 0 && (
+              <div className="mt-2 inline-flex items-center gap-1.5 text-xs">
+                <span className="text-muted-foreground">Лучший:</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">{bestScore}%</span>
+                {result.overallScore !== bestScore && (
+                  <span className={`font-medium ${result.overallScore > bestScore ? "text-emerald-600" : "text-rose-600"}`}>
+                    {result.overallScore > bestScore ? "↑" : "↓"}{Math.abs(result.overallScore - bestScore)}%
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap justify-center gap-6">

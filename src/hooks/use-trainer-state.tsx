@@ -425,6 +425,57 @@ export function useTrainerState() {
     toast.success(`Добавлено ${newCases.length} тест-кейс(ов) для покрытия всех EC`);
   }, [selectedTask, testCases, generateTestCaseFromEc, pushUndoSnapshot]);
 
+  const handleFillAllBv = useCallback(() => {
+    if (!selectedTask) return;
+
+    const result = evaluateTestCases(selectedTask, testCases);
+    const uncoveredBvs = result.uncoveredBvDescriptions;
+    if (uncoveredBvs.length === 0) {
+      toast.info("Все граничные значения уже покрыты!");
+      return;
+    }
+
+    const newCases: TestCase[] = [];
+    for (const bvDesc of uncoveredBvs) {
+      const bv = selectedTask.boundaryValues.find((b) => b.description === bvDesc);
+      if (!bv) continue;
+
+      const inputValues = Array.isArray(bv.value) ? bv.value.map(String) : [String(bv.value)];
+      const parsedInputs = inputValues.map(parseInputForRef);
+      const { result: fnResult, error: fnError } = runReferenceFunction(selectedTask.id, parsedInputs);
+
+      let expectedOutput = fnError
+        ? `Ошибка: ${fnError}`
+        : typeof fnResult === "object"
+          ? JSON.stringify(fnResult)
+          : String(fnResult);
+
+      newCases.push({
+        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        inputs: inputValues,
+        expectedOutput,
+        category: "Граничное значение",
+        comment: `BV: ${bvDesc}`,
+      });
+    }
+
+    if (newCases.length === 0) {
+      toast.warning("Не удалось сгенерировать тест-кейсы");
+      return;
+    }
+
+    pushUndoSnapshot();
+    setTestCases((prev) => {
+      const updated = [...prev, ...newCases];
+      if (selectedTask) {
+        saveCurrentSession(selectedTask.id, updated);
+      }
+      return updated;
+    });
+
+    toast.success(`Добавлено ${newCases.length} тест-кейс(ов) для покрытия всех BV`);
+  }, [selectedTask, testCases, pushUndoSnapshot, parseInputForRef]);
+
   // Submit evaluation
   const handleSubmit = useCallback(() => {
     if (!selectedTask || testCases.length === 0) return;
@@ -513,6 +564,19 @@ export function useTrainerState() {
     }
     undoStack.clear();
   }, [selectedTask, undoStack]);
+
+  // Clear all test cases
+  const handleClearAll = useCallback(() => {
+    pushUndoSnapshot();
+    setTestCases([]);
+    setEvaluationResult(null);
+
+    if (selectedTask) {
+      saveCurrentSession(selectedTask.id, []);
+    }
+
+    toast.info("Все тест-кейсы удалены");
+  }, [selectedTask, pushUndoSnapshot]);
 
   // Reset all progress
   const handleResetAllProgress = useCallback(() => {
@@ -606,6 +670,24 @@ export function useTrainerState() {
         setShowShortcuts(true);
       }
 
+      if (e.key === "h" || e.key === "H" || e.key === "р" || e.key === "Р") {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        if (activeTab === "trainer" && selectedTask) {
+          e.preventDefault();
+          handleShowHint();
+        }
+      }
+
+      if (e.key === "f" || e.key === "F" || e.key === "а" || e.key === "А") {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        if (activeTab === "trainer" && selectedTask) {
+          e.preventDefault();
+          handleFillAllEc();
+        }
+      }
+
       if (activeTab === "tasks" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         const target = e.target as HTMLElement;
         if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
@@ -622,7 +704,7 @@ export function useTrainerState() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask]);
+  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask, handleShowHint, handleFillAllEc]);
 
   return {
     // State
@@ -660,12 +742,14 @@ export function useTrainerState() {
     handleBulkRemove,
     handleSubmit,
     handleReset,
+    handleClearAll,
     handleResetAllProgress,
     handleExportProgress,
     handleImportProgress,
     handleBackToTasks,
     handleShowHint,
     handleFillAllEc,
+    handleFillAllBv,
     handleUndo,
     handleRedo,
   };

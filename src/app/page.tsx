@@ -55,8 +55,10 @@ export default function Home() {
           onReset={state.handleReset}
           onShowHint={state.handleShowHint}
           onFillAllEc={state.handleFillAllEc}
+          onFillAllBv={state.handleFillAllBv}
           onReorder={state.handleReorderTestCases}
           onBulkRemove={state.handleBulkRemove}
+          onClearAll={state.handleClearAll}
           onBackToTasks={state.handleBackToTasks}
         />
       </main>

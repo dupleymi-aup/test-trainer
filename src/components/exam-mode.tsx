@@ -7,16 +7,29 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2 } from "lucide-react";
+import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2 } from "lucide-react";
 import { Confetti } from "./confetti";
-import { tasks } from "@/lib/tasks";
+import { tasks, runReferenceFunction } from "@/lib/tasks";
 import type { Task } from "@/lib/tasks";
 import { evaluateTestCases } from "@/lib/evaluator";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { toast } from "sonner";
 import { saveAttempt } from "@/lib/storage";
 import { ResultsPanel } from "./results-panel";
+import { categories } from "@/lib/constants";
 
 type ExamState = "setup" | "running" | "results";
 
@@ -32,7 +45,10 @@ export function ExamMode() {
   const [examInputs, setExamInputs] = useState<string[]>([]);
   const [examExpected, setExamExpected] = useState("");
   const [examCategory, setExamCategory] = useState<string>("Нормальное значение");
+  const [isCalculating, setIsCalculating] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [practiceMode, setPracticeMode] = useState(false);
+  const [lastPracticeResult, setLastPracticeResult] = useState<EvaluationResult | null>(null);
   const finishExamRef = useRef<() => void>(undefined);
 
   const completedCount = examResults.length;
@@ -106,6 +122,7 @@ export function ExamMode() {
     setExamTasks(shuffled);
     setExamTestCases({});
     setExamResults([]);
+    setLastPracticeResult(null);
     setCurrentTaskIndex(0);
     setExamInputs(shuffled.length > 0 ? shuffled[0].params.map(() => "") : []);
     setExamExpected("");
@@ -133,6 +150,52 @@ export function ExamMode() {
     toast.success("Тест-кейс добавлен");
   }, [examTasks, currentTaskIndex, examInputs, examExpected, examCategory]);
 
+  const parseInputForRef = useCallback((v: string) => {
+    const trimmed = v.trim();
+    if (trimmed === "true" || trimmed === "да" || trimmed === "верно") return true;
+    if (trimmed === "false" || trimmed === "нет" || trimmed === "неверно") return false;
+    if (trimmed === "null") return null;
+    const num = Number(trimmed);
+    if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
+    try {
+      const p = JSON.parse(trimmed);
+      if (typeof p === "object") return p;
+    } catch {}
+    return trimmed;
+  }, []);
+
+  const handleCalculate = useCallback(() => {
+    const task = examTasks[currentTaskIndex];
+    if (!task || examInputs.some((v) => v.trim() === "")) return;
+    setIsCalculating(true);
+    requestAnimationFrame(() => {
+      try {
+        const parsedInputs = examInputs.map(parseInputForRef);
+        const { result, error } = runReferenceFunction(task.id, parsedInputs);
+        if (error) {
+          setExamExpected(`Ошибка: ${error}`);
+        } else {
+          const output = typeof result === "object" ? JSON.stringify(result) : String(result);
+          setExamExpected(output);
+        }
+      } catch {
+        setExamExpected("Ошибка вычисления");
+      } finally {
+        setIsCalculating(false);
+      }
+    });
+  }, [examTasks, currentTaskIndex, examInputs, parseInputForRef]);
+
+  const removeExamTestCase = useCallback((tcId: string) => {
+    const task = examTasks[currentTaskIndex];
+    if (!task) return;
+    setExamTestCases((prev) => ({
+      ...prev,
+      [task.id]: (prev[task.id] || []).filter((tc) => tc.id !== tcId),
+    }));
+    toast.info("Тест-кейс удалён");
+  }, [examTasks, currentTaskIndex]);
+
   const submitCurrentTask = useCallback(() => {
     const task = examTasks[currentTaskIndex];
     if (!task) return;
@@ -155,6 +218,13 @@ export function ExamMode() {
       testCasesCount: tcs.length,
     });
 
+    // In practice mode, show mini result and wait for user to continue
+    if (practiceMode) {
+      setLastPracticeResult(result);
+      toast.success(`Оценка: ${result.overallScore}% — EC: ${result.ecCoverage}%, BV: ${result.boundaryCoverage}%`);
+      return;
+    }
+
     if (currentTaskIndex < examTasks.length - 1) {
       const nextTask = examTasks[currentTaskIndex + 1];
       setCurrentTaskIndex((i) => i + 1);
@@ -175,6 +245,26 @@ export function ExamMode() {
       }
     }
   }, [examTasks, currentTaskIndex, examTestCases, examResults]);
+
+  const handleNextAfterPractice = useCallback(() => {
+    setLastPracticeResult(null);
+    if (currentTaskIndex < examTasks.length - 1) {
+      const nextTask = examTasks[currentTaskIndex + 1];
+      setCurrentTaskIndex((i) => i + 1);
+      setExamInputs(nextTask.params.map(() => ""));
+      setExamExpected("");
+    } else {
+      setExamState("results");
+      window.dispatchEvent(new Event("achievements-updated"));
+      const newAvg = examResults.length > 0
+        ? Math.round(examResults.reduce((s, r) => s + r.overallScore, 0) / examResults.length)
+        : 0;
+      if (newAvg >= 90) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3500);
+      }
+    }
+  }, [currentTaskIndex, examTasks, examResults]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -254,6 +344,35 @@ export function ExamMode() {
                     {t} мин
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Practice vs Exam mode toggle */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium">Режим:</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPracticeMode(false)}
+                  className={`flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                    !practiceMode
+                      ? "border-emerald-500 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      : "border-border hover:border-emerald-300"
+                  }`}
+                >
+                  <div className="font-semibold mb-0.5">Экзамен</div>
+                  <div className="text-[10px] text-muted-foreground">Результаты в конце</div>
+                </button>
+                <button
+                  onClick={() => setPracticeMode(true)}
+                  className={`flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                    practiceMode
+                      ? "border-amber-500 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                      : "border-border hover:border-amber-300"
+                  }`}
+                >
+                  <div className="font-semibold mb-0.5">Практика</div>
+                  <div className="text-[10px] text-muted-foreground">Результат после каждого задания</div>
+                </button>
               </div>
             </div>
 
@@ -358,20 +477,71 @@ export function ExamMode() {
 
             <div className="space-y-1">
               <Label className="text-xs font-medium">Ожидаемый результат</Label>
-              <Input
-                placeholder={
-                  task.returnType === "boolean"
-                    ? "true / false"
-                    : task.returnType === "string"
-                      ? 'Например: "равносторонний"'
-                      : task.returnType.startsWith("{")
-                        ? '{ valid: true, errors: [] }'
-                        : "Например: 120"
-                }
-                value={examExpected}
-                onChange={(e) => setExamExpected(e.target.value)}
-                className="h-9 text-sm"
-              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder={
+                    task.returnType === "boolean"
+                      ? "true / false"
+                      : task.returnType === "string"
+                        ? 'Например: "равносторонний"'
+                        : task.returnType.startsWith("{")
+                          ? '{ valid: true, errors: [] }'
+                          : "Например: 120"
+                  }
+                  value={examExpected}
+                  onChange={(e) => setExamExpected(e.target.value)}
+                  className="h-9 text-sm flex-1"
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="h-9 w-9 shrink-0"
+                      onClick={handleCalculate}
+                      disabled={examInputs.some((v) => v.trim() === "") || isCalculating}
+                    >
+                      <Calculator className={`h-4 w-4 ${isCalculating ? "animate-spin" : ""}`} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Вычислить ожидаемый результат
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-medium">Категория</Label>
+              <Select
+                value={examCategory}
+                onValueChange={setExamCategory}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full ${
+                            cat === "Нормальное значение"
+                              ? "bg-emerald-500"
+                              : cat === "Граничное значение"
+                                ? "bg-amber-500"
+                                : cat === "Исключение"
+                                  ? "bg-rose-500"
+                                  : "bg-purple-500"
+                          }`}
+                        />
+                        {cat}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex gap-2">
@@ -387,15 +557,63 @@ export function ExamMode() {
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={submitCurrentTask}
-                disabled={taskTestCases.length === 0}
+                disabled={taskTestCases.length === 0 || (practiceMode && lastPracticeResult)}
               >
                 <ChevronRight className="h-3.5 w-3.5 mr-1" />
                 {currentTaskIndex < examTasks.length - 1 ? "Далее" : "Завершить"}
               </Button>
             </div>
             {taskTestCases.length > 0 && (
-              <div className="text-xs text-muted-foreground">
-                Тест-кейсов: {taskTestCases.length}
+              <div className="space-y-1.5">
+                <div className="text-xs font-medium text-muted-foreground">
+                  Тест-кейсы ({taskTestCases.length}):
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-1.5 custom-scrollbar">
+                  {taskTestCases.map((tc, i) => (
+                    <div key={tc.id} className="flex items-start gap-2 p-2 rounded-md bg-muted/50 text-xs">
+                      <span className="text-muted-foreground font-mono shrink-0 w-4">{i + 1}</span>
+                      <div className="flex-1 min-w-0 space-y-0.5">
+                        <code className="block text-[11px] font-mono truncate">
+                          {tc.inputs.join(", ")} → {tc.expectedOutput}
+                        </code>
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">
+                          {tc.category}
+                        </Badge>
+                      </div>
+                      <button
+                        onClick={() => removeExamTestCase(tc.id)}
+                        className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
+                        aria-label="Удалить тест-кейс"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Practice mode result display */}
+            {practiceMode && lastPracticeResult && (
+              <div className="mt-3 p-3 rounded-lg border bg-muted/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Результат:</span>
+                  <div className="flex gap-3 text-xs">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{lastPracticeResult.overallScore}%</span>
+                    <span className="text-muted-foreground">EC: {lastPracticeResult.ecCoverage}%</span>
+                    <span className="text-muted-foreground">BV: {lastPracticeResult.boundaryCoverage}%</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={handleNextAfterPractice}
+                  >
+                    <ChevronRight className="h-3.5 w-3.5 mr-1" />
+                    {currentTaskIndex < examTasks.length - 1 ? "Следующее задание" : "Завершить"}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

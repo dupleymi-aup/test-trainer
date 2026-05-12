@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,12 +15,18 @@ import {
   StickyNote,
   ChevronDown,
   ChevronUp,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
 } from "lucide-react";
 import type { Task } from "@/lib/tasks";
 import { saveTaskNote, loadTaskNote } from "@/lib/storage";
+import type { TestCase } from "@/lib/evaluator";
+import { evaluateTestCases } from "@/lib/evaluator";
 
 interface TaskWorkspaceProps {
   task: Task;
+  testCases?: TestCase[];
 }
 
 function highlightCode(code: string): React.ReactNode {
@@ -79,10 +85,12 @@ function highlightCode(code: string): React.ReactNode {
   });
 }
 
-export function TaskWorkspace({ task }: TaskWorkspaceProps) {
+export function TaskWorkspace({ task, testCases }: TaskWorkspaceProps) {
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState(() => loadTaskNote(task.id));
   const [taskNoteId, setTaskNoteId] = useState(task.id);
+  const [expandedEcs, setExpandedEcs] = useState<Set<string>>(new Set());
+  const [expandedBvs, setExpandedBvs] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (taskNoteId !== task.id) {
@@ -95,7 +103,37 @@ export function TaskWorkspace({ task }: TaskWorkspaceProps) {
     saveTaskNote(task.id, note);
   };
 
+  // Live coverage computation
+  const coverage = useMemo(() => {
+    if (!testCases || testCases.length === 0) return null;
+    return evaluateTestCases(task, testCases);
+  }, [task, testCases]);
+
+  const toggleEc = (id: string) => {
+    setExpandedEcs((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleBv = (idx: number) => {
+    setExpandedBvs((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
   const maxNoteLength = 2000;
+
+  const formatExampleValue = (val: unknown): string => {
+    if (Array.isArray(val)) return `[${val.join(", ")}]`;
+    if (typeof val === "string") return `"${val}"`;
+    return String(val);
+  };
 
   return (
     <ScrollArea className="h-full">
@@ -181,22 +219,63 @@ export function TaskWorkspace({ task }: TaskWorkspaceProps) {
                 <span className="text-xs font-medium">
                   Классы эквивалентности ({task.equivalenceClasses.length})
                 </span>
+                {coverage && (
+                  <Badge variant="secondary" className="ml-auto text-[10px]">
+                    {coverage.coveredEcsCount}/{coverage.totalEcs}
+                  </Badge>
+                )}
               </div>
               <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
-                {task.equivalenceClasses.map((ec) => (
-                  <div
-                    key={ec.id}
-                    className="text-xs bg-muted/50 rounded-md p-2 space-y-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-3 w-3 text-teal-500 shrink-0" />
-                      <span className="font-medium">{ec.name}</span>
+                {task.equivalenceClasses.map((ec) => {
+                  const isCovered = coverage?.coveredEcIds.includes(ec.id) ?? false;
+                  const isExpanded = expandedEcs.has(ec.id);
+                  return (
+                    <div
+                      key={ec.id}
+                      className={`text-xs rounded-md p-2 space-y-1 border transition-colors ${
+                        coverage
+                          ? isCovered
+                            ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                            : "bg-muted/30 border-border"
+                          : "bg-muted/50 border-transparent"
+                      }`}
+                    >
+                      <button
+                        onClick={() => toggleEc(ec.id)}
+                        className="w-full flex items-center gap-2 text-left"
+                      >
+                        {coverage && (
+                          isCovered ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5 text-rose-400/60 shrink-0" />
+                          )
+                        )}
+                        {!coverage && <Tag className="h-3 w-3 text-teal-500 shrink-0" />}
+                        <span className="font-medium">{ec.name}</span>
+                        <ChevronRight className={`h-3 w-3 text-muted-foreground ml-auto transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                      </button>
+                      <p className="text-muted-foreground pl-5 text-[11px]">
+                        {ec.description}
+                      </p>
+                      {isExpanded && ec.exampleValues.length > 0 && (
+                        <div className="pl-5 pt-1">
+                          <span className="text-[10px] font-medium text-muted-foreground">Примеры:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {ec.exampleValues.map((val, i) => (
+                              <code
+                                key={i}
+                                className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]"
+                              >
+                                {formatExampleValue(val)}
+                              </code>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-muted-foreground pl-5">
-                      {ec.description}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -207,23 +286,55 @@ export function TaskWorkspace({ task }: TaskWorkspaceProps) {
                 <span className="text-xs font-medium">
                   Граничные значения ({task.boundaryValues.length})
                 </span>
+                {coverage && (
+                  <Badge variant="secondary" className="ml-auto text-[10px]">
+                    {coverage.coveredBvsCount}/{coverage.totalBvs}
+                  </Badge>
+                )}
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {task.boundaryValues.map((bv, idx) => (
-                  <div
-                    key={idx}
-                    className="text-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-2 py-1"
-                  >
-                    <code className="font-mono text-amber-800 dark:text-amber-300">
-                      {Array.isArray(bv.value)
-                        ? `[${bv.value.join(", ")}]`
-                        : String(bv.value)}
-                    </code>
-                    <span className="text-muted-foreground ml-1 hidden sm:inline">
-                      — {bv.description}
-                    </span>
-                  </div>
-                ))}
+                {task.boundaryValues.map((bv, idx) => {
+                  const isCovered = coverage?.coveredBvDescriptions.includes(bv.description) ?? false;
+                  const isExpanded = expandedBvs.has(idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleBv(idx)}
+                      className={`text-xs rounded-md px-2 py-1 border transition-colors text-left ${
+                        coverage
+                          ? isCovered
+                            ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800"
+                            : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+                          : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1">
+                        {coverage && (
+                          isCovered ? (
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-rose-400/60 shrink-0" />
+                          )
+                        )}
+                        <code className="font-mono text-amber-800 dark:text-amber-300">
+                          {Array.isArray(bv.value)
+                            ? `[${bv.value.join(", ")}]`
+                            : String(bv.value)}
+                        </code>
+                      </div>
+                      {isExpanded && (
+                        <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                          {bv.description}
+                        </span>
+                      )}
+                      {!isExpanded && !coverage && (
+                        <span className="text-muted-foreground ml-1 hidden sm:inline text-[10px]">
+                          — {bv.description}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </CardContent>

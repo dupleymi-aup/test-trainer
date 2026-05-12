@@ -43,12 +43,22 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Trash2, Send, AlertCircle, Keyboard, Lightbulb, Pencil, Save, X, GripVertical, Wand2, Copy, CheckSquare, Square } from "lucide-react";
+import { Trash2, Send, AlertCircle, Keyboard, Lightbulb, Pencil, Save, X, GripVertical, Wand2, Copy, CheckSquare, Square, GitBranch } from "lucide-react";
 import type { Task } from "@/lib/tasks";
 import type { TestCase } from "@/lib/evaluator";
 import type { TestCaseCategory } from "@/lib/tasks";
 import { categories, categoryColors } from "@/lib/constants";
 import { evaluateTestCases } from "@/lib/evaluator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TestListProps {
   task: Task | null;
@@ -59,8 +69,10 @@ interface TestListProps {
   onSubmit: () => void;
   onShowHint?: () => void;
   onFillAllEc?: () => void;
+  onFillAllBv?: () => void;
   onReorder?: (reordered: TestCase[]) => void;
   onBulkRemove?: (ids: string[]) => void;
+  onClearAll?: () => void;
 }
 
 function CoverageBar({ task, testCases }: { task: Task | null; testCases: TestCase[] }) {
@@ -352,7 +364,7 @@ function SortableRow({
   );
 }
 
-export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSubmit, onShowHint, onFillAllEc, onReorder, onBulkRemove }: TestListProps) {
+export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSubmit, onShowHint, onFillAllEc, onFillAllBv, onReorder, onBulkRemove, onClearAll }: TestListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editInputs, setEditInputs] = useState<string[]>([]);
   const [editExpectedOutput, setEditExpectedOutput] = useState("");
@@ -360,6 +372,7 @@ export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSub
   const [editComment, setEditComment] = useState("");
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -450,6 +463,7 @@ export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSub
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2">
@@ -491,6 +505,18 @@ export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSub
                 <span className="hidden sm:inline">Заполнить EC</span>
               </Button>
             )}
+            {onFillAllBv && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs gap-1 text-sky-700 border-sky-300 hover:bg-sky-50 dark:text-sky-400 dark:border-sky-800 dark:hover:bg-sky-900/20"
+                onClick={onFillAllBv}
+                title="Автоматически добавить тесты для всех непокрытых граничных значений"
+              >
+                <GitBranch className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Заполнить BV</span>
+              </Button>
+            )}
             {onShowHint && (
               <Button
                 size="sm"
@@ -503,6 +529,16 @@ export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSub
                 <span className="hidden sm:inline">Подсказка</span>
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs gap-1 text-rose-600 border-rose-300 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-900/20"
+              onClick={() => setClearDialogOpen(true)}
+              title="Очистить все тест-кейсы"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Очистить всё</span>
+            </Button>
             <Button
               size="sm"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -614,5 +650,33 @@ export function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSub
         <GripVertical className="h-3 w-3" />
       </div>
     </Card>
+
+    <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Очистить все тест-кейсы?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Все {testCases.length} тест-кейс(ов) будут удалены. Это действие нельзя отменить.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Отмена</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (onClearAll) {
+                onClearAll();
+              } else {
+                testCases.forEach((tc) => onRemove(tc.id));
+              }
+              setClearDialogOpen(false);
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Удалить всё
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

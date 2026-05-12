@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/task-card";
 import { tasks } from "@/lib/tasks";
+import { getTaskHistory } from "@/lib/storage";
 import type { Task, Difficulty } from "@/lib/tasks";
 import type { TaskProgress } from "@/lib/storage";
 import type { DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
@@ -121,7 +122,9 @@ export function TaskListTab({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          {filteredTasks.map((task) => (
+          {filteredTasks.map((task) => {
+            const attemptCount = getTaskHistory(task.id).length;
+            return (
             <TaskCard
               key={task.id}
               task={task}
@@ -129,9 +132,11 @@ export function TaskListTab({
               bestScore={savedProgress[task.id]?.score}
               bestEcCoverage={taskBestCoverage[task.id]?.bestEc}
               bestBvCoverage={taskBestCoverage[task.id]?.bestBv}
+              attemptCount={attemptCount}
               onClick={() => onSelectTask(task)}
             />
-          ))}
+            );
+          })}
         </div>
       )}
     </motion.div>

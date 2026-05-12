@@ -53,8 +53,10 @@ interface TabContentProps {
   onReset: () => void;
   onShowHint: () => void;
   onFillAllEc: () => void;
+  onFillAllBv: () => void;
   onReorder: (reordered: TestCase[]) => void;
   onBulkRemove: (ids: string[]) => void;
+  onClearAll: () => void;
   onBackToTasks: () => void;
 }
 
@@ -83,8 +85,10 @@ export function TabContent({
   onReset,
   onShowHint,
   onFillAllEc,
+  onFillAllBv,
   onReorder,
   onBulkRemove,
+  onClearAll,
   onBackToTasks,
 }: TabContentProps) {
   return (
@@ -171,8 +175,10 @@ export function TabContent({
             onSubmit={onSubmit}
             onShowHint={onShowHint}
             onFillAllEc={onFillAllEc}
+            onFillAllBv={onFillAllBv}
             onReorder={onReorder}
             onBulkRemove={onBulkRemove}
+            onClearAll={onClearAll}
           />
         )}
 
@@ -192,7 +198,11 @@ export function TabContent({
               </p>
             </div>
             <div className="max-w-4xl mx-auto">
-              <ResultsPanel result={evaluationResult} onReset={onReset} />
+              <ResultsPanel
+                result={evaluationResult}
+                onReset={onReset}
+                bestScore={savedProgress[evaluationResult.task.id]?.score}
+              />
             </div>
           </motion.div>
         )}

@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Copy, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   achievements,
   loadUnlockedAchievements,
@@ -23,6 +26,23 @@ export function AchievementsPanel() {
   const unlockedCount = unlockedIds.length;
   const totalCount = achievements.length;
 
+  const handleShare = async () => {
+    const unlocked = achievements.filter((a) => unlockedIds.includes(a.id));
+    const lines = [
+      "🏆 Тренажёр тестирования — Мои достижения",
+      "",
+      `${unlockedCount} из ${totalCount} получено:`,
+      ...unlocked.map((a) => `${a.icon} ${a.name} — ${a.description}`),
+    ];
+    const text = lines.join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Достижения скопированы в буфер обмена!");
+    } catch {
+      toast.error("Не удалось скопировать");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,6 +58,17 @@ export function AchievementsPanel() {
             <p className="text-xs text-muted-foreground mt-1">
               {unlockedCount} из {totalCount} получено
             </p>
+            {unlockedCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs gap-1 mt-2"
+                onClick={handleShare}
+              >
+                <Share2 className="h-3 w-3" />
+                Поделиться
+              </Button>
+            )}
           </div>
           {/* Progress bar */}
           <div className="h-2 rounded-full bg-muted overflow-hidden">

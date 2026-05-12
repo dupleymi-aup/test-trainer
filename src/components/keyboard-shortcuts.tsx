@@ -12,8 +12,10 @@ const shortcuts = [
   { keys: ["Ctrl", "Enter"], description: "Проверить тест-кейсы" },
   { keys: ["Ctrl", "Z"], description: "Отменить (undo)" },
   { keys: ["Ctrl", "Shift", "Z"], description: "Вернуть (redo)" },
+  { keys: ["H"], description: "Подсказка (случайный непокрытый EC)" },
+  { keys: ["F"], description: "Заполнить все непокрытые EC" },
   { keys: ["?"], description: "Показать горячие клавиши" },
-  { keys: ["1", "–", "8"], description: "Быстрый выбор задания" },
+  { keys: ["1", "–", "10"], description: "Быстрый выбор задания" },
   { keys: ["Esc"], description: "Закрыть диалог" },
 ];
 

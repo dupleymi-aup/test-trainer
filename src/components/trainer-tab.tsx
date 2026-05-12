@@ -26,8 +26,10 @@ interface TrainerTabProps {
   onSubmit: () => void;
   onShowHint: () => void;
   onFillAllEc: () => void;
+  onFillAllBv: () => void;
   onReorder: (reordered: TestCase[]) => void;
   onBulkRemove: (ids: string[]) => void;
+  onClearAll: () => void;
 }
 
 export function TrainerTab({
@@ -41,8 +43,10 @@ export function TrainerTab({
   onSubmit,
   onShowHint,
   onFillAllEc,
+  onFillAllBv,
   onReorder,
   onBulkRemove,
+  onClearAll,
 }: TrainerTabProps) {
   return (
     <motion.div
@@ -64,7 +68,7 @@ export function TrainerTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Left panel — task description */}
         <div className="lg:max-h-[calc(100vh-240px)]">
-          <TaskWorkspace task={task} />
+          <TaskWorkspace task={task} testCases={testCases} />
         </div>
 
         {/* Right panel — test form and list */}
@@ -79,8 +83,10 @@ export function TrainerTab({
             onSubmit={onSubmit}
             onShowHint={onShowHint}
             onFillAllEc={onFillAllEc}
+            onFillAllBv={onFillAllBv}
             onReorder={onReorder}
             onBulkRemove={onBulkRemove}
+            onClearAll={onClearAll}
           />
         </div>
       </div>

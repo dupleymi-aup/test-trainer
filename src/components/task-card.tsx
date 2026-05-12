@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/lib/tasks";
-import { Trophy } from "lucide-react";
+import { Trophy, CheckCircle2, Circle } from "lucide-react";
 import {
   FunctionSquare,
   Hash,
@@ -14,6 +14,8 @@ import {
   Lock,
   ArrowLeftRight,
   Mail,
+  Superscript,
+  CalendarDays,
 } from "lucide-react";
 
 const taskIcons: Record<number, React.ReactNode> = {
@@ -25,6 +27,8 @@ const taskIcons: Record<number, React.ReactNode> = {
   6: <Lock className="h-5 w-5" />,
   7: <ArrowLeftRight className="h-5 w-5" />,
   8: <Mail className="h-5 w-5" />,
+  9: <Superscript className="h-5 w-5" />,
+  10: <CalendarDays className="h-5 w-5" />,
 };
 
 const difficultyColors: Record<string, string> = {
@@ -39,14 +43,23 @@ interface TaskCardProps {
   bestScore?: number;
   bestEcCoverage?: number;
   bestBvCoverage?: number;
+  attemptCount?: number;
   onClick: () => void;
 }
 
-export function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, onClick }: TaskCardProps) {
+const difficultyBorderColors: Record<string, string> = {
+  Легко: "border-l-emerald-500",
+  Средне: "border-l-amber-500",
+  Сложно: "border-l-rose-500",
+};
+
+export function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, onClick }: TaskCardProps) {
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
-        className={`cursor-pointer transition-all duration-200 h-full ${
+        className={`cursor-pointer transition-all duration-200 h-full border-l-4 ${
+          difficultyBorderColors[task.difficulty] ?? "border-l-transparent"
+        } ${
           isSelected
             ? "ring-2 ring-emerald-500 shadow-lg shadow-emerald-500/20"
             : "hover:shadow-md hover:ring-1 hover:ring-emerald-300"
@@ -79,11 +92,21 @@ export function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCo
               >
                 {task.difficulty}
               </Badge>
-              {bestScore !== undefined && bestScore > 0 && (
+              {bestScore !== undefined && bestScore > 0 ? (
                 <Badge className="bg-amber-100 text-amber-800 text-[10px] dark:bg-amber-900/30 dark:text-amber-400">
                   <Trophy className="h-3 w-3 mr-0.5" />
                   {bestScore}%
                 </Badge>
+              ) : (attemptCount === undefined || attemptCount === 0) && (
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                  <Circle className="h-2.5 w-2.5 mr-0.5" />
+                  Новое
+                </Badge>
+              )}
+              {attemptCount !== undefined && attemptCount > 0 && (
+                <span className="text-[10px] text-muted-foreground">
+                  {attemptCount} {attemptCount === 1 ? "попытка" : attemptCount >= 2 && attemptCount <= 4 ? "попытки" : "попыток"}
+                </span>
               )}
             </div>
           </div>

@@ -1,9 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import type { Task } from "@/lib/tasks";
+import { quizQuestions } from "@/lib/constants";
 import {
   BookOpen,
   Layers,
@@ -13,6 +17,12 @@ import {
   ShieldCheck,
   LayoutGrid,
   ArrowLeftRight,
+  AlertTriangle,
+  BarChart3,
+  Brain,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
 } from "lucide-react";
 
 const fadeIn = {
@@ -21,6 +31,32 @@ const fadeIn = {
 };
 
 export function TheoryPanel({ task }: { task?: Task }) {
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  const handleQuizAnswer = (questionIndex: number, optionIndex: number) => {
+    if (quizSubmitted) return;
+    setQuizAnswers((prev) => ({ ...prev, [questionIndex]: optionIndex }));
+  };
+
+  const handleQuizSubmit = () => {
+    if (Object.keys(quizAnswers).length < quizQuestions.length) return;
+    setQuizSubmitted(true);
+  };
+
+  const handleQuizReset = () => {
+    setQuizAnswers({});
+    setQuizSubmitted(false);
+  };
+
+  const quizScore = quizSubmitted
+    ? quizQuestions.reduce(
+        (score, q, i) => score + (quizAnswers[i] === q.correctIndex ? 1 : 0),
+        0
+      )
+    : 0;
+
+  const allAnswered = Object.keys(quizAnswers).length === quizQuestions.length;
   return (
     <motion.div {...fadeIn} className="space-y-4">
       {/* Contextual banner when task is provided */}
@@ -327,6 +363,79 @@ export function TheoryPanel({ task }: { task?: Task }) {
             </div>
           </AccordionContent>
         </AccordionItem>
+        {/* State Transition Testing */}
+        <AccordionItem
+          value="state-transition"
+          className="border rounded-lg px-4 data-[state=open]:border-cyan-300 data-[state=open]:bg-cyan-50/50 dark:data-[state=open]:border-cyan-800 dark:data-[state=open]:bg-cyan-950/20"
+        >
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-400">
+                <ArrowLeftRight className="h-4 w-4" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-sm">Диаграммы состояний</h3>
+                <p className="text-xs text-muted-foreground">
+                  Тестирование переходов между состояниями
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                <strong>Тестирование переходов состояний</strong> — это метод, при котором
+                тестируются переходы системы из одного состояния в другое под воздействием
+                различных событий. Особенно полезен для функций с памятью или состоянием.
+              </p>
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                <p className="font-medium text-foreground text-xs uppercase tracking-wider">
+                  Основные понятия
+                </p>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-500 mt-0.5 shrink-0">●</span>
+                    <span><strong>Состояние</strong> — текущее условие системы (например, «авторизован», «не авторизован»)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-500 mt-0.5 shrink-0">●</span>
+                    <span><strong>Переход</strong> — изменение состояния при определённом событии</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-500 mt-0.5 shrink-0">●</span>
+                    <span><strong>Событие</strong> — действие, вызывающее переход (клик, ввод данных)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-500 mt-0.5 shrink-0">●</span>
+                    <span><strong>Недопустимый переход</strong> — переход, который система не должна разрешать</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3">
+                <p className="font-medium text-cyan-800 dark:text-cyan-300 text-xs mb-1 flex items-center gap-1">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  Пример: Банкомат
+                </p>
+                <p className="text-xs">
+                  Состояния: «Карта вставлена», «PIN введён», «Ошибка».
+                  Переходы: вставка карты → ввод PIN → правильный/неправильный PIN.
+                  Тест-кейсы: все допустимые пути + попытка снять деньги без ввода PIN.
+                </p>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                <p className="font-medium text-foreground text-xs uppercase tracking-wider">
+                  Покрытие переходов
+                </p>
+                <ul className="space-y-1.5 text-xs">
+                  <li>• <strong>0-switch coverage</strong> — тестирование каждого отдельного перехода</li>
+                  <li>• <strong>1-switch coverage</strong> — тестирование последовательностей из двух переходов</li>
+                  <li>• <strong>N-switch coverage</strong> — тестирование цепочек из N+1 переходов</li>
+                </ul>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Decision Tables */}
         <AccordionItem
           value="decision-tables"
@@ -458,7 +567,389 @@ export function TheoryPanel({ task }: { task?: Task }) {
             </div>
           </AccordionContent>
         </AccordionItem>
+        {/* Testing Metrics */}
+        <AccordionItem
+          value="metrics"
+          className="border rounded-lg px-4 data-[state=open]:border-violet-300 data-[state=open]:bg-violet-50/50 dark:data-[state=open]:border-violet-800 dark:data-[state=open]:bg-violet-950/20"
+        >
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400">
+                <BarChart3 className="h-4 w-4" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-sm">Метрики покрытия</h3>
+                <p className="text-xs text-muted-foreground">
+                  Как оценивается качество тестирования
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                В этом тренажёре оценка качества тестирования основана на трёх ключевых метриках.
+                Каждая метрика измеряет отдельный аспект полноты тестирования.
+              </p>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
+                  <p className="font-medium text-emerald-800 dark:text-emerald-300 text-xs mb-1">
+                    📊 Покрытие классов эквивалентности (40%)
+                  </p>
+                  <p className="text-xs">
+                    Какая доля определённых классов эквивалентности покрыта вашими тестами.
+                    Каждый уникальный класс засчитывается один раз, независимо от количества
+                    тестов из него.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded p-1">
+                    EC Coverage = покрытые EC / всего EC × 100%
+                  </p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
+                  <p className="font-medium text-amber-800 dark:text-amber-300 text-xs mb-1">
+                    📏 Покрытие граничных значений (30%)
+                  </p>
+                  <p className="text-xs">
+                    Какая доля определённых граничных значений протестирована. Граничные значения
+                    — это конкретные точки на границах диапазонов, а не целые области.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded p-1">
+                    BV Coverage = покрытые BV / всего BV × 100%
+                  </p>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                  <p className="font-medium text-blue-800 dark:text-blue-300 text-xs mb-1">
+                    ✅ Корректность ожиданий (30%)
+                  </p>
+                  <p className="text-xs">
+                    Какая доля ваших ожидаемых результатов совпала с фактическим поведением
+                    эталонной функции. Показывает, насколько правильно вы понимаете функцию.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded p-1">
+                    Correctness = правильные ответы / всего тестов × 100%
+                  </p>
+                </div>
+              </div>
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3">
+                <p className="font-medium text-violet-800 dark:text-violet-300 text-xs mb-1 flex items-center gap-1">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  Итоговая формула
+                </p>
+                <p className="text-xs font-mono bg-white/50 dark:bg-black/20 rounded p-1.5 mt-1">
+                  Overall = EC×0.4 + BV×0.3 + Correctness×0.3
+                </p>
+                <p className="text-xs mt-1">
+                  Веса выбраны так, что покрытие классов эквивалентности наиболее важно,
+                  но корректность ожиданий и граничные значения тоже существенны.
+                </p>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                <p className="font-medium text-foreground text-xs uppercase tracking-wider">
+                  Градации оценок
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span><strong>90-100%</strong> — Отлично</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span><strong>75-89%</strong> — Хорошо</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span><strong>50-74%</strong> — Удовлетворительно</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span><strong>0-49%</strong> — Неудовлетворительно</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Error Guessing */}
+        <AccordionItem
+          value="error-guessing"
+          className="border rounded-lg px-4 data-[state=open]:border-red-300 data-[state=open]:bg-red-50/50 dark:data-[state=open]:border-red-800 dark:data-[state=open]:bg-red-950/20"
+        >
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-sm">Предугадывание ошибок</h3>
+                <p className="text-xs text-muted-foreground">
+                  Интуитивный поиск типичных дефектов
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                <strong>Error Guessing</strong> — это техника тестирования, основанная на опыте,
+                интуиции и знании типичных ошибок. Тестировщик предполагает, где могут быть
+                дефекты, и создаёт тест-кейсы для этих ситуаций.
+              </p>
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                <p className="font-medium text-foreground text-xs uppercase tracking-wider">
+                  Типичные «горячие точки»
+                </p>
+                <ul className="space-y-1.5">
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">●</span>
+                    <span>Нулевые и пустые значения (<code className="font-mono bg-muted px-1 rounded">null</code>, <code className="font-mono bg-muted px-1 rounded">&quot;&quot;</code>, <code className="font-mono bg-muted px-1 rounded">0</code>)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">●</span>
+                    <span>Пустые коллекции и массивы</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">●</span>
+                    <span>Очень большие значения (переполнение, длинные строки)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">●</span>
+                    <span>Специальные символы в строках (<code className="font-mono bg-muted px-1 rounded">{`\'`}</code>, <code className="font-mono bg-muted px-1 rounded">{`"`}</code>, <code className="font-mono bg-muted px-1 rounded">&lt;&gt;</code>, <code className="font-mono bg-muted px-1 rounded">&amp;</code>)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">●</span>
+                    <span>Дубликаты в данных</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-500 mt-0.5 shrink-0">●</span>
+                    <span>Юникод и разные языки (кириллица, эмодзи, арабский)</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1 flex items-center gap-1">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  Примеры «хитрых» тестов
+                </p>
+                <ul className="text-xs space-y-1">
+                  <li>• Строка из пробелов: <code className="font-mono bg-muted px-1 rounded">&quot;   &quot;</code></li>
+                  <li>• Число с плавающей запятой: <code className="font-mono bg-muted px-1 rounded">3.14159</code></li>
+                  <li>• Отрицательный ноль: <code className="font-mono bg-muted px-1 rounded">-0</code></li>
+                  <li>• Очень длинная строка: <code className="font-mono bg-muted px-1 rounded">&quot;a&quot;.repeat(10000)</code></li>
+                  <li>• Эмодзи: <code className="font-mono bg-muted px-1 rounded">&quot;🔥🎉&quot;</code></li>
+                </ul>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-1">
+                  Когда применять
+                </p>
+                <p className="text-xs">
+                  Error Guessing — дополнительная техника. Используйте его <strong>после</strong>
+                  формальных методов (классы эквивалентности, граничные значения) для нахождения
+                  дефектов, которые формальные методы не покрывают.
+                </p>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Common Mistakes */}
+        <AccordionItem
+          value="common-mistakes"
+          className="border rounded-lg px-4 data-[state=open]:border-yellow-300 data-[state=open]:bg-yellow-50/50 dark:data-[state=open]:border-yellow-800 dark:data-[state=open]:bg-yellow-950/20"
+        >
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400">
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-sm">Типичные ошибки студентов</h3>
+                <p className="text-xs text-muted-foreground">
+                  Чего следует избегать при написании тестов
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+              <div className="space-y-3">
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                  <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
+                    ❌ Дублирование тестов
+                  </p>
+                  <p className="text-xs">
+                    Добавление нескольких тестов из одного класса эквивалентности не увеличивает
+                    покрытие. Достаточно одного представителя из каждого класса.
+                  </p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                  <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
+                    ❌ Игнорирование невалидных данных
+                  </p>
+                  <p className="text-xs">
+                    Многие студенты тестируют только «правильные» входы. Но обработка ошибок —
+                    важная часть покрытия. Не забывайте про исключения и недопустимые типы.
+                  </p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                  <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
+                    ❌ Неправильный ожидаемый результат
+                  </p>
+                  <p className="text-xs">
+                    Ожидаемый результат должен соответствовать реальному поведению функции,
+                    а не тому, что вы «думаете» она должна вернуть.
+                  </p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                  <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
+                    ❌ Пропуск граничных значений
+                  </p>
+                  <p className="text-xs">
+                    Граничные значения — отдельный метод от классов эквивалентности.
+                    Даже если класс покрыт, граница может быть не протестирована.
+                  </p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                  <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
+                    ❌ Пустые комментарии
+                  </p>
+                  <p className="text-xs">
+                    Комментарии к тест-кейсам помогают объяснить, почему выбран именно этот
+                    вход. «Тест для EC1» — плохой комментарий; «Граничное значение: n=0» — хороший.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
+                <p className="font-medium text-emerald-800 dark:text-emerald-300 text-xs mb-1 flex items-center gap-1">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  Как избежать
+                </p>
+                <ul className="text-xs space-y-1">
+                  <li>1. Сначала проанализируйте функцию и выпишите все классы</li>
+                  <li>2. Определите граничные значения для каждого диапазона</li>
+                  <li>3. Создайте по одному тесту на каждый класс и границу</li>
+                  <li>4. Проверьте ожидаемые результаты по коду функции</li>
+                  <li>5. Добавьте error guessing тесты для полноты</li>
+                </ul>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
+
+      {/* Interactive Quiz */}
+      <Card className="border-violet-200 dark:border-violet-800 mt-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Brain className="h-5 w-5 text-violet-600" />
+            Проверь себя
+            <span className="text-xs font-normal text-muted-foreground ml-auto">
+              {quizQuestions.length} вопросов
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {quizSubmitted && (
+            <div className="text-center py-2">
+              <p className="text-lg font-bold">
+                Результат: {quizScore}/{quizQuestions.length}
+              </p>
+              <Progress
+                value={(quizScore / quizQuestions.length) * 100}
+                className="h-2 mt-2"
+              />
+            </div>
+          )}
+
+          {quizQuestions.map((q, qi) => {
+            const userAnswer = quizAnswers[qi];
+            const isCorrect = quizSubmitted && userAnswer === q.correctIndex;
+            const isWrong = quizSubmitted && userAnswer !== undefined && userAnswer !== q.correctIndex;
+
+            return (
+              <div key={q.id} className="space-y-2">
+                <p className="text-sm font-medium">
+                  <span className="text-violet-600 mr-1">{qi + 1}.</span>
+                  {q.question}
+                </p>
+                <div className="space-y-1.5">
+                  {q.options.map((opt, oi) => {
+                    let optClass = "border-border hover:border-violet-300 dark:hover:border-violet-700";
+                    if (quizSubmitted) {
+                      if (oi === q.correctIndex) {
+                        optClass = "border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20";
+                      } else if (oi === userAnswer && oi !== q.correctIndex) {
+                        optClass = "border-rose-400 bg-rose-50 dark:bg-rose-900/20";
+                      } else {
+                        optClass = "border-border opacity-50";
+                      }
+                    } else if (oi === userAnswer) {
+                      optClass = "border-violet-400 bg-violet-50 dark:bg-violet-900/20";
+                    }
+
+                    return (
+                      <button
+                        key={oi}
+                        onClick={() => handleQuizAnswer(qi, oi)}
+                        disabled={quizSubmitted}
+                        className={`w-full text-left text-xs p-2.5 rounded-lg border transition-colors flex items-center gap-2 ${optClass}`}
+                      >
+                        {quizSubmitted && oi === q.correctIndex && (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        )}
+                        {isWrong && (
+                          <XCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                        )}
+                        {!quizSubmitted && (
+                          <span
+                            className={`w-3.5 h-3.5 rounded-full border shrink-0 flex items-center justify-center ${
+                              oi === userAnswer
+                                ? "border-violet-500 bg-violet-500"
+                                : "border-muted-foreground/30"
+                            }`}
+                          >
+                            {oi === userAnswer && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                            )}
+                          </span>
+                        )}
+                        <span>{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {quizSubmitted && (
+                  <p className="text-[11px] text-muted-foreground bg-muted/30 rounded p-2">
+                    {q.explanation}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+
+          <div className="flex gap-2 pt-2">
+            {!quizSubmitted ? (
+              <Button
+                onClick={handleQuizSubmit}
+                disabled={!allAnswered}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                Проверить ответы
+              </Button>
+            ) : (
+              <Button
+                onClick={handleQuizReset}
+                variant="outline"
+                className="w-full"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                Пройти заново
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }

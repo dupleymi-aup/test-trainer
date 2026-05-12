@@ -11,6 +11,11 @@ import {
   Calendar,
   Target,
   Flame,
+  Clock,
+  ArrowRight,
+  TrendingDown,
+  Minus,
+  ChevronDown,
 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
 import type { AttemptRecord, StreakData } from "@/lib/storage";
@@ -22,6 +27,7 @@ interface StatisticsPanelProps {
 
 export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
   const [streak] = useState<StreakData>(() => loadStreak());
+  const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
 
   const taskStats = tasks.map((task) => {
     const history = getTaskHistory(task.id);
@@ -98,6 +104,91 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
         </CardContent>
       </Card>
 
+      {/* Recent attempts timeline */}
+      {attempts.length > 0 && (
+        <Card>
+          <CardContent className="pt-5 pb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+              <Clock className="h-4 w-4" />
+              Последние попытки
+            </h3>
+            <div className="space-y-2">
+              {attempts.slice(-10).reverse().map((attempt, i) => {
+                const task = tasks.find((t) => t.id === attempt.taskId);
+                const date = new Date(attempt.timestamp);
+                const now = new Date();
+                const diffMs = now.getTime() - date.getTime();
+                const diffMin = Math.floor(diffMs / 60000);
+                const diffHr = Math.floor(diffMs / 3600000);
+                const diffDay = Math.floor(diffMs / 86400000);
+
+                let timeLabel: string;
+                if (diffMin < 1) timeLabel = "только что";
+                else if (diffMin < 60) timeLabel = `${diffMin} мин. назад`;
+                else if (diffHr < 24) timeLabel = `${diffHr} ч. назад`;
+                else if (diffDay < 7) timeLabel = `${diffDay} дн. назад`;
+                else timeLabel = date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+                // Find previous attempt for same task to compute trend
+                const taskHistory = attempts.filter((a) => a.taskId === attempt.taskId);
+                const thisIdx = taskHistory.findIndex((a) => a.timestamp === attempt.timestamp);
+                const prevAttempt = thisIdx > 0 ? taskHistory[thisIdx - 1] : null;
+                const trendDiff = prevAttempt ? attempt.score - prevAttempt.score : 0;
+
+                const scoreColor = attempt.score >= 90
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : attempt.score >= 60
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-rose-600 dark:text-rose-400";
+
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors"
+                  >
+                    <div className="shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        {attempt.taskId}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium truncate">
+                          {task?.name ?? `Задание ${attempt.taskId}`}
+                        </span>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className={`text-sm font-bold ${scoreColor}`}>
+                          {attempt.score}%
+                        </span>
+                        {trendDiff !== 0 && (
+                          <span className={`text-[10px] font-medium flex items-center gap-0.5 ${trendDiff > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                            {trendDiff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                            {trendDiff > 0 ? "+" : ""}{trendDiff}%
+                          </span>
+                        )}
+                        {trendDiff === 0 && thisIdx > 0 && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            <Minus className="h-3 w-3" />0%
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span>EC: {attempt.ecCoverage}%</span>
+                        <span>BV: {attempt.bvCoverage}%</span>
+                        <span>{attempt.testCasesCount} тест{attempt.testCasesCount === 1 ? "" : attempt.testCasesCount >= 2 && attempt.testCasesCount <= 4 ? "а" : "ов"}</span>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[11px] text-muted-foreground whitespace-nowrap">
+                      {timeLabel}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Per-task stats */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -106,9 +197,22 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
         </h3>
         {taskStats.map(({ task, bestScore, avgScore, attempts: count, trend }) => {
           const sparklineData = getTaskHistory(task.id).map((h) => h.score);
+          const isExpanded = expandedTasks.has(task.id);
+          const taskHistory = getTaskHistory(task.id);
           return (
           <Card key={task.id}>
             <CardContent className="pt-4 pb-4">
+              <button
+                onClick={() => {
+                  if (taskHistory.length === 0) return;
+                  const next = new Set(expandedTasks);
+                  if (next.has(task.id)) next.delete(task.id);
+                  else next.add(task.id);
+                  setExpandedTasks(next);
+                }}
+                className="w-full"
+                disabled={taskHistory.length === 0}
+              >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{task.name}</span>
@@ -126,6 +230,9 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                     <Badge className="bg-amber-100 text-amber-800 text-[10px] dark:bg-amber-900/30 dark:text-amber-400">
                       {bestScore}%
                     </Badge>
+                  )}
+                  {taskHistory.length > 0 && (
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                   )}
                 </div>
               </div>
@@ -153,6 +260,34 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                       title={`Попытка: ${score}%`}
                     />
                   ))}
+                </div>
+              )}
+              </button>
+              {isExpanded && taskHistory.length > 0 && (
+                <div className="mt-3 pt-3 border-t space-y-1.5">
+                  {taskHistory.slice().reverse().map((h, i) => {
+                    const date = new Date(h.timestamp);
+                    const scoreColor = h.score >= 90
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : h.score >= 60
+                        ? "text-amber-600 dark:text-amber-400"
+                        : "text-rose-600 dark:text-rose-400";
+                    return (
+                      <div key={i} className="flex items-center justify-between text-xs p-1.5 rounded bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <span className={`font-bold ${scoreColor}`}>{h.score}%</span>
+                          <span className="text-muted-foreground">EC: {h.ecCoverage}%</span>
+                          <span className="text-muted-foreground">BV: {h.bvCoverage}%</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <span>{h.testCasesCount} тестов</span>
+                          <span className="text-[10px]">
+                            {date.toLocaleDateString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
