@@ -122,32 +122,30 @@ export default function ProfilePage() {
       return;
     }
     if (status === "authenticated") {
-      fetchProfile();
+      (async () => {
+        try {
+          const res = await fetch("/api/auth/profile");
+          const json = await res.json();
+          if (res.ok) {
+            setProfile(json.user);
+            profileForm.reset({
+              name: json.user.name || "",
+              phone: json.user.phone || "",
+              bio: json.user.bio || "",
+              university: json.user.university || "",
+              group: json.user.group || "",
+            });
+          } else {
+            toast.error(json.error || "Ошибка при загрузке профиля");
+          }
+        } catch {
+          toast.error("Ошибка при загрузке профиля");
+        } finally {
+          setLoading(false);
+        }
+      })();
     }
   }, [status, router]);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await fetch("/api/auth/profile");
-      const json = await res.json();
-      if (res.ok) {
-        setProfile(json.user);
-        profileForm.reset({
-          name: json.user.name || "",
-          phone: json.user.phone || "",
-          bio: json.user.bio || "",
-          university: json.user.university || "",
-          group: json.user.group || "",
-        });
-      } else {
-        toast.error(json.error || "Ошибка при загрузке профиля");
-      }
-    } catch {
-      toast.error("Ошибка при загрузке профиля");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const onProfileSubmit = async (data: ProfileForm) => {
     setSaving(true);
