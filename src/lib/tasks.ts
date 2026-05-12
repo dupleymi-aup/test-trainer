@@ -145,21 +145,21 @@ function validatePassword(
 // Map of reference functions
 export const referenceFunctions: Record<
   number,
-  (...args: unknown[]) => unknown
+  (args: unknown[]) => unknown
 > = {
-  1: (args) => factorial(args[0] as number),
-  2: (args) => isPrime(args[0] as number),
-  3: (args) => applyDiscount(args[0] as number, args[1] as number),
-  4: (args) => isLeapYear(args[0] as number),
-  5: (args) => triangleType(args[0] as number, args[1] as number, args[2] as number),
-  6: (args) => validatePassword(args[0] as string),
-  7: (args) => {
+  1: (args: unknown[]) => factorial(args[0] as number),
+  2: (args: unknown[]) => isPrime(args[0] as number),
+  3: (args: unknown[]) => applyDiscount(args[0] as number, args[1] as number),
+  4: (args: unknown[]) => isLeapYear(args[0] as number),
+  5: (args: unknown[]) => triangleType(args[0] as number, args[1] as number, args[2] as number),
+  6: (args: unknown[]) => validatePassword(args[0] as string),
+  7: (args: unknown[]) => {
     const str = args[0] as string;
     if (typeof str !== "string") throw new Error("Аргумент должен быть строкой");
     const cleaned = str.toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
     return cleaned === cleaned.split("").reverse().join("");
   },
-  8: (args) => {
+  8: (args: unknown[]) => {
     const email = args[0] as string;
     if (typeof email !== "string") throw new Error("Аргумент должен быть строкой");
     const errors: string[] = [];
@@ -183,8 +183,8 @@ export const referenceFunctions: Record<
     }
     return { valid: errors.length === 0, errors };
   },
-  9: (args) => toRoman(args[0] as number),
-  10: (args) => isValidDate(args[0] as number, args[1] as number, args[2] as number),
+  9: (args: unknown[]) => toRoman(args[0] as number),
+  10: (args: unknown[]) => isValidDate(args[0] as number, args[1] as number, args[2] as number),
 };
 
 export const tasks: Task[] = [

@@ -10,8 +10,8 @@ import {
   TrendingUp,
   Timer,
 } from "lucide-react";
-import type { Task, TestCase, TestCaseCategory, EvaluationResult } from "@/lib/evaluator";
-import type { Task as TaskType, Difficulty } from "@/lib/tasks";
+import type { TestCase, EvaluationResult } from "@/lib/evaluator";
+import type { Task as TaskType, Difficulty, TestCaseCategory } from "@/lib/tasks";
 import type { TaskProgress, AttemptRecord } from "@/lib/storage";
 import type { TabValue, DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
 import { TaskListTab } from "@/components/task-list-tab";
@@ -213,7 +213,7 @@ export function TabContent({
               </p>
             </div>
             <div className="max-w-3xl mx-auto">
-              <TheoryPanel task={selectedTask} />
+              <TheoryPanel task={selectedTask ?? undefined} />
             </div>
           </motion.div>
         )}

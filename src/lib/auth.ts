@@ -1,0 +1,90 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import type { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import EmailProvider from "next-auth/providers/email";
+import { db } from "@/lib/db";
+
+// Extend next-auth types
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role?: string;
+  }
+}
+
+const prisma = db as PrismaClient;
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        login: { label: "Email или телефон", type: "text" },
+        password: { label: "Пароль", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.login || !credentials?.password) return null;
+
+        const login = credentials.login.trim();
+        const isPhone = /^\+?\d{10,15}$/.test(login.replace(/[\s()-]/g, ""));
+
+        const user = await prisma.user.findFirst({
+          where: isPhone ? { phone: login } : { email: login.toLowerCase() },
+        });
+
+        if (!user || !user.hashedPassword) return null;
+
+        const isValid = await bcrypt.compare(credentials.password, user.hashedPassword);
+        if (!isValid) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.avatar,
+        };
+      },
+    }),
+    EmailProvider({
+      server: process.env.EMAIL_SERVER || "",
+      from: process.env.EMAIL_FROM || "noreply@test-trainer.ru",
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = "student";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};

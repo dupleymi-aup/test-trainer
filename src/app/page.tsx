@@ -32,7 +32,7 @@ export default function Home() {
 
         <TabContent
           activeTab={state.activeTab}
-          onTabChange={state.setActiveTab}
+          onTabChange={state.setActiveTab as (tab: string) => void}
           selectedTask={state.selectedTask}
           testCases={state.testCases}
           evaluationResult={state.evaluationResult}

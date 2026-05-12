@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { TaskWorkspace } from "@/components/task-workspace";
 import { TestForm } from "@/components/test-form";
 import { TestList } from "@/components/test-list";
-import type { Task, TestCase, TestCaseCategory, EvaluationResult } from "@/lib/evaluator";
-import type { Task as TaskType } from "@/lib/tasks";
+import type { TestCase, EvaluationResult } from "@/lib/evaluator";
+import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
