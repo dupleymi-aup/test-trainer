@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, BarChart3 } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -62,6 +62,12 @@ export function UserMenu() {
             <Link href="/profile" className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               Профиль
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/profile?tab=stats" className="cursor-pointer">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Статистика
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

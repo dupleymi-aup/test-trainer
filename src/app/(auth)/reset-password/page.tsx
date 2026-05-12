@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Beaker, Loader2 } from "lucide-react";
+import { Beaker, Loader2, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
 const resetSchema = z
   .object({
@@ -51,6 +52,8 @@ const otpSchema = z.object({
 type ResetForm = z.infer<typeof resetSchema>;
 type OtpForm = z.infer<typeof otpSchema>;
 
+const RESEND_COOLDOWN = 60;
+
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,6 +62,10 @@ function ResetPasswordContent() {
   const [otpVerified, setOtpVerified] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
 
   const token = searchParams.get("token");
   const urlMethod = searchParams.get("method");
@@ -71,6 +78,16 @@ function ResetPasswordContent() {
       setPhone(urlPhone);
     }
   }, [token, urlMethod, urlPhone]);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  const startCooldown = useCallback(() => {
+    setCountdown(RESEND_COOLDOWN);
+  }, []);
 
   const resetForm = useForm<ResetForm>({
     resolver: zodResolver(resetSchema),
@@ -103,6 +120,30 @@ function ResetPasswordContent() {
       }
     } catch {
       toast.error("Ошибка при проверке кода");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onResendSMS = async () => {
+    if (!phone || countdown > 0) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "", phone }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json.error || "Ошибка при отправке");
+      } else {
+        toast.success("Код отправлен повторно");
+        startCooldown();
+      }
+    } catch {
+      toast.error("Ошибка при отправке");
     } finally {
       setIsLoading(false);
     }
@@ -195,7 +236,27 @@ function ResetPasswordContent() {
               </Button>
             </form>
           </Form>
-          <div className="mt-6 text-center text-sm">
+
+          <div className="mt-4 text-center">
+            {countdown > 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Отправить повторно через {countdown} сек.
+              </p>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onResendSMS}
+                disabled={isLoading}
+                className="text-sm"
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />
+                Отправить код повторно
+              </Button>
+            )}
+          </div>
+
+          <div className="mt-4 text-center text-sm">
             <Link
               href="/forgot-password"
               className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
@@ -232,14 +293,33 @@ function ResetPasswordContent() {
                 <FormItem>
                   <FormLabel>Новый пароль</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                    />
+                    <div className="relative">
+                      <Input
+                        {...field}
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setNewPasswordValue(e.target.value);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        tabIndex={-1}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
+                  <PasswordStrengthIndicator password={newPasswordValue} />
                 </FormItem>
               )}
             />
@@ -250,12 +330,26 @@ function ResetPasswordContent() {
                 <FormItem>
                   <FormLabel>Подтвердите пароль</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="password"
-                      placeholder="••••••••"
-                      autoComplete="new-password"
-                    />
+                    <div className="relative">
+                      <Input
+                        {...field}
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        tabIndex={-1}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

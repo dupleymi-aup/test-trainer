@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,6 +21,10 @@ import {
   X,
   KeyRound,
   Beaker,
+  Eye,
+  EyeOff,
+  BarChart3,
+  RefreshCw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -46,6 +50,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
+import { StatisticsPanel } from "@/components/statistics-panel";
+import { AchievementsPanel } from "@/components/achievements-panel";
+import { loadAttemptHistory } from "@/lib/storage";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Имя должно быть не менее 2 символов").optional(),
@@ -88,13 +96,34 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
+  );
+}
+
+function ProfileContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") || "profile";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [verifyCooldown, setVerifyCooldown] = useState(0);
+  const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -187,6 +216,7 @@ export default function ProfilePage() {
       if (res.ok) {
         toast.success("Пароль изменён");
         passwordForm.reset();
+        setNewPasswordValue("");
       } else {
         toast.error(json.error || "Ошибка при смене пароля");
       }
@@ -200,6 +230,33 @@ export default function ProfilePage() {
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/" });
   };
+
+  useEffect(() => {
+    if (verifyCooldown <= 0) return;
+    const timer = setTimeout(() => setVerifyCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [verifyCooldown]);
+
+  const handleResendVerification = useCallback(async () => {
+    if (verifyCooldown > 0) return;
+    setIsSendingVerification(true);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (res.ok) {
+        toast.success("Письмо для подтверждения отправлено");
+        setVerifyCooldown(60);
+      } else {
+        toast.error(json.error || "Ошибка при отправке");
+      }
+    } catch {
+      toast.error("Ошибка при отправке письма");
+    } finally {
+      setIsSendingVerification(false);
+    }
+  }, [verifyCooldown]);
 
   if (status === "loading" || loading) {
     return (
@@ -264,14 +321,42 @@ export default function ProfilePage() {
                 <CardDescription className="break-all">{profile.email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="truncate">{profile.email || "Не указан"}</span>
-                  {profile.emailVerified && (
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      Подтверждён
-                    </Badge>
-                  )}
+                <div className="flex items-start gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <span className="truncate">{profile.email || "Не указан"}</span>
+                    {profile.emailVerified ? (
+                      <Badge variant="secondary" className="ml-2 text-xs">
+                        Подтверждён
+                      </Badge>
+                    ) : (
+                      <div className="mt-1">
+                        <Badge variant="destructive" className="text-[10px] mb-1">
+                          Не подтверждён
+                        </Badge>
+                        {verifyCooldown > 0 ? (
+                          <p className="text-[11px] text-muted-foreground">
+                            Отправить повторно через {verifyCooldown} сек.
+                          </p>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 text-xs text-emerald-600 hover:text-emerald-700"
+                            onClick={handleResendVerification}
+                            disabled={isSendingVerification}
+                          >
+                            {isSendingVerification ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="mr-1 h-3 w-3" />
+                            )}
+                            Подтвердить email
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -303,10 +388,14 @@ export default function ProfilePage() {
 
           {/* Main Content */}
           <div className="md:col-span-2">
-            <Tabs defaultValue="profile">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="profile">Профиль</TabsTrigger>
                 <TabsTrigger value="security">Безопасность</TabsTrigger>
+                <TabsTrigger value="stats">
+                  <BarChart3 className="mr-1 h-3.5 w-3.5" />
+                  Статистика
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="profile" className="mt-6">
@@ -460,81 +549,144 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="security" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Смена пароля</CardTitle>
-                    <CardDescription>
-                      Обновите пароль для вашего аккаунта
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...passwordForm}>
-                      <form
-                        onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
-                        className="space-y-4"
-                      >
-                        <FormField
-                          control={passwordForm.control}
-                          name="currentPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Текущий пароль</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="password"
-                                  placeholder="••••••••"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={passwordForm.control}
-                          name="newPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Новый пароль</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="password"
-                                  placeholder="••••••••"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={passwordForm.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Подтвердите пароль</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="password"
-                                  placeholder="••••••••"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" disabled={isSavingPassword}>
-                          {isSavingPassword && (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          )}
-                          <KeyRound className="mr-2 h-4 w-4" />
-                          Сменить пароль
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Смена пароля</CardTitle>
+                      <CardDescription>
+                        Обновите пароль для вашего аккаунта
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Form {...passwordForm}>
+                        <form
+                          onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                          className="space-y-4"
+                        >
+                          <FormField
+                            control={passwordForm.control}
+                            name="currentPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Текущий пароль</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input
+                                      {...field}
+                                      type={showCurrentPassword ? "text" : "password"}
+                                      placeholder="••••••••"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                      tabIndex={-1}
+                                    >
+                                      {showCurrentPassword ? (
+                                        <EyeOff className="h-4 w-4" />
+                                      ) : (
+                                        <Eye className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={passwordForm.control}
+                            name="newPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Новый пароль</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input
+                                      {...field}
+                                      type={showNewPassword ? "text" : "password"}
+                                      placeholder="••••••••"
+                                      onChange={(e) => {
+                                        field.onChange(e);
+                                        setNewPasswordValue(e.target.value);
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                      onClick={() => setShowNewPassword(!showNewPassword)}
+                                      tabIndex={-1}
+                                    >
+                                      {showNewPassword ? (
+                                        <EyeOff className="h-4 w-4" />
+                                      ) : (
+                                        <Eye className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                                <PasswordStrengthIndicator password={newPasswordValue} />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={passwordForm.control}
+                            name="confirmPassword"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Подтвердите пароль</FormLabel>
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input
+                                      {...field}
+                                      type={showConfirmPassword ? "text" : "password"}
+                                      placeholder="••••••••"
+                                    />
+                                    <button
+                                      type="button"
+                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                      tabIndex={-1}
+                                    >
+                                      {showConfirmPassword ? (
+                                        <EyeOff className="h-4 w-4" />
+                                      ) : (
+                                        <Eye className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" disabled={isSavingPassword}>
+                            {isSavingPassword && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            Сменить пароль
+                          </Button>
+                        </form>
+                      </Form>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="stats" className="mt-6">
+                <div className="space-y-6">
+                  <StatisticsPanel attempts={loadAttemptHistory()} />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Достижения</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <AchievementsPanel />
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

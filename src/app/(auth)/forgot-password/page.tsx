@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Beaker, Loader2, Mail, Phone } from "lucide-react";
+import { Beaker, Loader2, Mail, Phone, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,9 +39,13 @@ const phoneSchema = z.object({
 type EmailForm = z.infer<typeof emailSchema>;
 type PhoneForm = z.infer<typeof phoneSchema>;
 
+const RESEND_COOLDOWN = 60;
+
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [lastMethod, setLastMethod] = useState<"email" | "phone" | null>(null);
 
   const emailForm = useForm<EmailForm>({
     resolver: zodResolver(emailSchema),
@@ -52,6 +56,16 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(phoneSchema),
     defaultValues: { phone: "" },
   });
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  const startCooldown = useCallback(() => {
+    setCountdown(RESEND_COOLDOWN);
+  }, []);
 
   const onEmailSubmit = async (data: EmailForm) => {
     setIsLoading(true);
@@ -68,6 +82,11 @@ export default function ForgotPasswordPage() {
         toast.error(json.error || "Ошибка при отправке");
       } else {
         toast.success(json.message);
+        startCooldown();
+        setLastMethod("email");
+        if (json.token) {
+          router.push(`/reset-password?token=${json.token}`);
+        }
       }
     } catch {
       toast.error("Ошибка при отправке");
@@ -91,6 +110,8 @@ export default function ForgotPasswordPage() {
         toast.error(json.error || "Ошибка при отправке");
       } else {
         toast.success(json.message);
+        startCooldown();
+        setLastMethod("phone");
         router.push(`/reset-password?method=phone&phone=${encodeURIComponent(data.phone)}`);
       }
     } catch {
@@ -99,6 +120,24 @@ export default function ForgotPasswordPage() {
       setIsLoading(false);
     }
   };
+
+  const onResend = async () => {
+    if (!lastMethod || countdown > 0) return;
+
+    if (lastMethod === "email") {
+      const email = emailForm.getValues("email");
+      if (email) {
+        await onEmailSubmit({ email });
+      }
+    } else {
+      const phone = phoneForm.getValues("phone");
+      if (phone) {
+        await onPhoneSubmit({ phone });
+      }
+    }
+  };
+
+  const isCooldown = countdown > 0;
 
   return (
     <Card className="w-full max-w-md">
@@ -189,7 +228,27 @@ export default function ForgotPasswordPage() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-6 text-center text-sm">
+        {lastMethod && (
+          <div className="mt-4 text-center">
+            {isCooldown ? (
+              <p className="text-sm text-muted-foreground">
+                Отправить повторно через {countdown} сек.
+              </p>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onResend}
+                className="text-sm"
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />
+                Отправить повторно
+              </Button>
+            )}
+          </div>
+        )}
+
+        <div className="mt-4 text-center text-sm">
           <Link
             href="/login"
             className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"

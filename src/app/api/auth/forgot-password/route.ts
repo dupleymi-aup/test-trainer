@@ -21,11 +21,13 @@ export async function POST(req: Request) {
       const emailLower = email.toLowerCase().trim();
       const user = await db.user.findUnique({ where: { email: emailLower } });
 
+      // Always return the same response regardless of whether user exists
+      // to prevent email/phone enumeration via timing attack
       if (!user) {
-        return NextResponse.json(
-          { error: "Пользователь с таким email не найден" },
-          { status: 404 }
-        );
+        return NextResponse.json({
+          message: "Если аккаунт существует, инструкция отправлена на email",
+          method: "email",
+        });
       }
 
       const token = Buffer.from(`${user.id}:${Date.now()}`).toString("base64");
@@ -42,8 +44,9 @@ export async function POST(req: Request) {
       await sendEmail({ to: emailLower, ...emailData });
 
       return NextResponse.json({
-        message: "Инструкция по восстановлению отправлена на email",
+        message: "Если аккаунт существует, инструкция отправлена на email",
         method: "email",
+        token,
       });
     }
 
@@ -51,11 +54,12 @@ export async function POST(req: Request) {
       const trimmedPhone = phone.trim();
       const user = await db.user.findUnique({ where: { phone: trimmedPhone } });
 
+      // Always return the same response regardless of whether user exists
       if (!user) {
-        return NextResponse.json(
-          { error: "Пользователь с таким номером телефона не найден" },
-          { status: 404 }
-        );
+        return NextResponse.json({
+          message: "Если аккаунт существует, код отправлен по SMS",
+          method: "phone",
+        });
       }
 
       const code = generateOTPCode();
@@ -72,7 +76,7 @@ export async function POST(req: Request) {
       await sendSMS({ phone: trimmedPhone, message: smsMessage });
 
       return NextResponse.json({
-        message: "Код восстановления отправлен по SMS",
+        message: "Если аккаунт существует, код отправлен по SMS",
         method: "phone",
         phone: trimmedPhone,
       });
