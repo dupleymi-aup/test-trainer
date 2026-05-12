@@ -142,6 +142,52 @@ function validatePassword(
   return { valid: errors.length === 0, errors };
 }
 
+// Helper functions for new tasks
+function validatePhone(phone: string): { valid: boolean; errors: string[] } {
+  if (typeof phone !== "string") throw new Error("Аргумент должен быть строкой");
+  const errors: string[] = [];
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 0) errors.push("Номер не содержит цифр");
+  else if (digits.length < 10) errors.push("Слишком короткий номер (минимум 10 цифр)");
+  else if (digits.length > 15) errors.push("Слишком длинный номер (максимум 15 цифр)");
+  if (phone.length > 0 && !phone[0].match(/[+\d8]/)) errors.push("Номер должен начинаться с +, цифры или 8");
+  if (/[a-zA-Zа-яА-ЯёЁ]/.test(phone)) errors.push("Номер не должен содержать букв");
+  return { valid: errors.length === 0, errors };
+}
+
+function calculateBMI(weight: number, height: number): { bmi: number; category: string } {
+  if (typeof weight !== "number" || typeof height !== "number" || isNaN(weight) || isNaN(height))
+    throw new Error("Аргументы должны быть числами");
+  if (weight < 20) throw new Error("Вес должен быть не менее 20 кг");
+  if (weight > 300) throw new Error("Вес должен быть не более 300 кг");
+  if (height < 50) throw new Error("Рост должен быть не менее 50 см");
+  if (height > 250) throw new Error("Рост должен быть не более 250 см");
+  const heightM = height / 100;
+  const bmi = Math.round((weight / (heightM * heightM)) * 10) / 10;
+  let category: string;
+  if (bmi < 18.5) category = "Недостаточный вес";
+  else if (bmi < 25) category = "Норма";
+  else if (bmi < 30) category = "Избыточный вес";
+  else category = "Ожирение";
+  return { bmi, category };
+}
+
+function parseNumber(str: string): number {
+  if (typeof str !== "string") throw new Error("Аргумент должен быть строкой");
+  if (str.trim() === "") return NaN;
+  const trimmed = str.trim();
+  if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
+    const n = parseInt(trimmed, 16);
+    return isNaN(n) ? NaN : n;
+  }
+  if (trimmed.startsWith("0b") || trimmed.startsWith("0B")) {
+    const n = parseInt(trimmed.slice(2), 2);
+    return isNaN(n) ? NaN : n;
+  }
+  const n = parseInt(trimmed, 10);
+  return isNaN(n) ? NaN : n;
+}
+
 // Map of reference functions
 export const referenceFunctions: Record<
   number,
@@ -185,6 +231,9 @@ export const referenceFunctions: Record<
   },
   9: (args: unknown[]) => toRoman(args[0] as number),
   10: (args: unknown[]) => isValidDate(args[0] as number, args[1] as number, args[2] as number),
+  11: (args: unknown[]) => validatePhone(args[0] as string),
+  12: (args: unknown[]) => calculateBMI(args[0] as number, args[1] as number),
+  13: (args: unknown[]) => parseNumber(args[0] as string),
 };
 
 export const tasks: Task[] = [
@@ -924,6 +973,145 @@ export const tasks: Task[] = [
       { value: [0, 1, 2023], description: "День = 0" },
       { value: [1, 13, 2023], description: "Месяц > 12" },
       { value: [1, 0, 2023], description: "Месяц < 1" },
+    ],
+  },
+  {
+    id: 11,
+    name: "Валидация телефона",
+    difficulty: "Средне",
+    description:
+      "Проверяет корректность номера телефона. Поддерживает форматы: +7XXXXXXXXXX, 8XXXXXXXXXX, +X-XXX-XXX-XX-XX. Номер должен содержать 10-15 цифр, может начинаться с + или 8.",
+    signature: "validatePhone(phone: string): { valid: boolean; errors: string[] }",
+    topics: ["Классы эквивалентности", "Граничные значения", "Проверка форматов"],
+    params: [
+      { name: "phone", type: "string", description: "Номер телефона для проверки" },
+    ],
+    returnType: "{ valid: boolean; errors: string[] }",
+    code: `function validatePhone(phone: string): { valid: boolean; errors: string[] } {
+  if (typeof phone !== "string") throw new Error("Аргумент должен быть строкой");
+  const errors: string[] = [];
+  const digits = phone.replace(/\\D/g, "");
+  if (digits.length === 0) errors.push("Номер не содержит цифр");
+  else if (digits.length < 10) errors.push("Слишком короткий номер (минимум 10 цифр)");
+  else if (digits.length > 15) errors.push("Слишком длинный номер (максимум 15 цифр)");
+  if (phone.length > 0 && !phone[0].match(/[+\\d8]/)) errors.push("Номер должен начинаться с +, цифры или 8");
+  if (/[a-zA-Zа-яА-ЯёЁ]/.test(phone)) errors.push("Номер не должен содержать букв");
+  return { valid: errors.length === 0, errors };
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: Валидный формат +7", description: "Корректный номер с +7", exampleValues: ["+79991234567", "+7-999-123-45-67"] },
+      { id: "ec2", name: "EC2: Валидный формат 8", description: "Корректный номер с 8", exampleValues: ["89991234567", "8-999-123-45-67"] },
+      { id: "ec3", name: "EC3: Валидный международный", description: "Международный формат с другим кодом", exampleValues: ["+1-555-123-4567", "+44-20-7946-0958"] },
+      { id: "ec4", name: "EC4: Слишком короткий", description: "Менее 10 цифр", exampleValues: ["123456789", "+7123"] },
+      { id: "ec5", name: "EC5: Слишком длинный", description: "Более 15 цифр", exampleValues: ["+71234567890123456"] },
+      { id: "ec6", name: "EC6: Содержит буквы", description: "Номер с буквами", exampleValues: ["+7abc1234567", "phone"] },
+      { id: "ec7", name: "EC7: Пустая строка", description: "Пустой номер", exampleValues: [""] },
+      { id: "ec8", name: "EC8: Не строковый тип", description: "Неверный тип", exampleValues: [123, null] },
+    ],
+    boundaryValues: [
+      { value: "+79991234567", description: "Минимальный валидный (10 цифр, +7)" },
+      { value: "+7123456789012345", description: "Максимальный валидный (15 цифр)" },
+      { value: "123456789", description: "9 цифр (слишком короткий)" },
+      { value: "+71234567890123456", description: "16 цифр (слишком длинный)" },
+      { value: "", description: "Пустая строка" },
+      { value: "+7abc", description: "Содержит буквы" },
+    ],
+  },
+  {
+    id: 12,
+    name: "Калькулятор ИМТ",
+    difficulty: "Средне",
+    description:
+      "Вычисляет индекс массы тела (ИМТ) по весу и росту. Возвращает числовое значение и категорию: недостаточный вес (< 18.5), норма (18.5–24.9), избыточный (25–29.9), ожирение (≥ 30).",
+    signature: "calculateBMI(weight: number, height: number): { bmi: number; category: string }",
+    topics: ["Классы эквивалентности", "Граничные значения", "Многофакторное тестирование"],
+    params: [
+      { name: "weight", type: "number", description: "Вес в кг (20–300)" },
+      { name: "height", type: "number", description: "Рост в см (50–250)" },
+    ],
+    returnType: "{ bmi: number; category: string }",
+    code: `function calculateBMI(weight: number, height: number): { bmi: number; category: string } {
+  if (typeof weight !== "number" || typeof height !== "number" || isNaN(weight) || isNaN(height))
+    throw new Error("Аргументы должны быть числами");
+  if (weight < 20) throw new Error("Вес должен быть не менее 20 кг");
+  if (weight > 300) throw new Error("Вес должен быть не более 300 кг");
+  if (height < 50) throw new Error("Рост должен быть не менее 50 см");
+  if (height > 250) throw new Error("Рост должен быть не более 250 см");
+  const heightM = height / 100;
+  const bmi = Math.round((weight / (heightM * heightM)) * 10) / 10;
+  let category: string;
+  if (bmi < 18.5) category = "Недостаточный вес";
+  else if (bmi < 25) category = "Норма";
+  else if (bmi < 30) category = "Избыточный вес";
+  else category = "Ожирение";
+  return { bmi, category };
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: Недостаточный вес", description: "ИМТ < 18.5", exampleValues: [[45, 170], [50, 180]] },
+      { id: "ec2", name: "EC2: Норма", description: "18.5 ≤ ИМТ < 25", exampleValues: [[65, 170], [70, 175]] },
+      { id: "ec3", name: "EC3: Избыточный вес", description: "25 ≤ ИМТ < 30", exampleValues: [[85, 170], [90, 175]] },
+      { id: "ec4", name: "EC4: Ожирение", description: "ИМТ ≥ 30", exampleValues: [[110, 170], [120, 165]] },
+      { id: "ec5", name: "EC5: Вес < 20", description: "Недопустимый вес", exampleValues: [[15, 170], [0, 170]] },
+      { id: "ec6", name: "EC6: Вес > 300", description: "Слишком большой вес", exampleValues: [[350, 170]] },
+      { id: "ec7", name: "EC7: Рост < 50", description: "Недопустимый рост", exampleValues: [[70, 30], [70, 0]] },
+      { id: "ec8", name: "EC8: Рост > 250", description: "Слишком большой рост", exampleValues: [[70, 300]] },
+      { id: "ec9", name: "EC9: Нечисловые аргументы", description: "Неверный тип", exampleValues: [["70", "170"], [null, null]] },
+    ],
+    boundaryValues: [
+      { value: [45, 170], description: "Граница недостаточного веса" },
+      { value: [63.5, 170], description: "ИМТ ≈ 18.5 (переход в норму)" },
+      { value: [72, 170], description: "ИМТ ≈ 25 (переход к избыточному)" },
+      { value: [85, 170], description: "ИМТ ≈ 30 (переход к ожирению)" },
+      { value: [20, 170], description: "Минимальный вес" },
+      { value: [300, 170], description: "Максимальный вес" },
+      { value: [70, 50], description: "Минимальный рост" },
+      { value: [70, 250], description: "Максимальный рост" },
+    ],
+  },
+  {
+    id: 13,
+    name: "Строка в число",
+    difficulty: "Легко",
+    description:
+      "Преобразует строку в целое число. Поддерживает десятичные, шестнадцатеричные (0x...) и двоичные (0b...) форматы. Для некорректных входных данных возвращает NaN.",
+    signature: "parseNumber(str: string): number",
+    topics: ["Классы эквивалентности", "Граничные значения", "Обработка строк"],
+    params: [
+      { name: "str", type: "string", description: "Строка для преобразования" },
+    ],
+    returnType: "number",
+    code: `function parseNumber(str: string): number {
+  if (typeof str !== "string") throw new Error("Аргумент должен быть строкой");
+  if (str.trim() === "") return NaN;
+  const trimmed = str.trim();
+  if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
+    const n = parseInt(trimmed, 16);
+    return isNaN(n) ? NaN : n;
+  }
+  if (trimmed.startsWith("0b") || trimmed.startsWith("0B")) {
+    const n = parseInt(trimmed.slice(2), 2);
+    return isNaN(n) ? NaN : n;
+  }
+  const n = parseInt(trimmed, 10);
+  return isNaN(n) ? NaN : n;
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: Десятичное число", description: "Обычное десятичное число", exampleValues: ["42", "-17", "0"] },
+      { id: "ec2", name: "EC2: Шестнадцатеричное", description: "Формат 0x...", exampleValues: ["0xFF", "0x1A", "0XAB"] },
+      { id: "ec3", name: "EC3: Двоичное", description: "Формат 0b...", exampleValues: ["0b1010", "0B1111"] },
+      { id: "ec4", name: "EC4: С пробелами", description: "Число с ведущими/завершающими пробелами", exampleValues: ["  42  ", "  0xFF "] },
+      { id: "ec5", name: "EC5: Пустая строка", description: "Пустая или только пробелы", exampleValues: ["", "   "] },
+      { id: "ec6", name: "EC6: Не число", description: "Строка, не являющаяся числом", exampleValues: ["abc", "12.34", "12ab"] },
+      { id: "ec7", name: "EC7: Не строковый тип", description: "Неверный тип", exampleValues: [42, null, undefined] },
+    ],
+    boundaryValues: [
+      { value: "0", description: "Ноль" },
+      { value: "-1", description: "Отрицательная единица" },
+      { value: "0xFF", description: "Максимальное однобайтное (255)" },
+      { value: "0b0", description: "Двоичный ноль" },
+      { value: "", description: "Пустая строка (NaN)" },
+      { value: "   ", description: "Только пробелы (NaN)" },
+      { value: "abc", description: "Не число (NaN)" },
     ],
   },
 ];

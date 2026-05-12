@@ -14,6 +14,7 @@ const shortcuts = [
   { keys: ["Ctrl", "Shift", "Z"], description: "Вернуть (redo)" },
   { keys: ["H"], description: "Подсказка (случайный непокрытый EC)" },
   { keys: ["F"], description: "Заполнить все непокрытые EC" },
+  { keys: ["R"], description: "Случайное задание" },
   { keys: ["?"], description: "Показать горячие клавиши" },
   { keys: ["1", "–", "10"], description: "Быстрый выбор задания" },
   { keys: ["Esc"], description: "Закрыть диалог" },

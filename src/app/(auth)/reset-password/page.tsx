@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -51,7 +51,7 @@ const otpSchema = z.object({
 type ResetForm = z.infer<typeof resetSchema>;
 type OtpForm = z.infer<typeof otpSchema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -279,5 +279,13 @@ export default function ResetPasswordPage() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<Card className="w-full max-w-md"><CardHeader><CardTitle>Загрузка...</CardTitle></CardHeader></Card>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

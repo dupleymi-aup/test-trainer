@@ -58,6 +58,7 @@ interface TabContentProps {
   onBulkRemove: (ids: string[]) => void;
   onClearAll: () => void;
   onBackToTasks: () => void;
+  onRandomTask: () => void;
 }
 
 export function TabContent({
@@ -90,6 +91,7 @@ export function TabContent({
   onBulkRemove,
   onClearAll,
   onBackToTasks,
+  onRandomTask,
 }: TabContentProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
@@ -160,6 +162,7 @@ export function TabContent({
             onDifficultyFilterChange={onDifficultyFilterChange}
             onSortModeChange={onSortModeChange}
             onSelectTask={onSelectTask}
+            onRandomTask={onRandomTask}
           />
         )}
 

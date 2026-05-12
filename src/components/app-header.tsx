@@ -58,11 +58,14 @@ export function AppHeader({ streak, onShowShortcuts }: AppHeaderProps) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground relative"
               onClick={onShowShortcuts}
-              title="Горячие клавиши"
+              title="Горячие клавиши (?)"
             >
               <HelpCircle className="h-4 w-4" />
+              <kbd className="absolute -top-1 -right-1 h-4 w-4 rounded bg-muted text-[8px] font-mono leading-4 text-center text-muted-foreground border hidden sm:block">
+                ?
+              </kbd>
             </Button>
             <ThemeToggle />
             <UserMenu />

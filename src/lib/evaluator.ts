@@ -95,15 +95,7 @@ function matchBoundaryValue(
 
   // Single value — compare with first input
   if (inputs.length === 1) {
-    // Exact match
-    if (normalizeValue(inputs[0]) === normalizeValue(bv)) return true;
-
-    // Proximity match for numeric values (within ±1)
-    const inputNum = Number(inputs[0]);
-    const bvNum = Number(bv);
-    if (!isNaN(inputNum) && !isNaN(bvNum) && typeof inputs[0] === 'number') {
-      return Math.abs(inputNum - bvNum) <= 1;
-    }
+    return normalizeValue(inputs[0]) === normalizeValue(bv);
   }
 
   return false;
@@ -281,7 +273,14 @@ function findCoveredEquivalenceClasses(
         covered.push(ec.id);
       if (
         ec.id === "ec4" &&
-        result === "не треугольник"
+        result === "не треугольник" &&
+        !error
+      )
+        covered.push(ec.id);
+      if (
+        ec.id === "ec5" &&
+        error &&
+        (inputs as number[]).some(v => typeof v === "number" && v <= 0)
       )
         covered.push(ec.id);
       if (
@@ -296,7 +295,7 @@ function findCoveredEquivalenceClasses(
     }
 
     if (taskId === 6) {
-      // validatePassword — improved heuristic based on result.errors
+      // validatePassword — match ECs by specific error presence
       if (
         result &&
         typeof result === "object" &&
@@ -310,25 +309,25 @@ function findCoveredEquivalenceClasses(
         if (ec.id === "ec1" && res.valid) {
           covered.push(ec.id);
         }
-        if (ec.id === "ec2" && errors.includes("Минимум 8 символов") && errors.length === 1) {
+        if (ec.id === "ec2" && errors.some(e => e.includes("Минимум 8"))) {
           covered.push(ec.id);
         }
-        if (ec.id === "ec3" && errors.some(e => e.includes("заглавную")) && !errors.includes("Минимум 8 символов") && errors.length <= 2) {
+        if (ec.id === "ec3" && errors.some(e => e.includes("заглавную"))) {
           covered.push(ec.id);
         }
-        if (ec.id === "ec4" && errors.some(e => e.includes("строчную")) && !errors.includes("Минимум 8 символов") && errors.length <= 2) {
+        if (ec.id === "ec4" && errors.some(e => e.includes("строчную"))) {
           covered.push(ec.id);
         }
-        if (ec.id === "ec5" && errors.some(e => e.includes("цифр")) && !errors.includes("Минимум 8 символов") && errors.length <= 2) {
+        if (ec.id === "ec5" && errors.some(e => e.includes("цифр"))) {
           covered.push(ec.id);
         }
-        if (ec.id === "ec6" && errors.some(e => e.includes("спецсимвол")) && !errors.includes("Минимум 8 символов") && errors.length <= 2) {
+        if (ec.id === "ec6" && errors.some(e => e.includes("спецсимвол"))) {
           covered.push(ec.id);
         }
-        if (ec.id === "ec7" && errors.length >= 2 && inputStr !== "" && errors.length < 4) {
+        if (ec.id === "ec7" && errors.length >= 2 && inputStr !== "") {
           covered.push(ec.id);
         }
-        if (ec.id === "ec8" && inputStr === "" && errors.length >= 4) {
+        if (ec.id === "ec8" && inputStr === "") {
           covered.push(ec.id);
         }
         if (ec.id === "ec9" && error) {
@@ -399,14 +398,71 @@ function findCoveredEquivalenceClasses(
         const month = Number(inputs[1]);
         const year = Number(inputs[2]);
         const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-        if (ec.id === "ec1" && isValid && month >= 1 && month <= 12 && day >= 1) covered.push(ec.id);
+        if (ec.id === "ec1" && isValid && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1]) covered.push(ec.id);
         if (ec.id === "ec2" && isValid && day === 29 && month === 2 && isLeap) covered.push(ec.id);
-        if (ec.id === "ec3" && !isValid && day > 28 && month >= 1 && month <= 12 && !(day === 29 && month === 2)) covered.push(ec.id);
+        if (ec.id === "ec3" && !isValid && month >= 1 && month <= 12 && day > daysInMonth[month - 1]) covered.push(ec.id);
         if (ec.id === "ec4" && !isValid && day === 29 && month === 2 && !isLeap) covered.push(ec.id);
         if (ec.id === "ec5" && !isValid && (month < 1 || month > 12)) covered.push(ec.id);
         if (ec.id === "ec6" && !isValid && day < 1 && month >= 1 && month <= 12) covered.push(ec.id);
         if (ec.id === "ec7" && isValid && (day === 30 || day === 31) && month >= 1 && month <= 12) covered.push(ec.id);
+      }
+    }
+
+    if (taskId === 11) {
+      // validatePhone
+      if (error) {
+        if (ec.id === "ec8") covered.push(ec.id);
+      } else if (result && typeof result === "object" && "valid" in result && "errors" in result) {
+        const res = result as { valid: boolean; errors: string[] };
+        const errors = res.errors;
+        const inputStr = String(inputs[0]);
+        const digits = inputStr.replace(/\D/g, "");
+
+        if (ec.id === "ec1" && res.valid && inputStr.startsWith("+7")) covered.push(ec.id);
+        if (ec.id === "ec2" && res.valid && (inputStr.startsWith("8") || inputStr.startsWith("+"))) covered.push(ec.id);
+        if (ec.id === "ec3" && res.valid && !inputStr.startsWith("+7") && !inputStr.startsWith("8")) covered.push(ec.id);
+        if (ec.id === "ec4" && errors.some(e => e.includes("короткий"))) covered.push(ec.id);
+        if (ec.id === "ec5" && errors.some(e => e.includes("длинный"))) covered.push(ec.id);
+        if (ec.id === "ec6" && errors.some(e => e.includes("букв"))) covered.push(ec.id);
+        if (ec.id === "ec7" && inputStr === "" && errors.some(e => e.includes("цифр"))) covered.push(ec.id);
+      }
+    }
+
+    if (taskId === 12) {
+      // calculateBMI
+      if (error) {
+        const inputStr = String(inputs[0]);
+        if (ec.id === "ec9" && error) covered.push(ec.id);
+        if (ec.id === "ec5" && error && Number(inputs[0]) < 20) covered.push(ec.id);
+        if (ec.id === "ec6" && error && Number(inputs[0]) > 300) covered.push(ec.id);
+        if (ec.id === "ec7" && error && Number(inputs[1]) < 50) covered.push(ec.id);
+        if (ec.id === "ec8" && error && Number(inputs[1]) > 250) covered.push(ec.id);
+      } else if (result && typeof result === "object" && "category" in result) {
+        const res = result as { category: string };
+        if (ec.id === "ec1" && res.category === "Недостаточный вес") covered.push(ec.id);
+        if (ec.id === "ec2" && res.category === "Норма") covered.push(ec.id);
+        if (ec.id === "ec3" && res.category === "Избыточный вес") covered.push(ec.id);
+        if (ec.id === "ec4" && res.category === "Ожирение") covered.push(ec.id);
+      }
+    }
+
+    if (taskId === 13) {
+      // parseNumber
+      if (error) {
+        if (ec.id === "ec7") covered.push(ec.id);
+      } else {
+        const numResult = result as number;
+        const inputStr = String(inputs[0]).trim();
+        const isNaNResult = isNaN(numResult);
+
+        if (ec.id === "ec1" && !isNaNResult && !inputStr.toLowerCase().startsWith("0x") && !inputStr.toLowerCase().startsWith("0b")) covered.push(ec.id);
+        if (ec.id === "ec2" && !isNaNResult && inputStr.toLowerCase().startsWith("0x")) covered.push(ec.id);
+        if (ec.id === "ec3" && !isNaNResult && inputStr.toLowerCase().startsWith("0b")) covered.push(ec.id);
+        if (ec.id === "ec4" && !isNaNResult && (inputStr !== String(inputs[0]))) covered.push(ec.id);
+        if (ec.id === "ec5" && isNaNResult && inputStr.trim() === "") covered.push(ec.id);
+        if (ec.id === "ec6" && isNaNResult && inputStr.trim() !== "") covered.push(ec.id);
       }
     }
   }
@@ -457,11 +513,11 @@ function compareOutputs(expected: string, actual: unknown): boolean {
     if (strippedActual.startsWith("ошибка:")) {
       strippedActual = strippedActual.slice(7).trim();
     }
-    // Strict: require near-exact match (allow small whitespace differences)
+    // Flexible matching: exact, keyword, or substring for medium messages
     if (strippedExpected === strippedActual) return true;
-    // Allow substring only for short generic expected values (single keyword)
-    if (strippedExpected.length <= 10 && strippedActual.includes(strippedExpected)) return true;
-    if (strippedActual.length <= 10 && strippedExpected.includes(strippedActual)) return true;
+    const keywords = strippedExpected.split(/\s+/).filter(w => w.length > 3);
+    if (keywords.length > 0 && keywords.some(kw => strippedActual.includes(kw))) return true;
+    if (strippedExpected.length <= 50 && (strippedActual.includes(strippedExpected) || strippedExpected.includes(strippedActual))) return true;
     return false;
   }
 

@@ -634,6 +634,13 @@ export function useTrainerState() {
     setActiveTab("tasks");
   }, []);
 
+  const handleRandomTask = useCallback(() => {
+    const uncompleted = tasks.filter((t) => !savedProgress[t.id]);
+    const pool = uncompleted.length > 0 ? uncompleted : tasks;
+    const randomTask = pool[Math.floor(Math.random() * pool.length)];
+    handleSelectTask(randomTask);
+  }, [savedProgress, handleSelectTask]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -688,6 +695,15 @@ export function useTrainerState() {
         }
       }
 
+      if ((e.key === "r" || e.key === "R" || e.key === "к" || e.key === "К") && !e.ctrlKey && !e.metaKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        if (activeTab === "tasks") {
+          e.preventDefault();
+          handleRandomTask();
+        }
+      }
+
       if (activeTab === "tasks" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         const target = e.target as HTMLElement;
         if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
@@ -704,7 +720,7 @@ export function useTrainerState() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask, handleShowHint, handleFillAllEc]);
+  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask, handleShowHint, handleFillAllEc, handleRandomTask]);
 
   return {
     // State
@@ -747,6 +763,7 @@ export function useTrainerState() {
     handleExportProgress,
     handleImportProgress,
     handleBackToTasks,
+    handleRandomTask,
     handleShowHint,
     handleFillAllEc,
     handleFillAllBv,

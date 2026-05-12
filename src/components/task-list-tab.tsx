@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Shuffle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/task-card";
@@ -29,6 +29,7 @@ interface TaskListTabProps {
   onDifficultyFilterChange: (d: DifficultyFilter) => void;
   onSortModeChange: (s: SortMode) => void;
   onSelectTask: (task: Task) => void;
+  onRandomTask: () => void;
 }
 
 export function TaskListTab({
@@ -43,6 +44,7 @@ export function TaskListTab({
   onDifficultyFilterChange,
   onSortModeChange,
   onSelectTask,
+  onRandomTask,
 }: TaskListTabProps) {
   return (
     <motion.div
@@ -109,6 +111,17 @@ export function TaskListTab({
         <div className="text-xs text-muted-foreground ml-auto">
           {filteredTasks.length}/{tasks.length} заданий
         </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs h-7 px-2.5 gap-1"
+          onClick={onRandomTask}
+          title="Выбрать случайное задание"
+        >
+          <Shuffle className="h-3 w-3" />
+          <span className="hidden sm:inline">Случайное</span>
+        </Button>
       </div>
 
       {/* Task grid */}

@@ -7,9 +7,6 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  experimental: {
-    turbopack: false,
-  },
 };
 
 export default nextConfig;
