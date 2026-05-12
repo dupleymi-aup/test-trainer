@@ -1,0 +1,15 @@
+# Dummy workflow to prevent other workflows from running on forks
+# This file exists to block automated CI/CD in forked repositories
+name: Disable CI for Forks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  skip-for-forks:
+    if: github.event.pull_request.head.repo.fork == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip workflow for forks
+        run: echo "Skipping CI for forked repository"
