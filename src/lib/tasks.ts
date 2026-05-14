@@ -234,6 +234,23 @@ export const referenceFunctions: Record<
   11: (args: unknown[]) => validatePhone(args[0] as string),
   12: (args: unknown[]) => calculateBMI(args[0] as number, args[1] as number),
   13: (args: unknown[]) => parseNumber(args[0] as string),
+  14: (args: unknown[]) => {
+    const arr = args[0] as unknown[];
+    if (!Array.isArray(arr)) throw new Error("Аргумент должен быть массивом");
+    const flatten = (a: unknown[]): unknown[] => a.reduce((acc: unknown[], v) => acc.concat(Array.isArray(v) ? flatten(v) : [v]), []);
+    return flatten(arr);
+  },
+  15: (args: unknown[]) => {
+    const n = args[0] as number;
+    if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
+    if (n < 0) throw new Error("Фибоначчи не определён для отрицательных чисел");
+    if (n > 75) throw new Error("Переполнение: n > 75");
+    if (n === 0) return 0;
+    if (n === 1) return 1;
+    let a = 0, b = 1;
+    for (let i = 2; i <= n; i++) { const t = a + b; a = b; b = t; }
+    return b;
+  },
 };
 
 export const tasks: Task[] = [
@@ -1112,6 +1129,89 @@ export const tasks: Task[] = [
       { value: "", description: "Пустая строка (NaN)" },
       { value: "   ", description: "Только пробелы (NaN)" },
       { value: "abc", description: "Не число (NaN)" },
+    ],
+  },
+  {
+    id: 14,
+    name: "Распаковка массива",
+    difficulty: "Средне",
+    description:
+      "Рекурсивно распаковывает вложенный массив в плоский. Каждый элемент, который является массивом, раскрывается на всех уровнях вложенности.",
+    signature: "flattenArray(arr: unknown[]): unknown[]",
+    topics: ["Классы эквивалентности", "Граничные значения", "Рекурсия"],
+    params: [
+      { name: "arr", type: "array", description: "Вложенный массив" },
+    ],
+    returnType: "unknown[]",
+    code: `function flattenArray(arr: unknown[]): unknown[] {
+  const flatten = (a: unknown[]): unknown[] =>
+    a.reduce(
+      (acc, v) => acc.concat(Array.isArray(v) ? flatten(v) : [v]),
+      []
+    );
+  return flatten(arr);
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: Пустой массив", description: "Пустой массив", exampleValues: [[]] },
+      { id: "ec2", name: "EC2: Плоский массив", description: "Массив без вложенности", exampleValues: [[1, 2, 3], ["a", "b"]] },
+      { id: "ec3", name: "EC3: Один уровень вложенности", description: "Массив с элементами-массивами", exampleValues: [[[1, 2], [3, 4]], ["a", ["b"]]] },
+      { id: "ec4", name: "EC4: Глубокая вложенность", description: "Массив с 3+ уровнями вложенности", exampleValues: [[[1, [2]], 3]] },
+      { id: "ec5", name: "EC5: Массив с null/undefined", description: "Содержит null и undefined", exampleValues: [[1, null, undefined, 2]] },
+      { id: "ec6", name: "EC6: Массив с разными типами", description: "Числа, строки, булевы, объекты", exampleValues: [[1, "a", true, { x: 1 }]] },
+      { id: "ec7", name: "EC7: Недопустимый тип", description: "Аргумент не является массивом", exampleValues: ["not array", 42, null] },
+    ],
+    boundaryValues: [
+      { value: [], description: "Пустой массив (нижняя граница)" },
+      { value: [1], description: "Один элемент" },
+      { value: [[]], description: "Массив с пустым массивом" },
+      { value: [1, [2, [3, [4]]]], description: "4 уровня вложенности" },
+      { value: [null], description: "Массив с null" },
+      { value: [undefined], description: "Массив с undefined" },
+    ],
+  },
+  {
+    id: 15,
+    name: "Число Фибоначчи",
+    difficulty: "Легко",
+    description:
+      "Вычисляет n-е число Фибоначчи. F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2). Для отрицательных чисел и n>75 выбрасывается ошибка.",
+    signature: "fibonacci(n: number): number",
+    topics: ["Классы эквивалентности", "Граничные значения", "Рекурсия"],
+    params: [
+      { name: "n", type: "number", description: "Индекс числа Фибоначчи (0–75)" },
+    ],
+    returnType: "number",
+    code: `function fibonacci(n: number): number {
+  if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
+  if (n < 0) throw new Error("Фибоначчи не определён для отрицательных чисел");
+  if (n > 75) throw new Error("Переполнение: n > 75");
+  if (n === 0) return 0;
+  if (n === 1) return 1;
+  let a = 0, b = 1;
+  for (let i = 2; i <= n; i++) {
+    const t = a + b;
+    a = b;
+    b = t;
+  }
+  return b;
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: F(0)", description: "Нулевое число Фибоначчи", exampleValues: [0] },
+      { id: "ec2", name: "EC2: F(1)", description: "Первое число Фибоначчи", exampleValues: [1] },
+      { id: "ec3", name: "EC3: Обычное значение", description: "Число в диапазоне 2–74", exampleValues: [5, 10, 50] },
+      { id: "ec4", name: "EC4: Максимальное значение", description: "Максимальный допустимый индекс (75)", exampleValues: [75] },
+      { id: "ec5", name: "EC5: Отрицательное число", description: "Отрицательный индекс", exampleValues: [-1, -10] },
+      { id: "ec6", name: "EC6: Больше максимума", description: "Индекс больше 75", exampleValues: [76, 100] },
+      { id: "ec7", name: "EC7: Не целое число", description: "Дробное число", exampleValues: [3.5, 2.1] },
+    ],
+    boundaryValues: [
+      { value: 0, description: "Нижняя граница: n=0" },
+      { value: 1, description: "n=1 (базовый случай)" },
+      { value: 2, description: "Первое вычисляемое значение" },
+      { value: 75, description: "Верхняя граница: n=75" },
+      { value: 76, description: "За верхней границей" },
+      { value: -1, description: "Ниже нижней границы" },
+      { value: 0.5, description: "Нецелое число" },
     ],
   },
 ];

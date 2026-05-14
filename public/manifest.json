@@ -1,0 +1,23 @@
+{
+  "name": "Тренажёр тестирования",
+  "short_name": "TestTrainer",
+  "description": "Тренажёр методов тестирования — классы эквивалентности, граничные значения",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

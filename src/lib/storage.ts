@@ -5,6 +5,29 @@ const SESSION_PREFIX = "test-trainer-session-";
 const HISTORY_KEY = "test-trainer-history";
 const STREAK_KEY = "test-trainer-streak";
 const NOTE_PREFIX = "test-trainer-note-";
+const GLOBAL_NOTES_KEY = "test-trainer-global-notes";
+
+/**
+ * Сохраняет глобальные заметки
+ */
+export function saveGlobalNotes(content: string): void {
+  try {
+    localStorage.setItem(GLOBAL_NOTES_KEY, content);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Загружает глобальные заметки
+ */
+export function loadGlobalNotes(): string {
+  try {
+    return localStorage.getItem(GLOBAL_NOTES_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 
 export interface StreakData {
   currentStreak: number;

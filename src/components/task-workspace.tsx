@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -18,11 +19,14 @@ import {
   CheckCircle2,
   XCircle,
   ChevronRight,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import type { Task } from "@/lib/tasks";
 import { saveTaskNote, loadTaskNote } from "@/lib/storage";
 import type { TestCase } from "@/lib/evaluator";
 import { evaluateTestCases } from "@/lib/evaluator";
+import { MarkdownPreview } from "@/components/markdown-preview";
 
 interface TaskWorkspaceProps {
   task: Task;
@@ -92,6 +96,7 @@ export function TaskWorkspace({ task, testCases }: TaskWorkspaceProps) {
 function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState(() => loadTaskNote(task.id));
+  const [noteViewMode, setNoteViewMode] = useState(false);
   const [expandedEcs, setExpandedEcs] = useState<Set<string>>(new Set());
   const [expandedBvs, setExpandedBvs] = useState<Set<number>>(new Set());
 
@@ -362,20 +367,61 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
           </button>
           {notesOpen && (
             <div className="px-4 pb-4 space-y-2">
-              <Textarea
-                value={note}
-                onChange={(e) => {
-                  if (e.target.value.length <= maxNoteLength) {
-                    setNote(e.target.value);
-                  }
-                }}
-                onBlur={handleBlur}
-                placeholder="Запишите свои мысли, идеи или наблюдения по этому заданию..."
-                className="min-h-[100px] text-sm resize-y"
-              />
-              <div className="text-right text-[10px] text-muted-foreground">
-                {note.length}/{maxNoteLength}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant={noteViewMode ? "default" : "outline"}
+                    size="sm"
+                    className={`text-xs gap-1 h-6 px-2 ${noteViewMode ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+                    onClick={() => setNoteViewMode(true)}
+                    title="Режим просмотра"
+                  >
+                    <Eye className="h-3 w-3" />
+                    Просмотр
+                  </Button>
+                  <Button
+                    variant={!noteViewMode ? "default" : "outline"}
+                    size="sm"
+                    className={`text-xs gap-1 h-6 px-2 ${!noteViewMode ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+                    onClick={() => setNoteViewMode(false)}
+                    title="Режим редактирования"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Редактирование
+                  </Button>
+                </div>
               </div>
+
+              {noteViewMode ? (
+                note.length > 0 ? (
+                  <div className="p-3 bg-muted/30 rounded-lg min-h-[100px]">
+                    <MarkdownPreview text={note} />
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    Заметка пуста. Переключитесь в режим редактирования.
+                  </p>
+                )
+              ) : (
+                <>
+                  <Textarea
+                    value={note}
+                    onChange={(e) => {
+                      if (e.target.value.length <= maxNoteLength) {
+                        setNote(e.target.value);
+                      }
+                    }}
+                    onBlur={handleBlur}
+                    placeholder="Запишите свои мысли, идеи или наблюдения по этому заданию...
+
+Поддерживается **жирный**, *курсив*, `код`, - списки"
+                    className="min-h-[100px] text-sm resize-y font-mono text-xs"
+                  />
+                  <div className="text-right text-[10px] text-muted-foreground">
+                    {note.length}/{maxNoteLength}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </Card>

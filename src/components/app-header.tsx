@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { Beaker, Sun, Moon, HelpCircle, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
+import { GlobalNotesDialog } from "@/components/global-notes-dialog";
 
 interface AppHeaderProps {
   streak: { currentStreak: number };
@@ -55,6 +56,7 @@ export function AppHeader({ streak, onShowShortcuts }: AppHeaderProps) {
                 </span>
               </div>
             )}
+            <GlobalNotesDialog />
             <Button
               variant="ghost"
               size="icon"
