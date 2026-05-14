@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -86,28 +86,27 @@ function highlightCode(code: string): React.ReactNode {
 }
 
 export function TaskWorkspace({ task, testCases }: TaskWorkspaceProps) {
+  return <TaskWorkspaceInner key={task.id} task={task} testCases={testCases} />;
+}
+
+function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState(() => loadTaskNote(task.id));
-  const [taskNoteId, setTaskNoteId] = useState(task.id);
   const [expandedEcs, setExpandedEcs] = useState<Set<string>>(new Set());
   const [expandedBvs, setExpandedBvs] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    if (taskNoteId !== task.id) {
-      setTaskNoteId(task.id);
-      setNote(loadTaskNote(task.id));
-    }
-  }, [task.id, taskNoteId]);
 
   const handleBlur = () => {
     saveTaskNote(task.id, note);
   };
 
-  // Live coverage computation
+  // Defer expensive coverage computation to keep UI responsive during rapid test case changes
+  const deferredTestCases = useDeferredValue(testCases);
+
+  // Live coverage computation (deferred)
   const coverage = useMemo(() => {
-    if (!testCases || testCases.length === 0) return null;
-    return evaluateTestCases(task, testCases);
-  }, [task, testCases]);
+    if (!deferredTestCases || deferredTestCases.length === 0) return null;
+    return evaluateTestCases(task, deferredTestCases);
+  }, [task, deferredTestCases]);
 
   const toggleEc = (id: string) => {
     setExpandedEcs((prev) => {

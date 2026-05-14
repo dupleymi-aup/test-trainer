@@ -104,12 +104,13 @@ function matchBoundaryValue(
 function findCoveredEquivalenceClasses(
   taskId: number,
   inputs: unknown[],
-  task: Task
+  task: Task,
+  fnResult: unknown,
+  fnError: string | null
 ): string[] {
   const covered: string[] = [];
 
-  // Run the function to see the result
-  const { result, error } = runReferenceFunction(taskId, inputs);
+  // Use the cached result instead of calling runReferenceFunction again
 
   for (const ec of task.equivalenceClasses) {
     // Check if any example value matches
@@ -137,7 +138,7 @@ function findCoveredEquivalenceClasses(
   }
 
   // Heuristic: also check by error / result matching
-  if (error) {
+  if (fnError) {
     // Check if error matches EC descriptions
     for (const ec of task.equivalenceClasses) {
       if (covered.includes(ec.id)) continue;
@@ -154,7 +155,7 @@ function findCoveredEquivalenceClasses(
           (desc.includes("отрицательн") && inputs[0] !== undefined && Number(inputs[0]) < 0) ||
           (desc.includes("не число") && !Number.isInteger(inputs[0]) && typeof inputs[0] !== "number") ||
           (desc.includes("переполнен") && Number(inputs[0]) > 20) ||
-          (desc.includes("превышает") && Number(inputs[1]) > 100) ||
+          (desc.includes("превышает") && Number(inputs[1]) !== undefined && Number(inputs[1]) > 100) ||
           (desc.includes("отрицательн") && Number(inputs[1]) !== undefined && Number(inputs[1]) < 0)
         ) {
           covered.push(ec.id);
@@ -185,13 +186,13 @@ function findCoveredEquivalenceClasses(
       if (ec.id === "ec2" && Number(inputs[0]) === 2) covered.push(ec.id);
       if (
         ec.id === "ec3" &&
-        result === true &&
+        fnResult === true &&
         Number(inputs[0]) > 2
       )
         covered.push(ec.id);
       if (
         ec.id === "ec4" &&
-        result === false &&
+        fnResult === false &&
         Number(inputs[0]) > 1
       )
         covered.push(ec.id);
@@ -202,28 +203,28 @@ function findCoveredEquivalenceClasses(
       const price = Number(inputs[0]);
       const discount = Number(inputs[1]);
 
-      if (ec.id === "ec1" && !error && discount === 0 && price > 0) {
+      if (ec.id === "ec1" && !fnError && discount === 0 && price > 0) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec2" && !error && discount > 0 && discount < 100 && price > 0) {
+      if (ec.id === "ec2" && !fnError && discount > 0 && discount < 100 && price > 0) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec3" && !error && discount === 100 && price > 0) {
+      if (ec.id === "ec3" && !fnError && discount === 100 && price > 0) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec4" && !error && price === 0) {
+      if (ec.id === "ec4" && !fnError && price === 0) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec5" && error && typeof price === "number" && !isNaN(price) && price < 0) {
+      if (ec.id === "ec5" && fnError && typeof price === "number" && !isNaN(price) && price < 0) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec6" && error && typeof discount === "number" && !isNaN(discount) && discount < 0) {
+      if (ec.id === "ec6" && fnError && typeof discount === "number" && !isNaN(discount) && discount < 0) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec7" && error && typeof discount === "number" && !isNaN(discount) && discount > 100) {
+      if (ec.id === "ec7" && fnError && typeof discount === "number" && !isNaN(discount) && discount > 100) {
         covered.push(ec.id);
       }
-      if (ec.id === "ec8" && error && (typeof inputs[0] !== "number" || typeof inputs[1] !== "number")) {
+      if (ec.id === "ec8" && fnError && (typeof inputs[0] !== "number" || typeof inputs[1] !== "number")) {
         covered.push(ec.id);
       }
     }
@@ -258,35 +259,35 @@ function findCoveredEquivalenceClasses(
       // triangle
       if (
         ec.id === "ec1" &&
-        result === "равносторонний"
+        fnResult === "равносторонний"
       )
         covered.push(ec.id);
       if (
         ec.id === "ec2" &&
-        result === "равнобедренный"
+        fnResult === "равнобедренный"
       )
         covered.push(ec.id);
       if (
         ec.id === "ec3" &&
-        result === "разносторонний"
+        fnResult === "разносторонний"
       )
         covered.push(ec.id);
       if (
         ec.id === "ec4" &&
-        result === "не треугольник" &&
-        !error
+        fnResult === "не треугольник" &&
+        !fnError
       )
         covered.push(ec.id);
       if (
         ec.id === "ec5" &&
-        error &&
+        fnError &&
         (inputs as number[]).some(v => typeof v === "number" && v <= 0)
       )
         covered.push(ec.id);
       if (
         ec.id === "ec6" &&
-        result === "не треугольник" &&
-        !error
+        fnResult === "не треугольник" &&
+        !fnError
       ) {
         const [a, b, c] = inputs as number[];
         if (a + b === c || a + c === b || b + c === a)
@@ -297,12 +298,12 @@ function findCoveredEquivalenceClasses(
     if (taskId === 6) {
       // validatePassword — match ECs by specific error presence
       if (
-        result &&
-        typeof result === "object" &&
-        "valid" in result &&
-        "errors" in result
+        fnResult &&
+        typeof fnResult === "object" &&
+        "valid" in fnResult &&
+        "errors" in fnResult
       ) {
-        const res = result as { valid: boolean; errors: string[] };
+        const res = fnResult as { valid: boolean; errors: string[] };
         const errors = res.errors;
         const inputStr = String(inputs[0]);
 
@@ -330,10 +331,10 @@ function findCoveredEquivalenceClasses(
         if (ec.id === "ec8" && inputStr === "") {
           covered.push(ec.id);
         }
-        if (ec.id === "ec9" && error) {
+        if (ec.id === "ec9" && fnError) {
           covered.push(ec.id);
         }
-      } else if (ec.id === "ec9" && error) {
+      } else if (ec.id === "ec9" && fnError) {
         covered.push(ec.id);
       }
     }
@@ -346,17 +347,17 @@ function findCoveredEquivalenceClasses(
 
       if (ec.id === "ec1" && isPalin && /^[a-z]+$/.test(cleaned)) covered.push(ec.id);
       if (ec.id === "ec2" && isPalin && /[а-яё]/i.test(cleaned)) covered.push(ec.id);
-      if (ec.id === "ec3" && !isPalin && !error) covered.push(ec.id);
+      if (ec.id === "ec3" && !isPalin && !fnError) covered.push(ec.id);
       if (ec.id === "ec4" && isPalin && /[a-zа-яё0-9]/i.test(inputStr) && (inputStr.includes(" ") || /[^a-zа-яё0-9]/i.test(inputStr))) covered.push(ec.id);
-      if (ec.id === "ec5" && inputStr.trim() === "" && !error) covered.push(ec.id);
-      if (ec.id === "ec6" && !error && inputStr.trim().length === 1) covered.push(ec.id);
-      if (ec.id === "ec7" && error) covered.push(ec.id);
+      if (ec.id === "ec5" && inputStr.trim() === "" && !fnError) covered.push(ec.id);
+      if (ec.id === "ec6" && !fnError && inputStr.trim().length === 1) covered.push(ec.id);
+      if (ec.id === "ec7" && fnError) covered.push(ec.id);
     }
 
     if (taskId === 8) {
       // validateEmail
-      if (result && typeof result === "object" && "valid" in result && "errors" in result) {
-        const res = result as { valid: boolean; errors: string[] };
+      if (fnResult && typeof fnResult === "object" && "valid" in fnResult && "errors" in fnResult) {
+        const res = fnResult as { valid: boolean; errors: string[] };
         const errors = res.errors;
         const inputStr = String(inputs[0]);
 
@@ -370,8 +371,8 @@ function findCoveredEquivalenceClasses(
         if (ec.id === "ec8" && errors.some(e => e.includes("слишком короткий"))) covered.push(ec.id);
         if (ec.id === "ec9" && errors.some(e => e.includes("слишком длинный"))) covered.push(ec.id);
         if (ec.id === "ec10" && inputStr === "" && errors.length > 0) covered.push(ec.id);
-        if (ec.id === "ec11" && error) covered.push(ec.id);
-      } else if (ec.id === "ec11" && error) {
+        if (ec.id === "ec11" && fnError) covered.push(ec.id);
+      } else if (ec.id === "ec11" && fnError) {
         covered.push(ec.id);
       }
     }
@@ -380,20 +381,20 @@ function findCoveredEquivalenceClasses(
       // toRoman
       const n = Number(inputs[0]);
 
-      if (ec.id === "ec1" && !error && n === 1) covered.push(ec.id);
-      if (ec.id === "ec2" && !error && n >= 2 && n <= 3998) covered.push(ec.id);
-      if (ec.id === "ec3" && !error && n === 3999) covered.push(ec.id);
-      if (ec.id === "ec4" && error && n < 1) covered.push(ec.id);
-      if (ec.id === "ec5" && error && n > 3999) covered.push(ec.id);
-      if (ec.id === "ec6" && error && !Number.isInteger(n)) covered.push(ec.id);
+      if (ec.id === "ec1" && !fnError && n === 1) covered.push(ec.id);
+      if (ec.id === "ec2" && !fnError && n >= 2 && n <= 3998) covered.push(ec.id);
+      if (ec.id === "ec3" && !fnError && n === 3999) covered.push(ec.id);
+      if (ec.id === "ec4" && fnError && n < 1) covered.push(ec.id);
+      if (ec.id === "ec5" && fnError && n > 3999) covered.push(ec.id);
+      if (ec.id === "ec6" && fnError && !Number.isInteger(n)) covered.push(ec.id);
     }
 
     if (taskId === 10) {
       // isValidDate
-      if (error) {
+      if (fnError) {
         if (ec.id === "ec8") covered.push(ec.id);
-      } else if (result !== undefined) {
-        const isValid = result === true;
+      } else if (fnResult !== undefined) {
+        const isValid = fnResult === true;
         const day = Number(inputs[0]);
         const month = Number(inputs[1]);
         const year = Number(inputs[2]);
@@ -412,10 +413,10 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 11) {
       // validatePhone
-      if (error) {
+      if (fnError) {
         if (ec.id === "ec8") covered.push(ec.id);
-      } else if (result && typeof result === "object" && "valid" in result && "errors" in result) {
-        const res = result as { valid: boolean; errors: string[] };
+      } else if (fnResult && typeof fnResult === "object" && "valid" in fnResult && "errors" in fnResult) {
+        const res = fnResult as { valid: boolean; errors: string[] };
         const errors = res.errors;
         const inputStr = String(inputs[0]);
         const digits = inputStr.replace(/\D/g, "");
@@ -432,15 +433,15 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 12) {
       // calculateBMI
-      if (error) {
+      if (fnError) {
         const inputStr = String(inputs[0]);
-        if (ec.id === "ec9" && error) covered.push(ec.id);
-        if (ec.id === "ec5" && error && Number(inputs[0]) < 20) covered.push(ec.id);
-        if (ec.id === "ec6" && error && Number(inputs[0]) > 300) covered.push(ec.id);
-        if (ec.id === "ec7" && error && Number(inputs[1]) < 50) covered.push(ec.id);
-        if (ec.id === "ec8" && error && Number(inputs[1]) > 250) covered.push(ec.id);
-      } else if (result && typeof result === "object" && "category" in result) {
-        const res = result as { category: string };
+        if (ec.id === "ec9" && fnError) covered.push(ec.id);
+        if (ec.id === "ec5" && fnError && Number(inputs[0]) < 20) covered.push(ec.id);
+        if (ec.id === "ec6" && fnError && Number(inputs[0]) > 300) covered.push(ec.id);
+        if (ec.id === "ec7" && fnError && Number(inputs[1]) < 50) covered.push(ec.id);
+        if (ec.id === "ec8" && fnError && Number(inputs[1]) > 250) covered.push(ec.id);
+      } else if (fnResult && typeof fnResult === "object" && "category" in fnResult) {
+        const res = fnResult as { category: string };
         if (ec.id === "ec1" && res.category === "Недостаточный вес") covered.push(ec.id);
         if (ec.id === "ec2" && res.category === "Норма") covered.push(ec.id);
         if (ec.id === "ec3" && res.category === "Избыточный вес") covered.push(ec.id);
@@ -450,10 +451,10 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 13) {
       // parseNumber
-      if (error) {
+      if (fnError) {
         if (ec.id === "ec7") covered.push(ec.id);
       } else {
-        const numResult = result as number;
+        const numResult = fnResult as number;
         const inputStr = String(inputs[0]).trim();
         const isNaNResult = isNaN(numResult);
 
@@ -564,11 +565,13 @@ export function evaluateTestCases(
     // Compare expected with actual
     const isCorrect = compareOutputs(tc.expectedOutput, error ? `Ошибка: ${error}` : result);
 
-    // Find covered ECs
+    // Find covered ECs - pass cached result to avoid duplicate runReferenceFunction call
     const coveredClasses = findCoveredEquivalenceClasses(
       task.id,
       parsedInputs,
-      task
+      task,
+      result,
+      error
     );
     coveredClasses.forEach((id) => allCoveredEcs.add(id));
 

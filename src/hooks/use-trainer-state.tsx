@@ -65,6 +65,8 @@ export function useTrainerState() {
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>("Все");
   const [sortMode, setSortMode] = useState<SortMode>("По номеру");
   const [searchQuery, setSearchQuery] = useState("");
+  const [taskStartTime, setTaskStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   // Undo/Redo
   const undoStackRef = useRef(new UndoStack<TestCase[]>());
@@ -145,6 +147,8 @@ export function useTrainerState() {
       setSelectedTask(task);
       setEvaluationResult(null);
       setActiveTab("trainer");
+      setTaskStartTime(Date.now());
+      setElapsedTime(0);
 
       const savedSession = loadCurrentSession(task.id);
       if (savedSession && savedSession.length > 0) {
@@ -495,6 +499,8 @@ export function useTrainerState() {
       correctnessScore: result.correctnessScore,
       timestamp: Date.now(),
       testCasesCount: testCases.length,
+      coveredEcIds: result.coveredEcIds,
+      coveredBvDescriptions: result.coveredBvDescriptions,
     });
     setAttemptHistory(loadAttemptHistory());
 
@@ -643,6 +649,14 @@ export function useTrainerState() {
 
   // Keyboard shortcuts
   useEffect(() => {
+    if (!taskStartTime || activeTab !== "trainer") return;
+    const interval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - taskStartTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [taskStartTime, activeTab]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
@@ -741,6 +755,7 @@ export function useTrainerState() {
     completedCount,
     taskBestCoverage,
     filteredTasks,
+    elapsedTime,
     // Setters
     setActiveTab,
     setResetDialogOpen,

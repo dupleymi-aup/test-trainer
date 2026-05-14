@@ -25,6 +25,7 @@ import {
   Check,
   Printer,
   Download,
+  Lightbulb,
 } from "lucide-react";
 import {
   Tooltip,
@@ -32,10 +33,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import React from "react";
 import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
 import { categoryColors } from "@/lib/constants";
+import { getTaskHistory } from "@/lib/storage";
 
 interface ResultsPanelProps {
   result: EvaluationResult | null;
@@ -153,8 +156,42 @@ function formatResultsAsText(result: EvaluationResult): string {
   return lines.join("\n");
 }
 
-export function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) {
+export const ResultsPanel = React.memo(function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) {
   const [copied, setCopied] = useState(false);
+
+  const grade = getGrade(result.overallScore);
+
+  // Compare with best previous attempt
+  const comparison = useMemo(() => {
+    const history = getTaskHistory(result.task.id);
+    if (history.length <= 1) return null;
+    const bestPrev = history
+      .filter((h) => (h.coveredEcIds && h.coveredEcIds.length > 0) || (h.coveredBvDescriptions && h.coveredBvDescriptions.length > 0))
+      .sort((a, b) => b.score - a.score)[0];
+    if (!bestPrev) return null;
+
+    const bestEcIds = new Set(bestPrev.coveredEcIds ?? []);
+    const bestBvDesc = new Set(bestPrev.coveredBvDescriptions ?? []);
+    const currentEcIds = new Set(result.coveredEcIds);
+    const currentBvDesc = new Set(result.coveredBvDescriptions);
+
+    const lostEc = [...bestEcIds].filter((id) => !currentEcIds.has(id));
+    const lostBv = [...bestBvDesc].filter((desc) => !currentBvDesc.has(desc));
+    const gainedEc = [...currentEcIds].filter((id) => !bestEcIds.has(id));
+    const gainedBv = [...currentBvDesc].filter((desc) => !bestBvDesc.has(desc));
+
+    if (lostEc.length === 0 && lostBv.length === 0 && gainedEc.length === 0 && gainedBv.length === 0) return null;
+
+    return {
+      bestScore: bestPrev.score,
+      bestEc: bestPrev.ecCoverage,
+      bestBv: bestPrev.bvCoverage,
+      lostEc,
+      lostBv,
+      gainedEc,
+      gainedBv,
+    };
+  }, [result]);
 
   const handleExportCsv = () => {
     if (!result) return;
@@ -209,8 +246,6 @@ export function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) 
       </Card>
     );
   }
-
-  const grade = getGrade(result.overallScore);
 
   return (
     <motion.div
@@ -513,29 +548,142 @@ export function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) 
 
       {/* Hints for improvement */}
       {(result.uncoveredEcIds.length > 0 || result.uncoveredBvDescriptions.length > 0) && (
-        <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-          <ArrowRight className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-sm">
-            <strong>Рекомендации:</strong>
-            <ul className="mt-1 list-disc list-inside space-y-0.5 text-xs">
-              {result.uncoveredEcIds.length > 0 && (
-                <li>
-                  Покройте непокрытые классы эквивалентности:{" "}
-                  {result.uncoveredEcIds.map((id) => {
-                    const ec = result.task.equivalenceClasses.find((e) => e.id === id);
-                    return ec?.name;
-                  }).filter(Boolean).join(", ")}
-                </li>
-              )}
-              {result.uncoveredBvDescriptions.length > 0 && (
-                <li>
-                  Протестируйте граничные значения:{" "}
-                  {result.uncoveredBvDescriptions.join(", ")}
-                </li>
-              )}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-amber-600" />
+              Рекомендации по улучшению
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {result.uncoveredEcIds.map((id) => {
+              const ec = result.task.equivalenceClasses.find((e) => e.id === id);
+              if (!ec) return null;
+              const example = ec.exampleValues[0];
+              return (
+                <div key={id} className="flex items-start justify-between gap-2 p-2 rounded bg-white/60 dark:bg-zinc-900/30">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                      Добавьте тест для {ec.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{ec.description}</p>
+                    {example !== undefined && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Пример входа: <code className="bg-muted px-1 py-0.5 rounded font-mono">{String(example)}</code>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {result.uncoveredBvDescriptions.map((desc) => {
+              const bv = result.task.boundaryValues.find((b) => b.description === desc);
+              if (!bv) return null;
+              return (
+                <div key={desc} className="flex items-start justify-between gap-2 p-2 rounded bg-white/60 dark:bg-zinc-900/30">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
+                      Протестируйте граничное значение
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{desc}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Значение: <code className="bg-muted px-1 py-0.5 rounded font-mono">
+                        {Array.isArray(bv.value) ? `[${bv.value.join(", ")}]` : String(bv.value)}
+                      </code>
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Comparison with best attempt */}
+      {comparison && (
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+              Сравнение с лучшей попыткой
+              <Badge variant="secondary" className="ml-auto text-xs">
+                Лучший: {comparison.bestScore}%
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <p className="text-muted-foreground mb-1">Классы эквивалентности</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Было:</span>
+                  <span className="font-bold text-amber-600">{comparison.bestEc}%</span>
+                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  <span className={`font-bold ${result.ecCoverage >= comparison.bestEc ? "text-emerald-600" : "text-rose-600"}`}>
+                    {result.ecCoverage}%
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">Граничные значения</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Было:</span>
+                  <span className="font-bold text-amber-600">{comparison.bestBv}%</span>
+                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  <span className={`font-bold ${result.boundaryCoverage >= comparison.bestBv ? "text-emerald-600" : "text-rose-600"}`}>
+                    {result.boundaryCoverage}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {(comparison.lostEc.length > 0 || comparison.lostBv.length > 0) && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                  Потеряно покрытия:
+                </p>
+                {comparison.lostEc.map((id) => {
+                  const ec = result.task.equivalenceClasses.find((e) => e.id === id);
+                  return ec ? (
+                    <div key={id} className="text-[11px] text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
+                      <XCircle className="h-3 w-3 mt-px shrink-0" />
+                      <span>EC: {ec.name}</span>
+                    </div>
+                  ) : null;
+                })}
+                {comparison.lostBv.map((desc) => (
+                  <div key={desc} className="text-[11px] text-rose-700 dark:text-rose-300 flex items-start gap-1.5">
+                    <XCircle className="h-3 w-3 mt-px shrink-0" />
+                    <span>BV: {desc}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {(comparison.gainedEc.length > 0 || comparison.gainedBv.length > 0) && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  Новое покрытие:
+                </p>
+                {comparison.gainedEc.map((id) => {
+                  const ec = result.task.equivalenceClasses.find((e) => e.id === id);
+                  return ec ? (
+                    <div key={id} className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
+                      <CheckCircle2 className="h-3 w-3 mt-px shrink-0" />
+                      <span>EC: {ec.name}</span>
+                    </div>
+                  ) : null;
+                })}
+                {comparison.gainedBv.map((desc) => (
+                  <div key={desc} className="text-[11px] text-emerald-700 dark:text-emerald-300 flex items-start gap-1.5">
+                    <CheckCircle2 className="h-3 w-3 mt-px shrink-0" />
+                    <span>BV: {desc}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Reset button */}
@@ -550,4 +698,4 @@ export function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) 
       </div>
     </motion.div>
   );
-}
+});

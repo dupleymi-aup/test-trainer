@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2 } from "lucide-react";
+import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2, Download } from "lucide-react";
 import { Confetti } from "./confetti";
 import { tasks, runReferenceFunction } from "@/lib/tasks";
 import type { Task } from "@/lib/tasks";
@@ -32,6 +32,46 @@ import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
 
 type ExamState = "setup" | "running" | "results";
+
+const EXAM_STORAGE_KEY = "exam-session";
+
+interface ExamSessionData {
+  examState: ExamState;
+  selectedTasks: number[];
+  timeLimit: number;
+  timeRemaining: number;
+  currentTaskIndex: number;
+  examTasks: Task[];
+  examTestCases: Record<number, TestCase[]>;
+  examResults: EvaluationResult[];
+  practiceMode: boolean;
+}
+
+function saveExamSession(data: ExamSessionData) {
+  try {
+    sessionStorage.setItem(EXAM_STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore — sessionStorage may be unavailable
+  }
+}
+
+function loadExamSession(): ExamSessionData | null {
+  try {
+    const raw = sessionStorage.getItem(EXAM_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ExamSessionData;
+  } catch {
+    return null;
+  }
+}
+
+function clearExamSession() {
+  try {
+    sessionStorage.removeItem(EXAM_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 export function ExamMode() {
   const [examState, setExamState] = useState<ExamState>("setup");
@@ -49,7 +89,29 @@ export function ExamMode() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [practiceMode, setPracticeMode] = useState(false);
   const [lastPracticeResult, setLastPracticeResult] = useState<EvaluationResult | null>(null);
+  const [showCode, setShowCode] = useState(false);
   const finishExamRef = useRef<() => void>(undefined);
+
+  // Restore exam session on mount
+  useEffect(() => {
+    const session = loadExamSession();
+    if (session && session.examState === "running" && session.examTasks.length > 0) {
+      setExamState("running");
+      setSelectedTasks(session.selectedTasks);
+      setTimeLimit(session.timeLimit);
+      setTimeRemaining(session.timeRemaining);
+      setCurrentTaskIndex(session.currentTaskIndex);
+      setExamTasks(session.examTasks);
+      setExamTestCases(session.examTestCases);
+      setExamResults(session.examResults);
+      setPracticeMode(session.practiceMode);
+      const currentTask = session.examTasks[session.currentTaskIndex];
+      if (currentTask) {
+        setExamInputs(currentTask.params.map(() => ""));
+      }
+      toast.info("Сессия экзамена восстановлена");
+    }
+  }, []);
 
   const completedCount = examResults.length;
 
@@ -70,12 +132,15 @@ export function ExamMode() {
             correctnessScore: result.correctnessScore,
             timestamp: Date.now(),
             testCasesCount: tcs.length,
+            coveredEcIds: result.coveredEcIds,
+            coveredBvDescriptions: result.coveredBvDescriptions,
           });
           results.push(result);
         }
       }
     }
     setExamResults(results);
+    clearExamSession();
     setExamState("results");
     window.dispatchEvent(new Event("achievements-updated"));
     // Check confetti
@@ -92,6 +157,23 @@ export function ExamMode() {
     finishExamRef.current = finishExam;
   }, [finishExam]);
 
+  // Autosave exam session
+  useEffect(() => {
+    if (examState !== "running") return;
+    saveExamSession({
+      examState,
+      selectedTasks,
+      timeLimit,
+      timeRemaining,
+      currentTaskIndex,
+      examTasks,
+      examTestCases,
+      examResults,
+      practiceMode,
+    });
+  }, [examState, selectedTasks, timeLimit, timeRemaining, currentTaskIndex, examTasks, examTestCases, examResults, practiceMode]);
+
+  // Timer countdown
   useEffect(() => {
     if (examState !== "running") return;
     if (timeRemaining <= 0) {
@@ -186,6 +268,14 @@ export function ExamMode() {
     });
   }, [examTasks, currentTaskIndex, examInputs, parseInputForRef]);
 
+  const handleExamKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (examInputs.some((v) => v.trim() === "") || !examExpected.trim()) return;
+      addExamTestCase();
+    }
+  };
+
   const removeExamTestCase = useCallback((tcId: string) => {
     const task = examTasks[currentTaskIndex];
     if (!task) return;
@@ -216,6 +306,8 @@ export function ExamMode() {
       correctnessScore: result.correctnessScore,
       timestamp: Date.now(),
       testCasesCount: tcs.length,
+      coveredEcIds: result.coveredEcIds,
+      coveredBvDescriptions: result.coveredBvDescriptions,
     });
 
     // In practice mode, show mini result and wait for user to continue
@@ -275,6 +367,33 @@ export function ExamMode() {
   const avgScore = examResults.length > 0
     ? Math.round(examResults.reduce((s, r) => s + r.overallScore, 0) / examResults.length)
     : 0;
+
+  const exportExamResults = useCallback(() => {
+    const data = {
+      type: "exam-results",
+      timestamp: Date.now(),
+      date: new Date().toLocaleString("ru-RU"),
+      avgScore,
+      tasks: examResults.map((r) => ({
+        name: r.task.name,
+        score: r.overallScore,
+        ecCoverage: r.ecCoverage,
+        boundaryCoverage: r.boundaryCoverage,
+        correctnessScore: r.correctnessScore,
+        testCasesCount: r.results.length,
+        uncoveredEc: r.uncoveredEcIds,
+        uncoveredBv: r.uncoveredBvDescriptions,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `exam-results-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Результаты экспортированы");
+  }, [examResults, avgScore]);
 
   // Confetti trigger when entering results with avg >= 90
   const handleExamConfetti = useCallback(() => {
@@ -433,21 +552,40 @@ export function ExamMode() {
           </div>
         </div>
 
+        <div onKeyDown={handleExamKeyDown}>
         <Card>
           <CardContent className="pt-4 space-y-3">
-            <div>
-              <p className="text-sm font-medium">{task.name}</p>
-              <code className="text-xs text-muted-foreground font-mono">{task.signature}</code>
-              <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
-              {/* Show task params so user knows expected inputs */}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {task.params.map((param) => (
-                  <Badge key={param.name} variant="outline" className="text-[10px] font-mono normal-case">
-                    {param.name}: {param.type}
-                  </Badge>
-                ))}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <p className="text-sm font-medium">{task.name}</p>
+                <code className="text-xs text-muted-foreground font-mono">{task.signature}</code>
+                <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                {/* Show task params so user knows expected inputs */}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {task.params.map((param) => (
+                    <Badge key={param.name} variant="outline" className="text-[10px] font-mono normal-case">
+                      {param.name}: {param.type}
+                    </Badge>
+                  ))}
+                </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 text-xs gap-1 h-7"
+                onClick={() => setShowCode(!showCode)}
+              >
+                {showCode ? "Скрыть" : "Показать"} код
+              </Button>
             </div>
+
+            {showCode && (
+              <div className="bg-zinc-900 dark:bg-zinc-950 rounded-lg p-3 overflow-x-auto">
+                <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                  <code>{task.code}</code>
+                </pre>
+              </div>
+            )}
 
             {/* One input per param, same pattern as TestForm */}
             {task.params.map((param, idx) => (
@@ -501,6 +639,7 @@ export function ExamMode() {
                       className="h-9 w-9 shrink-0"
                       onClick={handleCalculate}
                       disabled={examInputs.some((v) => v.trim() === "") || isCalculating}
+                      aria-label="Вычислить ожидаемый результат"
                     >
                       <Calculator className={`h-4 w-4 ${isCalculating ? "animate-spin" : ""}`} />
                     </Button>
@@ -618,6 +757,7 @@ export function ExamMode() {
             )}
           </CardContent>
         </Card>
+        </div>
       </motion.div>
     );
   }
@@ -644,6 +784,10 @@ export function ExamMode() {
         <ResultsPanel key={result.task.id} result={result} onReset={() => {}} />
       ))}
       <div className="flex justify-center gap-2">
+        <Button variant="outline" onClick={exportExamResults}>
+          <Download className="h-4 w-4 mr-1" />
+          Экспорт результатов
+        </Button>
         <Button variant="outline" onClick={() => setExamState("setup")}>
           <RotateCcw className="h-4 w-4 mr-1" />
           Новый экзамен

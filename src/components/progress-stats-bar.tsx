@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { tasks } from "@/lib/tasks";
 import type { TaskProgress } from "@/lib/storage";
 import { Trophy, Download, Upload, RotateCcw } from "lucide-react";
@@ -27,7 +28,7 @@ interface ProgressStatsBarProps {
   onResetAll: () => void;
 }
 
-export function ProgressStatsBar({
+export const ProgressStatsBar = React.memo(function ProgressStatsBar({
   completedCount,
   totalTasks,
   savedProgress,
@@ -136,4 +137,4 @@ export function ProgressStatsBar({
       )}
     </div>
   );
-}
+});

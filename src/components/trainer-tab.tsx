@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskWorkspace } from "@/components/task-workspace";
 import { TestForm } from "@/components/test-form";
@@ -18,6 +18,7 @@ const pageVariants = {
 interface TrainerTabProps {
   task: TaskType;
   testCases: TestCase[];
+  elapsedTime: number;
   onBack: () => void;
   onAddTestCase: (inputs: string[], expected: string, category: TestCaseCategory, comment: string) => void;
   onRemoveTestCase: (id: string) => void;
@@ -35,6 +36,7 @@ interface TrainerTabProps {
 export function TrainerTab({
   task,
   testCases,
+  elapsedTime,
   onBack,
   onAddTestCase,
   onRemoveTestCase,
@@ -48,6 +50,12 @@ export function TrainerTab({
   onBulkRemove,
   onClearAll,
 }: TrainerTabProps) {
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
   return (
     <motion.div
       key="trainer"
@@ -57,12 +65,18 @@ export function TrainerTab({
       exit="exit"
       transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center gap-2 mb-4 sm:mb-6">
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Назад
-        </Button>
-        <h2 className="text-lg sm:text-xl font-semibold">Тренажёр: {task.name}</h2>
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Назад
+          </Button>
+          <h2 className="text-lg sm:text-xl font-semibold">Тренажёр: {task.name}</h2>
+        </div>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
+          <Clock className="h-3.5 w-3.5" />
+          <span className="font-mono">{formatTime(elapsedTime)}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

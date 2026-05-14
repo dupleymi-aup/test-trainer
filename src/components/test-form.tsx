@@ -80,6 +80,18 @@ export function TestForm({ task, onAdd }: TestFormProps) {
     });
   }, [inputs, task.id, parseInputForRef]);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Allow Ctrl+Enter or Cmd+Enter to submit from any input
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (inputs.some((v) => v.trim() === "") || !expected.trim()) return;
+      onAdd(inputs, expected.trim(), category, comment.trim());
+      setInputs(task.params.map(() => ""));
+      setExpected("");
+      setComment("");
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -89,7 +101,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="space-y-3">
           {task.params.map((param, idx) => (
             <div key={param.name} className="space-y-1">
               <Label className="text-xs font-medium">
@@ -143,6 +155,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
                     className="h-9 w-9 shrink-0"
                     onClick={handleCalculate}
                     disabled={inputs.some((v) => v.trim() === "") || isCalculating}
+                    aria-label="Вычислить ожидаемый результат"
                   >
                     <Calculator className={`h-4 w-4 ${isCalculating ? "animate-spin" : ""}`} />
                   </Button>

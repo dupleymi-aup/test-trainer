@@ -144,6 +144,8 @@ export interface AttemptRecord {
   correctnessScore: number;
   timestamp: number;
   testCasesCount: number;
+  coveredEcIds?: string[];
+  coveredBvDescriptions?: string[];
 }
 
 /**

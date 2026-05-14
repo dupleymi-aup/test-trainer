@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -29,19 +29,24 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
   const [streak] = useState<StreakData>(() => loadStreak());
   const [expandedTasks, setExpandedTasks] = useState<Set<number>>(new Set());
 
-  const taskStats = tasks.map((task) => {
-    const history = getTaskHistory(task.id);
-    const bestScore = history.reduce((max, r) => Math.max(max, r.score), 0);
-    const avgScore = history.length > 0
-      ? Math.round(history.reduce((sum, r) => sum + r.score, 0) / history.length)
-      : 0;
-    const attemptsCount = history.length;
-    const trend = history.length >= 2
-      ? history[history.length - 1].score - history[history.length - 2].score
-      : 0;
+  // Load history once and memoize task stats
+  const taskStats = useMemo(() => {
+    const allHistory = loadAttemptHistory();
+    return tasks.map((task) => {
+      const history = allHistory.filter((r) => r.taskId === task.id);
+      const bestScore = history.reduce((max, r) => Math.max(max, r.score), 0);
+      const avgScore = history.length > 0
+        ? Math.round(history.reduce((sum, r) => sum + r.score, 0) / history.length)
+        : 0;
+      const attemptsCount = history.length;
+      const trend = history.length >= 2
+        ? history[history.length - 1].score - history[history.length - 2].score
+        : 0;
+      const sparklineData = history.map((h) => h.score);
 
-    return { task, bestScore, avgScore, attempts: attemptsCount, trend };
-  });
+      return { task, bestScore, avgScore, attempts: attemptsCount, trend, history, sparklineData };
+    });
+  }, [attempts]);
 
   const totalAttempts = attempts.length;
   const avgOverallScore = totalAttempts > 0
@@ -195,23 +200,21 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
           <Target className="h-4 w-4" />
           Детализация по заданиям
         </h3>
-        {taskStats.map(({ task, bestScore, avgScore, attempts: count, trend }) => {
-          const sparklineData = getTaskHistory(task.id).map((h) => h.score);
+        {taskStats.map(({ task, bestScore, avgScore, attempts: count, trend, history, sparklineData }) => {
           const isExpanded = expandedTasks.has(task.id);
-          const taskHistory = getTaskHistory(task.id);
           return (
           <Card key={task.id}>
             <CardContent className="pt-4 pb-4">
               <button
                 onClick={() => {
-                  if (taskHistory.length === 0) return;
+                  if (history.length === 0) return;
                   const next = new Set(expandedTasks);
                   if (next.has(task.id)) next.delete(task.id);
                   else next.add(task.id);
                   setExpandedTasks(next);
                 }}
                 className="w-full"
-                disabled={taskHistory.length === 0}
+                disabled={history.length === 0}
               >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -231,7 +234,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                       {bestScore}%
                     </Badge>
                   )}
-                  {taskHistory.length > 0 && (
+                  {history.length > 0 && (
                     <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                   )}
                 </div>
@@ -263,9 +266,9 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                 </div>
               )}
               </button>
-              {isExpanded && taskHistory.length > 0 && (
+              {isExpanded && history.length > 0 && (
                 <div className="mt-3 pt-3 border-t space-y-1.5">
-                  {taskHistory.slice().reverse().map((h, i) => {
+                  {history.slice().reverse().map((h, i) => {
                     const date = new Date(h.timestamp);
                     const scoreColor = h.score >= 90
                       ? "text-emerald-600 dark:text-emerald-400"
