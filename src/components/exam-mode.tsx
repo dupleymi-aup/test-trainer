@@ -91,6 +91,22 @@ export function ExamMode() {
   const [lastPracticeResult, setLastPracticeResult] = useState<EvaluationResult | null>(null);
   const [showCode, setShowCode] = useState(false);
   const finishExamRef = useRef<() => void>(undefined);
+  const isFinishingRef = useRef(false);
+  const examResultsRef = useRef(examResults);
+  const examTasksRef = useRef(examTasks);
+  const examTestCasesRef = useRef(examTestCases);
+
+  useEffect(() => {
+    examResultsRef.current = examResults;
+  }, [examResults]);
+
+  useEffect(() => {
+    examTasksRef.current = examTasks;
+  }, [examTasks]);
+
+  useEffect(() => {
+    examTestCasesRef.current = examTestCases;
+  }, [examTestCases]);
 
   // Restore exam session on mount
   useEffect(() => {
@@ -116,14 +132,18 @@ export function ExamMode() {
   const completedCount = examResults.length;
 
   const finishExam = useCallback(() => {
-    // Submit remaining unsent tasks
-    const results = [...examResults];
-    for (const task of examTasks) {
+    if (isFinishingRef.current) return;
+    isFinishingRef.current = true;
+
+    const results = [...examResultsRef.current];
+    const currentTasks = examTasksRef.current;
+    const currentTestCases = examTestCasesRef.current;
+
+    for (const task of currentTasks) {
       if (!results.find((r) => r.task.id === task.id)) {
-        const tcs = examTestCases[task.id] || [];
+        const tcs = currentTestCases[task.id] || [];
         if (tcs.length > 0) {
           const result = evaluateTestCases(task, tcs);
-          // Save each remaining task result to attempt history
           saveAttempt({
             taskId: task.id,
             score: result.overallScore,
@@ -143,7 +163,6 @@ export function ExamMode() {
     clearExamSession();
     setExamState("results");
     window.dispatchEvent(new Event("achievements-updated"));
-    // Check confetti
     const newAvg = results.length > 0
       ? Math.round(results.reduce((s, r) => s + r.overallScore, 0) / results.length)
       : 0;
@@ -151,7 +170,8 @@ export function ExamMode() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3500);
     }
-  }, [examResults, examTasks, examTestCases]);
+    isFinishingRef.current = false;
+  }, []);
 
   useEffect(() => {
     finishExamRef.current = finishExam;
@@ -176,15 +196,17 @@ export function ExamMode() {
   // Timer countdown
   useEffect(() => {
     if (examState !== "running") return;
-    if (timeRemaining <= 0) {
-      finishExamRef.current?.();
-      return;
-    }
     const interval = setInterval(() => {
-      setTimeRemaining((t) => t - 1);
+      setTimeRemaining((t) => {
+        if (t <= 1) {
+          finishExamRef.current?.();
+          return 0;
+        }
+        return t - 1;
+      });
     }, 1000);
     return () => clearInterval(interval);
-  }, [examState, timeRemaining]);
+  }, [examState]);
 
   const toggleTask = (id: number) => {
     setSelectedTasks((prev) =>
