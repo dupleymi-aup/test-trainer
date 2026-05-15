@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { generateSecureToken } from "@/lib/crypto";
 
 export async function POST(req: Request) {
   try {
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const resetToken = Buffer.from(`${user.id}:${Date.now()}`).toString("base64");
+    const resetToken = generateSecureToken();
 
     await db.verificationToken.create({
       data: {

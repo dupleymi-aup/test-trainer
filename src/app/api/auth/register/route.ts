@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
+import { generateSecureToken } from "@/lib/crypto";
 
 export async function POST(req: Request) {
   try {
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
 
     // Send verification email
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const verificationToken = Buffer.from(`${user.id}:${Date.now()}`).toString("base64");
+    const verificationToken = generateSecureToken();
 
     await db.verificationToken.create({
       data: {

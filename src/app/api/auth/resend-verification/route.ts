@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
+import { generateSecureToken } from "@/lib/crypto";
 
 export async function POST(req: Request) {
   try {
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const verificationToken = Buffer.from(`${user.id}:${Date.now()}`).toString("base64");
+    const verificationToken = generateSecureToken();
 
     // Delete old token if exists
     await db.verificationToken.deleteMany({
