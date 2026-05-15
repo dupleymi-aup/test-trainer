@@ -5,6 +5,8 @@
  * SMS gateway and replace the implementation below.
  */
 
+import { generateSecureOTP } from "@/lib/crypto";
+
 interface SendSMSOptions {
   phone: string;
   message: string;
@@ -26,7 +28,7 @@ export async function sendSMS({ phone, message }: SendSMSOptions): Promise<boole
 }
 
 export function generateOTPCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return generateSecureOTP();
 }
 
 export function generatePasswordResetSMS(code: string): string {
