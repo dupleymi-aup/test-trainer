@@ -44,7 +44,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Trash2, Send, AlertCircle, Keyboard, Lightbulb, Pencil, Save, X, GripVertical, Wand2, Copy, CheckSquare, Square, GitBranch } from "lucide-react";
+import { Trash2, Send, AlertCircle, Keyboard, Lightbulb, Pencil, Save, X, GripVertical, Wand2, Copy, CheckSquare, Square, GitBranch, ChevronDown, ChevronUp } from "lucide-react";
 import type { Task } from "@/lib/tasks";
 import type { TestCase } from "@/lib/evaluator";
 import type { TestCaseCategory } from "@/lib/tasks";
@@ -129,6 +129,88 @@ function CoverageBar({ task, testCases }: { task: Task | null; testCases: TestCa
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases: TestCase[] }) {
+  const [open, setOpen] = useState(false);
+
+  const uncovered = useMemo(() => {
+    if (!task || testCases.length === 0) return null;
+    const result = evaluateTestCases(task, testCases);
+    if (result.uncoveredEcIds.length === 0 && result.uncoveredBvDescriptions.size === 0) return null;
+
+    const uncoveredEcs = result.uncoveredEcIds
+      .map((id) => task.equivalenceClasses.find((ec) => ec.id === id))
+      .filter(Boolean)
+      .map((ec) => ({ id: ec!.id, name: ec!.name, description: ec!.description }));
+
+    const uncoveredBvs = task.boundaryValues
+      .filter((bv) => result.uncoveredBvDescriptions.has(bv.description))
+      .map((bv) => ({ description: bv.description, value: bv.value }));
+
+    return { ecs: uncoveredEcs, bvs: uncoveredBvs };
+  }, [task, testCases]);
+
+  if (!uncovered) return null;
+
+  const total = uncovered.ecs.length + uncovered.bvs.length;
+
+  return (
+    <div className="px-4 pb-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+        <span className="font-medium">Не покрыто: {total}</span>
+        {open ? (
+          <ChevronUp className="h-3 w-3 ml-auto shrink-0" />
+        ) : (
+          <ChevronDown className="h-3 w-3 ml-auto shrink-0" />
+        )}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+          {uncovered.ecs.length > 0 && (
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">Классы эквивалентности:</p>
+              {uncovered.ecs.map((ec) => (
+                <div
+                  key={ec.id}
+                  className="text-[11px] bg-muted/40 rounded-md px-2 py-1.5 flex items-start gap-2"
+                >
+                  <span className="text-amber-500 shrink-0 mt-px">○</span>
+                  <div>
+                    <span className="font-medium">{ec.name}</span>
+                    <span className="text-muted-foreground ml-1">— {ec.description}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {uncovered.bvs.length > 0 && (
+            <div>
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">Граничные значения:</p>
+              {uncovered.bvs.map((bv, i) => (
+                <div
+                  key={i}
+                  className="text-[11px] bg-muted/40 rounded-md px-2 py-1.5 flex items-start gap-2"
+                >
+                  <span className="text-amber-500 shrink-0 mt-px">○</span>
+                  <div>
+                    <code className="font-mono text-amber-700 dark:text-amber-400">
+                      {Array.isArray(bv.value) ? `[${bv.value.join(", ")}]` : String(bv.value)}
+                    </code>
+                    <span className="text-muted-foreground ml-1">— {bv.description}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -573,6 +655,9 @@ export const TestList = React.memo(function TestList({ task, testCases, onRemove
 
         {/* Coverage bar */}
         <CoverageBar task={task} testCases={testCases} />
+
+        {/* Uncovered checklist */}
+        <UncoveredChecklist task={task} testCases={testCases} />
 
         <div className="max-h-80 overflow-y-auto custom-scrollbar">
           <DndContext

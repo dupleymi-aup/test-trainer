@@ -18,13 +18,15 @@ export async function sendSMS({ phone, message }: SendSMSOptions): Promise<boole
     return true;
   }
 
-  // TODO: integrate with real SMS provider
-  // Example with Twilio:
+  // Production: SMS provider must be configured
+  // Integrate with Twilio, SMS.ru, or another SMS gateway:
   //   const client = new twilio(accountSid, authToken);
   //   await client.messages.create({ from, to: phone, body: message });
+  // Then set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in .env
 
-  console.warn("[SMS] No real SMS provider configured. SMS will not be sent in production.");
-  return false;
+  throw new Error(
+    "SMS service not configured in production. Set up an SMS provider (Twilio, SMS.ru, etc.) in .env"
+  );
 }
 
 export function generateOTPCode(): string {

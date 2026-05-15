@@ -2,9 +2,10 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { User, LogOut, Settings, BarChart3 } from "lucide-react";
+import { User, LogOut, Settings, BarChart3, Shield, GraduationCap } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+
+const roleLabels: Record<string, string> = {
+  STUDENT: "Студент",
+  TEACHER: "Преподаватель",
+  ADMIN: "Администратор",
+};
+
+const roleColors: Record<string, string> = {
+  STUDENT: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  TEACHER: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
+  ADMIN: "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300",
+};
 
 export function UserMenu() {
   const { data: session } = useSession();
@@ -29,6 +42,7 @@ export function UserMenu() {
 
   const name = session.user.name || "Пользователь";
   const email = session.user.email || "";
+  const role = session.user.role || "STUDENT";
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -50,14 +64,33 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col gap-1">
-            <span className="font-medium truncate">{name}</span>
-            <span className="text-xs text-muted-foreground truncate">
-              {email}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium truncate">{name}</span>
+              <Badge className={`${roleColors[role]} text-[10px] px-1 py-0 h-auto`}>
+                {roleLabels[role]}
+              </Badge>
+            </div>
+            <span className="text-xs text-muted-foreground truncate">{email}</span>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          {role === "ADMIN" && (
+            <DropdownMenuItem asChild>
+              <Link href="/admin" className="cursor-pointer">
+                <Shield className="mr-2 h-4 w-4" />
+                Панель администратора
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {(role === "TEACHER" || role === "ADMIN") && (
+            <DropdownMenuItem asChild>
+              <Link href="/teacher" className="cursor-pointer">
+                <GraduationCap className="mr-2 h-4 w-4" />
+                Панель преподавателя
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem asChild>
             <Link href="/profile" className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />

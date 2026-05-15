@@ -466,6 +466,54 @@ function findCoveredEquivalenceClasses(
         if (ec.id === "ec6" && isNaNResult && inputStr.trim() !== "") covered.push(ec.id);
       }
     }
+
+    if (taskId === 16) {
+      // calculateShipping — decision table
+      if (fnError) {
+        if (ec.id === "ec11" && !isNaN(Number(inputs[1])) && Number(inputs[1]) < 0) covered.push(ec.id);
+        if (ec.id === "ec12" && typeof inputs[2] === "string" && !["local", "national", "international"].includes(inputs[2] as string)) covered.push(ec.id);
+        if (ec.id === "ec13" && fnError) covered.push(ec.id);
+      } else if (fnResult && typeof fnResult === "object" && "shipping" in fnResult) {
+        const res = fnResult as { shipping: number };
+        const isPremium = inputs[0] as boolean;
+        const amount = Number(inputs[1]);
+        const region = inputs[2] as string;
+
+        if (ec.id === "ec1" && isPremium === true && amount >= 1000 && res.shipping === 0) covered.push(ec.id);
+        if (ec.id === "ec2" && isPremium === true && amount < 1000 && region !== "international" && res.shipping === 100) covered.push(ec.id);
+        if (ec.id === "ec3" && isPremium === true && amount < 1000 && region === "international" && res.shipping === 200) covered.push(ec.id);
+        if (ec.id === "ec4" && isPremium === false && amount >= 2000 && res.shipping === 0) covered.push(ec.id);
+        if (ec.id === "ec5" && isPremium === false && amount >= 500 && amount < 2000 && region === "local" && res.shipping === 100) covered.push(ec.id);
+        if (ec.id === "ec6" && isPremium === false && amount >= 500 && amount < 2000 && region === "national" && res.shipping === 200) covered.push(ec.id);
+        if (ec.id === "ec7" && isPremium === false && amount >= 500 && amount < 2000 && region === "international" && res.shipping === 400) covered.push(ec.id);
+        if (ec.id === "ec8" && isPremium === false && amount < 500 && region === "local" && res.shipping === 200) covered.push(ec.id);
+        if (ec.id === "ec9" && isPremium === false && amount < 500 && region === "national" && res.shipping === 350) covered.push(ec.id);
+        if (ec.id === "ec10" && isPremium === false && amount < 500 && region === "international" && res.shipping === 500) covered.push(ec.id);
+      }
+    }
+
+    if (taskId === 17) {
+      // handleLoginAction — state transitions
+      if (fnError) {
+        if (ec.id === "ec9" && typeof inputs[0] === "string" && !["login", "success", "wait"].includes(inputs[0] as string)) covered.push(ec.id);
+        if (ec.id === "ec10" && typeof inputs[1] === "number" && (inputs[1] as number) < 0) covered.push(ec.id);
+        if (ec.id === "ec11" && fnError && (typeof inputs[0] !== "string" || (typeof inputs[1] !== "number" && inputs[1] !== null))) covered.push(ec.id);
+      } else if (fnResult && typeof fnResult === "object" && "status" in fnResult) {
+        const res = fnResult as { status: string; remainingAttempts: number };
+        const action = inputs[0] as string;
+        const attempts = inputs[1] as number;
+        const lockout = inputs[2];
+
+        if (ec.id === "ec1" && action === "success" && attempts === 0 && res.status === "success") covered.push(ec.id);
+        if (ec.id === "ec2" && action === "success" && (attempts === 1 || attempts === 2) && res.status === "success") covered.push(ec.id);
+        if (ec.id === "ec3" && action === "login" && attempts === 0 && res.status === "failed" && res.remainingAttempts === 2) covered.push(ec.id);
+        if (ec.id === "ec4" && action === "login" && attempts === 1 && res.status === "failed" && res.remainingAttempts === 1) covered.push(ec.id);
+        if (ec.id === "ec5" && action === "login" && attempts === 2 && res.status === "locked") covered.push(ec.id);
+        if (ec.id === "ec6" && action === "login" && lockout !== null && res.status === "locked") covered.push(ec.id);
+        if (ec.id === "ec7" && action === "wait" && res.status === "unlocked") covered.push(ec.id);
+        if (ec.id === "ec8" && action === "success" && lockout !== null && res.status === "locked") covered.push(ec.id);
+      }
+    }
   }
 
   return [...new Set(covered)];
@@ -588,10 +636,35 @@ export function evaluateTestCases(
     // Generate explanation
     let explanation: string;
     if (isCorrect) {
-      const coveredEc = task.equivalenceClasses.find((ec) => coveredClasses.includes(ec.id));
-      explanation = coveredEc
-        ? `Верно! Покрыт класс: ${coveredEc.name}`
-        : "Тест-кейс пройден успешно";
+      const coveredEcNames = coveredClasses
+        .map((id) => task.equivalenceClasses.find((ec) => ec.id === id))
+        .filter(Boolean)
+        .map((ec) => ec!.name);
+
+      const coveredBvNames = coveredBoundaries;
+
+      const parts: string[] = [];
+
+      if (coveredEcNames.length > 0) {
+        parts.push(`Покрыт${coveredEcNames.length > 1 ? 'ы' : ''} класс${coveredEcNames.length > 1 ? 'ы' : ''}: ${coveredEcNames.join(", ")}`);
+      }
+      if (coveredBvNames.length > 0) {
+        parts.push(`граничное значение: ${coveredBvNames.join(", ")}`);
+      }
+
+      if (parts.length > 0) {
+        explanation = parts.join("; ");
+      } else {
+        explanation = "Тест-кейс пройден успешно";
+      }
+
+      // Add conceptual tip for first-time coverage
+      if (coveredClasses.length > 0 && tc.category === "Исключение") {
+        explanation += ". Проверка обработки ошибок — важная часть покрытия.";
+      }
+      if (coveredBoundaries.length > 0) {
+        explanation += ". Граничные значения — наиболее вероятное место дефектов.";
+      }
     } else {
       const normExpected = tc.expectedOutput.trim().toLowerCase();
       const normActual = actualOutput.trim().toLowerCase();
@@ -599,11 +672,11 @@ export function evaluateTestCases(
       const actualIsError = normActual.includes("ошибк") || normActual.startsWith("ошибка");
 
       if (expectedIsError && !actualIsError) {
-        explanation = `Функция не выбросила ошибку. Фактический результат: ${actualOutput}`;
+        explanation = `Ожидалась ошибка, но функция вернула результат. Фактический: ${actualOutput}. Проверьте, попадает ли вход в класс невалидных данных.`;
       } else if (!expectedIsError && actualIsError) {
-        explanation = `Функция выбросила ошибку, а ожидался результат: ${tc.expectedOutput}`;
+        explanation = `Функция выбросила ошибку вместо ожидаемого результата. Фактический: ${actualOutput}. Возможно, вход относится к другому классу эквивалентности.`;
       } else {
-        explanation = `Ожидался: ${tc.expectedOutput}, получено: ${actualOutput}`;
+        explanation = `Ожидалось: ${tc.expectedOutput}, получено: ${actualOutput}. Сверьтесь с кодом функции и уточните ожидаемый результат.`;
       }
     }
 

@@ -5,6 +5,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import { db } from "@/lib/db";
+import { isLoginRateLimited } from "@/lib/login-rate-limit";
 
 // Extend next-auth types
 declare module "next-auth" {
@@ -14,6 +15,8 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      role?: string;
+      isActive?: boolean;
     };
   }
 }
@@ -22,6 +25,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role?: string;
+    isActive?: boolean;
   }
 }
 
@@ -40,6 +44,9 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.login || !credentials?.password) return null;
 
         const login = credentials.login.trim();
+
+        if (isLoginRateLimited(login)) return null;
+
         const isPhone = /^\+?\d{10,15}$/.test(login.replace(/[\s()-]/g, ""));
 
         const user = await prisma.user.findFirst({
@@ -47,6 +54,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.hashedPassword) return null;
+        if (!user.isActive) return null; // Block inactive users
 
         const isValid = await bcrypt.compare(credentials.password, user.hashedPassword);
         if (!isValid) return null;
@@ -56,6 +64,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           image: user.avatar,
+          role: user.role,
+          isActive: user.isActive,
         };
       },
     }),
@@ -75,13 +85,23 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = "student";
+        // Fetch fresh role and isActive from DB on every login
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true, isActive: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.isActive = dbUser.isActive;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.isActive = token.isActive as boolean;
       }
       return session;
     },

@@ -1,0 +1,84 @@
+import { NextResponse } from "next/server";
+import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { db } from "@/lib/db";
+import { z } from "zod";
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const guard = await requireTeacherOrAdmin();
+  if ("response" in guard) return guard.response;
+
+  const { id } = await params;
+  const members = await db.userGroup.findMany({
+    where: { groupId: id },
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, role: true },
+      },
+    },
+  });
+
+  return NextResponse.json({ members: members.map((m) => m.user) });
+}
+
+const addMemberSchema = z.object({
+  userId: z.string().min(1),
+});
+
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const guard = await requireTeacherOrAdmin();
+  if ("response" in guard) return guard.response;
+  const { session } = guard;
+
+  const { id } = await params;
+  const body = await req.json();
+  const parsed = addMemberSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+  }
+
+  const existing = await db.userGroup.findUnique({
+    where: { userId_groupId: { userId: parsed.data.userId, groupId: id } },
+  });
+
+  if (existing) {
+    return NextResponse.json({ error: "User is already a member of this group" }, { status: 409 });
+  }
+
+  await db.userGroup.create({
+    data: {
+      userId: parsed.data.userId,
+      groupId: id,
+      assignedByUserId: session.userId,
+    },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const guard = await requireTeacherOrAdmin();
+  if ("response" in guard) return guard.response;
+
+  const { id } = await params;
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get("userId");
+
+  if (!userId) {
+    return NextResponse.json({ error: "userId is required" }, { status: 400 });
+  }
+
+  await db.userGroup.delete({
+    where: { userId_groupId: { userId, groupId: id } },
+  });
+
+  return NextResponse.json({ success: true });
+}

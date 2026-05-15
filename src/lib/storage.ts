@@ -154,6 +154,8 @@ export function clearAllProgress(): void {
       }
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
+    clearTheoryProgress();
+    clearMarathonProgress();
   } catch {
     // ignore
   }
@@ -169,6 +171,8 @@ export interface AttemptRecord {
   testCasesCount: number;
   coveredEcIds?: string[];
   coveredBvDescriptions?: string[];
+  timeSpentMs?: number; // time from first test case addition to submission
+  categoryDistribution?: Record<string, number>; // count of test cases per category
 }
 
 /**
@@ -303,5 +307,117 @@ export function loadStreak(): StreakData {
     return JSON.parse(raw);
   } catch {
     return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
+  }
+}
+
+const THEORY_VIEWED_KEY = "test-trainer-theory-viewed";
+const MARATHON_KEY = "test-trainer-marathons";
+
+export interface MarathonRecord {
+  timestamp: number;
+  totalTasks: number;
+  completedTasks: number;
+  avgScore: number;
+  totalTimeSec: number;
+}
+
+/**
+ * Save a marathon completion record
+ */
+export function saveMarathonRecord(record: MarathonRecord): void {
+  try {
+    const records = loadMarathonRecords();
+    records.push(record);
+    // Keep last 20 marathon records
+    if (records.length > 20) records.splice(0, records.length - 20);
+    localStorage.setItem(MARATHON_KEY, JSON.stringify(records));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Load all marathon records
+ */
+export function loadMarathonRecords(): MarathonRecord[] {
+  try {
+    const raw = localStorage.getItem(MARATHON_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get total number of completed marathons
+ */
+export function getMarathonsCompleted(): number {
+  return loadMarathonRecords().filter((r) => r.completedTasks === r.totalTasks).length;
+}
+
+/**
+ * Get best average score across all completed marathons
+ */
+export function getBestMarathonAvgScore(): number {
+  const completed = loadMarathonRecords().filter((r) => r.completedTasks === r.totalTasks);
+  if (completed.length === 0) return 0;
+  return completed.reduce((max, r) => Math.max(max, r.avgScore), 0);
+}
+
+/**
+ * Mark a theory section as viewed
+ */
+export function markTheorySectionViewed(sectionId: string): void {
+  try {
+    const viewed = loadTheorySectionsViewed();
+    if (!viewed.includes(sectionId)) {
+      viewed.push(sectionId);
+      localStorage.setItem(THEORY_VIEWED_KEY, JSON.stringify(viewed));
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Load viewed theory section IDs
+ */
+export function loadTheorySectionsViewed(): string[] {
+  try {
+    const raw = localStorage.getItem(THEORY_VIEWED_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Check if a specific theory section has been viewed
+ */
+export function isTheorySectionViewed(sectionId: string): boolean {
+  return loadTheorySectionsViewed().includes(sectionId);
+}
+
+/**
+ * Reset theory progress (called by clearAllProgress)
+ */
+export function clearTheoryProgress(): void {
+  try {
+    localStorage.removeItem(THEORY_VIEWED_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Reset marathon progress
+ */
+export function clearMarathonProgress(): void {
+  try {
+    localStorage.removeItem(MARATHON_KEY);
+  } catch {
+    // ignore
   }
 }

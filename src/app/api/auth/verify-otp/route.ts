@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { generateSecureToken } from "@/lib/crypto";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+
+function getClientIP(req: Request): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req);
+  const result = checkRateLimit(`verify-otp:${ip}`, rateLimits.verifyOtp);
+  if (result.limited) {
+    return NextResponse.json(
+      { error: "Слишком много попыток. Попробуйте позже" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const body = await req.json();
     const { phone, code } = body;

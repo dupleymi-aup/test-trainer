@@ -1,0 +1,53 @@
+import { NextResponse } from "next/server";
+import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { db } from "@/lib/db";
+
+export async function GET() {
+  const guard = await requireTeacherOrAdmin();
+  if ("response" in guard) return guard.response;
+
+  const attempts = await db.attempt.findMany({
+    select: {
+      score: true,
+      ecCoverage: true,
+      bvCoverage: true,
+      taskId: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 500,
+  });
+
+  // Score distribution
+  const distribution = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
+  attempts.forEach((a) => {
+    if (a.score <= 20) distribution["0-20"]++;
+    else if (a.score <= 40) distribution["21-40"]++;
+    else if (a.score <= 60) distribution["41-60"]++;
+    else if (a.score <= 80) distribution["61-80"]++;
+    else distribution["81-100"]++;
+  });
+
+  // Task difficulty (by average score)
+  const taskScores: Record<string, number[]> = {};
+  attempts.forEach((a) => {
+    if (!taskScores[a.taskId]) taskScores[a.taskId] = [];
+    taskScores[a.taskId].push(a.score);
+  });
+
+  const taskDifficulty = Object.entries(taskScores).map(([taskId, scores]) => ({
+    taskId,
+    avgScore: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
+    attemptsCount: scores.length,
+  }));
+
+  // Overall stats
+  const overallAvg = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
+
+  return NextResponse.json({
+    distribution,
+    taskDifficulty,
+    overallAvg,
+    totalAttempts: attempts.length,
+  });
+}

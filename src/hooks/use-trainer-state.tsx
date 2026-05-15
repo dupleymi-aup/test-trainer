@@ -7,6 +7,7 @@ import type { Task, Difficulty, TestCaseCategory } from "@/lib/tasks";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { evaluateTestCases } from "@/lib/evaluator";
 import { UndoStack } from "@/lib/undo-stack";
+import { apiFetch } from "@/lib/api-client";
 import {
   saveProgress,
   loadProgress,
@@ -22,9 +23,37 @@ import {
   getTaskBestCoverage,
   type TaskProgress,
   type AttemptRecord,
+  getMarathonsCompleted,
+  getBestMarathonAvgScore,
 } from "@/lib/storage";
 import { checkAndUnlockAchievements, achievements as allAchievements } from "@/lib/achievements";
 import { AchievementToast } from "@/components/achievements-panel";
+
+// Sync attempt to server (non-blocking, fire-and-forget)
+async function syncAttemptToServer(payload: {
+  taskId: string;
+  testCases: { id: string; inputs: unknown[]; expectedOutput: string; category: string; comment?: string }[];
+  score: number;
+  ecCoverage: number;
+  bvCoverage: number;
+  correctness: number;
+  coveredEcIds: string[];
+  coveredBvDescriptions: string[];
+  timeSpent: number;
+}) {
+  try {
+    const res = await apiFetch("/api/attempts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      console.warn("Failed to sync attempt to server:", res.status);
+    }
+  } catch {
+    // Silently fail — localStorage is the primary storage
+  }
+}
 
 export type TabValue = "tasks" | "trainer" | "results" | "statistics" | "exam" | "theory";
 export type SortMode = "По номеру" | "По имени" | "По сложности";
@@ -67,6 +96,19 @@ export function useTrainerState() {
   const [searchQuery, setSearchQuery] = useState("");
   const [taskStartTime, setTaskStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [availableTaskIds, setAvailableTaskIds] = useState<Set<number> | null>(null);
+
+  // Fetch available tasks on mount (group-based permissions)
+  useEffect(() => {
+    fetch("/api/tasks/available")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.taskIds && data.taskIds.length < tasks.length) {
+          setAvailableTaskIds(new Set(data.taskIds));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Undo/Redo
   const undoStackRef = useRef(new UndoStack<TestCase[]>());
@@ -114,6 +156,11 @@ export function useTrainerState() {
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
 
+    // Apply group-based restrictions
+    if (availableTaskIds) {
+      filtered = filtered.filter((t) => availableTaskIds.has(t.id));
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -139,7 +186,7 @@ export function useTrainerState() {
       default:
         return filtered;
     }
-  }, [difficultyFilter, sortMode, searchQuery]);
+  }, [difficultyFilter, sortMode, searchQuery, availableTaskIds]);
 
   // Task selection
   const handleSelectTask = useCallback(
@@ -379,20 +426,21 @@ export function useTrainerState() {
     const ec = selectedTask.equivalenceClasses.find((e) => e.id === randomEcId);
     if (!ec) return;
 
-    const newCase = generateTestCaseFromEc(ec);
-    if (!newCase) return;
+    // Generate hint info without auto-adding
+    const exampleValue = ec.exampleValues[0];
+    const suggestedInput = Array.isArray(exampleValue) ? exampleValue.map(String).join(", ") : String(exampleValue);
 
-    pushUndoSnapshot();
-    setTestCases((prev) => {
-      const updated = [...prev, newCase];
-      if (selectedTask) {
-        saveCurrentSession(selectedTask.id, updated);
-      }
-      return updated;
-    });
-
-    toast.success(`Подсказка: добавлен тест для «${ec.name}»`);
-  }, [selectedTask, testCases, generateTestCaseFromEc, pushUndoSnapshot]);
+    // Dispatch hint event for HintDialog to display
+    window.dispatchEvent(new CustomEvent("show-hint", {
+      detail: {
+        ecName: ec.name,
+        ecDescription: ec.description,
+        suggestedInput,
+        exampleValues: ec.exampleValues.map((v) => Array.isArray(v) ? v.join(", ") : String(v)),
+        taskId: selectedTask.id,
+      },
+    }));
+  }, [selectedTask, testCases]);
 
   const handleFillAllEc = useCallback(() => {
     if (!selectedTask) return;
@@ -491,6 +539,12 @@ export function useTrainerState() {
     saveProgress(selectedTask.id, result.overallScore, testCases);
     setSavedProgress(loadProgress());
 
+    // Compute category distribution
+    const categoryDist: Record<string, number> = {};
+    testCases.forEach((tc) => {
+      categoryDist[tc.category] = (categoryDist[tc.category] || 0) + 1;
+    });
+
     saveAttempt({
       taskId: selectedTask.id,
       score: result.overallScore,
@@ -501,8 +555,30 @@ export function useTrainerState() {
       testCasesCount: testCases.length,
       coveredEcIds: result.coveredEcIds,
       coveredBvDescriptions: result.coveredBvDescriptions,
+      timeSpentMs: elapsedTime > 0 ? elapsedTime * 1000 : undefined,
+      categoryDistribution: categoryDist,
     });
     setAttemptHistory(loadAttemptHistory());
+
+    // Sync to server (fire-and-forget)
+    const timeSpentSeconds = elapsedTime > 0 ? elapsedTime : 0;
+    syncAttemptToServer({
+      taskId: selectedTask.id,
+      testCases: testCases.map((tc) => ({
+        id: tc.id,
+        inputs: tc.inputs,
+        expectedOutput: tc.expectedOutput,
+        category: tc.category,
+        comment: tc.comment,
+      })),
+      score: result.overallScore,
+      ecCoverage: result.ecCoverage,
+      bvCoverage: result.boundaryCoverage,
+      correctness: result.correctnessScore,
+      coveredEcIds: result.coveredEcIds,
+      coveredBvDescriptions: result.coveredBvDescriptions,
+      timeSpent: timeSpentSeconds,
+    });
 
     const updatedStreak = saveStreak();
     setStreak(updatedStreak);
@@ -521,6 +597,19 @@ export function useTrainerState() {
         ? Math.round(examScores.reduce((s, h) => s + h.score, 0) / examsCompleted)
         : 0;
 
+    // Check if all 4 categories were used in this submission
+    const categorySet = new Set(testCases.map((tc) => tc.category));
+    const usedAllCategories = categorySet.size >= 4;
+
+    // Count score improvements (current score > previous best on same task)
+    const scoreImprovements = history.filter((h) => {
+      const prev = progress[h.taskId];
+      return prev && h.score > prev.score;
+    }).length;
+
+    // Count distinct active days
+    const activeDays = new Set(history.map((h) => new Date(h.timestamp).toDateString())).size;
+
     const context = {
       completedTasks: Object.keys(progress).length,
       totalTasks: tasks.length,
@@ -538,6 +627,11 @@ export function useTrainerState() {
       maxBvCoverage: maxBv,
       examsCompleted,
       examAvgScore,
+      usedAllCategories,
+      scoreImprovements,
+      daysActive: activeDays,
+      marathonCompleted: getMarathonsCompleted(),
+      bestMarathonScore: getBestMarathonAvgScore(),
     };
 
     const newlyUnlocked = checkAndUnlockAchievements(context);
@@ -557,7 +651,7 @@ export function useTrainerState() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3500);
     }
-  }, [selectedTask, testCases]);
+  }, [selectedTask, testCases, elapsedTime]);
 
   // Reset current task
   const handleReset = useCallback(() => {

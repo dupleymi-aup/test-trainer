@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2, Download } from "lucide-react";
+import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2, Download, Lightbulb, AlertTriangle, Target } from "lucide-react";
 import { Confetti } from "./confetti";
 import { tasks, runReferenceFunction } from "@/lib/tasks";
 import type { Task } from "@/lib/tasks";
@@ -31,7 +31,7 @@ import { saveAttempt } from "@/lib/storage";
 import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
 
-type ExamState = "setup" | "running" | "results";
+type ExamState = "setup" | "tips" | "running" | "results";
 
 const EXAM_STORAGE_KEY = "exam-session";
 
@@ -144,6 +144,8 @@ export function ExamMode() {
         const tcs = currentTestCases[task.id] || [];
         if (tcs.length > 0) {
           const result = evaluateTestCases(task, tcs);
+          const catDist: Record<string, number> = {};
+          tcs.forEach((tc) => { catDist[tc.category] = (catDist[tc.category] || 0) + 1; });
           saveAttempt({
             taskId: task.id,
             score: result.overallScore,
@@ -154,6 +156,7 @@ export function ExamMode() {
             testCasesCount: tcs.length,
             coveredEcIds: result.coveredEcIds,
             coveredBvDescriptions: result.coveredBvDescriptions,
+            categoryDistribution: catDist,
           });
           results.push(result);
         }
@@ -219,6 +222,10 @@ export function ExamMode() {
       toast.error("Выберите хотя бы одно задание");
       return;
     }
+    setExamState("tips");
+  };
+
+  const beginExam = () => {
     // Shuffle selected tasks
     const shuffled = selectedTasks
       .map((id) => tasks.find((t) => t.id === id)!)
@@ -320,6 +327,8 @@ export function ExamMode() {
     setExamResults((prev) => [...prev, result]);
 
     // Save this task's result to attempt history
+    const catDist: Record<string, number> = {};
+    tcs.forEach((tc) => { catDist[tc.category] = (catDist[tc.category] || 0) + 1; });
     saveAttempt({
       taskId: task.id,
       score: result.overallScore,
@@ -330,6 +339,7 @@ export function ExamMode() {
       testCasesCount: tcs.length,
       coveredEcIds: result.coveredEcIds,
       coveredBvDescriptions: result.coveredBvDescriptions,
+      categoryDistribution: catDist,
     });
 
     // In practice mode, show mini result and wait for user to continue
@@ -448,6 +458,65 @@ export function ExamMode() {
               Пройдите несколько заданий на время. Выбранные задания будут перемешаны,
               и вы не сможете посмотреть теорию или подсказки до окончания экзамена.
             </p>
+
+            {/* Exam presets */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium">Быстрый выбор:</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button
+                  onClick={() => {
+                    const easy = tasks.filter(t => t.difficulty === "Легко").map(t => t.id);
+                    setSelectedTasks(easy);
+                    setTimeLimit(10);
+                  }}
+                  className="px-3 py-2 rounded-lg border text-xs font-medium transition-all border-border hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/10"
+                >
+                  🟢 Только лёгкие
+                </button>
+                <button
+                  onClick={() => {
+                    const medium = tasks.filter(t => t.difficulty === "Средне").map(t => t.id);
+                    setSelectedTasks(medium);
+                    setTimeLimit(15);
+                  }}
+                  className="px-3 py-2 rounded-lg border text-xs font-medium transition-all border-border hover:border-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                >
+                  🟡 Только средние
+                </button>
+                <button
+                  onClick={() => {
+                    const hard = tasks.filter(t => t.difficulty === "Сложно").map(t => t.id);
+                    setSelectedTasks(hard);
+                    setTimeLimit(20);
+                  }}
+                  className="px-3 py-2 rounded-lg border text-xs font-medium transition-all border-border hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/10"
+                >
+                  🔴 Только сложные
+                </button>
+                <button
+                  onClick={() => {
+                    const shuffled = [...tasks].sort(() => Math.random() - 0.5);
+                    const picked = shuffled.slice(0, 5).map(t => t.id);
+                    setSelectedTasks(picked);
+                    setTimeLimit(15);
+                  }}
+                  className="px-3 py-2 rounded-lg border text-xs font-medium transition-all border-border hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10"
+                >
+                  🎲 Случайные 5
+                </button>
+                <button
+                  onClick={() => {
+                    const all = tasks.map(t => t.id);
+                    setSelectedTasks(all);
+                    setTimeLimit(30);
+                  }}
+                  className="px-3 py-2 rounded-lg border text-xs font-medium transition-all border-border hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/10 col-span-2 sm:col-span-2"
+                >
+                  📋 Все задания ({tasks.length})
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <p className="text-xs font-medium">Выберите задания:</p>
               <div className="grid grid-cols-2 gap-2">
@@ -536,6 +605,76 @@ export function ExamMode() {
             </Button>
           </CardContent>
         </Card>
+      </motion.div>
+    );
+  }
+
+  // TIPS SCREEN
+  if (examState === "tips") {
+    const taskNames = selectedTasks.map((id) => tasks.find((t) => t.id === id)?.name).filter(Boolean).join(", ");
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto space-y-4">
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-amber-600" />
+              Советы перед экзаменом
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Задания: <strong>{taskNames}</strong>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Лимит: <strong>{timeLimit} мин</strong> • Режим: <strong>{practiceMode ? "Практика" : "Экзамен"}</strong>
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
+                <Target className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Стратегия покрытия</p>
+                  <p className="text-[11px] text-muted-foreground">Сначала тестируйте нормальные значения, затем границы, потом исключения. Не тратьте время на один класс дважды.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/10">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Распределение времени</p>
+                  <p className="text-[11px] text-muted-foreground">≈ {Math.floor(timePerTask / 60)}:{(timePerTask % 60).toString().padStart(2, "0")} на задание. Если застряли — переходите к следующему.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/10">
+                <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-blue-800 dark:text-blue-300">Проверяйте ожидания</p>
+                  <p className="text-[11px] text-muted-foreground">Используйте кнопку калькулятора для точного ожидаемого результата. Неверное ожидание = потеря баллов корректности.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-3">
+              <p className="text-xs font-medium mb-1">Формула оценки:</p>
+              <p className="text-xs font-mono bg-white/50 dark:bg-black/20 rounded p-1.5">
+                EC×0.4 + BV×0.3 + Correctness×0.3
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Покрытие классов эквивалентности важнее всего, но корректность ожиданий тоже существенна.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setExamState("setup")} className="flex-1">
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Назад к настройке
+          </Button>
+          <Button onClick={beginExam} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Timer className="h-4 w-4 mr-1" />
+            Начать ({selectedTasks.length} заданий)
+          </Button>
+        </div>
       </motion.div>
     );
   }
@@ -795,13 +934,91 @@ export function ExamMode() {
           <p className="text-sm text-muted-foreground mt-1">
             Средняя оценка: <strong className="text-lg">{avgScore}%</strong> по {examResults.length} заданиям
           </p>
-          {avgScore >= 80 && (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">
-              🎉 Отличный результат!
+          {avgScore >= 90 && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
+              Отлично! Вы превосходно владеете методами тестирования!
+            </p>
+          )}
+          {avgScore >= 75 && avgScore < 90 && (
+            <p className="text-sm text-teal-600 dark:text-teal-400 mt-1">
+              Хороший результат! Обратите внимание на задания с низкой оценкой.
+            </p>
+          )}
+          {avgScore >= 50 && avgScore < 75 && (
+            <p className="text-sm text-amber-600 dark:text-amber-400 mt-1">
+              Удовлетворительно. Рекомендуем повторить теорию по слабым местам.
+            </p>
+          )}
+          {avgScore < 50 && (
+            <p className="text-sm text-rose-600 dark:text-rose-400 mt-1">
+              Стоит подтянуть знания. Изучите теорию и попробуйте снова.
             </p>
           )}
         </CardContent>
       </Card>
+
+      {/* Post-exam reflection */}
+      <Card className="border-blue-200 dark:border-blue-800">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Lightbulb className="h-4 w-4 text-blue-600" />
+            Анализ результатов
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {/* Weakest and strongest tasks */}
+          {examResults.length > 1 && (() => {
+            const sorted = [...examResults].sort((a, b) => a.overallScore - b.overallScore);
+            const weakest = sorted[0];
+            const strongest = sorted[sorted.length - 1];
+            return (
+              <>
+                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-900/10">
+                  <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-rose-800 dark:text-rose-300">Слабое место: {weakest.task.name} ({weakest.overallScore}%)</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {weakest.uncoveredEcIds.length > 0
+                        ? `Не покрыто ${weakest.uncoveredEcIds.length} классов эквивалентности.`
+                        : "Покрытие хорошее, но есть ошибки в ожидаемых результатах."}
+                      Рекомендуем вернуться к теории и практике этого задания.
+                    </p>
+                  </div>
+                </div>
+                {strongest.overallScore !== weakest.overallScore && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Сильное место: {strongest.task.name} ({strongest.overallScore}%)</p>
+                      <p className="text-[11px] text-muted-foreground">Лучший результат на экзамене. Вы хорошо понимаете этот тип задач.</p>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {/* Category distribution tips */}
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="text-xs font-medium mb-1">Рекомендации для улучшения:</p>
+            <ul className="text-[11px] space-y-1 text-muted-foreground">
+              {examResults.some((r) => r.ecCoverage < 60) && (
+                <li>• <strong>Классы эквивалентности:</strong> Вы покрываете менее 60% EC. Перед тестированием выпишите все классы из кода функции.</li>
+              )}
+              {examResults.some((r) => r.boundaryCoverage < 50) && (
+                <li>• <strong>Граничные значения:</strong> Низкое покрытие BV. Обращайте внимание на min/max в диапазонах и точки перехода.</li>
+              )}
+              {examResults.some((r) => r.correctnessScore < 70) && (
+                <li>• <strong>Корректность:</strong> Много неверных ожиданий. Используйте калькулятор для проверки реального результата.</li>
+              )}
+              {examResults.every((r) => r.overallScore >= 75) && (
+                <li>• Вы стабильно показываете хороший результат. Попробуйте более сложные задания или сократите лимит времени.</li>
+              )}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+
       {examResults.map((result) => (
         <ResultsPanel key={result.task.id} result={result} onReset={() => {}} />
       ))}

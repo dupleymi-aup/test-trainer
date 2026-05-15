@@ -3,12 +3,21 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const result = checkRateLimit(`change-pw:${session.user.id}`, rateLimits.changePassword);
+    if (result.limited) {
+      return NextResponse.json(
+        { error: "Слишком много попыток. Попробуйте позже" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
+      );
     }
 
     const body = await req.json();

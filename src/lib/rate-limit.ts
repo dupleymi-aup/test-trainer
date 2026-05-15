@@ -1,0 +1,86 @@
+/**
+ * In-memory rate limiter for auth endpoints.
+ * Uses a sliding window counter approach.
+ * For production with multiple server instances, replace with Redis-based limiting.
+ */
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+// Map key -> { count, resetAt }
+const store = new Map<string, RateLimitEntry>();
+
+export interface RateLimitConfig {
+  /** Maximum number of requests allowed in the window */
+  max: number;
+  /** Window duration in milliseconds */
+  windowMs: number;
+}
+
+export const rateLimits: Record<string, RateLimitConfig> = {
+  /** Login: 5 attempts per 15 minutes (brute-force protection) */
+  login: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Registration: 3 per 1 hour per IP (spam prevention) */
+  register: { max: 3, windowMs: 60 * 60 * 1000 },
+  /** Forgot password: 3 per 15 minutes (email/SMS bombing prevention) */
+  forgotPassword: { max: 3, windowMs: 15 * 60 * 1000 },
+  /** OTP verification: 5 per 15 minutes (brute-force 6-digit code) */
+  verifyOtp: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Reset password: 5 per 15 minutes */
+  resetPassword: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Resend verification email: 2 per 1 hour */
+  resendVerification: { max: 2, windowMs: 60 * 60 * 1000 },
+  /** Change password: 5 per 15 minutes */
+  changePassword: { max: 5, windowMs: 15 * 60 * 1000 },
+};
+
+/**
+ * Check if a request is rate limited.
+ * @param key - Unique identifier (typically IP address or user ID)
+ * @param config - Rate limit configuration
+ * @returns { limited: boolean, remaining: number, resetAt: number }
+ */
+export function checkRateLimit(
+  key: string,
+  config: RateLimitConfig
+): { limited: boolean; remaining: number; resetAt: number } {
+  const now = Date.now();
+  const entry = store.get(key);
+
+  if (!entry || entry.resetAt <= now) {
+    // No entry or window expired — create new
+    store.set(key, {
+      count: 1,
+      resetAt: now + config.windowMs,
+    });
+    return { limited: false, remaining: config.max - 1, resetAt: now + config.windowMs };
+  }
+
+  // Within window
+  entry.count += 1;
+
+  if (entry.count > config.max) {
+    return { limited: true, remaining: 0, resetAt: entry.resetAt };
+  }
+
+  return { limited: false, remaining: config.max - entry.count, resetAt: entry.resetAt };
+}
+
+/**
+ * Clean up expired entries (call periodically in production).
+ */
+export function cleanupExpiredEntries() {
+  const now = Date.now();
+  for (const [key, entry] of store) {
+    if (entry.resetAt <= now) {
+      store.delete(key);
+    }
+  }
+}
+
+// Auto-cleanup every 10 minutes
+if (typeof global !== "undefined") {
+  setInterval(cleanupExpiredEntries, 10 * 60 * 1000).unref?.();
+}

@@ -4,12 +4,21 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const result = checkRateLimit(`resend:${session.user.id}`, rateLimits.resendVerification);
+    if (result.limited) {
+      return NextResponse.json(
+        { error: "Слишком много попыток. Попробуйте позже" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
+      );
     }
 
     const user = await db.user.findUnique({
@@ -48,9 +57,17 @@ export async function POST(req: Request) {
     });
 
     const emailData = generateVerificationEmail(verificationToken, baseUrl);
-    await sendEmail({ to: user.email, ...emailData });
-
-    return NextResponse.json({ message: "Письмо отправлено" });
+    try {
+      await sendEmail({ to: user.email, ...emailData });
+      return NextResponse.json({ message: "Письмо отправлено" });
+    } catch (emailError) {
+      await db.verificationToken.delete({ where: { token: verificationToken } });
+      console.error("Resend verification email failed:", emailError);
+      return NextResponse.json(
+        { error: "Не удалось отправить письмо. Попробуйте позже" },
+        { status: 503 }
+      );
+    }
   } catch (error) {
     console.error("Resend verification error:", error);
     return NextResponse.json(

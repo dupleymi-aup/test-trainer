@@ -26,6 +26,9 @@ import {
   Printer,
   Download,
   Lightbulb,
+  AlertTriangle,
+  Info,
+  ChevronRight,
 } from "lucide-react";
 import {
   Tooltip,
@@ -37,13 +40,17 @@ import { useState, useMemo } from "react";
 import React from "react";
 import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
+import type { TestCase } from "@/lib/evaluator";
 import { categoryColors } from "@/lib/constants";
 import { getTaskHistory } from "@/lib/storage";
+import { CoverageMatrix } from "@/components/coverage-matrix";
 
 interface ResultsPanelProps {
   result: EvaluationResult | null;
+  testCases?: TestCase[];
   onReset: () => void;
   bestScore?: number;
+  elapsedTime?: number; // seconds spent on current attempt
 }
 
 function ScoreCircle({
@@ -156,8 +163,18 @@ function formatResultsAsText(result: EvaluationResult): string {
   return lines.join("\n");
 }
 
-export const ResultsPanel = React.memo(function ResultsPanel({ result, onReset, bestScore }: ResultsPanelProps) {
+function formatTime(ms: number): string {
+  const totalSec = Math.round(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  if (min >= 60) return `${Math.floor(min / 60)}ч ${min % 60}м`;
+  if (min > 0) return `${min}м ${sec}с`;
+  return `${sec}с`;
+}
+
+export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases = [], onReset, bestScore, elapsedTime }: ResultsPanelProps) {
   const [copied, setCopied] = useState(false);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   const grade = getGrade(result.overallScore);
 
@@ -191,6 +208,38 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, onReset, 
       gainedEc,
       gainedBv,
     };
+  }, [result]);
+
+  // Diagnostic summary: group test results by category
+  const diagnosticSummary = useMemo(() => {
+    const byCategory: Record<string, { correct: number; total: number; failedDescriptions: string[] }> = {};
+    result.results.forEach((r) => {
+      const cat = r.testCase.category;
+      if (!byCategory[cat]) byCategory[cat] = { correct: 0, total: 0, failedDescriptions: [] };
+      byCategory[cat].total++;
+      if (r.isCorrect) byCategory[cat].correct++;
+      else byCategory[cat].failedDescriptions.push(r.explanation || "");
+    });
+
+    const lines: string[] = [];
+    for (const [cat, data] of Object.entries(byCategory)) {
+      if (data.correct === data.total) {
+        lines.push(`✓ ${cat}: ${data.total}/${data.total} верно`);
+      } else {
+        lines.push(`✗ ${cat}: ${data.correct}/${data.total} верно`);
+        // Find most common failure pattern
+        const freq: Record<string, number> = {};
+        for (const d of data.failedDescriptions) {
+          freq[d] = (freq[d] || 0) + 1;
+        }
+        const topIssue = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
+        if (topIssue) {
+          lines.push(`  Наиболее частая проблема: ${topIssue[0]}`);
+        }
+      }
+    }
+
+    return { lines, categories: Object.keys(byCategory) };
   }, [result]);
 
   const handleExportCsv = () => {
@@ -282,6 +331,11 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, onReset, 
                 )}
               </div>
             )}
+            {elapsedTime !== undefined && elapsedTime > 0 && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                Время: {formatTime(elapsedTime * 1000)}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap justify-center gap-6">
@@ -318,6 +372,39 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, onReset, 
           </div>
         </CardContent>
       </Card>
+
+      {/* Diagnostic summary */}
+      {diagnosticSummary.lines.length > 0 && (
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+              Анализ результатов по категориям
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {diagnosticSummary.lines.map((line, i) => (
+              <p
+                key={i}
+                className={`text-xs leading-relaxed ${
+                  line.startsWith("✓")
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : line.startsWith("  ")
+                      ? "text-muted-foreground pl-4"
+                      : "text-rose-700 dark:text-rose-400"
+                }`}
+              >
+                {line}
+              </p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Coverage Matrix */}
+      {testCases.length > 0 && (
+        <CoverageMatrix result={result} testCases={testCases} />
+      )}
 
       {/* Coverage details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -489,62 +576,264 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, onReset, 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {result.results.map((r, idx) => (
-                  <TableRow key={r.testCase.id}>
-                    <TableCell className="text-xs text-muted-foreground py-2">
-                      {idx + 1}
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                        ({r.testCase.inputs.join(", ")})
-                      </code>
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono max-w-[100px] inline-block truncate">
-                        {r.testCase.expectedOutput}
-                      </code>
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <code
-                        className={`text-xs px-1.5 py-0.5 rounded font-mono max-w-[150px] inline-block truncate ${
-                          r.isCorrect
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
-                        }`}
+                {result.results.map((r, idx) => {
+                  const isExpanded = expandedRow === r.testCase.id;
+                  return (
+                    <React.Fragment key={r.testCase.id}>
+                      <TableRow
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setExpandedRow(isExpanded ? null : r.testCase.id)}
                       >
-                        {r.actualOutput}
-                      </code>
-                    </TableCell>
-                    <TableCell className="py-2">
-                      {r.isCorrect ? (
-                        <div className="space-y-0.5">
-                          <Badge className="bg-emerald-100 text-emerald-800 text-[10px] dark:bg-emerald-900/30 dark:text-emerald-400">
-                            ✓ Верно
-                          </Badge>
-                          {r.explanation && !r.explanation.includes("успешно") && (
-                            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 max-w-[150px] leading-tight">
-                              {r.explanation}
-                            </p>
+                        <TableCell className="text-xs text-muted-foreground py-2">
+                          <ChevronRight className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                        </TableCell>
+                        <TableCell className="py-2">
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                            ({r.testCase.inputs.join(", ")})
+                          </code>
+                        </TableCell>
+                        <TableCell className="py-2">
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono max-w-[100px] inline-block truncate">
+                            {r.testCase.expectedOutput}
+                          </code>
+                        </TableCell>
+                        <TableCell className="py-2">
+                          <code
+                            className={`text-xs px-1.5 py-0.5 rounded font-mono max-w-[150px] inline-block truncate ${
+                              r.isCorrect
+                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                : "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
+                            }`}
+                          >
+                            {r.actualOutput}
+                          </code>
+                        </TableCell>
+                        <TableCell className="py-2">
+                          {r.isCorrect ? (
+                            <div className="space-y-0.5">
+                              <Badge className="bg-emerald-100 text-emerald-800 text-[10px] dark:bg-emerald-900/30 dark:text-emerald-400">
+                                ✓ Верно
+                              </Badge>
+                              {r.explanation && !r.explanation.includes("успешно") && (
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 max-w-[150px] leading-tight">
+                                  {r.explanation}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <Badge className="bg-rose-100 text-rose-800 text-[10px] dark:bg-rose-900/30 dark:text-rose-400">
+                                ✗ Неверно
+                              </Badge>
+                              <p className="text-[10px] text-rose-600 dark:text-rose-400 max-w-[150px] leading-tight">
+                                {r.explanation}
+                              </p>
+                            </div>
                           )}
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <Badge className="bg-rose-100 text-rose-800 text-[10px] dark:bg-rose-900/30 dark:text-rose-400">
-                            ✗ Неверно
-                          </Badge>
-                          <p className="text-[10px] text-rose-600 dark:text-rose-400 max-w-[150px] leading-tight">
-                            {r.explanation}
-                          </p>
-                        </div>
+                        </TableCell>
+                      </TableRow>
+                      {/* Expanded guided review */}
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="bg-muted/30 p-0">
+                            <div className="p-4 space-y-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-[10px]">{r.testCase.category}</Badge>
+                                {r.testCase.comment && (
+                                  <span className="text-[11px] text-muted-foreground">{r.testCase.comment}</span>
+                                )}
+                              </div>
+
+                              {/* Expected vs Actual comparison */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Ожидаемый результат:</p>
+                                  <code className="block text-xs bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded font-mono break-all">
+                                    {r.testCase.expectedOutput}
+                                  </code>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className={`text-[11px] font-medium ${r.isCorrect ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"}`}>
+                                    Фактический результат:
+                                  </p>
+                                  <code className={`block text-xs p-2 rounded font-mono break-all ${
+                                    r.isCorrect
+                                      ? "bg-emerald-50 dark:bg-emerald-900/20"
+                                      : "bg-rose-50 dark:bg-rose-900/20"
+                                  }`}>
+                                    {r.actualOutput}
+                                  </code>
+                                </div>
+                              </div>
+
+                              {/* Explanation */}
+                              {r.explanation && (
+                                <div className={`p-3 rounded-lg text-xs leading-relaxed ${
+                                  r.isCorrect
+                                    ? "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-800 dark:text-emerald-300"
+                                    : "bg-rose-50 dark:bg-rose-900/10 text-rose-800 dark:text-rose-300"
+                                }`}>
+                                  <div className="flex items-start gap-2">
+                                    {r.isCorrect ? <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" /> : <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />}
+                                    <span>{r.explanation}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Covered classes and boundaries */}
+                              {(r.coveredClasses.length > 0 || r.coveredBoundaries.length > 0) && (
+                                <div className="space-y-1.5">
+                                  <p className="text-[11px] font-medium text-muted-foreground">Покрытие:</p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {r.coveredClasses.map((cls) => (
+                                      <Badge key={cls} className="text-[10px] bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400">
+                                        EC: {cls}
+                                      </Badge>
+                                    ))}
+                                    {r.coveredBoundaries.map((bv) => (
+                                      <Badge key={bv} className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                        BV: {bv}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Hint for incorrect tests */}
+                              {!r.isCorrect && (
+                                <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10">
+                                  <Lightbulb className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                                  <div className="text-xs text-blue-800 dark:text-blue-300">
+                                    <p className="font-medium mb-0.5">Как исправить?</p>
+                                    <p className="text-[11px] opacity-80">
+                                      Проверьте входные данные и ожидаемый результат. Убедитесь, что тест соответствует классу эквивалентности или граничному значению, которое вы хотите покрыть.
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Smart category distribution warnings */}
+      {(() => {
+        const warnings: { icon: React.ReactNode; title: string; details: string; color: string }[] = [];
+
+        // Analyze category distribution
+        const categoryCounts: Record<string, number> = {};
+        result.results.forEach((r) => {
+          const cat = r.testCase.category;
+          categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        });
+
+        const totalTests = result.results.length;
+        const hasNormal = categoryCounts["Нормальное значение"] > 0;
+        const hasBoundary = categoryCounts["Граничное значение"] > 0;
+        const hasException = categoryCounts["Исключение"] > 0;
+        const hasInvalidType = categoryCounts["Недопустимый тип"] > 0;
+
+        // Check if only testing normal values
+        if (hasNormal && !hasException && !hasInvalidType && totalTests >= 2) {
+          warnings.push({
+            icon: <AlertTriangle className="h-4 w-4" />,
+            title: "Тестируются только нормальные значения",
+            details: "Вы добавили тесты для корректных входов, но не проверили обработку ошибок. Добавьте тесты для исключений и невалидных типов данных.",
+            color: "amber",
+          });
+        }
+
+        // Check if missing boundary values
+        if (!hasBoundary && result.totalBvs > 3 && totalTests >= 3) {
+          warnings.push({
+            icon: <AlertTriangle className="h-4 w-4" />,
+            title: "Отсутствуют граничные значения",
+            details: `У этой задачи ${result.totalBvs} граничных значений. Границы диапазонов — наиболее вероятное место ошибок. Протестируйте min, max и соседние значения.`,
+            color: "amber",
+          });
+        }
+
+        // Check if only 1-2 test cases total
+        if (totalTests < 3) {
+          warnings.push({
+            icon: <Info className="h-4 w-4" />,
+            title: "Слишком мало тест-кейсов",
+            details: `Всего ${totalTests} тест. Для полного покрытия этой задачи (${result.totalEcs} EC + ${result.totalBvs} BV) рекомендуется минимум ${Math.min(result.totalEcs + result.totalBvs, 8)} тестов.`,
+            color: "blue",
+          });
+        }
+
+        // Check if EC coverage is high but correctness is low
+        if (result.ecCoverage >= 80 && result.correctnessScore < 70) {
+          warnings.push({
+            icon: <AlertTriangle className="h-4 w-4" />,
+            title: "Хорошее покрытие, но есть ошибки в ожиданиях",
+            details: "Вы покрыли большинство классов эквивалентности, но часть ожидаемых результатов не совпадает с фактическими. Проверьте код функции и уточните ожидания.",
+            color: "amber",
+          });
+        }
+
+        // Check if correctness is high but coverage is low
+        if (result.correctnessScore >= 90 && result.ecCoverage < 50) {
+          warnings.push({
+            icon: <Info className="h-4 w-4" />,
+            title: "Точные ожидания, но малое покрытие",
+            details: "Все ваши ожидаемые результаты верны, но вы протестировали менее половины классов эквивалентности. Добавьте тесты для непокрытых классов.",
+            color: "blue",
+          });
+        }
+
+        // Check if all test cases are from same category
+        const categoryKeys = Object.keys(categoryCounts);
+        if (categoryKeys.length === 1 && totalTests >= 3) {
+          const onlyCat = categoryKeys[0];
+          warnings.push({
+            icon: <AlertTriangle className="h-4 w-4" />,
+            title: `Все тесты в категории «${onlyCat}»`,
+            details: "Разнообразьте категории: тестируйте нормальные значения, границы, исключения и недопустимые типы для полного покрытия.",
+            color: "amber",
+          });
+        }
+
+        if (warnings.length === 0) return null;
+
+        return (
+          <Card className="border-blue-200 dark:border-blue-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-blue-600" />
+                Стратегия тестирования
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {warnings.map((w, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-2 p-2.5 rounded-lg ${
+                    w.color === "amber"
+                      ? "bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-300"
+                      : "bg-blue-50 dark:bg-blue-900/10 text-blue-800 dark:text-blue-300"
+                  }`}
+                >
+                  <span className="shrink-0 mt-0.5">{w.icon}</span>
+                  <div>
+                    <p className="text-xs font-medium">{w.title}</p>
+                    <p className="text-[11px] mt-0.5 opacity-80">{w.details}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Hints for improvement */}
       {(result.uncoveredEcIds.length > 0 || result.uncoveredBvDescriptions.length > 0) && (

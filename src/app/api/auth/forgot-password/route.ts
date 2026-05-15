@@ -3,8 +3,26 @@ import { db } from "@/lib/db";
 import { sendEmail, generatePasswordResetEmail } from "@/lib/email";
 import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
 import { generateSecureToken } from "@/lib/crypto";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+
+function getClientIP(req: Request): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req);
+  const result = checkRateLimit(`forgot-password:${ip}`, rateLimits.forgotPassword);
+  if (result.limited) {
+    return NextResponse.json(
+      { error: "Слишком много попыток. Попробуйте позже" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const body = await req.json();
     const { email, phone } = body;
@@ -42,12 +60,23 @@ export async function POST(req: Request) {
       });
 
       const emailData = generatePasswordResetEmail(token, baseUrl);
-      await sendEmail({ to: emailLower, ...emailData });
+      try {
+        await sendEmail({ to: emailLower, ...emailData });
+      } catch (emailError) {
+        // Delete the token since email failed
+        await db.verificationToken.deleteMany({
+          where: { identifier: `password-reset:${user.id}`, token },
+        });
+        console.error("Forgot-password email failed:", emailError);
+        return NextResponse.json(
+          { error: "Не удалось отправить письмо. Попробуйте позже или используйте телефон" },
+          { status: 503 }
+        );
+      }
 
       return NextResponse.json({
         message: "Если аккаунт существует, инструкция отправлена на email",
         method: "email",
-        token,
       });
     }
 
@@ -74,12 +103,23 @@ export async function POST(req: Request) {
       });
 
       const smsMessage = generatePasswordResetSMS(code);
-      await sendSMS({ phone: trimmedPhone, message: smsMessage });
+      try {
+        await sendSMS({ phone: trimmedPhone, message: smsMessage });
+      } catch (smsError) {
+        // Delete the OTP code since SMS failed
+        await db.verificationCode.deleteMany({
+          where: { phone: trimmedPhone, code },
+        });
+        console.error("SMS send failed:", smsError);
+        return NextResponse.json(
+          { error: "Не удалось отправить SMS. Попробуйте позже или используйте email" },
+          { status: 503 }
+        );
+      }
 
       return NextResponse.json({
         message: "Если аккаунт существует, код отправлен по SMS",
         method: "phone",
-        phone: trimmedPhone,
       });
     }
 

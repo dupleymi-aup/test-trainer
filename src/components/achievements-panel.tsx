@@ -5,15 +5,21 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Copy, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   achievements,
   loadUnlockedAchievements,
   type Achievement,
+  type AchievementContext,
 } from "@/lib/achievements";
 
-export function AchievementsPanel() {
+interface AchievementsPanelProps {
+  context?: AchievementContext;
+}
+
+export function AchievementsPanel({ context }: AchievementsPanelProps) {
   const [unlockedIds, setUnlockedIds] = useState<string[]>(() => loadUnlockedAchievements());
   useEffect(() => {
     const handler = () => {
@@ -86,6 +92,9 @@ export function AchievementsPanel() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {achievements.map((achievement) => {
           const isUnlocked = unlockedIds.includes(achievement.id);
+          const progress = context && achievement.progressFn
+            ? Math.round(achievement.progressFn(context) * 100)
+            : 0;
           return (
             <motion.div
               key={achievement.id}
@@ -93,11 +102,11 @@ export function AchievementsPanel() {
               className={`rounded-lg border p-4 transition-all ${
                 isUnlocked
                   ? "border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10"
-                  : "border-border opacity-60 grayscale"
+                  : "border-border"
               }`}
             >
               <div className="flex items-start gap-3">
-                <span className="text-2xl">{achievement.icon}</span>
+                <span className={`text-2xl ${isUnlocked ? "" : "opacity-50 grayscale"}`}>{achievement.icon}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate">
@@ -112,6 +121,12 @@ export function AchievementsPanel() {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {achievement.description}
                   </p>
+                  {!isUnlocked && progress > 0 && (
+                    <div className="mt-2">
+                      <Progress value={progress} className="h-1.5" />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{progress}%</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

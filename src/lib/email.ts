@@ -1,9 +1,4 @@
-/**
- * Email sending service (stub)
- *
- * To use a real provider, install nodemailer or integrate with
- * SendGrid / Resend / etc. and replace the implementation below.
- */
+import nodemailer from "nodemailer";
 
 interface SendEmailOptions {
   to: string;
@@ -12,20 +7,51 @@ interface SendEmailOptions {
   text?: string;
 }
 
-export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<boolean> {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
-    console.log(`[EMAIL] HTML: ${html}`);
-    return true;
+function createTransporter() {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!host || !user || !pass) {
+    return null;
   }
 
-  // TODO: integrate with real email provider
-  // Example with nodemailer:
-  //   const transporter = nodemailer.createTransport({ ... });
-  //   await transporter.sendMail({ from, to, subject, html, text });
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass },
+  });
+}
 
-  console.warn("[EMAIL] No real email provider configured. Emails will not be sent in production.");
-  return false;
+export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<boolean> {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
+      console.log(`[EMAIL] HTML: ${html}`);
+      return true;
+    }
+    throw new Error(
+      "Email service not configured in production. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env"
+    );
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"Тренажёр тестирования" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Failed to send email:", error);
+    throw error;
+  }
 }
 
 export function generatePasswordResetEmail(token: string, baseUrl: string): { subject: string; html: string; text: string } {

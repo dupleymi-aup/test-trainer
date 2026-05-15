@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type { Task } from "@/lib/tasks";
 import { quizQuestions } from "@/lib/constants";
+import { markTheorySectionViewed, loadTheorySectionsViewed } from "@/lib/storage";
 import {
   BookOpen,
   Layers,
@@ -33,6 +35,29 @@ const fadeIn = {
 export function TheoryPanel({ task }: { task?: Task }) {
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [viewedSections, setViewedSections] = useState<Set<string>>(() => new Set(loadTheorySectionsViewed()));
+
+  // Compute relevant sections based on current task topics
+  const relevantSections = useMemo(() => {
+    if (!task) return [];
+    const sections: string[] = [];
+    const topics = task.topics.map((t) => t.toLowerCase());
+    if (topics.some((t) => t.includes("класс") || t.includes("equivalence"))) sections.push("ec");
+    if (topics.some((t) => t.includes("гранич") || t.includes("boundary"))) sections.push("bv");
+    if (topics.some((t) => t.includes("многофактор") || t.includes("комбинатор") || t.includes("pairwise"))) {
+      sections.push("pairwise");
+      sections.push("decision-tables");
+    }
+    if (topics.some((t) => t.includes("логическ") || t.includes("decision") || t.includes("condition"))) sections.push("decision-tables");
+    if (topics.some((t) => t.includes("состоя") || t.includes("transition") || t.includes("переход"))) sections.push("state-transition");
+    if (topics.some((t) => t.includes("формат") || t.includes("валид") || t.includes("проверк"))) sections.push("error-guessing");
+    if (topics.some((t) => t.includes("рекурс") || t.includes("recursion"))) sections.push("testing-strategy");
+    // Always include categories and tips as defaults
+    if (sections.length < 2) sections.push("categories", "tips");
+    return [...new Set(sections)];
+  }, [task]);
+
+  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set(relevantSections.length > 0 ? relevantSections : []));
 
   const handleQuizAnswer = (questionIndex: number, optionIndex: number) => {
     if (quizSubmitted) return;
@@ -57,6 +82,27 @@ export function TheoryPanel({ task }: { task?: Task }) {
     : 0;
 
   const allAnswered = Object.keys(quizAnswers).length === quizQuestions.length;
+
+  const isRecommended = (section: string) => task && relevantSections.includes(section);
+
+  const handleSectionToggle = useCallback((sectionId: string) => {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else {
+        next.add(sectionId);
+        markTheorySectionViewed(sectionId);
+        setViewedSections((v) => new Set(v).add(sectionId));
+      }
+      return next;
+    });
+  }, []);
+
+  const theoryProgress = useMemo(() => {
+    const totalSections = 11; // ec, bv, categories, tips, state-transition, decision-tables, pairwise, metrics, error-guessing, common-mistakes, testing-strategy
+    return { viewed: viewedSections.size, total: totalSections };
+  }, [viewedSections]);
+
   return (
     <motion.div {...fadeIn} className="space-y-4">
       {/* Contextual banner when task is provided */}
@@ -105,7 +151,25 @@ export function TheoryPanel({ task }: { task?: Task }) {
         </CardContent>
       </Card>
 
-      <Accordion type="multiple" className="space-y-3">
+      {/* Theory progress bar */}
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium">Прогресс теории</span>
+            <span className="text-xs text-muted-foreground">{theoryProgress.viewed}/{theoryProgress.total} разделов</span>
+          </div>
+          <Progress value={(theoryProgress.viewed / theoryProgress.total) * 100} className="h-2" />
+        </CardContent>
+      </Card>
+
+      <Accordion type="multiple" defaultValue={relevantSections} onValueChange={(vals) => {
+        vals.forEach((v) => {
+          if (!viewedSections.has(v)) {
+            markTheorySectionViewed(v);
+            setViewedSections((prev) => new Set(prev).add(v));
+          }
+        });
+      }} className="space-y-3">
         {/* Equivalence Classes */}
         <AccordionItem
           value="ec"
@@ -117,7 +181,13 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <Layers className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Классы эквивалентности</h3>
+                <h3 className="font-semibold text-sm flex items-center gap-1.5">
+                  Классы эквивалентности
+                  {viewedSections.has("ec") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {isRecommended("ec") && (
+                    <Badge variant="default" className="text-[9px] px-1 py-0 h-4 bg-emerald-600 hover:bg-emerald-700">Рекомендуется</Badge>
+                  )}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Разделение входных данных на группы
                 </p>
@@ -183,7 +253,13 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <GitBranch className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Граничные значения</h3>
+                <h3 className="font-semibold text-sm flex items-center gap-1.5">
+                  Граничные значения
+                  {viewedSections.has("bv") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {isRecommended("bv") && (
+                    <Badge variant="default" className="text-[9px] px-1 py-0 h-4 bg-amber-600 hover:bg-amber-700">Рекомендуется</Badge>
+                  )}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Тестирование на границах диапазонов
                 </p>
@@ -252,7 +328,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <ArrowRightLeft className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Категории тест-кейсов</h3>
+                <h3 className="font-semibold text-sm">
+                  Категории тест-кейсов
+                  {viewedSections.has("categories") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Как классифицировать тесты
                 </p>
@@ -314,7 +393,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Советы</h3>
+                <h3 className="font-semibold text-sm">
+                  Советы
+                  {viewedSections.has("tips") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Лучшие практики тестирования
                 </p>
@@ -374,7 +456,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <ArrowLeftRight className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Диаграммы состояний</h3>
+                <h3 className="font-semibold text-sm">
+                  Диаграммы состояний
+                  {viewedSections.has("state-transition") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Тестирование переходов между состояниями
                 </p>
@@ -447,7 +532,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <LayoutGrid className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Таблицы решений</h3>
+                <h3 className="font-semibold text-sm">
+                  Таблицы решений
+                  {viewedSections.has("decision-tables") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Систематический подход к логическим условиям
                 </p>
@@ -489,9 +577,31 @@ export function TheoryPanel({ task }: { task?: Task }) {
                   <Lightbulb className="h-3.5 w-3.5" />
                   Пример: Високосный год
                 </p>
-                <p className="text-xs">
+                <p className="text-xs mb-2">
                   Для isLeapYear(year) условия: year%4==0, year%100==0, year%400==0.
-                  Комбинации: (T,T,T)→високосный, (T,T,F)→не високосный, (T,F,*)→високосный, (F,*,*)→не високосный.
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[11px] font-mono border-collapse">
+                    <thead>
+                      <tr className="bg-orange-100 dark:bg-orange-900/40">
+                        <th className="border border-orange-300 dark:border-orange-700 px-1.5 py-1">#</th>
+                        <th className="border border-orange-300 dark:border-orange-700 px-1.5 py-1">÷400</th>
+                        <th className="border border-orange-300 dark:border-orange-700 px-1.5 py-1">÷100</th>
+                        <th className="border border-orange-300 dark:border-orange-700 px-1.5 py-1">÷4</th>
+                        <th className="border border-orange-300 dark:border-orange-700 px-1.5 py-1">Результат</th>
+                        <th className="border border-orange-300 dark:border-orange-700 px-1.5 py-1">Пример</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">1</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-emerald-600">Да</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-emerald-600">Да</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-emerald-600">Да</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-emerald-700 font-semibold">Високосный</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">2000</td></tr>
+                      <tr><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">2</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-rose-600">Нет</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-emerald-600">Да</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-emerald-600">Да</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-rose-700 font-semibold">Не високосный</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">1900</td></tr>
+                      <tr><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">3</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-rose-600">—</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-rose-600">Нет</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-emerald-600">Да</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-emerald-700 font-semibold">Високосный</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">2024</td></tr>
+                      <tr><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">4</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-rose-600">—</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-rose-600">—</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center text-rose-600">Нет</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-rose-700 font-semibold">Не високосный</td><td className="border border-orange-200 dark:border-orange-800 px-1.5 py-0.5 text-center">2023</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs mt-2 text-muted-foreground">
+                  Знак «—» означает, что значение условия не влияет на результат при данных предыдущих условиях.
                   Вместо 8 комбинаций достаточно 4 теста.
                 </p>
               </div>
@@ -510,7 +620,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <ArrowLeftRight className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Попарное тестирование</h3>
+                <h3 className="font-semibold text-sm">
+                  Попарное тестирование
+                  {viewedSections.has("pairwise") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Сокращение комбинаций с гарантированным покрытием пар
                 </p>
@@ -578,7 +691,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <BarChart3 className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Метрики покрытия</h3>
+                <h3 className="font-semibold text-sm">
+                  Метрики покрытия
+                  {viewedSections.has("metrics") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Как оценивается качество тестирования
                 </p>
@@ -681,7 +797,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <ShieldCheck className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Предугадывание ошибок</h3>
+                <h3 className="font-semibold text-sm">
+                  Предугадывание ошибок
+                  {viewedSections.has("error-guessing") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Интуитивный поиск типичных дефектов
                 </p>
@@ -764,7 +883,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 <AlertTriangle className="h-4 w-4" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-sm">Типичные ошибки студентов</h3>
+                <h3 className="font-semibold text-sm">
+                  Типичные ошибки студентов
+                  {viewedSections.has("common-mistakes") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
                 <p className="text-xs text-muted-foreground">
                   Чего следует избегать при написании тестов
                 </p>
@@ -782,6 +904,12 @@ export function TheoryPanel({ task }: { task?: Task }) {
                     Добавление нескольких тестов из одного класса эквивалентности не увеличивает
                     покрытие. Достаточно одного представителя из каждого класса.
                   </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-rose-600">Плохо:</span> factorial(5), factorial(7), factorial(10) — все из EC2
+                  </p>
+                  <p className="text-xs mt-0.5 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-emerald-600">Хорошо:</span> factorial(5) — один тест из EC2
+                  </p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
                   <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
@@ -790,6 +918,12 @@ export function TheoryPanel({ task }: { task?: Task }) {
                   <p className="text-xs">
                     Многие студенты тестируют только «правильные» входы. Но обработка ошибок —
                     важная часть покрытия. Не забывайте про исключения и недопустимые типы.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-rose-600">Пропуск:</span> triangleType(3,4,5) ✓, но нет triangleType(-1,2,3)
+                  </p>
+                  <p className="text-xs mt-0.5 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-emerald-600">Полное:</span> + triangleType(-1,2,3) → «Стороны должны быть положительными»
                   </p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
@@ -800,6 +934,12 @@ export function TheoryPanel({ task }: { task?: Task }) {
                     Ожидаемый результат должен соответствовать реальному поведению функции,
                     а не тому, что вы «думаете» она должна вернуть.
                   </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-rose-600">Ошибка:</span> validateEmail("a@b.c") → valid=true
+                  </p>
+                  <p className="text-xs mt-0.5 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-emerald-600">Реальность:</span> valid=false (TLD «c» &lt; 2 символа)
+                  </p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
                   <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
@@ -809,6 +949,12 @@ export function TheoryPanel({ task }: { task?: Task }) {
                     Граничные значения — отдельный метод от классов эквивалентности.
                     Даже если класс покрыт, граница может быть не протестирована.
                   </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-rose-600">Пропуск:</span> isPrime(5), isPrime(7) — но нет isPrime(2)
+                  </p>
+                  <p className="text-xs mt-0.5 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-emerald-600">Границы:</span> isPrime(2) — наименьшее простое, isPrime(1) — не простое
+                  </p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
                   <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
@@ -817,6 +963,21 @@ export function TheoryPanel({ task }: { task?: Task }) {
                   <p className="text-xs">
                     Комментарии к тест-кейсам помогают объяснить, почему выбран именно этот
                     вход. «Тест для EC1» — плохой комментарий; «Граничное значение: n=0» — хороший.
+                  </p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+                  <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">
+                    ❌ Тестирование только одного нарушения
+                  </p>
+                  <p className="text-xs">
+                    В функциях с множественными проверками (validatePassword, validateEmail) один вход может
+                    нарушать несколько правил. Проверяйте комбинированные нарушения.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-rose-600">Неполно:</span> validatePassword("abcdefgh") → только «нет цифры»
+                  </p>
+                  <p className="text-xs mt-0.5 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    <span className="text-emerald-600">Полно:</span> validatePassword("abc") → длина + заглавная + цифра + спецсимвол (4 нарушения)
                   </p>
                 </div>
               </div>
@@ -831,6 +992,155 @@ export function TheoryPanel({ task }: { task?: Task }) {
                   <li>3. Создайте по одному тесту на каждый класс и границу</li>
                   <li>4. Проверьте ожидаемые результаты по коду функции</li>
                   <li>5. Добавьте error guessing тесты для полноты</li>
+                </ul>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Testing Strategy / Algorithm */}
+        <AccordionItem
+          value="testing-strategy"
+          className="border rounded-lg px-4 data-[state=open]:border-green-300 data-[state=open]:bg-green-50/50 dark:data-[state-open]:border-green-800 dark:data-[state=open]:bg-green-950/20"
+        >
+          <AccordionTrigger className="hover:no-underline py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                <Brain className="h-4 w-4" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-sm">
+                  Алгоритм создания тестов
+                  {viewedSections.has("testing-strategy") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Пошаговая стратегия для любой функции
+                </p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-4">
+            <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                Следуйте этому алгоритму для систематического создания тест-кейсов.
+                Каждый шаг дополняет предыдущий, обеспечивая полное покрытие.
+              </p>
+
+              <div className="space-y-3">
+                {/* Step 1 */}
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border-l-4 border-green-500">
+                  <p className="font-medium text-green-800 dark:text-green-300 text-xs mb-1">
+                    Шаг 1: Прочитайте описание и код функции
+                  </p>
+                  <p className="text-xs">
+                    Поймите, что функция делает, какие входы принимает и что возвращает.
+                    Обратите внимание на проверки (if/throw) — это ключ к классам эквивалентности.
+                  </p>
+                  <p className="text-xs mt-1 text-muted-foreground">
+                    <strong>Пример:</strong> factorial(n) → проверяет n &lt; 0, n &gt; 20, !Integer → 3 класса ошибок
+                  </p>
+                </div>
+
+                {/* Step 2 */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border-l-4 border-blue-500">
+                  <p className="font-medium text-blue-800 dark:text-blue-300 text-xs mb-1">
+                    Шаг 2: Выпишите классы эквивалентности
+                  </p>
+                  <p className="text-xs">
+                    Для каждой проверки в коде определите валидный и невалидный класс.
+                    Каждый «if/throw» = минимум 2 класса.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    applyDiscount: price≥0 (✓), price&lt;0 (✗), discount 0–100 (✓), discount&lt;0 (✗), discount&gt;100 (✗)
+                  </p>
+                </div>
+
+                {/* Step 3 */}
+                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border-l-4 border-amber-500">
+                  <p className="font-medium text-amber-800 dark:text-amber-300 text-xs mb-1">
+                    Шаг 3: Определите граничные значения
+                  </p>
+                  <p className="text-xs">
+                    Для каждого диапазона [min, max] проверьте: min-1, min, min+1, max-1, max, max+1.
+                    Также ищите особые точки: 0, пустая строка, null.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    BMI: weight ∈ [20, 300] → 19, 20, 21, 299, 300, 301
+                  </p>
+                </div>
+
+                {/* Step 4 */}
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 border-l-4 border-purple-500">
+                  <p className="font-medium text-purple-800 dark:text-purple-300 text-xs mb-1">
+                    Шаг 4: Создайте тест-кейсы
+                  </p>
+                  <p className="text-xs">
+                    Для каждого класса и границы создайте по одному тесту.
+                    Указывайте категорию: «нормальное», «граничное», «исключение», «недопустимый тип».
+                  </p>
+                  <p className="text-xs mt-1 text-muted-foreground">
+                    <strong>Совет:</strong> один тест может покрыть несколько классов (комбинированные нарушения).
+                  </p>
+                </div>
+
+                {/* Step 5 */}
+                <div className="bg-rose-50 dark:bg-rose-900/20 rounded-lg p-3 border-l-4 border-rose-500">
+                  <p className="font-medium text-rose-800 dark:text-rose-300 text-xs mb-1">
+                    Шаг 5: Проверьте ожидаемые результаты
+                  </p>
+                  <p className="text-xs">
+                    Запустите тест через эталонную функцию. Ожидаемый результат должен совпадать
+                    с фактическим поведением, а не с вашими предположениями.
+                  </p>
+                  <p className="text-xs mt-1 text-muted-foreground">
+                    <strong>Важно:</strong> для исключений ожидаемый результат — текст ошибки, а не просто «ошибка».
+                  </p>
+                </div>
+
+                {/* Step 6 */}
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 border-l-4 border-indigo-500">
+                  <p className="font-medium text-indigo-800 dark:text-indigo-300 text-xs mb-1">
+                    Шаг 6: Добавьте Error Guessing
+                  </p>
+                  <p className="text-xs">
+                    После формальных методов добавьте «хитрые» тесты: пустая строка, пробелы,
+                    эмодзи, очень длинные строки, специальные символы.
+                  </p>
+                  <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1">
+                    isPalindrome("   ") → очищенная строка пуста → true
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-2">
+                  Чек-лист полноты
+                </p>
+                <ul className="space-y-1 text-xs">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>Все валидные классы покрыты (зелёные)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>Все невалидные классы покрыты (красные)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>Все граничные значения протестированы</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>Проверены недопустимые типы данных</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>Ожидаемые результаты совпадают с эталоном</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>Добавлены 1–2 error guessing теста</span>
+                  </li>
                 </ul>
               </div>
             </div>

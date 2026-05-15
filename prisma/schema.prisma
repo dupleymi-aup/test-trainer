@@ -10,6 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
 model User {
   id             String    @id @default(cuid())
   name           String?
@@ -17,7 +23,9 @@ model User {
   emailVerified  DateTime?
   phone          String?   @unique
   hashedPassword String?
-  role           String    @default("student")
+  role           Role      @default(STUDENT)
+  isActive       Boolean   @default(true)
+  deletedAt      DateTime?
   avatar         String?
   bio            String?
   university     String?
@@ -27,6 +35,11 @@ model User {
 
   accounts       Account[]
   sessions       Session[]
+  groups         UserGroup[]
+  attempts       Attempt[]
+  activityLogs   ActivityLog[]
+  createdGroups  Group[]     @relation("CreatedGroups")
+  updatedSettings SystemSetting[] @relation("UpdatedSettings")
 }
 
 model Account {
@@ -71,4 +84,86 @@ model VerificationCode {
   email     String?
   expires   DateTime
   createdAt DateTime @default(now())
+}
+
+model Group {
+  id              String      @id @default(cuid())
+  name            String
+  description     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  createdByUserId String
+  createdBy       User        @relation("CreatedGroups", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  members         UserGroup[]
+  assignedTasks   GroupTask[]
+}
+
+model GroupTask {
+  id        String   @id @default(cuid())
+  groupId   String
+  taskId    Int
+  assignedAt DateTime @default(now())
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, taskId])
+  @@index([groupId])
+}
+
+model UserGroup {
+  userId         String
+  groupId        String
+  assignedAt     DateTime  @default(now())
+  assignedByUserId String?
+
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+}
+
+model Attempt {
+  id                    String   @id @default(cuid())
+  userId                String
+  taskId                String
+  testCases             String   // JSON array of test cases
+  score                 Int
+  ecCoverage            Int
+  bvCoverage            Int
+  correctness           Int
+  coveredEcIds          String   // JSON array of covered EC IDs
+  coveredBvDescriptions String   // JSON array of covered BV descriptions
+  timeSpent             Int      // seconds
+  createdAt             DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([taskId])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // e.g., "USER_CREATE", "ROLE_CHANGE", "GROUP_UPDATE"
+  entity    String?  // e.g., "User", "Group", "Setting"
+  entityId  String?
+  details   String?  // JSON
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  value            String   // JSON value
+  updatedAt        DateTime @updatedAt
+  updatedByUserId  String?
+  updatedBy        User?    @relation("UpdatedSettings", fields: [updatedByUserId], references: [id], onDelete: SetNull)
 }

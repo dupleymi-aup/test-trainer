@@ -21,6 +21,7 @@ import { TheoryPanel } from "@/components/theory-panel";
 import { StatisticsPanel } from "@/components/statistics-panel";
 import { ExamMode } from "@/components/exam-mode";
 import { AchievementsPanel } from "@/components/achievements-panel";
+import type { AchievementContext } from "@/lib/achievements";
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
@@ -37,6 +38,7 @@ interface TabContentProps {
   attemptHistory: AttemptRecord[];
   savedProgress: Record<number, TaskProgress>;
   taskBestCoverage: Record<number, { bestEc: number; bestBv: number }>;
+  elapsedTime: number;
   searchQuery: string;
   difficultyFilter: DifficultyFilter;
   sortMode: SortMode;
@@ -70,6 +72,7 @@ export function TabContent({
   attemptHistory,
   savedProgress,
   taskBestCoverage,
+  elapsedTime,
   searchQuery,
   difficultyFilter,
   sortMode,
@@ -203,8 +206,10 @@ export function TabContent({
             <div className="max-w-4xl mx-auto">
               <ResultsPanel
                 result={evaluationResult}
+                testCases={testCases}
                 onReset={onReset}
                 bestScore={savedProgress[evaluationResult.task.id]?.score}
+                elapsedTime={elapsedTime}
               />
             </div>
           </motion.div>
@@ -248,7 +253,19 @@ export function TabContent({
             </div>
             <div className="max-w-3xl mx-auto space-y-6">
               <StatisticsPanel attempts={attemptHistory} />
-              <AchievementsPanel />
+              {(() => {
+                const achievementCtx: AchievementContext = {
+                  completedTasks: Object.keys(savedProgress).length,
+                  totalTasks: tasks.length,
+                  bestScores: Object.fromEntries(Object.entries(savedProgress).map(([id, p]) => [id, p.score])),
+                  totalAttempts: attemptHistory.length,
+                  perfectScores: Object.values(savedProgress).filter((p) => p.score >= 100).length,
+                  attemptHistory: attemptHistory.map((h) => ({ taskId: h.taskId, score: h.score, timestamp: h.timestamp })),
+                  maxEcCoverage: attemptHistory.reduce((max, h) => Math.max(max, h.ecCoverage ?? 0), 0),
+                  maxBvCoverage: attemptHistory.reduce((max, h) => Math.max(max, h.bvCoverage ?? 0), 0),
+                };
+                return <AchievementsPanel context={achievementCtx} />;
+              })()}
             </div>
           </motion.div>
         )}

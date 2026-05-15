@@ -18,7 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Plus, Calculator } from "lucide-react";
+import { Plus, Calculator, HelpCircle } from "lucide-react";
 import type { Task, TestCaseCategory } from "@/lib/tasks";
 import { runReferenceFunction } from "@/lib/tasks";
 import { categories, categoryColors } from "@/lib/constants";
@@ -177,24 +177,56 @@ export function TestForm({ task, onAdd }: TestFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full ${
-                          cat === "Нормальное значение"
-                            ? "bg-emerald-500"
-                            : cat === "Граничное значение"
-                              ? "bg-amber-500"
-                              : cat === "Исключение"
-                                ? "bg-rose-500"
-                                : "bg-purple-500"
-                        }`}
-                      />
-                      {cat}
-                    </span>
-                  </SelectItem>
-                ))}
+                {categories.map((cat) => {
+                  const descriptions: Record<TestCaseCategory, { desc: string; example: string }> = {
+                    "Нормальное значение": {
+                      desc: "Обычные входные данные из допустимого диапазона",
+                      example: "factorial(5) → 120",
+                    },
+                    "Граничное значение": {
+                      desc: "Значения на границах диапазонов — min, max и соседние",
+                      example: "factorial(0), factorial(20), factorial(21)",
+                    },
+                    "Исключение": {
+                      desc: "Входные данные, вызывающие ошибку или невалидный результат",
+                      example: "factorial(-1) → «Факториал не определён»",
+                    },
+                    "Недопустимый тип": {
+                      desc: "Данные неверного типа: строка вместо числа, null, undefined",
+                      example: "factorial('abc') → ошибка типа",
+                    },
+                  };
+                  const info = descriptions[cat];
+                  const dotColor =
+                    cat === "Нормальное значение"
+                      ? "bg-emerald-500"
+                      : cat === "Граничное значение"
+                        ? "bg-amber-500"
+                        : cat === "Исключение"
+                          ? "bg-rose-500"
+                          : "bg-purple-500";
+
+                  return (
+                    <SelectItem key={cat} value={cat}>
+                      <span className="flex items-center gap-2">
+                        <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
+                        {cat}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-[260px]">
+                            <p className="text-xs font-medium mb-1">{cat}</p>
+                            <p className="text-[11px] text-muted-foreground mb-1">{info.desc}</p>
+                            <p className="text-[11px] font-mono bg-muted/50 rounded px-1.5 py-0.5">
+                              {info.example}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

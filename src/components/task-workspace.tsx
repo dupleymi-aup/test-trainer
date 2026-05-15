@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Eye,
   Pencil,
+  Lightbulb,
 } from "lucide-react";
 import type { Task } from "@/lib/tasks";
 import { saveTaskNote, loadTaskNote } from "@/lib/storage";
@@ -99,6 +100,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
   const [noteViewMode, setNoteViewMode] = useState(false);
   const [expandedEcs, setExpandedEcs] = useState<Set<string>>(new Set());
   const [expandedBvs, setExpandedBvs] = useState<Set<number>>(new Set());
+  const [mistakesOpen, setMistakesOpen] = useState(false);
 
   const handleBlur = () => {
     saveTaskNote(task.id, note);
@@ -343,6 +345,42 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* Common Mistakes */}
+        {task.commonMistakes && task.commonMistakes.length > 0 && (
+          <Card className="border-amber-200 dark:border-amber-800">
+            <button
+              onClick={() => setMistakesOpen(!mistakesOpen)}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 rounded-t-lg transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-amber-600" />
+                <span className="text-sm font-semibold">Типичные ошибки</span>
+                <Badge variant="secondary" className="text-[10px]">
+                  {task.commonMistakes.length}
+                </Badge>
+              </div>
+              {mistakesOpen ? (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+            {mistakesOpen && (
+              <div className="px-4 pb-4 space-y-2">
+                {task.commonMistakes.map((mistake, idx) => (
+                  <div
+                    key={idx}
+                    className="flex gap-2 text-xs text-muted-foreground leading-relaxed bg-amber-50/50 dark:bg-amber-900/10 rounded-md p-2.5"
+                  >
+                    <span className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">⚠</span>
+                    <span>{mistake}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
 
         {/* Notes Section */}
         <Card>

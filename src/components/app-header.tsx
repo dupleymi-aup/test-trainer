@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Beaker, Sun, Moon, HelpCircle, Flame } from "lucide-react";
+import { Beaker, Sun, Moon, HelpCircle, Flame, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 import { GlobalNotesDialog } from "@/components/global-notes-dialog";
@@ -9,6 +9,8 @@ import { GlobalNotesDialog } from "@/components/global-notes-dialog";
 interface AppHeaderProps {
   streak: { currentStreak: number };
   onShowShortcuts: () => void;
+  onReplayOnboarding: () => void;
+  onMarathonClick?: () => void;
 }
 
 function ThemeToggle() {
@@ -28,7 +30,7 @@ function ThemeToggle() {
   );
 }
 
-export function AppHeader({ streak, onShowShortcuts }: AppHeaderProps) {
+export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarathonClick }: AppHeaderProps) {
   return (
     <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-5">
@@ -56,6 +58,26 @@ export function AppHeader({ streak, onShowShortcuts }: AppHeaderProps) {
                 </span>
               </div>
             )}
+            {onMarathonClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                onClick={onMarathonClick}
+                title="Режим «Марафон»"
+              >
+                <Flame className="h-4 w-4 text-orange-500" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground"
+              onClick={onReplayOnboarding}
+              title="Повторить обучение"
+            >
+              <PlayCircle className="h-4 w-4" />
+            </Button>
             <GlobalNotesDialog />
             <Button
               variant="ghost"

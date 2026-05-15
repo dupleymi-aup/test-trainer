@@ -25,6 +25,9 @@ import {
   EyeOff,
   BarChart3,
   RefreshCw,
+  Download,
+  Upload,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -53,7 +56,16 @@ import {
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 import { StatisticsPanel } from "@/components/statistics-panel";
 import { AchievementsPanel } from "@/components/achievements-panel";
-import { loadAttemptHistory } from "@/lib/storage";
+import { loadAttemptHistory, exportAllProgress, importAllProgress, clearAllProgress } from "@/lib/storage";
+
+const roleLabels: Record<string, string> = {
+  student: "Студент",
+  STUDENT: "Студент",
+  teacher: "Преподаватель",
+  TEACHER: "Преподаватель",
+  admin: "Администратор",
+  ADMIN: "Администратор",
+};
 
 const profileSchema = z.object({
   name: z.string().min(2, "Имя должно быть не менее 2 символов").optional(),
@@ -258,6 +270,47 @@ function ProfileContent() {
     }
   }, [verifyCooldown]);
 
+  const handleExportProgress = useCallback(() => {
+    const json = exportAllProgress();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `test-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Прогресс экспортирован");
+  }, []);
+
+  const handleImportProgress = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const content = ev.target?.result;
+        if (typeof content === "string" && importAllProgress(content)) {
+          toast.success("Прогресс импортирован");
+          // Refresh the page to show updated stats
+          window.location.reload();
+        } else {
+          toast.error("Ошибка при импорте");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, []);
+
+  const handleResetProgress = useCallback(() => {
+    clearAllProgress();
+    toast.success("Прогресс сброшен");
+    window.location.reload();
+  }, []);
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
@@ -377,7 +430,7 @@ function ProfileContent() {
                 <Separator />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <ShieldCheck className="h-4 w-4" />
-                  <span className="capitalize">{profile.role}</span>
+                  <span>{roleLabels[profile.role] || profile.role}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Аккаунт создан: {new Date(profile.createdAt).toLocaleDateString("ru-RU")}
@@ -677,6 +730,32 @@ function ProfileContent() {
 
               <TabsContent value="stats" className="mt-6">
                 <div className="space-y-6">
+                  {/* Data Management */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Управление данными</CardTitle>
+                      <CardDescription>
+                        Экспорт, импорт и сброс прогресса
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <Button variant="outline" onClick={handleExportProgress} className="flex items-center gap-2">
+                          <Download className="h-4 w-4" />
+                          Экспорт
+                        </Button>
+                        <Button variant="outline" onClick={handleImportProgress} className="flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          Импорт
+                        </Button>
+                        <Button variant="destructive" onClick={handleResetProgress} className="flex items-center gap-2">
+                          <Trash2 className="h-4 w-4" />
+                          Сброс
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <StatisticsPanel attempts={loadAttemptHistory()} />
                   <Card>
                     <CardHeader>

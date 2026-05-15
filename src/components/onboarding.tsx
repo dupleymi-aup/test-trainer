@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Sparkles, ListChecks, Dumbbell, BarChart3, BookOpen } from "lucide-react";
 
 const ONBOARDING_KEY = "test-trainer-onboarding-done";
+const REPLAY_EVENT = "replay-onboarding";
 
 const steps = [
   {
@@ -43,6 +44,7 @@ const steps = [
 ];
 
 export function Onboarding() {
+  const [forcedOpen, setForcedOpen] = useState(false);
   const [open, setOpen] = useState(() => {
     try {
       return !localStorage.getItem(ONBOARDING_KEY);
@@ -52,8 +54,20 @@ export function Onboarding() {
   });
   const [step, setStep] = useState(0);
 
+  useEffect(() => {
+    const handler = () => {
+      localStorage.removeItem(ONBOARDING_KEY);
+      setForcedOpen(true);
+      setStep(0);
+      setOpen(true);
+    };
+    window.addEventListener(REPLAY_EVENT, handler);
+    return () => window.removeEventListener(REPLAY_EVENT, handler);
+  }, []);
+
   const handleClose = () => {
     setOpen(false);
+    setForcedOpen(false);
     try {
       localStorage.setItem(ONBOARDING_KEY, "true");
     } catch {

@@ -36,6 +36,7 @@ export interface Task {
   code: string;
   equivalenceClasses: EquivalenceClass[];
   boundaryValues: BoundaryValue[];
+  commonMistakes?: string[];
 }
 
 // Reference functions
@@ -251,6 +252,62 @@ export const referenceFunctions: Record<
     for (let i = 2; i <= n; i++) { const t = a + b; a = b; b = t; }
     return b;
   },
+  16: (args: unknown[]) => {
+    const isPremium = args[0] as boolean;
+    const orderAmount = args[1] as number;
+    const region = args[2] as string;
+    if (typeof isPremium !== "boolean") throw new Error("isPremium должен быть булевым");
+    if (typeof orderAmount !== "number" || isNaN(orderAmount)) throw new Error("orderAmount должен быть числом");
+    if (typeof region !== "string") throw new Error("region должен быть строкой");
+    if (orderAmount < 0) throw new Error("Сумма заказа не может быть отрицательной");
+    const validRegions = ["local", "national", "international"];
+    if (!validRegions.includes(region)) throw new Error("Недопустимый регион");
+    let shipping: number;
+    if (isPremium && orderAmount >= 1000) {
+      shipping = 0;
+    } else if (isPremium) {
+      shipping = region === "international" ? 200 : 100;
+    } else if (orderAmount >= 2000) {
+      shipping = region === "international" ? 300 : 0;
+    } else if (orderAmount >= 500) {
+      shipping = region === "local" ? 100 : region === "national" ? 200 : 400;
+    } else {
+      shipping = region === "local" ? 200 : region === "national" ? 350 : 500;
+    }
+    return { shipping, currency: "RUB" };
+  },
+  17: (args: unknown[]) => {
+    const action = args[0] as string;
+    const currentAttempts = args[1] as number;
+    const lockoutTime = args[2] as number | null;
+    const maxAttempts = 3;
+    const lockoutDuration = 300; // 5 минут
+    if (typeof action !== "string") throw new Error("action должен быть строкой");
+    if (!Number.isInteger(currentAttempts) || currentAttempts < 0) throw new Error("currentAttempts должен быть неотрицательным целым");
+    if (lockoutTime !== null && (typeof lockoutTime !== "number" || lockoutTime < 0)) throw new Error("lockoutTime должен быть неотрицательным числом или null");
+    const now = 0; // моделируем: lockoutTime — это время блокировки в секундах от начала, 0 = сейчас
+    const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDuration;
+    if (action === "login") {
+      if (isLockedOut) {
+        return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован. Попробуйте позже." };
+      }
+      const newAttempts = currentAttempts + 1;
+      if (newAttempts >= maxAttempts) {
+        return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован после 3 неудачных попыток." };
+      }
+      return { status: "failed", remainingAttempts: maxAttempts - newAttempts, message: `Неверный пароль. Осталось попыток: ${maxAttempts - newAttempts}` };
+    }
+    if (action === "success") {
+      if (isLockedOut) {
+        return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован." };
+      }
+      return { status: "success", remainingAttempts: maxAttempts, message: "Вход выполнен успешно." };
+    }
+    if (action === "wait") {
+      return { status: "unlocked", remainingAttempts: maxAttempts, message: "Блокировка снята. Попытки сброшены." };
+    }
+    throw new Error("Недопустимое действие");
+  },
 };
 
 export const tasks: Task[] = [
@@ -314,6 +371,11 @@ export const tasks: Task[] = [
       { value: 20, description: "Верхняя граница допустимых" },
       { value: 21, description: "Переполнение" },
       { value: -1, description: "Первая недопустимая" },
+    ],
+    commonMistakes: [
+      "Студенты часто забывают проверить n = 0 — граничный случай, где факториал равен 1",
+      "Пропускают проверку дробных чисел (например, 3.5) — функция должна выбросить ошибку",
+      "Тестируют только положительные значения, забывая про отрицательные и превышающие 20",
     ],
   },
   {
@@ -382,6 +444,11 @@ export const tasks: Task[] = [
       { value: 2, description: "Наименьшее простое" },
       { value: 3, description: "Наименьшее нечётное простое" },
       { value: 4, description: "Наименьшее составное" },
+    ],
+    commonMistakes: [
+      "Часто забывают, что 1 — не простое число (должно вернуть false)",
+      "Пропускают проверку n = 2 — единственное чётное простое число",
+      "Не тестируют дробные числа и нечисловые аргументы",
     ],
   },
   {
@@ -472,6 +539,11 @@ export const tasks: Task[] = [
       { value: [100, 100], description: "Полная скидка" },
       { value: [100, 101], description: "Скидка > 100%" },
     ],
+    commonMistakes: [
+      "Забывают проверить price = 0 — нулевая цена допустима, результат должен быть 0",
+      "Не тестируют комбинации: отрицательная цена И отрицательная скидка одновременно",
+      "Пропускают проверку discountPercent = 100 — товар должен стать бесплатным",
+    ],
   },
   {
     id: 4,
@@ -536,6 +608,11 @@ export const tasks: Task[] = [
       { value: 2024, description: "Високосный (÷4, не ÷100)" },
       { value: 2025, description: "Не високосный" },
       { value: 2100, description: "Не високосный (÷100, не ÷400)" },
+    ],
+    commonMistakes: [
+      "Часто думают, что любой год, делящийся на 4 — високосный, забывая про правило 100/400",
+      "Не тестируют годы типа 1900 или 2100 (делятся на 100, но не на 400 — не високосные)",
+      "Пропускают проверку year = 1 — минимальный допустимый год",
     ],
   },
   {
@@ -614,6 +691,11 @@ export const tasks: Task[] = [
       { value: [3, 4, 5], description: "Разносторонний" },
       { value: [1, 2, 3], description: "Вырожденный (не треугольник)" },
       { value: [1, 1, 3], description: "Не треугольник" },
+    ],
+    commonMistakes: [
+      "Забывают проверить вырожденный треугольник (a + b = c) — это «не треугольник»",
+      "Не тестируют случай, когда только две стороны равны (равнобедренный, но не равносторонний)",
+      "Пропускают проверку с нулевыми или отрицательными сторонами",
     ],
   },
   {
@@ -712,6 +794,11 @@ export const tasks: Task[] = [
       { value: "Abcdefgh!", description: "Нет цифр" },
       { value: "Abcdefg12", description: "Нет спецсимволов" },
     ],
+    commonMistakes: [
+      "Тестируют каждый критерий отдельно, забывая про комбинации нарушений (например, «abc» нарушает сразу 4 правила)",
+      "Не проверяют кириллические буквы — функция поддерживает и русские заглавные/строчные",
+      "Пропускают проверку нестроковых типов (null, undefined, число)",
+    ],
   },
   {
     id: 7,
@@ -748,6 +835,11 @@ export const tasks: Task[] = [
       { value: "A", description: "Один символ, верхний регистр" },
       { value: "a b a", description: "Палиндром с пробелом" },
       { value: "12321", description: "Числовой палиндром" },
+    ],
+    commonMistakes: [
+      "Забывают, что пустая строка считается палиндромом",
+      "Не проверяют палиндромы с пробелами и знаками препинания («A man, a plan, a canal: Panama»)",
+      "Не тестируют кириллические палиндромы («Анна», «казак»)",
     ],
   },
   {
@@ -820,6 +912,11 @@ export const tasks: Task[] = [
       { value: "user@", description: "Пустая доменная часть" },
       { value: "a b@example.com", description: "Пробел в локальной части" },
       { value: "", description: "Пустая строка" },
+    ],
+    commonMistakes: [
+      "Не проверяют минимальный валидный email (a@b.cd) — важно для понимания границ формата",
+      "Забывают про TLD длиной 1 символ и 7+ символов — типичные пограничные случаи",
+      "Не тестируют комбинации: несколько @, пробелы, спецсимволы в локальной части",
     ],
   },
   {
@@ -896,6 +993,11 @@ export const tasks: Task[] = [
       { value: 3999, description: "Максимальное число (MMMCMXCIX)" },
       { value: 4000, description: "Превышение максимума" },
       { value: 0, description: "Ниже минимума" },
+    ],
+    commonMistakes: [
+      "Забывают проверить специальные вычитающие комбинации: 4 (IV), 9 (IX), 40 (XL), 90 (XC), 400 (CD), 900 (CM)",
+      "Не тестируют граничные значения 1 и 3999 — минимум и максимум диапазона",
+      "Пропускают дробные числа — функция должна выбросить ошибку",
     ],
   },
   {
@@ -991,6 +1093,11 @@ export const tasks: Task[] = [
       { value: [1, 13, 2023], description: "Месяц > 12" },
       { value: [1, 0, 2023], description: "Месяц < 1" },
     ],
+    commonMistakes: [
+      "Забывают проверить 29 февраля в високосный и невисокосный год — критичная разница",
+      "Не тестируют месяцы с разным количеством дней: 30 дней (апрель, июнь) vs 31",
+      "Пропускают комбинации параметров — например, валидный день для одного месяца, но не для другого",
+    ],
   },
   {
     id: 11,
@@ -1032,6 +1139,11 @@ export const tasks: Task[] = [
       { value: "+71234567890123456", description: "16 цифр (слишком длинный)" },
       { value: "", description: "Пустая строка" },
       { value: "+7abc", description: "Содержит буквы" },
+    ],
+    commonMistakes: [
+      "Забывают проверить ровно 10 цифр (нижняя граница) и ровно 15 (верхняя)",
+      "Не тестируют разные форматы: с дефисами (+7-999-123-45-67) и без (+79991234567)",
+      "Пропускают проверку, что номер не должен содержать буквы",
     ],
   },
   {
@@ -1083,6 +1195,11 @@ export const tasks: Task[] = [
       { value: [70, 50], description: "Минимальный рост" },
       { value: [70, 250], description: "Максимальный рост" },
     ],
+    commonMistakes: [
+      "Не проверяют граничные значения ИМТ: 18.5, 25, 30 — переходы между категориями",
+      "Забывают проверить минимальный/максимальный вес и рост — функция выбрасывает ошибку за пределами диапазона",
+      "Тестируют только один параметр, не варьируя второй (weight и height нужно комбинировать)",
+    ],
   },
   {
     id: 13,
@@ -1129,6 +1246,11 @@ export const tasks: Task[] = [
       { value: "   ", description: "Только пробелы (NaN)" },
       { value: "abc", description: "Не число (NaN)" },
     ],
+    commonMistakes: [
+      "Забывают, что строка из пробелов должна вернуть NaN, а не 0",
+      "Не проверяют строки с ведущими/завершающими пробелами вокруг валидного числа",
+      "Не тестируют нестроковые типы — функция должна выбросить ошибку",
+    ],
   },
   {
     id: 14,
@@ -1166,6 +1288,11 @@ export const tasks: Task[] = [
       { value: [1, [2, [3, [4]]]], description: "4 уровня вложенности" },
       { value: [null], description: "Массив с null" },
       { value: [undefined], description: "Массив с undefined" },
+    ],
+    commonMistakes: [
+      "Забывают проверить пустой вложенный массив [[]] — должен вернуть []",
+      "Не тестируют глубокую вложенность (3+ уровня) — важно для проверки рекурсии",
+      "Пропускают массивы с null/undefined — они не должны распадаться",
     ],
   },
   {
@@ -1211,6 +1338,149 @@ export const tasks: Task[] = [
       { value: 76, description: "За верхней границей" },
       { value: -1, description: "Ниже нижней границы" },
       { value: 0.5, description: "Нецелое число" },
+    ],
+    commonMistakes: [
+      "Забывают проверить n = 0 — базовый случай, где F(0) = 0",
+      "Не тестируют n = 75 — максимальное допустимое значение",
+      "Пропускают дробные числа и отрицательные индексы — функция должна выбросить ошибку",
+    ],
+  },
+  {
+    id: 16,
+    name: "Стоимость доставки",
+    difficulty: "Сложно",
+    description:
+      "Рассчитывает стоимость доставки на основе трёх условий: статус клиента (премиум/обычный), сумма заказа и регион доставки. Используйте таблицу решений для покрытия всех комбинаций условий.",
+    signature: "calculateShipping(isPremium: boolean, orderAmount: number, region: string): { shipping: number; currency: string }",
+    topics: ["Таблица решений", "Комбинаторное тестирование", "Многофакторное тестирование"],
+    params: [
+      { name: "isPremium", type: "boolean", description: "Премиум-статус клиента" },
+      { name: "orderAmount", type: "number", description: "Сумма заказа (>= 0)" },
+      { name: "region", type: "string", description: "Регион: local, national, international" },
+    ],
+    returnType: "{ shipping: number; currency: string }",
+    code: `function calculateShipping(isPremium: boolean, orderAmount: number, region: string): { shipping: number; currency: string } {
+  if (typeof isPremium !== "boolean") throw new Error("isPremium должен быть булевым");
+  if (typeof orderAmount !== "number" || isNaN(orderAmount)) throw new Error("orderAmount должен быть числом");
+  if (typeof region !== "string") throw new Error("region должен быть строкой");
+  if (orderAmount < 0) throw new Error("Сумма заказа не может быть отрицательной");
+  const validRegions = ["local", "national", "international"];
+  if (!validRegions.includes(region)) throw new Error("Недопустимый регион");
+
+  let shipping: number;
+  if (isPremium && orderAmount >= 1000) {
+    shipping = 0; // Бесплатно для премиум от 1000
+  } else if (isPremium) {
+    shipping = region === "international" ? 200 : 100;
+  } else if (orderAmount >= 2000) {
+    shipping = region === "international" ? 300 : 0; // Бесплатно от 2000
+  } else if (orderAmount >= 500) {
+    shipping = region === "local" ? 100 : region === "national" ? 200 : 400;
+  } else {
+    shipping = region === "local" ? 200 : region === "national" ? 350 : 500;
+  }
+  return { shipping, currency: "RUB" };
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: Премиум, >= 1000", description: "Бесплатная доставка для премиум", exampleValues: [[true, 1000, "local"], [true, 5000, "international"]] },
+      { id: "ec2", name: "EC2: Премиум, < 1000, local/national", description: "Скидка премиум на местные/национальные", exampleValues: [[true, 500, "local"], [true, 999, "national"]] },
+      { id: "ec3", name: "EC3: Премиум, < 1000, international", description: "Международная для премиум", exampleValues: [[true, 500, "international"]] },
+      { id: "ec4", name: "EC4: Обычный, >= 2000", description: "Бесплатно для обычных от 2000", exampleValues: [[false, 2000, "local"], [false, 3000, "national"]] },
+      { id: "ec5", name: "EC5: Обычный, 500–1999, local", description: "Средняя сумма, локальная", exampleValues: [[false, 500, "local"], [false, 1500, "local"]] },
+      { id: "ec6", name: "EC6: Обычный, 500–1999, national", description: "Средняя сумма, национальная", exampleValues: [[false, 500, "national"]] },
+      { id: "ec7", name: "EC7: Обычный, 500–1999, international", description: "Средняя сумма, международная", exampleValues: [[false, 500, "international"]] },
+      { id: "ec8", name: "EC8: Обычный, < 500, local", description: "Малая сумма, локальная", exampleValues: [[false, 100, "local"], [false, 499, "local"]] },
+      { id: "ec9", name: "EC9: Обычный, < 500, national", description: "Малая сумма, национальная", exampleValues: [[false, 100, "national"]] },
+      { id: "ec10", name: "EC10: Обычный, < 500, international", description: "Малая сумма, международная", exampleValues: [[false, 100, "international"]] },
+      { id: "ec11", name: "EC11: orderAmount < 0", description: "Недопустимая сумма", exampleValues: [[false, -1, "local"]] },
+      { id: "ec12", name: "EC12: Недопустимый регион", description: "Недопустимый регион", exampleValues: [[false, 500, "moon"]] },
+      { id: "ec13", name: "EC13: Неверные типы", description: "Неверный тип аргументов", exampleValues: [["yes", 500, "local"], [false, "abc", "local"]] },
+    ],
+    boundaryValues: [
+      { value: [true, 1000, "local"], description: "Премиум, граница бесплатной доставки" },
+      { value: [true, 999, "local"], description: "Премиум, чуть ниже границы" },
+      { value: [false, 2000, "local"], description: "Обычный, граница бесплатной доставки" },
+      { value: [false, 1999, "local"], description: "Обычный, чуть ниже границы" },
+      { value: [false, 500, "local"], description: "Обычный, граница среднего тарифа" },
+      { value: [false, 499, "local"], description: "Обычный, чуть ниже среднего тарифа" },
+      { value: [false, 0, "local"], description: "Нулевая сумма заказа" },
+    ],
+    commonMistakes: [
+      "Не строят полную таблицу решений: 3 условия × 3 региона = 18+ комбинаций",
+      "Забывают проверить граничные суммы: 1000, 2000, 500 — точки смены тарифа",
+      "Не тестируют комбинацию «премиум + international + малая сумма» — отдельный тариф",
+    ],
+  },
+  {
+    id: 17,
+    name: "Блокировка при входе",
+    difficulty: "Сложно",
+    description:
+      "Моделирует систему блокировки аккаунта после 3 неудачных попыток входа. Состояния: разблокирован → неудачная попытка → заблокирован → разблокирован (после ожидания). Тестируйте переходы между состояниями.",
+    signature: "handleLoginAction(action: string, currentAttempts: number, lockoutTime: number | null): { status: string; remainingAttempts: number; message: string }",
+    topics: ["Переходы состояний", "0-switch coverage", "1-switch coverage", "Пограничные случаи"],
+    params: [
+      { name: "action", type: "string", description: "Действие: login, success, wait" },
+      { name: "currentAttempts", type: "number", description: "Текущее число неудачных попыток (0–3)" },
+      { name: "lockoutTime", type: "number | null", description: "Время блокировки (null = не заблокирован)" },
+    ],
+    returnType: "{ status: string; remainingAttempts: number; message: string }",
+    code: `function handleLoginAction(action: string, currentAttempts: number, lockoutTime: number | null): { status: string; remainingAttempts: number; message: string } {
+  const maxAttempts = 3;
+  const lockoutDuration = 300; // 5 минут
+  if (typeof action !== "string") throw new Error("action должен быть строкой");
+  if (!Number.isInteger(currentAttempts) || currentAttempts < 0) throw new Error("currentAttempts должен быть неотрицательным целым");
+  if (lockoutTime !== null && (typeof lockoutTime !== "number" || lockoutTime < 0)) throw new Error("lockoutTime должен быть неотрицательным числом или null");
+  const now = 0;
+  const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDuration;
+
+  if (action === "login") {
+    if (isLockedOut) {
+      return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован. Попробуйте позже." };
+    }
+    const newAttempts = currentAttempts + 1;
+    if (newAttempts >= maxAttempts) {
+      return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован после 3 неудачных попыток." };
+    }
+    return { status: "failed", remainingAttempts: maxAttempts - newAttempts, message: \`Неверный пароль. Осталось попыток: \${maxAttempts - newAttempts}\` };
+  }
+  if (action === "success") {
+    if (isLockedOut) {
+      return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован." };
+    }
+    return { status: "success", remainingAttempts: maxAttempts, message: "Вход выполнен успешно." };
+  }
+  if (action === "wait") {
+    return { status: "unlocked", remainingAttempts: maxAttempts, message: "Блокировка снята. Попытки сброшены." };
+  }
+  throw new Error("Недопустимое действие");
+}`,
+    equivalenceClasses: [
+      { id: "ec1", name: "EC1: Успешный вход (0 попыток)", description: "Вход с первой попытки", exampleValues: [["success", 0, null]] },
+      { id: "ec2", name: "EC2: Успешный вход (1–2 попытки)", description: "Вход после неудачных попыток", exampleValues: [["success", 1, null], ["success", 2, null]] },
+      { id: "ec3", name: "EC3: Неудачный вход (1-я попытка)", description: "Первая неудачная попытка", exampleValues: [["login", 0, null]] },
+      { id: "ec4", name: "EC4: Неудачный вход (2-я попытка)", description: "Вторая неудачная попытка", exampleValues: [["login", 1, null]] },
+      { id: "ec5", name: "EC5: Неудачный вход (3-я попытка → блокировка)", description: "Третья попытка — блокировка", exampleValues: [["login", 2, null]] },
+      { id: "ec6", name: "EC6: Попытка входа при блокировке", description: "Вход когда аккаунт заблокирован", exampleValues: [["login", 3, 0]] },
+      { id: "ec7", name: "EC7: Ожидание (разблокировка)", description: "Снятие блокировки", exampleValues: [["wait", 3, 0]] },
+      { id: "ec8", name: "EC8: Успешный вход при блокировке", description: "Попытка входа при блокировке", exampleValues: [["success", 2, 0]] },
+      { id: "ec9", name: "EC9: Недопустимое действие", description: "Неизвестный action", exampleValues: [["reset", 0, null]] },
+      { id: "ec10", name: "EC10: currentAttempts < 0", description: "Отрицательное число попыток", exampleValues: [["login", -1, null]] },
+      { id: "ec11", name: "EC11: Неверные типы", description: "Неверный тип аргументов", exampleValues: [[123, 0, null], ["login", "abc", null]] },
+    ],
+    boundaryValues: [
+      { value: ["login", 0, null], description: "Первая попытка (0 → 1)" },
+      { value: ["login", 1, null], description: "Вторая попытка (1 → 2)" },
+      { value: ["login", 2, null], description: "Третья попытка — блокировка (2 → 3)" },
+      { value: ["login", 3, 0], description: "Вход при активной блокировке" },
+      { value: ["success", 2, null], description: "Успех на последней попытке" },
+      { value: ["wait", 3, 0], description: "Разблокировка после ожидания" },
+      { value: ["login", 3, null], description: "Вход без блокировки, attempts=3" },
+    ],
+    commonMistakes: [
+      "Не тестируют полный цикл: 0 → 1 → 2 → 3 (блокировка) → wait → 0",
+      "Забывают проверить, что успешный вход при блокировке всё равно возвращает locked",
+      "Не проверяют граничное состояние: currentAttempts = 2 + login = блокировка",
     ],
   },
 ];

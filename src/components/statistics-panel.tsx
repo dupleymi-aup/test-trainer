@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
 import type { AttemptRecord, StreakData } from "@/lib/storage";
-import { getTaskHistory, loadStreak } from "@/lib/storage";
+import { getTaskHistory, loadStreak, loadAttemptHistory } from "@/lib/storage";
 
 interface StatisticsPanelProps {
   attempts: AttemptRecord[];
@@ -43,8 +43,13 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
         ? history[history.length - 1].score - history[history.length - 2].score
         : 0;
       const sparklineData = history.map((h) => h.score);
+      // Time analytics per task
+      const timedAttempts = history.filter((h) => h.timeSpentMs && h.timeSpentMs > 0);
+      const avgTimeMs = timedAttempts.length > 0
+        ? timedAttempts.reduce((sum, h) => sum + (h.timeSpentMs ?? 0), 0) / timedAttempts.length
+        : 0;
 
-      return { task, bestScore, avgScore, attempts: attemptsCount, trend, history, sparklineData };
+      return { task, bestScore, avgScore, attempts: attemptsCount, trend, history, sparklineData, avgTimeMs };
     });
   }, [attempts]);
 
@@ -52,6 +57,91 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
   const avgOverallScore = totalAttempts > 0
     ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / totalAttempts)
     : 0;
+
+  // Total and average time across all attempts
+  const totalTimeMs = attempts.filter((a) => a.timeSpentMs).reduce((sum, a) => sum + (a.timeSpentMs ?? 0), 0);
+  const timedAttemptsCount = attempts.filter((a) => a.timeSpentMs && a.timeSpentMs > 0).length;
+  const avgTimeMs = timedAttemptsCount > 0 ? totalTimeMs / timedAttemptsCount : 0;
+
+  // Weakness radar: group tasks by primary topic, compute avg best score per topic
+  const weaknessRadar = useMemo(() => {
+    // Map each task to its primary topic category
+    const topicMap: Record<string, { tasks: number[]; scores: number[] }> = {
+      "Классы экв.": { tasks: [], scores: [] },
+      "Граничные знач.": { tasks: [], scores: [] },
+      "Комбинаторное": { tasks: [], scores: [] },
+      "Таблица решений": { tasks: [], scores: [] },
+      "Переходы состояний": { tasks: [], scores: [] },
+      "Попарное": { tasks: [], scores: [] },
+      "Валидация": { tasks: [], scores: [] },
+      "Рекурсия": { tasks: [], scores: [] },
+    };
+
+    for (const ts of taskStats) {
+      if (ts.bestScore === 0) continue; // skip tasks not yet attempted
+      const topics = ts.task.topics.map(t => t.toLowerCase());
+      let assigned = false;
+
+      if (topics.some(t => t.includes("класс") && !t.includes("комбинатор"))) {
+        topicMap["Классы экв."].tasks.push(ts.task.id);
+        topicMap["Классы экв."].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("гранич") && !t.includes("комбинатор"))) {
+        topicMap["Граничные знач."].tasks.push(ts.task.id);
+        topicMap["Граничные знач."].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("комбинатор") || t.includes("многофактор"))) {
+        topicMap["Комбинаторное"].tasks.push(ts.task.id);
+        topicMap["Комбинаторное"].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("таблиц") || t.includes("решен"))) {
+        topicMap["Таблица решений"].tasks.push(ts.task.id);
+        topicMap["Таблица решений"].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("состоя") || t.includes("переход"))) {
+        topicMap["Переходы состояний"].tasks.push(ts.task.id);
+        topicMap["Переходы состояний"].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("попарн") || t.includes("pairwise"))) {
+        topicMap["Попарное"].tasks.push(ts.task.id);
+        topicMap["Попарное"].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("формат") || t.includes("проверк") || t.includes("валид"))) {
+        topicMap["Валидация"].tasks.push(ts.task.id);
+        topicMap["Валидация"].scores.push(ts.bestScore);
+        assigned = true;
+      }
+      if (topics.some(t => t.includes("рекурс"))) {
+        topicMap["Рекурсия"].tasks.push(ts.task.id);
+        topicMap["Рекурсия"].scores.push(ts.bestScore);
+        assigned = true;
+      }
+    }
+
+    return Object.entries(topicMap)
+      .filter(([_, data]) => data.tasks.length > 0)
+      .map(([name, data]) => ({
+        name,
+        avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length),
+        taskCount: data.tasks.length,
+      }))
+      .sort((a, b) => a.avgScore - b.avgScore); // weakest first
+  }, [taskStats]);
+
+  const formatTime = (ms: number): string => {
+    const totalSec = Math.round(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    if (min >= 60) return `${Math.floor(min / 60)}ч ${min % 60}м`;
+    if (min > 0) return `${min}м ${sec}с`;
+    return `${sec}с`;
+  };
 
   return (
     <motion.div
@@ -106,8 +196,142 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
               <p className="text-xs text-muted-foreground">Отлично</p>
             </div>
           </div>
+
+          {timedAttemptsCount > 0 && (
+            <div className="mt-4 pt-3 border-t border-border/50 grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p className="text-lg font-bold text-violet-600">{formatTime(avgTimeMs)}</p>
+                <p className="text-xs text-muted-foreground">Среднее время/задание</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-indigo-600">{formatTime(totalTimeMs)}</p>
+                <p className="text-xs text-muted-foreground">Общее время</p>
+              </div>
+            </div>
+          )}
+
+          {/* Category distribution analytics */}
+          {(() => {
+            const catTotals: Record<string, number> = { "Нормальное значение": 0, "Граничное значение": 0, "Исключение": 0, "Недопустимый тип": 0 };
+            attempts.forEach((a) => {
+              if (a.categoryDistribution) {
+                Object.entries(a.categoryDistribution).forEach(([cat, count]) => {
+                  catTotals[cat] = (catTotals[cat] || 0) + count;
+                });
+              }
+            });
+            const totalCats = Object.values(catTotals).reduce((s, v) => s + v, 0);
+            if (totalCats === 0) return null;
+
+            const catColors: Record<string, string> = {
+              "Нормальное значение": "bg-emerald-500",
+              "Граничное значение": "bg-amber-500",
+              "Исключение": "bg-rose-500",
+              "Недопустимый тип": "bg-purple-500",
+            };
+            const catLabels: Record<string, string> = {
+              "Нормальное значение": "Нормальные",
+              "Граничное значение": "Граничные",
+              "Исключение": "Исключения",
+              "Недопустимый тип": "Недопустимый тип",
+            };
+
+            // Detect imbalance: if any category is < 10% of total
+            const imbalance = Object.values(catTotals).some((v) => v > 0 && v / totalCats < 0.1);
+
+            return (
+              <div className="mt-4 pt-3 border-t border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-medium">Распределение категорий</p>
+                  {imbalance && (
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400">⚠ Есть перекос</span>
+                  )}
+                </div>
+                {/* Stacked bar */}
+                <div className="flex h-3 rounded overflow-hidden gap-px">
+                  {Object.entries(catTotals).map(([cat, count]) => {
+                    if (count === 0) return null;
+                    const pct = (count / totalCats) * 100;
+                    return (
+                      <div
+                        key={cat}
+                        className={`${catColors[cat]} transition-all`}
+                        style={{ width: `${pct}%` }}
+                        title={`${catLabels[cat]}: ${count} (${Math.round(pct)}%)`}
+                      />
+                    );
+                  })}
+                </div>
+                {/* Legend */}
+                <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-0.5">
+                  {Object.entries(catTotals).map(([cat, count]) => {
+                    if (count === 0) return null;
+                    const pct = Math.round((count / totalCats) * 100);
+                    return (
+                      <div key={cat} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <span className={`w-2 h-2 rounded-full ${catColors[cat]}`} />
+                        <span>{catLabels[cat]}: {count} ({pct}%)</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
+
+      {/* Weakness Radar */}
+      {weaknessRadar.length > 0 && (
+        <Card className="border-violet-200 dark:border-violet-800">
+          <CardContent className="pt-5 pb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-4">
+              <Target className="h-4 w-4 text-violet-600" />
+              Карта навыков
+            </h3>
+            <div className="space-y-3">
+              {weaknessRadar.map((item) => {
+                const scoreColor = item.avgScore >= 90
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : item.avgScore >= 60
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-rose-600 dark:text-rose-400";
+                const barColor = item.avgScore >= 90
+                  ? "bg-emerald-500"
+                  : item.avgScore >= 60
+                    ? "bg-amber-500"
+                    : "bg-rose-500";
+                return (
+                  <div key={item.name} className="flex items-center gap-3">
+                    <span className="text-xs font-medium min-w-[130px]">{item.name}</span>
+                    <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1 bg-muted rounded-full h-2.5 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${item.avgScore}%` }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                          className={`h-full rounded-full ${barColor}`}
+                        />
+                      </div>
+                      <span className={`text-xs font-bold min-w-[36px] text-right ${scoreColor}`}>
+                        {item.avgScore}%
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground min-w-[30px]">
+                      {item.taskCount} зад.
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {weaknessRadar.length > 0 && weaknessRadar[0].avgScore < 60 && (
+              <div className="mt-3 p-2 rounded-lg bg-rose-50 dark:bg-rose-900/10 text-xs text-rose-700 dark:text-rose-400">
+                💡 Рекомендуем повторить задания по теме «{weaknessRadar[0].name}»
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent attempts timeline */}
       {attempts.length > 0 && (
@@ -200,7 +424,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
           <Target className="h-4 w-4" />
           Детализация по заданиям
         </h3>
-        {taskStats.map(({ task, bestScore, avgScore, attempts: count, trend, history, sparklineData }) => {
+        {taskStats.map(({ task, bestScore, avgScore, attempts: count, trend, history, sparklineData, avgTimeMs }) => {
           const isExpanded = expandedTasks.has(task.id);
           return (
           <Card key={task.id}>
@@ -243,6 +467,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                 <Progress value={bestScore} className="h-1.5 flex-1" />
                 <span>{count} попыт{count === 1 ? "ка" : count >= 2 && count <= 4 ? "ки" : "ок"}</span>
                 {avgScore > 0 && <span>Ср: {avgScore}%</span>}
+                {avgTimeMs > 0 && <span className="text-violet-600 dark:text-violet-400">⏱ {formatTime(avgTimeMs)}</span>}
               </div>
               {sparklineData.length >= 2 && (
                 <div className="flex items-end gap-px h-4 mt-1.5">

@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+
+function getClientIP(req: Request): string {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
 
 export async function POST(req: Request) {
+  const ip = getClientIP(req);
+  const result = checkRateLimit(`reset-password:${ip}`, rateLimits.resetPassword);
+  if (result.limited) {
+    return NextResponse.json(
+      { error: "Слишком много попыток. Попробуйте позже" },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const body = await req.json();
     const { token, newPassword } = body;
