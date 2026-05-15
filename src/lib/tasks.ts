@@ -397,7 +397,7 @@ export const tasks: Task[] = [
       "Многофакторное тестирование",
     ],
     params: [
-      { name: "price", type: "number", description: "Цена товара (> 0)" },
+      { name: "price", type: "number", description: "Цена товара (>= 0)" },
       {
         name: "discountPercent",
         type: "number",
@@ -417,19 +417,19 @@ export const tasks: Task[] = [
       {
         id: "ec1",
         name: "EC1: Без скидки",
-        description: "price > 0, discountPercent = 0",
+        description: "price >= 0, discountPercent = 0",
         exampleValues: [[100, 0]],
       },
       {
         id: "ec2",
         name: "EC2: Частичная скидка",
-        description: "price > 0, 0 < discountPercent < 100",
+        description: "price >= 0, 0 < discountPercent < 100",
         exampleValues: [[100, 25], [500, 50]],
       },
       {
         id: "ec3",
         name: "EC3: Бесплатно",
-        description: "price > 0, discountPercent = 100",
+        description: "price >= 0, discountPercent = 100",
         exampleValues: [[100, 100]],
       },
       {
@@ -1075,10 +1075,9 @@ export const tasks: Task[] = [
       { id: "ec9", name: "EC9: Нечисловые аргументы", description: "Неверный тип", exampleValues: [["70", "170"], [null, null]] },
     ],
     boundaryValues: [
-      { value: [45, 170], description: "Граница недостаточного веса" },
-      { value: [63.5, 170], description: "ИМТ ≈ 18.5 (переход в норму)" },
-      { value: [72, 170], description: "ИМТ ≈ 25 (переход к избыточному)" },
-      { value: [85, 170], description: "ИМТ ≈ 30 (переход к ожирению)" },
+      { value: [53.5, 170], description: "ИМТ ≈ 18.5 (граница недостаточного веса и нормы)" },
+      { value: [72.3, 170], description: "ИМТ ≈ 25 (граница нормы и избыточного веса)" },
+      { value: [86.7, 170], description: "ИМТ ≈ 30 (граница избыточного веса и ожирения)" },
       { value: [20, 170], description: "Минимальный вес" },
       { value: [300, 170], description: "Максимальный вес" },
       { value: [70, 50], description: "Минимальный рост" },
@@ -1118,7 +1117,7 @@ export const tasks: Task[] = [
       { id: "ec3", name: "EC3: Двоичное", description: "Формат 0b...", exampleValues: ["0b1010", "0B1111"] },
       { id: "ec4", name: "EC4: С пробелами", description: "Число с ведущими/завершающими пробелами", exampleValues: ["  42  ", "  0xFF "] },
       { id: "ec5", name: "EC5: Пустая строка", description: "Пустая или только пробелы", exampleValues: ["", "   "] },
-      { id: "ec6", name: "EC6: Не число", description: "Строка, не являющаяся числом", exampleValues: ["abc", "12.34", "12ab"] },
+      { id: "ec6", name: "EC6: Не число", description: "Строка, не являющаяся числом ни в одном формате", exampleValues: ["abc", "xyz", "!@#"] },
       { id: "ec7", name: "EC7: Не строковый тип", description: "Неверный тип", exampleValues: [42, null, undefined] },
     ],
     boundaryValues: [
