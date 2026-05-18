@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
+  serverExternalPackages: ["twilio"],
   experimental: {
     turbo: undefined,
   },

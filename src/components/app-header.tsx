@@ -23,6 +23,7 @@ function ThemeToggle() {
       size="icon"
       className="h-9 w-9 text-muted-foreground hover:text-foreground"
       onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={isDark ? "Переключить на светлую тему" : "Переключить на тёмную тему"}
       suppressHydrationWarning
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -32,7 +33,7 @@ function ThemeToggle() {
 
 export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarathonClick }: AppHeaderProps) {
   return (
-    <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
+    <header role="banner" className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -64,6 +65,7 @@ export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarat
                 size="icon"
                 className="h-9 w-9 text-muted-foreground hover:text-foreground"
                 onClick={onMarathonClick}
+                aria-label="Режим «Марафон»"
                 title="Режим «Марафон»"
               >
                 <Flame className="h-4 w-4 text-orange-500" />
@@ -74,6 +76,7 @@ export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarat
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:text-foreground"
               onClick={onReplayOnboarding}
+              aria-label="Повторить обучение"
               title="Повторить обучение"
             >
               <PlayCircle className="h-4 w-4" />
@@ -84,6 +87,7 @@ export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarat
               size="icon"
               className="h-9 w-9 text-muted-foreground hover:text-foreground relative"
               onClick={onShowShortcuts}
+              aria-label="Горячие клавиши"
               title="Горячие клавиши (?)"
             >
               <HelpCircle className="h-4 w-4" />

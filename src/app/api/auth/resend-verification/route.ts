@@ -1,28 +1,23 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireAuth } from "@/lib/admin-guard";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
 
-    const result = checkRateLimit(`resend:${session.user.id}`, rateLimits.resendVerification);
+    const result = checkRateLimit(`resend:${auth.session.userId}`, rateLimits.resendVerification);
     if (result.limited) {
-      return NextResponse.json(
-        { error: "Слишком много попыток. Попробуйте позже" },
-        { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
-      );
+      return createRateLimitResponse(result.resetAt);
     }
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.session.userId },
       select: { id: true, email: true, emailVerified: true },
     });
 
@@ -62,14 +57,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Письмо отправлено" });
     } catch (emailError) {
       await db.verificationToken.delete({ where: { token: verificationToken } });
-      console.error("Resend verification email failed:", emailError);
+      logger.error("Resend verification email failed", emailError instanceof Error ? emailError : undefined);
       return NextResponse.json(
         { error: "Не удалось отправить письмо. Попробуйте позже" },
         { status: 503 }
       );
     }
   } catch (error) {
-    console.error("Resend verification error:", error);
+    logger.error("Resend verification error", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Ошибка при отправке письма" },
       { status: 500 }

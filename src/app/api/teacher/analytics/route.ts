@@ -1,22 +1,24 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const guard = await requireTeacherOrAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
 
-  const attempts = await db.attempt.findMany({
-    select: {
-      score: true,
-      ecCoverage: true,
-      bvCoverage: true,
-      taskId: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-  });
+    const attempts = await db.attempt.findMany({
+      select: {
+        score: true,
+        ecCoverage: true,
+        bvCoverage: true,
+        taskId: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 500,
+    });
 
   // Score distribution
   const distribution = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
@@ -50,4 +52,8 @@ export async function GET() {
     overallAvg,
     totalAttempts: attempts.length,
   });
+  } catch (error) {
+    logger.error("Failed to fetch teacher analytics", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
+  }
 }

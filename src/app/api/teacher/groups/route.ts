@@ -2,20 +2,26 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const guard = await requireTeacherOrAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
 
-  const groups = await db.group.findMany({
-    include: {
-      _count: { select: { members: true } },
-      createdBy: { select: { name: true, email: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+    const groups = await db.group.findMany({
+      include: {
+        _count: { select: { members: true } },
+        createdBy: { select: { name: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return NextResponse.json({ groups });
+    return NextResponse.json({ groups });
+  } catch (error) {
+    logger.error("Failed to fetch groups", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch groups" }, { status: 500 });
+  }
 }
 
 const createGroupSchema = z.object({
@@ -24,24 +30,29 @@ const createGroupSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const guard = await requireTeacherOrAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  const body = await req.json();
-  const parsed = createGroupSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    const body = await req.json();
+    const parsed = createGroupSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    }
+
+    const group = await db.group.create({
+      data: {
+        name: parsed.data.name,
+        description: parsed.data.description,
+        createdByUserId: session.userId,
+      },
+      include: { _count: { select: { members: true } } },
+    });
+
+    return NextResponse.json({ group }, { status: 201 });
+  } catch (error) {
+    logger.error("Failed to create group", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to create group" }, { status: 500 });
   }
-
-  const group = await db.group.create({
-    data: {
-      name: parsed.data.name,
-      description: parsed.data.description,
-      createdByUserId: session.userId,
-    },
-    include: { _count: { select: { members: true } } },
-  });
-
-  return NextResponse.json({ group }, { status: 201 });
 }

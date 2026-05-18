@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import bcrypt from "bcryptjs";
+import { z } from "zod";
+import { requireAuth } from "@/lib/admin-guard";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+
+const profileUpdateSchema = z.object({
+  name: z.string().max(100).optional().nullable(),
+  phone: z.string().max(20).optional().nullable(),
+  bio: z.string().max(500).optional().nullable(),
+  university: z.string().max(200).optional().nullable(),
+  group: z.string().max(100).optional().nullable(),
+  avatar: z.string().url().max(500).optional().nullable(),
+});
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.session.userId },
       select: {
         id: true,
         name: true,
@@ -34,20 +42,33 @@ export async function GET() {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Get profile error:", error);
+    logger.error("Get profile error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при получении профиля" }, { status: 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
+
+    // Rate limit profile updates
+    const rateResult = checkRateLimit(`profile:${auth.session.userId}`, rateLimits.profileUpdate);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
     }
 
     const body = await req.json();
-    const { name, phone, bio, university, group, avatar } = body;
+    const parsed = profileUpdateSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Неверные данные", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { name, phone, bio, university, group, avatar } = parsed.data;
 
     const updateData: Record<string, string | null> = {};
     if (name !== undefined) updateData.name = name?.trim() || null;
@@ -60,7 +81,7 @@ export async function PUT(req: Request) {
     // Check phone uniqueness
     if (phone) {
       const existingPhone = await db.user.findFirst({
-        where: { phone: phone.trim(), id: { not: session.user.id } },
+        where: { phone: phone.trim(), id: { not: auth.session.userId } },
       });
       if (existingPhone) {
         return NextResponse.json(
@@ -71,7 +92,7 @@ export async function PUT(req: Request) {
     }
 
     const user = await db.user.update({
-      where: { id: session.user.id },
+      where: { id: auth.session.userId },
       data: updateData,
       select: {
         id: true,
@@ -89,7 +110,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Update profile error:", error);
+    logger.error("Update profile error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при обновлении профиля" }, { status: 500 });
   }
 }

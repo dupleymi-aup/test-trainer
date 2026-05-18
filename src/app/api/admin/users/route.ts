@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
   const { searchParams } = new URL(req.url);
   const role = searchParams.get("role");
@@ -70,6 +72,10 @@ export async function GET(req: Request) {
       totalPages: Math.ceil(total / limit),
     },
   });
+  } catch (error) {
+    logger.error("Failed to fetch users", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+  }
 }
 
 const createUserSchema = z.object({
@@ -83,66 +89,71 @@ const createUserSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  const body = await req.json();
-  const parsed = createUserSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    const body = await req.json();
+    const parsed = createUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    }
+
+    const { name, email, phone, password, role, university, group } = parsed.data;
+
+    // Check for existing user
+    const existing = await db.user.findFirst({
+      where: {
+        OR: [
+          email ? { email: email.toLowerCase() } : {},
+          phone ? { phone } : {},
+        ].filter((w) => Object.keys(w).length > 0),
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json({ error: "User with this email or phone already exists" }, { status: 409 });
+    }
+
+    const bcrypt = await import("bcryptjs");
+    const hashedPassword = await bcrypt.default.hash(password, 12);
+
+    const user = await db.user.create({
+      data: {
+        name,
+        email: email?.toLowerCase() ?? null,
+        phone,
+        hashedPassword,
+        role,
+        university,
+        group,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    // Log activity
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "USER_CREATE",
+        entity: "User",
+        entityId: user.id,
+        details: JSON.stringify({ email, role }),
+      },
+    });
+
+    return NextResponse.json({ user }, { status: 201 });
+  } catch (error) {
+    logger.error("Failed to create user", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
   }
-
-  const { name, email, phone, password, role, university, group } = parsed.data;
-
-  // Check for existing user
-  const existing = await db.user.findFirst({
-    where: {
-      OR: [
-        email ? { email: email.toLowerCase() } : {},
-        phone ? { phone } : {},
-      ].filter((w) => Object.keys(w).length > 0),
-    },
-  });
-
-  if (existing) {
-    return NextResponse.json({ error: "User with this email or phone already exists" }, { status: 409 });
-  }
-
-  const bcrypt = await import("bcryptjs");
-  const hashedPassword = await bcrypt.default.hash(password, 12);
-
-  const user = await db.user.create({
-    data: {
-      name,
-      email: email?.toLowerCase() ?? null,
-      phone,
-      hashedPassword,
-      role,
-      university,
-      group,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-    },
-  });
-
-  // Log activity
-  await db.activityLog.create({
-    data: {
-      userId: session.userId,
-      action: "USER_CREATE",
-      entity: "User",
-      entityId: user.id,
-      details: JSON.stringify({ email, role }),
-    },
-  });
-
-  return NextResponse.json({ user }, { status: 201 });
 }

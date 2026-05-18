@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/auth-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,6 +28,27 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "TestTrainer",
   },
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    siteName: "TestTrainer",
+    title: "Тренажёр тестирования — Генератор тест-кейсов",
+    description: "Интерактивный тренажёр для изучения методов тестирования: классы эквивалентности, граничные значения и генерация тест-кейсов.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "TestTrainer — Тренажёр тестирования",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TestTrainer — Тренажёр тестирования",
+    description: "Интерактивный тренажёр для изучения методов тестирования ПО.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
@@ -39,20 +61,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <Providers>{children}</Providers>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
-                    console.log('SW registration failed:', err);
-                  });
-                });
-              }
-            `,
-          }}
-        />
+        <Providers>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </Providers>
       </body>
     </html>
   );

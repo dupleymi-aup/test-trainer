@@ -32,7 +32,9 @@ export function AnalyticsFilters({ onFilterChange }: AnalyticsFiltersProps) {
     fetch("/api/teacher/groups")
       .then((r) => r.json())
       .then((data) => setGroups(data.groups || []))
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("Failed to fetch groups:", err);
+      });
   }, []);
 
   const handleApply = () => {

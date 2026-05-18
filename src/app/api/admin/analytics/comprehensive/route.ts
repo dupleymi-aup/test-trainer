@@ -2,26 +2,28 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const yearAgo = new Date(now);
-  yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // KPI metrics
-  const [totalStudents, totalTeachers, totalGroups, allAttempts, activeStudents30d] =
-    await Promise.all([
-      db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
-      db.user.count({ where: { role: "TEACHER", deletedAt: null } }),
-      db.group.count(),
-      db.attempt.findMany({
-        select: { score: true, ecCoverage: true, bvCoverage: true, userId: true, createdAt: true },
-      }),
+    // KPI metrics — limit attempts to last 10000 to prevent memory issues
+    const [totalStudents, totalTeachers, totalGroups, allAttempts, activeStudents30d] =
+      await Promise.all([
+        db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
+        db.user.count({ where: { role: "TEACHER", deletedAt: null } }),
+        db.group.count(),
+        db.attempt.findMany({
+          select: { score: true, ecCoverage: true, bvCoverage: true, userId: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+          take: 10_000,
+        }),
       db.user.count({
         where: {
           role: "STUDENT",
@@ -30,6 +32,13 @@ export async function GET() {
         },
       }),
     ]);
+
+    // Pre-build userId -> attempts map for reuse across all sections
+    const userAttemptsMap: Record<string, typeof allAttempts> = {};
+    allAttempts.forEach((a) => {
+      if (!userAttemptsMap[a.userId]) userAttemptsMap[a.userId] = [];
+      userAttemptsMap[a.userId].push(a);
+    });
 
   // Score trends (monthly for last 12 months)
   const monthlyTrendsMap: Record<string, { totalScore: number; totalEc: number; totalBv: number; count: number }> = {};
@@ -53,26 +62,27 @@ export async function GET() {
       attemptsCount: data.count,
     }));
 
-  // Cohort analysis (by registration month)
-  const students = await db.user.findMany({
-    where: { role: "STUDENT", deletedAt: null },
-    select: { id: true, createdAt: true },
-  });
+  // Cohort analysis (by registration month) — run both queries in parallel
+  const [students, studentsWithAttempts] = await Promise.all([
+    db.user.findMany({
+      where: { role: "STUDENT", deletedAt: null },
+      select: { id: true, createdAt: true },
+    }),
+    db.user.findMany({
+      where: {
+        role: "STUDENT",
+        deletedAt: null,
+        attempts: { some: {} },
+      },
+      select: { id: true, createdAt: true },
+    }),
+  ]);
 
   const cohortMap: Record<string, { total: number; withAttempts: number }> = {};
   students.forEach((s) => {
     const cohort = s.createdAt.toISOString().slice(0, 7);
     if (!cohortMap[cohort]) cohortMap[cohort] = { total: 0, withAttempts: 0 };
     cohortMap[cohort].total++;
-  });
-
-  const studentsWithAttempts = await db.user.findMany({
-    where: {
-      role: "STUDENT",
-      deletedAt: null,
-      attempts: { some: {} },
-    },
-    select: { id: true, createdAt: true },
   });
 
   studentsWithAttempts.forEach((s) => {
@@ -140,7 +150,7 @@ export async function GET() {
                 select: {
                   id: true,
                   attempts: {
-                    select: { score: true, ecCoverage: true, bvCoverage: true },
+                    select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true },
                   },
                 },
               },
@@ -150,6 +160,9 @@ export async function GET() {
       },
     },
   });
+
+  // Pre-compute timestamp threshold for active students check
+  const thirtyDaysAgoTime = thirtyDaysAgo.getTime();
 
   const teacherLeaderboard = teachers
     .map((t) => {
@@ -163,15 +176,31 @@ export async function GET() {
         ? Math.round(allStudentAttempts.reduce((s, a) => s + a.score, 0) / allStudentAttempts.length)
         : 0;
 
-      // Calculate trend (first 10 vs last 10 attempts)
+      // Pre-group attempts by userId for O(1) lookup
+      const attemptsByStudent: Record<string, typeof allStudentAttempts> = {};
+      for (const a of allStudentAttempts) {
+        if (!attemptsByStudent[a.userId]) attemptsByStudent[a.userId] = [];
+        attemptsByStudent[a.userId].push(a);
+      }
+
+      // Calculate trend (first 10 vs last 10 attempts) — sort once by pre-parsed timestamps
       const sorted = [...allStudentAttempts].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
       );
       const first10 = sorted.slice(0, 10);
       const last10 = sorted.slice(-10);
       const firstAvg = first10.length > 0 ? first10.reduce((s, a) => s + a.score, 0) / first10.length : 0;
       const lastAvg = last10.length > 0 ? last10.reduce((s, a) => s + a.score, 0) / last10.length : 0;
       const trend = lastAvg - firstAvg > 5 ? "improving" : lastAvg - firstAvg < -5 ? "declining" : "stable";
+
+      // Count inactive students using pre-grouped attempts
+      let inactiveCount = 0;
+      for (const sid of uniqueStudents) {
+        const studentAttempts = attemptsByStudent[sid] || [];
+        if (studentAttempts.length === 0 || studentAttempts[studentAttempts.length - 1].createdAt.getTime() < thirtyDaysAgoTime) {
+          inactiveCount++;
+        }
+      }
 
       return {
         teacherId: t.id,
@@ -181,15 +210,7 @@ export async function GET() {
         avgStudentScore: avgScore,
         avgAttemptsPerStudent: uniqueStudents.size > 0 ? Math.round(allStudentAttempts.length / uniqueStudents.size) : 0,
         activeStudentsRate: uniqueStudents.size > 0
-          ? Math.round(
-              (uniqueStudents.size -
-                [...uniqueStudents].filter((sid) => {
-                  const studentAttempts = allStudentAttempts.filter((a) => a.userId === sid);
-                  return studentAttempts.length === 0 || new Date(studentAttempts[studentAttempts.length - 1].createdAt) < thirtyDaysAgo;
-                }).length) /
-                uniqueStudents.size *
-                100
-            )
+          ? Math.round(((uniqueStudents.size - inactiveCount) / uniqueStudents.size) * 100)
           : 0,
         trend,
         totalAttempts: allStudentAttempts.length,
@@ -198,33 +219,37 @@ export async function GET() {
     .filter((t) => t.studentsCount > 0)
     .sort((a, b) => b.avgStudentScore - a.avgStudentScore);
 
-  // Risk overview
-  const allStudentAttempts = await db.attempt.findMany({
-    select: { userId: true, score: true, ecCoverage: true, bvCoverage: true, createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
-
-  const userAttemptsMap: Record<string, typeof allStudentAttempts> = {};
-  allStudentAttempts.forEach((a) => {
-    if (!userAttemptsMap[a.userId]) userAttemptsMap[a.userId] = [];
-    userAttemptsMap[a.userId].push(a);
-  });
+  // Risk overview — reuse the userAttemptsMap built earlier (no need to fetch attempts again)
+  const fourteenDaysAgoTime = new Date(now);
+  fourteenDaysAgoTime.setDate(fourteenDaysAgoTime.getDate() - 14);
+  const sevenDaysAgoTime = new Date(now);
+  sevenDaysAgoTime.setDate(sevenDaysAgoTime.getDate() - 7);
 
   let lowPerformers = 0;
   let declining = 0;
   let inactive = 0;
   let lowEngagement = 0;
 
-  const fourteenDaysAgo = new Date(now);
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // Batch fetch user createdAt for all users with < 3 attempts (fix N+1)
+  const lowAttemptUserIds = Object.entries(userAttemptsMap)
+    .filter(([, attempts]) => attempts.length < 3)
+    .map(([userId]) => userId);
+
+  const userCreationDates = new Map<string, Date>();
+  if (lowAttemptUserIds.length > 0) {
+    const users = await db.user.findMany({
+      where: { id: { in: lowAttemptUserIds } },
+      select: { id: true, createdAt: true },
+    });
+    users.forEach((u) => userCreationDates.set(u.id, u.createdAt));
+  }
 
   for (const [userId, attempts] of Object.entries(userAttemptsMap)) {
     if (attempts.length === 0) continue;
 
     const bestScore = Math.max(...attempts.map((a) => a.score));
     const lastAttempt = attempts[attempts.length - 1];
+    const lastAttemptTime = lastAttempt.createdAt.getTime();
     const first3 = attempts.slice(0, 3);
     const last3 = attempts.slice(-3);
     const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
@@ -232,10 +257,10 @@ export async function GET() {
 
     if (bestScore < 50) lowPerformers++;
     if (attempts.length >= 6 && first3Avg - last3Avg > 15) declining++;
-    if (new Date(lastAttempt.createdAt) < fourteenDaysAgo) inactive++;
+    if (lastAttemptTime < fourteenDaysAgoTime.getTime()) inactive++;
     if (attempts.length < 3) {
-      const user = await db.user.findUnique({ where: { id: userId }, select: { createdAt: true } });
-      if (user && user.createdAt < sevenDaysAgo) lowEngagement++;
+      const createdAt = userCreationDates.get(userId);
+      if (createdAt && createdAt.getTime() < sevenDaysAgoTime.getTime()) lowEngagement++;
     }
   }
 
@@ -264,4 +289,8 @@ export async function GET() {
       total: lowPerformers + declining + inactive + lowEngagement,
     },
   });
+  } catch (error) {
+    logger.error("Failed to fetch comprehensive analytics", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch comprehensive analytics" }, { status: 500 });
+  }
 }

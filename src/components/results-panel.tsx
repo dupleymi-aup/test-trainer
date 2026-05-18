@@ -37,7 +37,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useState, useMemo } from "react";
-import React from "react";
 import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
 import type { TestCase } from "@/lib/evaluator";

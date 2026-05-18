@@ -56,7 +56,9 @@ export default function CompletionMatrixPage() {
     fetch("/api/teacher/groups")
       .then((r) => r.json())
       .then((d) => setGroups(d.groups || []))
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("Failed to fetch groups:", err);
+      });
   }, []);
 
   useEffect(() => {

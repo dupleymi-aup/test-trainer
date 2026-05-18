@@ -107,7 +107,9 @@ export function useTrainerState() {
           setAvailableTaskIds(new Set(data.taskIds));
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("Failed to fetch available tasks:", err);
+      });
   }, []);
 
   // Undo/Redo

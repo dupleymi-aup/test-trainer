@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
+import type { StoredTestCase } from "@/lib/evaluator";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
-  const guard = await requireTeacherOrAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
 
   const { searchParams } = new URL(req.url);
   const groupId = searchParams.get("groupId");
@@ -180,7 +183,7 @@ export async function GET(req: Request) {
     try {
       const testCases = JSON.parse(a.testCases);
       if (Array.isArray(testCases)) {
-        testCases.forEach((tc: any) => {
+        testCases.forEach((tc: StoredTestCase) => {
           if (tc.category && categoryCounts.hasOwnProperty(tc.category)) {
             categoryCounts[tc.category]++;
             totalCategories++;
@@ -288,4 +291,8 @@ export async function GET(req: Request) {
     overallStats,
     groupComparison,
   });
+  } catch (error) {
+    logger.error("Failed to fetch enhanced analytics", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch enhanced analytics" }, { status: 500 });
+  }
 }

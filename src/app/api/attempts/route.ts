@@ -1,8 +1,8 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireAuth } from "@/lib/admin-guard";
+import { logger } from "@/lib/logger";
 
 const createAttemptSchema = z.object({
   taskId: z.string().min(1),
@@ -24,10 +24,8 @@ const createAttemptSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
 
     const body = await req.json();
     const parsed = createAttemptSchema.safeParse(body);
@@ -39,7 +37,7 @@ export async function POST(req: Request) {
 
     // Check group-based task permissions
     const userGroups = await db.userGroup.findMany({
-      where: { userId: session.user.id },
+      where: { userId: auth.session.userId },
       select: { groupId: true },
     });
 
@@ -61,7 +59,7 @@ export async function POST(req: Request) {
 
     const attempt = await db.attempt.create({
       data: {
-        userId: session.user.id,
+        userId: auth.session.userId,
         taskId,
         testCases: JSON.stringify(testCases),
         score,
@@ -76,17 +74,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, attemptId: attempt.id }, { status: 201 });
   } catch (error) {
-    console.error("Failed to save attempt:", error);
+    logger.error("Failed to save attempt", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
 
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("taskId");
@@ -94,7 +90,7 @@ export async function GET(req: Request) {
 
     const attempts = await db.attempt.findMany({
       where: {
-        userId: session.user.id,
+        userId: auth.session.userId,
         ...(taskId ? { taskId } : {}),
       },
       orderBy: { createdAt: "desc" },
@@ -113,7 +109,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ attempts });
   } catch (error) {
-    console.error("Failed to fetch attempts:", error);
+    logger.error("Failed to fetch attempts", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

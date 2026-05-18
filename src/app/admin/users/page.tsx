@@ -548,7 +548,7 @@ export default function AdminUsersPage() {
             <div className="space-y-2">
               <Label htmlFor="create-role">Роль *</Label>
               <Select
-                onValueChange={(v) => createForm.setValue("role", v as any)}
+                onValueChange={(v) => createForm.setValue("role", v as CreateUserForm["role"])}
                 defaultValue={createForm.getValues("role")}
               >
                 <SelectTrigger id="create-role">

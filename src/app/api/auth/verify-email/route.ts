@@ -1,17 +1,25 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { z } from "zod";
+import { logger } from "@/lib/logger";
+
+const verifyEmailSchema = z.object({
+  token: z.string().min(1, "Токен обязателен"),
+});
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { token } = body;
+    const parsed = verifyEmailSchema.safeParse(body);
 
-    if (!token) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Отсутствует токен" },
+        { error: "Отсутствует токен", details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { token } = parsed.data;
 
     const verificationToken = await db.verificationToken.findUnique({
       where: { token },
@@ -38,7 +46,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: "Email подтверждён" });
   } catch (error) {
-    console.error("Verify email error:", error);
+    logger.error("Verify email error", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Ошибка при подтверждении email" },
       { status: 500 }

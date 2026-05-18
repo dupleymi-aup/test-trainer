@@ -1,58 +1,76 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
-  const settings = await db.systemSetting.findMany({
-    orderBy: { key: "asc" },
-  });
+    const settings = await db.systemSetting.findMany({
+      orderBy: { key: "asc" },
+    });
 
-  return NextResponse.json({
-    settings: settings.map((s) => ({
-      key: s.key,
-      value: JSON.parse(s.value),
-      updatedAt: s.updatedAt,
-    })),
-  });
+    return NextResponse.json({
+      settings: settings.map((s) => ({
+        key: s.key,
+        value: JSON.parse(s.value),
+        updatedAt: s.updatedAt,
+      })),
+    });
+  } catch (error) {
+    logger.error("Failed to fetch settings", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  const body = await req.json();
-  const { key, value } = body;
+    // Rate limit settings updates
+    const rateResult = checkRateLimit(`admin-settings:${session.userId}`, rateLimits.adminSettings);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
+    }
 
-  if (!key) {
-    return NextResponse.json({ error: "Key is required" }, { status: 400 });
+    const body = await req.json();
+    const { key, value } = body;
+
+    if (!key) {
+      return NextResponse.json({ error: "Key is required" }, { status: 400 });
+    }
+
+    const setting = await db.systemSetting.upsert({
+      where: { key },
+      update: {
+        value: JSON.stringify(value),
+        updatedByUserId: session.userId,
+      },
+      create: {
+        key,
+        value: JSON.stringify(value),
+        updatedByUserId: session.userId,
+      },
+    });
+
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "SETTING_UPDATE",
+        entity: "SystemSetting",
+        entityId: setting.id,
+        details: JSON.stringify({ key, value }),
+      },
+    });
+
+    return NextResponse.json({ setting: { key: setting.key, value: JSON.parse(setting.value) } });
+  } catch (error) {
+    logger.error("Failed to update settings", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }
-
-  const setting = await db.systemSetting.upsert({
-    where: { key },
-    update: {
-      value: JSON.stringify(value),
-      updatedByUserId: session.userId,
-    },
-    create: {
-      key,
-      value: JSON.stringify(value),
-      updatedByUserId: session.userId,
-    },
-  });
-
-  await db.activityLog.create({
-    data: {
-      userId: session.userId,
-      action: "SETTING_UPDATE",
-      entity: "SystemSetting",
-      entityId: setting.id,
-      details: JSON.stringify({ key, value }),
-    },
-  });
-
-  return NextResponse.json({ setting: { key: setting.key, value: JSON.parse(setting.value) } });
 }

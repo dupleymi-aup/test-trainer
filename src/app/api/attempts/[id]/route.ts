@@ -1,17 +1,15 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { requireAuth } from "@/lib/admin-guard";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
 
     const { id } = await params;
 
@@ -24,16 +22,16 @@ export async function GET(
     }
 
     // Users can only view their own attempts
-    if (attempt.userId !== session.user.id) {
+    if (attempt.userId !== auth.session.userId) {
       // Check if admin or teacher
-      if (session.user.role !== "ADMIN" && session.user.role !== "TEACHER") {
+      if (auth.session.role !== "ADMIN" && auth.session.role !== "TEACHER") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
     }
 
     return NextResponse.json({ attempt });
   } catch (error) {
-    console.error("Failed to fetch attempt:", error);
+    logger.error("Failed to fetch attempt", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

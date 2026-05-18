@@ -86,7 +86,9 @@ export default function AdminExportPage() {
       .then((data) => {
         if (Array.isArray(data)) setGroups(data);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("Failed to fetch groups:", err);
+      });
   }, []);
 
   const handleExport = async (reportType: string) => {

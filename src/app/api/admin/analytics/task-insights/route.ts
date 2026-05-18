@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { TestCaseCategory } from "@/lib/tasks";
+import type { StoredTestCase } from "@/lib/evaluator";
 
 export async function GET() {
   const guard = await requireAdmin();
@@ -70,7 +71,7 @@ export async function GET() {
     try {
       const testCases = JSON.parse(a.testCases);
       if (Array.isArray(testCases)) {
-        testCases.forEach((tc: any) => {
+        testCases.forEach((tc: StoredTestCase) => {
           if (tc.category) {
             taskData[a.taskId].categories[tc.category] =
               (taskData[a.taskId].categories[tc.category] || 0) + 1;

@@ -4,6 +4,16 @@ import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { z } from "zod";
+import { logger } from "@/lib/logger";
+
+const registerSchema = z.object({
+  name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
+  email: z.string().email("Неверный формат email").max(255, "Email слишком длинный"),
+  phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
+  password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+  role: z.enum(["STUDENT", "TEACHER"]).default("STUDENT"),
+});
 
 function getClientIP(req: Request): string {
   return (
@@ -25,37 +35,16 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, password, role } = body;
+    const parsed = registerSchema.safeParse(body);
 
-    // Input length limits to prevent DoS
-    if (name && name.length > 100) return NextResponse.json({ error: "Имя слишком длинное" }, { status: 400 });
-    if (email.length > 255) return NextResponse.json({ error: "Email слишком длинный" }, { status: 400 });
-    if (phone && phone.length > 20) return NextResponse.json({ error: "Номер телефона слишком длинный" }, { status: 400 });
-    if (password.length > 128) return NextResponse.json({ error: "Пароль слишком длинный (макс. 128)" }, { status: 400 });
-
-    if (!email || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Email и пароль обязательны" },
+        { error: "Неверные данные", details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Пароль должен быть не менее 8 символов" },
-        { status: 400 }
-      );
-    }
-
-    // Validate role: only STUDENT and TEACHER allowed via public registration
-    const allowedRoles = ["STUDENT", "TEACHER"];
-    const userRole = role || "STUDENT";
-    if (!allowedRoles.includes(userRole)) {
-      return NextResponse.json(
-        { error: "Недопустимая роль. Доступны только: студент, преподаватель" },
-        { status: 400 }
-      );
-    }
+    const { name, email, phone, password, role: userRole } = parsed.data;
 
     const emailLower = email.toLowerCase().trim();
 
@@ -120,14 +109,14 @@ export async function POST(req: Request) {
       );
     } catch (emailError) {
       // User is created but verification email failed
-      console.error("Registration email failed:", emailError);
+      logger.error("Registration email failed", emailError instanceof Error ? emailError : undefined);
       return NextResponse.json(
         { message: "Пользователь создан. Обратитесь к преподавателю для подтверждения email.", user },
         { status: 201 }
       );
     }
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error("Registration error", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Ошибка при регистрации" },
       { status: 500 }

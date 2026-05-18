@@ -40,6 +40,10 @@ model User {
   activityLogs   ActivityLog[]
   createdGroups  Group[]     @relation("CreatedGroups")
   updatedSettings SystemSetting[] @relation("UpdatedSettings")
+
+  @@index([role])
+  @@index([deletedAt])
+  @@index([university])
 }
 
 model Account {
@@ -120,6 +124,7 @@ model UserGroup {
   group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@id([userId, groupId])
+  @@index([groupId])
 }
 
 model Attempt {
@@ -140,6 +145,8 @@ model Attempt {
 
   @@index([userId])
   @@index([taskId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 model ActivityLog {

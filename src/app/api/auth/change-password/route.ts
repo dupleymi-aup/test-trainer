@@ -1,44 +1,40 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { z } from "zod";
+import { requireAuth } from "@/lib/admin-guard";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Текущий пароль обязателен"),
+  newPassword: z.string().min(8, "Новый пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+});
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
+    const auth = await requireAuth();
+    if ("response" in auth) return auth.response;
 
-    const result = checkRateLimit(`change-pw:${session.user.id}`, rateLimits.changePassword);
+    const result = checkRateLimit(`change-pw:${auth.session.userId}`, rateLimits.changePassword);
     if (result.limited) {
-      return NextResponse.json(
-        { error: "Слишком много попыток. Попробуйте позже" },
-        { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
-      );
+      return createRateLimitResponse(result.resetAt);
     }
 
     const body = await req.json();
-    const { currentPassword, newPassword } = body;
+    const parsed = changePasswordSchema.safeParse(body);
 
-    if (!currentPassword || !newPassword) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Укажите текущий и новый пароль" },
+        { error: "Неверные данные", details: parsed.error.errors },
         { status: 400 }
       );
     }
 
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: "Новый пароль должен быть не менее 8 символов" },
-        { status: 400 }
-      );
-    }
+    const { currentPassword, newPassword } = parsed.data;
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.session.userId },
     });
 
     if (!user || !user.hashedPassword) {
@@ -59,13 +55,13 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     await db.user.update({
-      where: { id: session.user.id },
+      where: { id: auth.session.userId },
       data: { hashedPassword },
     });
 
     return NextResponse.json({ message: "Пароль успешно изменён" });
   } catch (error) {
-    console.error("Change password error:", error);
+    logger.error("Change password error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при смене пароля" }, { status: 500 });
   }
 }

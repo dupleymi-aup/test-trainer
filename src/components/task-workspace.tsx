@@ -21,6 +21,7 @@ import {
   Eye,
   Pencil,
   Lightbulb,
+  Code2,
 } from "lucide-react";
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -34,9 +35,6 @@ interface TaskWorkspaceProps {
   task: Task;
   testCases?: TestCase[];
 }
-
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export function TaskWorkspace({ task, testCases }: TaskWorkspaceProps) {
   return <TaskWorkspaceInner key={task.id} task={task} testCases={testCases} />;

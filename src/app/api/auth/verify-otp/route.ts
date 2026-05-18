@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+
+const verifyOtpSchema = z.object({
+  phone: z.string().min(1, "Телефон обязателен").max(20, "Номер телефона слишком длинный"),
+  code: z.string().min(1, "Код обязателен"),
+});
 
 function getClientIP(req: Request): string {
   return (
@@ -15,22 +22,21 @@ export async function POST(req: Request) {
   const ip = getClientIP(req);
   const result = checkRateLimit(`verify-otp:${ip}`, rateLimits.verifyOtp);
   if (result.limited) {
-    return NextResponse.json(
-      { error: "Слишком много попыток. Попробуйте позже" },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
-    );
+    return createRateLimitResponse(result.resetAt);
   }
 
   try {
     const body = await req.json();
-    const { phone, code } = body;
+    const parsed = verifyOtpSchema.safeParse(body);
 
-    if (!phone || !code) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Укажите телефон и код" },
+        { error: "Укажите телефон и код", details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { phone, code } = parsed.data;
 
     const verificationCode = await db.verificationCode.findFirst({
       where: {
@@ -74,7 +80,7 @@ export async function POST(req: Request) {
       token: resetToken,
     });
   } catch (error) {
-    console.error("Verify OTP error:", error);
+    logger.error("Verify OTP error", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Ошибка при проверке кода" },
       { status: 500 }

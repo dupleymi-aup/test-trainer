@@ -180,20 +180,24 @@ export function ExamMode() {
     finishExamRef.current = finishExam;
   }, [finishExam]);
 
-  // Autosave exam session
+  // Autosave exam session (debounced to avoid excessive writes)
   useEffect(() => {
     if (examState !== "running") return;
-    saveExamSession({
-      examState,
-      selectedTasks,
-      timeLimit,
-      timeRemaining,
-      currentTaskIndex,
-      examTasks,
-      examTestCases,
-      examResults,
-      practiceMode,
-    });
+    const timer = setTimeout(() => {
+      saveExamSession({
+        examState,
+        selectedTasks,
+        timeLimit,
+        timeRemaining,
+        currentTaskIndex,
+        examTasks,
+        examTestCases,
+        examResults,
+        practiceMode,
+      });
+    }, 1000); // Debounce 1s
+
+    return () => clearTimeout(timer);
   }, [examState, selectedTasks, timeLimit, timeRemaining, currentTaskIndex, examTasks, examTestCases, examResults, practiceMode]);
 
   // Timer countdown
@@ -426,17 +430,6 @@ export function ExamMode() {
     URL.revokeObjectURL(url);
     toast.success("Результаты экспортированы");
   }, [examResults, avgScore]);
-
-  // Confetti trigger when entering results with avg >= 90
-  const handleExamConfetti = useCallback(() => {
-    const newAvg = examResults.length > 0
-      ? Math.round(examResults.reduce((s, r) => s + r.overallScore, 0) / examResults.length)
-      : 0;
-    if (newAvg >= 90) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3500);
-    }
-  }, [examResults]);
 
   const timePerTask = selectedTasks.length > 0
     ? Math.round((timeLimit * 60) / selectedTasks.length)

@@ -12,6 +12,15 @@ export interface TestCase {
   comment: string;
 }
 
+/** Test case shape as stored in the database (parsed from JSON). */
+export interface StoredTestCase {
+  id: string;
+  inputs: unknown[];
+  expectedOutput: string;
+  category: string;
+  comment?: string;
+}
+
 export interface TestCaseResult {
   testCase: TestCase;
   actualOutput: string;

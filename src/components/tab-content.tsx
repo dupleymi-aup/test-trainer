@@ -22,6 +22,7 @@ import { StatisticsPanel } from "@/components/statistics-panel";
 import { ExamMode } from "@/components/exam-mode";
 import { AchievementsPanel } from "@/components/achievements-panel";
 import type { AchievementContext } from "@/lib/achievements";
+import { tasks } from "@/lib/tasks";
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },

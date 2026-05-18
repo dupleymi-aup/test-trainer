@@ -34,6 +34,12 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   resendVerification: { max: 2, windowMs: 60 * 60 * 1000 },
   /** Change password: 5 per 15 minutes */
   changePassword: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Teacher notifications: 20 per hour (prevent spam) */
+  notifications: { max: 20, windowMs: 60 * 60 * 1000 },
+  /** Admin settings: 10 per 15 minutes */
+  adminSettings: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Profile updates: 10 per 15 minutes */
+  profileUpdate: { max: 10, windowMs: 15 * 60 * 1000 },
 };
 
 /**
@@ -78,6 +84,24 @@ export function cleanupExpiredEntries() {
       store.delete(key);
     }
   }
+}
+
+/**
+ * Create a standardized rate limit response with safe Retry-After header.
+ * The Retry-After value is clamped to a minimum of 1 second to prevent negative values.
+ */
+export function createRateLimitResponse(resetAt: number) {
+  const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+  return new Response(
+    JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+    {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        "Retry-After": String(retryAfter),
+      },
+    }
+  );
 }
 
 // Auto-cleanup every 10 minutes
