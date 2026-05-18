@@ -16,10 +16,24 @@ import {
   TrendingDown,
   Minus,
   ChevronDown,
+  Download,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import { tasks } from "@/lib/tasks";
 import type { AttemptRecord, StreakData } from "@/lib/storage";
 import { getTaskHistory, loadStreak, loadAttemptHistory } from "@/lib/storage";
+import { downloadJSON, downloadCSV } from "@/lib/export";
+import { toast } from "sonner";
 
 interface StatisticsPanelProps {
   attempts: AttemptRecord[];
@@ -197,6 +211,57 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
             </div>
           </div>
 
+          {/* Score dynamics chart */}
+          {attempts.length >= 2 && (
+            <div className="mt-4 pt-3 border-t border-border/50">
+              <h3 className="text-xs font-medium mb-2 flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                Динамика оценок
+              </h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <LineChart
+                  data={attempts.slice(-30).map((a, i) => ({
+                    index: i + 1,
+                    score: a.score,
+                    task: tasks.find((t) => t.id === a.taskId)?.name ?? `#${a.taskId}`,
+                    date: format(new Date(a.timestamp), "dd MMM HH:mm", { locale: ru }),
+                  }))}
+                  margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="index"
+                    className="text-xs"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(v) => `#${v}`}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    className="text-xs"
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [`${value}%`, "Оценка"]}
+                    labelFormatter={(_, payload) => {
+                      const item = payload?.[0]?.payload;
+                      return item ? `${item.task} — ${item.date}` : `#${_}`;
+                    }}
+                    contentStyle={{ fontSize: 12 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="score"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    dot={{ r: 2.5 }}
+                    activeDot={{ r: 4.5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
           {timedAttemptsCount > 0 && (
             <div className="mt-4 pt-3 border-t border-border/50 grid grid-cols-2 gap-4 text-center">
               <div>
@@ -207,6 +272,26 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                 <p className="text-lg font-bold text-indigo-600">{formatTime(totalTimeMs)}</p>
                 <p className="text-xs text-muted-foreground">Общее время</p>
               </div>
+            </div>
+          )}
+
+          {/* Export buttons */}
+          {totalAttempts > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/50 flex justify-center gap-3">
+              <button
+                onClick={() => { downloadJSON(); toast.success("Экспорт в JSON завершён"); }}
+                className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+              >
+                <Download className="h-3 w-3" />
+                Экспорт JSON
+              </button>
+              <button
+                onClick={() => { downloadCSV(); toast.success("Экспорт в CSV завершён"); }}
+                className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+              >
+                <Download className="h-3 w-3" />
+                Экспорт CSV
+              </button>
             </div>
           )}
 

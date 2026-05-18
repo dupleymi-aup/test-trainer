@@ -11,6 +11,7 @@ import { Confetti } from "@/components/confetti";
 import { Onboarding } from "@/components/onboarding";
 import { HintDialog } from "@/components/hint-dialog";
 import { MarathonMode } from "@/components/marathon-mode";
+import { CommandPalette } from "@/components/command-palette";
 
 const TOTAL_TASKS = tasks.length;
 
@@ -110,6 +111,22 @@ export default function Home() {
       <HintDialog
         testCases={state.testCases}
         onAddTestCase={state.handleAddTestCase}
+      />
+      <CommandPalette
+        activeTab={state.activeTab}
+        onTabChange={state.setActiveTab as (tab: string) => void}
+        onSelectTask={state.handleSelectTask}
+        onRandomTask={state.handleRandomTask}
+        onSubmit={state.handleSubmit}
+        onReset={state.handleReset}
+        onBackToTasks={state.handleBackToTasks}
+        onHint={state.handleShowHint}
+        onFillAllEc={state.handleFillAllEc}
+        onFillAllBv={state.handleFillAllBv}
+        onExport={state.handleExportProgress}
+        onImport={state.handleImportProgress}
+        onResetAllProgress={state.handleResetAllProgress}
+        availableTaskIds={state.availableTaskIds}
       />
     </div>
   );

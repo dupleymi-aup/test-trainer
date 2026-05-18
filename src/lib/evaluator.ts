@@ -154,7 +154,7 @@ function findCoveredEquivalenceClasses(
         if (
           (desc.includes("отрицательн") && inputs[0] !== undefined && Number(inputs[0]) < 0) ||
           (desc.includes("не число") && !Number.isInteger(inputs[0]) && typeof inputs[0] !== "number") ||
-          (desc.includes("переполнен") && Number(inputs[0]) > 20) ||
+          (taskId === 1 && desc.includes("переполнен") && Number(inputs[0]) > 20) ||
           (desc.includes("превышает") && Number(inputs[1]) !== undefined && Number(inputs[1]) > 100) ||
           (desc.includes("отрицательн") && Number(inputs[1]) !== undefined && Number(inputs[1]) < 0)
         ) {
@@ -464,6 +464,40 @@ function findCoveredEquivalenceClasses(
         if (ec.id === "ec4" && !isNaNResult && (inputStr !== String(inputs[0]))) covered.push(ec.id);
         if (ec.id === "ec5" && isNaNResult && inputStr.trim() === "") covered.push(ec.id);
         if (ec.id === "ec6" && isNaNResult && inputStr.trim() !== "") covered.push(ec.id);
+      }
+    }
+
+    if (taskId === 14) {
+      // flattenArray — detect EC coverage by analyzing input structure + result
+      if (fnError) {
+        if (ec.id === "ec7" && fnError) covered.push(ec.id);
+      } else if (fnResult && Array.isArray(fnResult)) {
+        const input = inputs[0];
+
+        if (ec.id === "ec1" && Array.isArray(input) && input.length === 0) covered.push(ec.id);
+        if (ec.id === "ec2" && Array.isArray(input) && input.length > 0 && input.every(v => !Array.isArray(v))) covered.push(ec.id);
+        if (ec.id === "ec3" && Array.isArray(input) && input.some(v => Array.isArray(v)) && !(input as unknown[]).some(v => Array.isArray(v) && (v as unknown[]).some(x => Array.isArray(x)))) covered.push(ec.id);
+        if (ec.id === "ec4" && Array.isArray(input) && (input as unknown[]).some(v => {
+          const check = (a: unknown): boolean => Array.isArray(a) && a.some(check);
+          return Array.isArray(v) && (v as unknown[]).some(check);
+        })) covered.push(ec.id);
+        if (ec.id === "ec5" && Array.isArray(input) && (input as unknown[]).some(v => v === null || v === undefined)) covered.push(ec.id);
+        if (ec.id === "ec6" && Array.isArray(input) && input.some(v => typeof v === "boolean" || (typeof v === "object" && v !== null && !Array.isArray(v)))) covered.push(ec.id);
+      }
+    }
+
+    if (taskId === 15) {
+      // fibonacci — detect EC coverage by input value + result/error
+      if (fnError) {
+        if (ec.id === "ec5" && fnError && typeof inputs[0] === "number" && (inputs[0] as number) < 0) covered.push(ec.id);
+        if (ec.id === "ec6" && fnError && typeof inputs[0] === "number" && (inputs[0] as number) > 75) covered.push(ec.id);
+        if (ec.id === "ec7" && fnError && typeof inputs[0] === "number" && !Number.isInteger(inputs[0])) covered.push(ec.id);
+      } else if (typeof fnResult === "number") {
+        const n = Number(inputs[0]);
+        if (ec.id === "ec1" && n === 0 && fnResult === 0) covered.push(ec.id);
+        if (ec.id === "ec2" && n === 1 && fnResult === 1) covered.push(ec.id);
+        if (ec.id === "ec3" && n >= 2 && n <= 74) covered.push(ec.id);
+        if (ec.id === "ec4" && n === 75) covered.push(ec.id);
       }
     }
 

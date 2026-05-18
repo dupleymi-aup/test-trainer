@@ -4,7 +4,7 @@
 
 ### Interactive Platform for Software Testing Practice
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
 [![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-new--york-black)](https://ui.shadcn.com/)
@@ -32,7 +32,7 @@ The project supports user authentication, progress persistence in a database, re
 
 ## Key Features
 
-- **10 interactive tasks** — from factorial to date validation, each with equivalence classes and boundary values
+- **17 interactive tasks** — from factorial to login lockout, each with equivalence classes and boundary values
 - **Coverage evaluation system** — automatic calculation of equivalence class (EC) and boundary value (BV) coverage
 - **Exam mode** — random task generation with time limits
 - **Practice mode** — free task progression with hints
@@ -62,6 +62,21 @@ The project supports user authentication, progress persistence in a database, re
 | 8 | **Email Validation** | Hard | Validates email address: format, domain, TLD, allowed characters |
 | 9 | **Roman Numerals** | Medium | Converts an integer to Roman numerals (1–3999) |
 | 10 | **Date Validation** | Hard | Validates a date: day, month, year, leap years, days per month |
+| 11 | **Phone Validation** | Hard | Validates phone number: format, country code, length, allowed characters |
+| 12 | **BMI Calculator** | Medium | Calculates Body Mass Index. Multi-factor: weight + height, underweight/normal/overweight |
+| 13 | **Number Parsing** | Hard | Parses a string into a number. Handles decimals, signs, scientific notation, invalid input |
+| 14 | **Array Flattening** | Hard | Flattens a nested array to a specified depth. Recursive structures, empty arrays |
+| 15 | **Fibonacci** | Medium | Computes the nth Fibonacci number. Negative indices, large numbers, overflow |
+| 16 | **Shipping Cost** | Hard | Decision table testing: weight + distance + speed → shipping cost calculation |
+| 17 | **Login Lockout** | Hard | State transition testing: failed attempts, lockout timer, reset, account blocking |
+
+## Multi-Role System
+
+| Role | Capabilities |
+|------|-------------|
+| **Student** | Complete tasks, track progress, view achievements, participate in groups |
+| **Teacher** | Manage students and groups, view analytics, export reports |
+| **Admin** | Full user management, system settings, activity logs, database health |
 
 ## Evaluation System
 
@@ -92,7 +107,7 @@ The platform automatically evaluates each set of test cases on three metrics:
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Next.js** | 16 | React framework with App Router, SSR, and optimization |
+| **Next.js** | 15 | React framework with App Router, SSR, and optimization |
 | **TypeScript** | 5 | Static typing for code reliability |
 | **Tailwind CSS** | 4 | Utility-first CSS for rapid UI development |
 | **shadcn/ui** | — | UI components in New York style |
@@ -246,10 +261,19 @@ test-trainer/
 - [x] Progress export/import
 - [x] Authentication (registration, login, password recovery)
 - [x] User profile
-- [ ] E2E tests (Playwright)
-- [ ] Full multilingual support (EN/RU)
-- [ ] LMS integration (Moodle, Canvas)
-- [ ] PWA manifest and offline mode
+- [x] Multi-role system (Student, Teacher, Admin)
+- [x] Group management and permissions
+- [x] Teacher analytics and reports
+- [x] Admin panel (user management, activity logs, system settings)
+- [x] E2E tests (Playwright)
+- [x] PWA manifest and offline mode
+- [x] Full multilingual support (EN/RU with next-intl)
+- [ ] Demo/guest mode without authentication
+- [ ] PostgreSQL support
+- [ ] API documentation (OpenAPI/Swagger)
+- [ ] CI/CD auto-deploy (Vercel, Railway)
+- [ ] Error tracking (Sentry)
+- [ ] Accessibility audit (WCAG 2.1)
 
 ---
 

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Code2,
   FileText,
   Tag,
   Layers,
@@ -23,6 +22,8 @@ import {
   Pencil,
   Lightbulb,
 } from "lucide-react";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { Task } from "@/lib/tasks";
 import { saveTaskNote, loadTaskNote } from "@/lib/storage";
 import type { TestCase } from "@/lib/evaluator";
@@ -34,61 +35,8 @@ interface TaskWorkspaceProps {
   testCases?: TestCase[];
 }
 
-function highlightCode(code: string): React.ReactNode {
-  const lines = code.split("\n");
-  return lines.map((line, i) => {
-    // Comments (// ...)
-    if (line.trimStart().startsWith("//")) {
-      return (
-        <span key={i}>
-          <span className="text-gray-500 italic">{line}</span>
-          {i < lines.length - 1 && "\n"}
-        </span>
-      );
-    }
-
-    // Escape HTML to prevent injection and broken markup
-    let html = line
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    // Extract strings into placeholders so keywords/numbers inside them stay untouched
-    const strings: string[] = [];
-    html = html.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, (match) => {
-      strings.push(match);
-      return `\u0000STR${strings.length - 1}\u0000`;
-    });
-
-    // Function names
-    html = html.replace(/\b([a-zA-Z_]\w*)\s*\(/g, '<span class="text-blue-400">$1</span>(');
-
-    // Keywords
-    const keywords = ["function", "return", "if", "else", "throw", "const", "let", "var", "new", "typeof", "for", "while", "true", "false", "null", "undefined"];
-    for (const kw of keywords) {
-      const regex = new RegExp(`\\b(${kw})\\b`, "g");
-      html = html.replace(regex, '<span class="text-purple-400">$1</span>');
-    }
-
-    // Numbers
-    html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="text-amber-400">$1</span>');
-
-    // Restore strings with highlighting
-    strings.forEach((str, idx) => {
-      html = html.replace(
-        `\u0000STR${idx}\u0000`,
-        `<span class="text-emerald-400">${str}</span>`
-      );
-    });
-
-    return (
-      <span key={i}>
-        <span dangerouslySetInnerHTML={{ __html: html }} />
-        {i < lines.length - 1 && "\n"}
-      </span>
-    );
-  });
-}
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export function TaskWorkspace({ task, testCases }: TaskWorkspaceProps) {
   return <TaskWorkspaceInner key={task.id} task={task} testCases={testCases} />;
@@ -206,16 +154,26 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
             </div>
 
             {/* Code */}
-            <div className="bg-zinc-900 dark:bg-zinc-950 rounded-lg p-3 overflow-x-auto">
-              <div className="flex items-center gap-2 mb-2">
-                <Code2 className="h-3.5 w-3.5 text-zinc-400" />
+            <div className="rounded-lg overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-800 dark:bg-zinc-950">
                 <span className="text-xs font-medium text-zinc-400">
                   Реализация
                 </span>
               </div>
-              <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                <code>{highlightCode(task.code)}</code>
-              </pre>
+              <SyntaxHighlighter
+                language="typescript"
+                style={vscDarkPlus}
+                customStyle={{
+                  margin: 0,
+                  borderRadius: 0,
+                  fontSize: "0.75rem",
+                  lineHeight: 1.625,
+                }}
+                showLineNumbers
+                wrapLines
+              >
+                {task.code}
+              </SyntaxHighlighter>
             </div>
 
             {/* Equivalence classes */}

@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, FolderKanban, BarChart3, FileDown, ArrowLeft, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { NotificationsBell } from "@/components/teacher/notifications-bell";
 
 const navItems = [
   { href: "/teacher", label: "Панель", icon: LayoutDashboard },
   { href: "/teacher/students", label: "Студенты", icon: Users },
   { href: "/teacher/groups", label: "Группы", icon: FolderKanban },
-  { href: "/teacher/analytics", label: "Аналитика", icon: BarChart3 },
+  { href: "/teacher/analytics-enhanced", label: "Аналитика", icon: BarChart3 },
   { href: "/teacher/reports", label: "Отчёты", icon: FileDown },
 ];
 
@@ -50,7 +51,10 @@ export function TeacherLayout({ children }: { children: React.ReactNode }) {
             <GraduationCap className="h-5 w-5 text-emerald-600" />
             <h1 className="text-lg font-bold">Панель преподавателя</h1>
           </div>
-          <div className="ml-auto text-sm text-muted-foreground">{session.user.name || session.user.email}</div>
+          <div className="ml-auto flex items-center gap-3">
+            <NotificationsBell />
+            <div className="text-sm text-muted-foreground">{session.user.name || session.user.email}</div>
+          </div>
         </div>
       </header>
 

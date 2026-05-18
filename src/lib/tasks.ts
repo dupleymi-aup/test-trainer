@@ -39,7 +39,25 @@ export interface Task {
   commonMistakes?: string[];
 }
 
-// Reference functions
+// Helper to auto-generate code display string from a function
+function getCode<T extends (...args: unknown[]) => unknown>(fn: T): string {
+  const source = fn.toString();
+  // If it's an arrow function wrapper like "(args) => factorial(args[0])", extract the inner call
+  const arrowMatch = source.match(/\)\s*=>\s*(\w+)\(/);
+  if (arrowMatch) {
+    const fnName = arrowMatch[1];
+    // Try to find the original function and return its source
+    const originalFn = fn.name !== "" ? fn : null;
+    if (originalFn && originalFn.name) {
+      try {
+        return originalFn.toString();
+      } catch {
+        // Fall through
+      }
+    }
+  }
+  return source;
+}
 function factorial(n: number): number {
   if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
   if (n < 0) throw new Error("Факториал не определён для отрицательных чисел");
@@ -189,6 +207,114 @@ function parseNumber(str: string): number {
   return isNaN(n) ? NaN : n;
 }
 
+function isPalindrome(str: string): boolean {
+  if (typeof str !== "string") throw new Error("Аргумент должен быть строкой");
+  const cleaned = str.toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
+  return cleaned === cleaned.split("").reverse().join("");
+}
+
+function validateEmail(email: string): { valid: boolean; errors: string[] } {
+  if (typeof email !== "string") throw new Error("Аргумент должен быть строкой");
+  const errors: string[] = [];
+  if (!email.includes("@")) {
+    errors.push("Отсутствует символ @");
+  } else if (email.indexOf("@") !== email.lastIndexOf("@")) {
+    errors.push("Более одного символа @");
+  } else {
+    const [local, domain] = email.split("@");
+    if (!local || local.length === 0) errors.push("Пустая локальная часть (до @)");
+    else if (!/^[a-zA-Z0-9.\-]+$/.test(local)) errors.push("Недопустимые символы в локальной части");
+    if (!domain || domain.length === 0) errors.push("Пустая доменная часть (после @)");
+    else if (!domain.includes(".")) errors.push("Домен не содержит точку");
+    else {
+      const parts = domain.split(".");
+      const tld = parts[parts.length - 1];
+      if (tld.length < 2) errors.push("Домен верхнего уровня слишком короткий (минимум 2 символа)");
+      else if (tld.length > 6) errors.push("Домен верхнего уровня слишком длинный (максимум 6 символов)");
+      if (!/^[a-zA-Z0-9.\-]+$/.test(domain)) errors.push("Недопустимые символы в домене");
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+function flattenArray(arr: unknown[]): unknown[] {
+  if (!Array.isArray(arr)) throw new Error("Аргумент должен быть массивом");
+  const flatten = (a: unknown[]): unknown[] =>
+    a.reduce((acc: unknown[], v) => acc.concat(Array.isArray(v) ? flatten(v) : [v]), []);
+  return flatten(arr);
+}
+
+function fibonacci(n: number): number {
+  if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
+  if (n < 0) throw new Error("Фибоначчи не определён для отрицательных чисел");
+  if (n > 75) throw new Error("Переполнение: n > 75");
+  if (n === 0) return 0;
+  if (n === 1) return 1;
+  let a = 0, b = 1;
+  for (let i = 2; i <= n; i++) { const t = a + b; a = b; b = t; }
+  return b;
+}
+
+function calculateShipping(
+  isPremium: boolean,
+  orderAmount: number,
+  region: string
+): { shipping: number; currency: string } {
+  if (typeof isPremium !== "boolean") throw new Error("isPremium должен быть булевым");
+  if (typeof orderAmount !== "number" || isNaN(orderAmount)) throw new Error("orderAmount должен быть числом");
+  if (typeof region !== "string") throw new Error("region должен быть строкой");
+  if (orderAmount < 0) throw new Error("Сумма заказа не может быть отрицательной");
+  const validRegions = ["local", "national", "international"];
+  if (!validRegions.includes(region)) throw new Error("Недопустимый регион");
+  let shipping: number;
+  if (isPremium && orderAmount >= 1000) {
+    shipping = 0;
+  } else if (isPremium) {
+    shipping = region === "international" ? 200 : 100;
+  } else if (orderAmount >= 2000) {
+    shipping = region === "international" ? 300 : 0;
+  } else if (orderAmount >= 500) {
+    shipping = region === "local" ? 100 : region === "national" ? 200 : 400;
+  } else {
+    shipping = region === "local" ? 200 : region === "national" ? 350 : 500;
+  }
+  return { shipping, currency: "RUB" };
+}
+
+function handleLoginAction(
+  action: string,
+  currentAttempts: number,
+  lockoutTime: number | null
+): { status: string; remainingAttempts: number; message: string } {
+  const maxAttempts = 3;
+  const lockoutDuration = 300;
+  if (typeof action !== "string") throw new Error("action должен быть строкой");
+  if (!Number.isInteger(currentAttempts) || currentAttempts < 0) throw new Error("currentAttempts должен быть неотрицательным целым");
+  if (lockoutTime !== null && (typeof lockoutTime !== "number" || lockoutTime < 0)) throw new Error("lockoutTime должен быть неотрицательным числом или null");
+  const now = 0;
+  const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDuration;
+  if (action === "login") {
+    if (isLockedOut) {
+      return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован. Попробуйте позже." };
+    }
+    const newAttempts = currentAttempts + 1;
+    if (newAttempts >= maxAttempts) {
+      return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован после 3 неудачных попыток." };
+    }
+    return { status: "failed", remainingAttempts: maxAttempts - newAttempts, message: `Неверный пароль. Осталось попыток: ${maxAttempts - newAttempts}` };
+  }
+  if (action === "success") {
+    if (isLockedOut) {
+      return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован." };
+    }
+    return { status: "success", remainingAttempts: maxAttempts, message: "Вход выполнен успешно." };
+  }
+  if (action === "wait") {
+    return { status: "unlocked", remainingAttempts: maxAttempts, message: "Блокировка снята. Попытки сброшены." };
+  }
+  throw new Error("Недопустимое действие");
+}
+
 // Map of reference functions
 export const referenceFunctions: Record<
   number,
@@ -200,114 +326,17 @@ export const referenceFunctions: Record<
   4: (args: unknown[]) => isLeapYear(args[0] as number),
   5: (args: unknown[]) => triangleType(args[0] as number, args[1] as number, args[2] as number),
   6: (args: unknown[]) => validatePassword(args[0] as string),
-  7: (args: unknown[]) => {
-    const str = args[0] as string;
-    if (typeof str !== "string") throw new Error("Аргумент должен быть строкой");
-    const cleaned = str.toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
-    return cleaned === cleaned.split("").reverse().join("");
-  },
-  8: (args: unknown[]) => {
-    const email = args[0] as string;
-    if (typeof email !== "string") throw new Error("Аргумент должен быть строкой");
-    const errors: string[] = [];
-    if (!email.includes("@")) {
-      errors.push("Отсутствует символ @");
-    } else if (email.indexOf("@") !== email.lastIndexOf("@")) {
-      errors.push("Более одного символа @");
-    } else {
-      const [local, domain] = email.split("@");
-      if (!local || local.length === 0) errors.push("Пустая локальная часть (до @)");
-      else if (!/^[a-zA-Z0-9.\-]+$/.test(local)) errors.push("Недопустимые символы в локальной части");
-      if (!domain || domain.length === 0) errors.push("Пустая доменная часть (после @)");
-      else if (!domain.includes(".")) errors.push("Домен не содержит точку");
-      else {
-        const parts = domain.split(".");
-        const tld = parts[parts.length - 1];
-        if (tld.length < 2) errors.push("Домен верхнего уровня слишком короткий (минимум 2 символа)");
-        else if (tld.length > 6) errors.push("Домен верхнего уровня слишком длинный (максимум 6 символов)");
-        if (!/^[a-zA-Z0-9.\-]+$/.test(domain)) errors.push("Недопустимые символы в домене");
-      }
-    }
-    return { valid: errors.length === 0, errors };
-  },
+  7: (args: unknown[]) => isPalindrome(args[0] as string),
+  8: (args: unknown[]) => validateEmail(args[0] as string),
   9: (args: unknown[]) => toRoman(args[0] as number),
   10: (args: unknown[]) => isValidDate(args[0] as number, args[1] as number, args[2] as number),
   11: (args: unknown[]) => validatePhone(args[0] as string),
   12: (args: unknown[]) => calculateBMI(args[0] as number, args[1] as number),
   13: (args: unknown[]) => parseNumber(args[0] as string),
-  14: (args: unknown[]) => {
-    const arr = args[0] as unknown[];
-    if (!Array.isArray(arr)) throw new Error("Аргумент должен быть массивом");
-    const flatten = (a: unknown[]): unknown[] => a.reduce((acc: unknown[], v) => acc.concat(Array.isArray(v) ? flatten(v) : [v]), []);
-    return flatten(arr);
-  },
-  15: (args: unknown[]) => {
-    const n = args[0] as number;
-    if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
-    if (n < 0) throw new Error("Фибоначчи не определён для отрицательных чисел");
-    if (n > 75) throw new Error("Переполнение: n > 75");
-    if (n === 0) return 0;
-    if (n === 1) return 1;
-    let a = 0, b = 1;
-    for (let i = 2; i <= n; i++) { const t = a + b; a = b; b = t; }
-    return b;
-  },
-  16: (args: unknown[]) => {
-    const isPremium = args[0] as boolean;
-    const orderAmount = args[1] as number;
-    const region = args[2] as string;
-    if (typeof isPremium !== "boolean") throw new Error("isPremium должен быть булевым");
-    if (typeof orderAmount !== "number" || isNaN(orderAmount)) throw new Error("orderAmount должен быть числом");
-    if (typeof region !== "string") throw new Error("region должен быть строкой");
-    if (orderAmount < 0) throw new Error("Сумма заказа не может быть отрицательной");
-    const validRegions = ["local", "national", "international"];
-    if (!validRegions.includes(region)) throw new Error("Недопустимый регион");
-    let shipping: number;
-    if (isPremium && orderAmount >= 1000) {
-      shipping = 0;
-    } else if (isPremium) {
-      shipping = region === "international" ? 200 : 100;
-    } else if (orderAmount >= 2000) {
-      shipping = region === "international" ? 300 : 0;
-    } else if (orderAmount >= 500) {
-      shipping = region === "local" ? 100 : region === "national" ? 200 : 400;
-    } else {
-      shipping = region === "local" ? 200 : region === "national" ? 350 : 500;
-    }
-    return { shipping, currency: "RUB" };
-  },
-  17: (args: unknown[]) => {
-    const action = args[0] as string;
-    const currentAttempts = args[1] as number;
-    const lockoutTime = args[2] as number | null;
-    const maxAttempts = 3;
-    const lockoutDuration = 300; // 5 минут
-    if (typeof action !== "string") throw new Error("action должен быть строкой");
-    if (!Number.isInteger(currentAttempts) || currentAttempts < 0) throw new Error("currentAttempts должен быть неотрицательным целым");
-    if (lockoutTime !== null && (typeof lockoutTime !== "number" || lockoutTime < 0)) throw new Error("lockoutTime должен быть неотрицательным числом или null");
-    const now = 0; // моделируем: lockoutTime — это время блокировки в секундах от начала, 0 = сейчас
-    const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDuration;
-    if (action === "login") {
-      if (isLockedOut) {
-        return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован. Попробуйте позже." };
-      }
-      const newAttempts = currentAttempts + 1;
-      if (newAttempts >= maxAttempts) {
-        return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован после 3 неудачных попыток." };
-      }
-      return { status: "failed", remainingAttempts: maxAttempts - newAttempts, message: `Неверный пароль. Осталось попыток: ${maxAttempts - newAttempts}` };
-    }
-    if (action === "success") {
-      if (isLockedOut) {
-        return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован." };
-      }
-      return { status: "success", remainingAttempts: maxAttempts, message: "Вход выполнен успешно." };
-    }
-    if (action === "wait") {
-      return { status: "unlocked", remainingAttempts: maxAttempts, message: "Блокировка снята. Попытки сброшены." };
-    }
-    throw new Error("Недопустимое действие");
-  },
+  14: (args: unknown[]) => flattenArray(args[0] as unknown[]),
+  15: (args: unknown[]) => fibonacci(args[0] as number),
+  16: (args: unknown[]) => calculateShipping(args[0] as boolean, args[1] as number, args[2] as string),
+  17: (args: unknown[]) => handleLoginAction(args[0] as string, args[1] as number, args[2] as number | null),
 };
 
 export const tasks: Task[] = [
@@ -323,15 +352,7 @@ export const tasks: Task[] = [
       { name: "n", type: "number", description: "Целое неотрицательное число (0–20)" },
     ],
     returnType: "number",
-    code: `function factorial(n: number): number {
-  if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
-  if (n < 0) throw new Error("Факториал не определён для отрицательных чисел");
-  if (n > 20) throw new Error("Переполнение: n > 20");
-  if (n === 0) return 1;
-  let result = 1;
-  for (let i = 2; i <= n; i++) result *= i;
-  return result;
-}`,
+    code: getCode(factorial),
     equivalenceClasses: [
       {
         id: "ec1",
@@ -390,16 +411,7 @@ export const tasks: Task[] = [
       { name: "n", type: "number", description: "Целое число для проверки" },
     ],
     returnType: "boolean",
-    code: `function isPrime(n: number): boolean {
-  if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
-  if (n <= 1) return false;
-  if (n <= 3) return true;
-  if (n % 2 === 0 || n % 3 === 0) return false;
-  for (let i = 5; i * i <= n; i += 6) {
-    if (n % i === 0 || n % (i + 2) === 0) return false;
-  }
-  return true;
-}`,
+    code: getCode(isPrime),
     equivalenceClasses: [
       {
         id: "ec1",
@@ -472,14 +484,7 @@ export const tasks: Task[] = [
       },
     ],
     returnType: "number",
-    code: `function applyDiscount(price: number, discountPercent: number): number {
-  if (typeof price !== 'number' || typeof discountPercent !== 'number' || isNaN(price) || isNaN(discountPercent))
-    throw new Error("Аргументы должны быть числами");
-  if (price < 0) throw new Error("Цена не может быть отрицательной");
-  if (discountPercent < 0) throw new Error("Скидка не может быть отрицательной");
-  if (discountPercent > 100) throw new Error("Скидка не может превышать 100%");
-  return Math.round(price * (1 - discountPercent / 100) * 100) / 100;
-}`,
+    code: getCode(applyDiscount),
     equivalenceClasses: [
       {
         id: "ec1",
@@ -557,11 +562,7 @@ export const tasks: Task[] = [
       { name: "year", type: "number", description: "Год (положительное целое число)" },
     ],
     returnType: "boolean",
-    code: `function isLeapYear(year: number): boolean {
-  if (!Number.isInteger(year)) throw new Error("Год должен быть целым числом");
-  if (year <= 0) throw new Error("Год должен быть положительным");
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}`,
+    code: getCode(isLeapYear),
     equivalenceClasses: [
       {
         id: "ec1",
@@ -633,14 +634,7 @@ export const tasks: Task[] = [
       { name: "c", type: "number", description: "Третья сторона" },
     ],
     returnType: "string",
-    code: `function triangleType(a: number, b: number, c: number): string {
-  if ([a, b, c].some(v => typeof v !== 'number' || isNaN(v))) throw new Error("Стороны должны быть числами");
-  if (a <= 0 || b <= 0 || c <= 0) throw new Error("Стороны должны быть положительными");
-  if (a + b <= c || a + c <= b || b + c <= a) return "не треугольник";
-  if (a === b && b === c) return "равносторонний";
-  if (a === b || b === c || a === c) return "равнобедренный";
-  return "разносторонний";
-}`,
+    code: getCode(triangleType),
     equivalenceClasses: [
       {
         id: "ec1",
@@ -719,16 +713,7 @@ export const tasks: Task[] = [
       },
     ],
     returnType: "{ valid: boolean; errors: string[] }",
-    code: `function validatePassword(password: string): { valid: boolean; errors: string[] } {
-  if (typeof password !== 'string') throw new Error("Пароль должен быть строкой");
-  const errors: string[] = [];
-  if (password.length < 8) errors.push("Минимум 8 символов");
-  if (!/[A-ZА-ЯЁ]/.test(password)) errors.push("Хотя бы одна заглавная буква");
-  if (!/[a-zа-яё]/.test(password)) errors.push("Хотя бы одна строчная буква");
-  if (!/[0-9]/.test(password)) errors.push("Хотя бы одна цифра");
-  if (!/[!@#$%^&*()_+\\-=\\[\\]{};':"\\\\|,.<>\\/\\?]/.test(password)) errors.push("Хотя бы один спецсимвол");
-  return { valid: errors.length === 0, errors };
-}`,
+    code: getCode(validatePassword),
     equivalenceClasses: [
       {
         id: "ec1",
@@ -811,13 +796,7 @@ export const tasks: Task[] = [
       { name: "str", type: "string", description: "Проверяемая строка" }
     ],
     returnType: "boolean",
-    code: `function isPalindrome(str: string): boolean {
-  if (typeof str !== "string") {
-    throw new Error("Аргумент должен быть строкой");
-  }
-  const cleaned = str.toLowerCase().replace(/[^a-zа-яё0-9]/gi, "");
-  return cleaned === cleaned.split("").reverse().join("");
-}`,
+    code: getCode(isPalindrome),
     equivalenceClasses: [
       { id: "ec1", name: "EC1: Палиндром (латиница)", description: "Строка-палиндром из латинских букв", exampleValues: ["aba", "racecar"] },
       { id: "ec2", name: "EC2: Палиндром (кириллица)", description: "Строка-палиндром из русских букв", exampleValues: ["Анна", "казак"] },

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Download } from "lucide-react";
+import { Download, Users, AlertTriangle, Grid3X3, FileJson } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 export default function TeacherReportsPage() {
@@ -16,6 +17,7 @@ export default function TeacherReportsPage() {
   const [groupId, setGroupId] = useState<string | undefined>();
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [exportType, setExportType] = useState<"summary" | "detailed" | "at-risk">("summary");
   const [loading, setLoading] = useState(false);
   const [loadingGroups, setLoadingGroups] = useState(true);
 
@@ -36,6 +38,7 @@ export default function TeacherReportsPage() {
           groupId: groupId || null,
           startDate: dateFrom || null,
           endDate: dateTo || null,
+          exportType,
         }),
       });
       if (res.ok) {
@@ -43,7 +46,7 @@ export default function TeacherReportsPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "student-report.csv";
+        a.download = `student-report-${exportType}-${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         toast.success("Отчёт экспортирован");
@@ -58,12 +61,99 @@ export default function TeacherReportsPage() {
     }
   };
 
+  const handleExportJSON = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/teacher/reports/export-json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupId: groupId || null,
+          startDate: dateFrom || null,
+          endDate: dateTo || null,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `student-report-${new Date().toISOString().split("T")[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("JSON отчёт экспортирован");
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Ошибка при экспорте JSON отчёта");
+      }
+    } catch {
+      toast.error("Ошибка экспорта JSON");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <TeacherLayout>
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Экспорт отчётов</CardTitle></CardHeader>
+      <div className="space-y-6">
+        {/* Report type cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link href="/teacher/reports/group-performance">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Users className="h-8 w-8 text-blue-600 shrink-0" />
+                  <div>
+                    <h3 className="font-semibold mb-1">Прогресс по группам</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Сравнение групп, тренды студентов, активные/неактивные
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/teacher/reports/at-risk">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-8 w-8 text-rose-600 shrink-0" />
+                  <div>
+                    <h3 className="font-semibold mb-1">Студенты риска</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Студенты с низким баллом, снижением тренда, неактивные
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/teacher/reports/completion-matrix">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Grid3X3 className="h-8 w-8 text-purple-600 shrink-0" />
+                  <div>
+                    <h3 className="font-semibold mb-1">Матрица заданий</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Выполнение заданий по группе, лучшие баллы, попытки
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Экспорт отчётов</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Группа</label>
               <Select onValueChange={(v) => setGroupId(v === "ALL" ? undefined : v)}>
@@ -86,14 +176,31 @@ export default function TeacherReportsPage() {
               <label className="text-sm text-muted-foreground mb-1 block">Дата до</label>
               <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Тип экспорта</label>
+              <Select onValueChange={(v) => setExportType(v as "summary" | "detailed" | "at-risk")} value={exportType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="summary">Сводка</SelectItem>
+                  <SelectItem value="detailed">Детальный</SelectItem>
+                  <SelectItem value="at-risk">Студенты риска</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button onClick={handleExportJSON} disabled={loading} variant="outline">
+              <FileJson className="h-4 w-4 mr-1" /> Экспорт JSON
+            </Button>
             <Button onClick={handleExport} disabled={loading}>
               <Download className="h-4 w-4 mr-1" /> Экспорт CSV
             </Button>
           </div>
         </CardContent>
       </Card>
+      </div>
     </TeacherLayout>
   );
 }

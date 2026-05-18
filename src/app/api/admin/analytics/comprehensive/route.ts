@@ -1,0 +1,267 @@
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-guard";
+import { db } from "@/lib/db";
+import { tasks } from "@/lib/tasks";
+
+export async function GET() {
+  const guard = await requireAdmin();
+  if ("response" in guard) return guard.response;
+
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const yearAgo = new Date(now);
+  yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+
+  // KPI metrics
+  const [totalStudents, totalTeachers, totalGroups, allAttempts, activeStudents30d] =
+    await Promise.all([
+      db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
+      db.user.count({ where: { role: "TEACHER", deletedAt: null } }),
+      db.group.count(),
+      db.attempt.findMany({
+        select: { score: true, ecCoverage: true, bvCoverage: true, userId: true, createdAt: true },
+      }),
+      db.user.count({
+        where: {
+          role: "STUDENT",
+          deletedAt: null,
+          attempts: { some: { createdAt: { gte: thirtyDaysAgo } } },
+        },
+      }),
+    ]);
+
+  // Score trends (monthly for last 12 months)
+  const monthlyTrendsMap: Record<string, { totalScore: number; totalEc: number; totalBv: number; count: number }> = {};
+  allAttempts.forEach((a) => {
+    const month = a.createdAt.toISOString().slice(0, 7); // YYYY-MM
+    if (!monthlyTrendsMap[month]) monthlyTrendsMap[month] = { totalScore: 0, totalEc: 0, totalBv: 0, count: 0 };
+    monthlyTrendsMap[month].totalScore += a.score;
+    monthlyTrendsMap[month].totalEc += a.ecCoverage;
+    monthlyTrendsMap[month].totalBv += a.bvCoverage;
+    monthlyTrendsMap[month].count++;
+  });
+
+  const scoreTrends = Object.entries(monthlyTrendsMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([month, data]) => ({
+      month,
+      avgScore: Math.round(data.totalScore / data.count),
+      avgEc: Math.round(data.totalEc / data.count),
+      avgBv: Math.round(data.totalBv / data.count),
+      attemptsCount: data.count,
+    }));
+
+  // Cohort analysis (by registration month)
+  const students = await db.user.findMany({
+    where: { role: "STUDENT", deletedAt: null },
+    select: { id: true, createdAt: true },
+  });
+
+  const cohortMap: Record<string, { total: number; withAttempts: number }> = {};
+  students.forEach((s) => {
+    const cohort = s.createdAt.toISOString().slice(0, 7);
+    if (!cohortMap[cohort]) cohortMap[cohort] = { total: 0, withAttempts: 0 };
+    cohortMap[cohort].total++;
+  });
+
+  const studentsWithAttempts = await db.user.findMany({
+    where: {
+      role: "STUDENT",
+      deletedAt: null,
+      attempts: { some: {} },
+    },
+    select: { id: true, createdAt: true },
+  });
+
+  studentsWithAttempts.forEach((s) => {
+    const cohort = s.createdAt.toISOString().slice(0, 7);
+    if (cohortMap[cohort]) cohortMap[cohort].withAttempts++;
+  });
+
+  const cohortAnalysis = Object.entries(cohortMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, data]) => ({
+      month,
+      totalStudents: data.total,
+      withAttempts: data.withAttempts,
+      activationRate: data.total > 0 ? Math.round((data.withAttempts / data.total) * 100) : 0,
+    }));
+
+  // Performance by university
+  const universityMap: Record<string, { scores: number[]; ecs: number[]; bvs: number[]; attempts: number; students: Set<string> }> = {};
+  allAttempts.forEach((a) => {
+    // We need user.university - fetch it separately
+  });
+
+  const usersWithUniversity = await db.user.findMany({
+    where: { role: "STUDENT", deletedAt: null, university: { not: "" } },
+    select: { id: true, university: true },
+  });
+
+  const userIdToUniversity = new Map(usersWithUniversity.map((u) => [u.id, u.university]));
+
+  allAttempts.forEach((a) => {
+    const uni = userIdToUniversity.get(a.userId);
+    if (!uni) return;
+    if (!universityMap[uni]) universityMap[uni] = { scores: [], ecs: [], bvs: [], attempts: 0, students: new Set() };
+    universityMap[uni].scores.push(a.score);
+    universityMap[uni].ecs.push(a.ecCoverage);
+    universityMap[uni].bvs.push(a.bvCoverage);
+    universityMap[uni].attempts++;
+    universityMap[uni].students.add(a.userId);
+  });
+
+  const universityPerformance = Object.entries(universityMap)
+    .map(([name, data]) => ({
+      university: name,
+      studentCount: data.students.size,
+      avgScore: data.scores.length > 0 ? Math.round(data.scores.reduce((s, v) => s + v, 0) / data.scores.length) : 0,
+      avgEc: data.ecs.length > 0 ? Math.round(data.ecs.reduce((s, v) => s + v, 0) / data.ecs.length) : 0,
+      avgBv: data.bvs.length > 0 ? Math.round(data.bvs.reduce((s, v) => s + v, 0) / data.bvs.length) : 0,
+      totalAttempts: data.attempts,
+    }))
+    .sort((a, b) => b.avgScore - a.avgScore);
+
+  // Teacher leaderboard
+  const teachers = await db.user.findMany({
+    where: { role: "TEACHER", deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdGroups: {
+        select: {
+          id: true,
+          members: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  attempts: {
+                    select: { score: true, ecCoverage: true, bvCoverage: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const teacherLeaderboard = teachers
+    .map((t) => {
+      const allStudentAttempts = t.createdGroups.flatMap((g) =>
+        g.members.flatMap((m) => m.user.attempts)
+      );
+      const uniqueStudents = new Set(
+        t.createdGroups.flatMap((g) => g.members.map((m) => m.user.id))
+      );
+      const avgScore = allStudentAttempts.length > 0
+        ? Math.round(allStudentAttempts.reduce((s, a) => s + a.score, 0) / allStudentAttempts.length)
+        : 0;
+
+      // Calculate trend (first 10 vs last 10 attempts)
+      const sorted = [...allStudentAttempts].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      const first10 = sorted.slice(0, 10);
+      const last10 = sorted.slice(-10);
+      const firstAvg = first10.length > 0 ? first10.reduce((s, a) => s + a.score, 0) / first10.length : 0;
+      const lastAvg = last10.length > 0 ? last10.reduce((s, a) => s + a.score, 0) / last10.length : 0;
+      const trend = lastAvg - firstAvg > 5 ? "improving" : lastAvg - firstAvg < -5 ? "declining" : "stable";
+
+      return {
+        teacherId: t.id,
+        name: t.name || t.email || "Unknown",
+        groupsCount: t.createdGroups.length,
+        studentsCount: uniqueStudents.size,
+        avgStudentScore: avgScore,
+        avgAttemptsPerStudent: uniqueStudents.size > 0 ? Math.round(allStudentAttempts.length / uniqueStudents.size) : 0,
+        activeStudentsRate: uniqueStudents.size > 0
+          ? Math.round(
+              (uniqueStudents.size -
+                [...uniqueStudents].filter((sid) => {
+                  const studentAttempts = allStudentAttempts.filter((a) => a.userId === sid);
+                  return studentAttempts.length === 0 || new Date(studentAttempts[studentAttempts.length - 1].createdAt) < thirtyDaysAgo;
+                }).length) /
+                uniqueStudents.size *
+                100
+            )
+          : 0,
+        trend,
+        totalAttempts: allStudentAttempts.length,
+      };
+    })
+    .filter((t) => t.studentsCount > 0)
+    .sort((a, b) => b.avgStudentScore - a.avgStudentScore);
+
+  // Risk overview
+  const allStudentAttempts = await db.attempt.findMany({
+    select: { userId: true, score: true, ecCoverage: true, bvCoverage: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const userAttemptsMap: Record<string, typeof allStudentAttempts> = {};
+  allStudentAttempts.forEach((a) => {
+    if (!userAttemptsMap[a.userId]) userAttemptsMap[a.userId] = [];
+    userAttemptsMap[a.userId].push(a);
+  });
+
+  let lowPerformers = 0;
+  let declining = 0;
+  let inactive = 0;
+  let lowEngagement = 0;
+
+  const fourteenDaysAgo = new Date(now);
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  for (const [userId, attempts] of Object.entries(userAttemptsMap)) {
+    if (attempts.length === 0) continue;
+
+    const bestScore = Math.max(...attempts.map((a) => a.score));
+    const lastAttempt = attempts[attempts.length - 1];
+    const first3 = attempts.slice(0, 3);
+    const last3 = attempts.slice(-3);
+    const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
+    const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
+
+    if (bestScore < 50) lowPerformers++;
+    if (attempts.length >= 6 && first3Avg - last3Avg > 15) declining++;
+    if (new Date(lastAttempt.createdAt) < fourteenDaysAgo) inactive++;
+    if (attempts.length < 3) {
+      const user = await db.user.findUnique({ where: { id: userId }, select: { createdAt: true } });
+      if (user && user.createdAt < sevenDaysAgo) lowEngagement++;
+    }
+  }
+
+  const avgPlatformScore = allAttempts.length > 0
+    ? Math.round(allAttempts.reduce((s, a) => s + a.score, 0) / allAttempts.length)
+    : 0;
+
+  return NextResponse.json({
+    kpi: {
+      totalStudents,
+      totalTeachers,
+      totalGroups,
+      avgPlatformScore,
+      activeStudents30d,
+      activeRate: totalStudents > 0 ? Math.round((activeStudents30d / totalStudents) * 100) : 0,
+    },
+    scoreTrends,
+    cohortAnalysis,
+    universityPerformance,
+    teacherLeaderboard,
+    riskOverview: {
+      lowPerformers,
+      declining,
+      inactive,
+      lowEngagement,
+      total: lowPerformers + declining + inactive + lowEngagement,
+    },
+  });
+}

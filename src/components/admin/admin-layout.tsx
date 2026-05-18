@@ -14,6 +14,14 @@ import {
   Settings,
   ArrowLeft,
   Shield,
+  BarChart3,
+  Activity,
+  Target,
+  GraduationCap,
+  BookOpen,
+  AlertTriangle,
+  TrendingUp,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,9 +29,18 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/admin", label: "Панель управления", icon: LayoutDashboard },
   { href: "/admin/users", label: "Пользователи", icon: Users },
+  { href: "/admin/analytics", label: "Аналитика платформы", icon: BarChart3 },
+  { href: "/admin/analytics/comprehensive", label: "Комплексная аналитика", icon: Target },
+  { href: "/admin/analytics/teacher-performance", label: "Преподаватели", icon: GraduationCap },
+  { href: "/admin/analytics/university-comparison", label: "Университеты", icon: BookOpen },
+  { href: "/admin/analytics/task-insights", label: "Анализ задач", icon: Activity },
+  { href: "/admin/analytics/predictions", label: "Прогнозы", icon: AlertTriangle },
+  { href: "/admin/analytics/time-trends", label: "Тренды", icon: TrendingUp },
+  { href: "/admin/reports/export", label: "Экспорт отчётов", icon: Download },
   { href: "/admin/groups", label: "Группы", icon: FolderKanban },
-  { href: "/admin/activity", label: "Журнал действий", icon: ScrollText },
   { href: "/admin/database", label: "База данных", icon: Database },
+  { href: "/admin/database/analytics", label: "Аналитика БД", icon: Activity },
+  { href: "/admin/activity", label: "Журнал действий", icon: ScrollText },
   { href: "/admin/settings", label: "Настройки", icon: Settings },
 ];
 

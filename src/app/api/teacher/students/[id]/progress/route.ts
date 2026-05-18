@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { tasks } from "@/lib/tasks";
 
 export async function GET(
   _req: Request,
@@ -59,10 +60,62 @@ export async function GET(
       bvCoverage: a.bvCoverage,
     }));
 
+  // Task breakdown
+  const taskMap = new Map(
+    tasks.map((t) => [String(t.id), { name: t.name, topics: t.topics }])
+  );
+
+  const taskAttempts: Record<string, Array<{ score: number; ecCoverage: number; bvCoverage: number }>> = {};
+  attempts.forEach((a) => {
+    if (!taskAttempts[a.taskId]) taskAttempts[a.taskId] = [];
+    taskAttempts[a.taskId].push({
+      score: a.score,
+      ecCoverage: a.ecCoverage,
+      bvCoverage: a.bvCoverage,
+    });
+  });
+
+  const taskBreakdown = Object.entries(taskAttempts).map(([taskId, atts]) => {
+    const meta = taskMap.get(taskId);
+    return {
+      taskId,
+      taskName: meta?.name || `Задание ${taskId}`,
+      bestScore: Math.max(...atts.map((a) => a.score)),
+      attemptsCount: atts.length,
+      avgEc: Math.round(atts.reduce((s, a) => s + a.ecCoverage, 0) / atts.length),
+      avgBv: Math.round(atts.reduce((s, a) => s + a.bvCoverage, 0) / atts.length),
+    };
+  });
+
+  // Topic analysis
+  const topicScores: Record<string, number[]> = {};
+  attempts.forEach((a) => {
+    const meta = taskMap.get(a.taskId);
+    if (meta?.topics) {
+      meta.topics.forEach((topic) => {
+        if (!topicScores[topic]) topicScores[topic] = [];
+        topicScores[topic].push(a.score);
+      });
+    }
+  });
+
+  const topicPerformance = Object.entries(topicScores)
+    .map(([topic, scores]) => ({
+      topic,
+      avgScore: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
+    }))
+    .sort((a, b) => a.avgScore - b.avgScore);
+
+  const weakAreas = topicPerformance.filter((t) => t.avgScore < 70).slice(0, 3);
+  const strongAreas = topicPerformance.filter((t) => t.avgScore >= 70).slice(-3).reverse();
+
   return NextResponse.json({
     student,
     stats: { bestScore, avgScore, avgEc, avgBv, totalAttempts: attempts.length },
     attempts: parsedAttempts,
     scoresOverTime,
+    taskBreakdown,
+    weakAreas,
+    strongAreas,
   });
 }

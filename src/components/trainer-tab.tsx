@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { TaskWorkspace } from "@/components/task-workspace";
 import { TestForm } from "@/components/test-form";
 import { TestList } from "@/components/test-list";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
 
@@ -79,30 +84,54 @@ export function TrainerTab({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Left panel — task description */}
-        <div className="lg:max-h-[calc(100vh-240px)]">
-          <TaskWorkspace task={task} testCases={testCases} />
-        </div>
+      {/* Mobile: stacked, Desktop: resizable split */}
+      <div className="lg:hidden space-y-4">
+        <TaskWorkspace task={task} testCases={testCases} />
+        <TestForm task={task} onAdd={onAddTestCase} />
+        <TestList
+          task={task}
+          testCases={testCases}
+          onRemove={onRemoveTestCase}
+          onDuplicate={onDuplicateTestCase}
+          onEdit={onEditTestCase}
+          onSubmit={onSubmit}
+          onShowHint={onShowHint}
+          onFillAllEc={onFillAllEc}
+          onFillAllBv={onFillAllBv}
+          onReorder={onReorder}
+          onBulkRemove={onBulkRemove}
+          onClearAll={onClearAll}
+        />
+      </div>
 
-        {/* Right panel — test form and list */}
-        <div className="space-y-4">
-          <TestForm task={task} onAdd={onAddTestCase} />
-          <TestList
-            task={task}
-            testCases={testCases}
-            onRemove={onRemoveTestCase}
-            onDuplicate={onDuplicateTestCase}
-            onEdit={onEditTestCase}
-            onSubmit={onSubmit}
-            onShowHint={onShowHint}
-            onFillAllEc={onFillAllEc}
-            onFillAllBv={onFillAllBv}
-            onReorder={onReorder}
-            onBulkRemove={onBulkRemove}
-            onClearAll={onClearAll}
-          />
-        </div>
+      <div className="hidden lg:block h-[calc(100vh-200px)]">
+        <ResizablePanelGroup direction="horizontal" autoSaveId="trainer-split">
+          <ResizablePanel defaultSize={50} minSize={30} className="overflow-hidden">
+            <div className="h-full overflow-auto pr-4">
+              <TaskWorkspace task={task} testCases={testCases} />
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={50} minSize={30} className="overflow-hidden">
+            <div className="h-full overflow-auto space-y-4 pr-4">
+              <TestForm task={task} onAdd={onAddTestCase} />
+              <TestList
+                task={task}
+                testCases={testCases}
+                onRemove={onRemoveTestCase}
+                onDuplicate={onDuplicateTestCase}
+                onEdit={onEditTestCase}
+                onSubmit={onSubmit}
+                onShowHint={onShowHint}
+                onFillAllEc={onFillAllEc}
+                onFillAllBv={onFillAllBv}
+                onReorder={onReorder}
+                onBulkRemove={onBulkRemove}
+                onClearAll={onClearAll}
+              />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </motion.div>
   );
