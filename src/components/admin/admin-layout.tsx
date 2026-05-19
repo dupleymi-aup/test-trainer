@@ -22,9 +22,24 @@ import {
   AlertTriangle,
   TrendingUp,
   Download,
+  GitCompare,
+  Table2,
+  Trophy,
+  Zap,
+  Route,
+  Bell,
+  Crosshair,
+  Calendar,
+  Lightbulb,
+  Clock,
+  Layers,
+  Award,
+  Siren,
+  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { NotificationsBell } from "@/components/admin/notifications-bell";
 
 const navItems = [
   { href: "/admin", label: "Панель управления", icon: LayoutDashboard },
@@ -32,10 +47,28 @@ const navItems = [
   { href: "/admin/analytics", label: "Аналитика платформы", icon: BarChart3 },
   { href: "/admin/analytics/comprehensive", label: "Комплексная аналитика", icon: Target },
   { href: "/admin/analytics/teacher-performance", label: "Преподаватели", icon: GraduationCap },
+  { href: "/admin/analytics/teacher-comparison", label: "Сравнение преподавателей", icon: Award },
   { href: "/admin/analytics/university-comparison", label: "Университеты", icon: BookOpen },
   { href: "/admin/analytics/task-insights", label: "Анализ задач", icon: Activity },
   { href: "/admin/analytics/predictions", label: "Прогнозы", icon: AlertTriangle },
   { href: "/admin/analytics/time-trends", label: "Тренды", icon: TrendingUp },
+  { href: "/admin/analytics/time-activity", label: "Активность по времени", icon: Clock },
+  { href: "/admin/analytics/compare-periods", label: "Сравнение периодов", icon: GitCompare },
+  { href: "/admin/analytics/completion-matrix", label: "Матрица выполнения", icon: Table2 },
+  { href: "/admin/analytics/group-performance", label: "Успеваемость групп", icon: FolderKanban },
+  { href: "/admin/analytics/ec-bv-gaps", label: "Анализ покрытия EC/BV", icon: AlertTriangle },
+  { href: "/admin/analytics/ec-bv-heatmap", label: "Тепловая карта EC/BV", icon: Crosshair },
+  { href: "/admin/analytics/improvement-leaderboard", label: "Лидеры улучшений", icon: Trophy },
+  { href: "/admin/analytics/velocity", label: "Скорость обучения", icon: Zap },
+  { href: "/admin/analytics/learning-path", label: "Путь обучения", icon: Route },
+  { href: "/admin/analytics/topic-heatmap", label: "Тепловая карта тем", icon: Target },
+  { href: "/admin/analytics/cohort-retention", label: "Когортный анализ", icon: Calendar },
+  { href: "/admin/analytics/recommendations", label: "Рекомендации", icon: Lightbulb },
+  { href: "/admin/analytics/skill-mastery", label: "Освоение навыков", icon: Layers },
+  { href: "/admin/analytics/at-risk", label: "Студенты группы риска", icon: AlertTriangle },
+  { href: "/admin/alerts", label: "Системные алерты", icon: Siren },
+  { href: "/admin/deadlines", label: "Дедлайны", icon: CalendarClock },
+  { href: "/admin/notifications", label: "Уведомления", icon: Bell },
   { href: "/admin/reports/export", label: "Экспорт отчётов", icon: Download },
   { href: "/admin/groups", label: "Группы", icon: FolderKanban },
   { href: "/admin/database", label: "База данных", icon: Database },
@@ -83,8 +116,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <Shield className="h-5 w-5 text-amber-600" />
             <h1 className="text-lg font-bold">Панель администратора</h1>
           </div>
-          <div className="ml-auto text-sm text-muted-foreground">
-            {session.user.name || session.user.email}
+          <div className="ml-auto flex items-center gap-2">
+            <NotificationsBell />
+            <span className="text-sm text-muted-foreground">
+              {session.user.name || session.user.email}
+            </span>
           </div>
         </div>
       </header>

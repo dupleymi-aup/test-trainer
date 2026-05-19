@@ -39,6 +39,8 @@ model User {
   attempts       Attempt[]
   activityLogs   ActivityLog[]
   createdGroups  Group[]     @relation("CreatedGroups")
+  createdDeadlines Deadline[] @relation("CreatedDeadlines")
+  reminders        Reminder[]
   updatedSettings SystemSetting[] @relation("UpdatedSettings")
 
   @@index([role])
@@ -100,6 +102,7 @@ model Group {
   createdBy       User        @relation("CreatedGroups", fields: [createdByUserId], references: [id], onDelete: Cascade)
   members         UserGroup[]
   assignedTasks   GroupTask[]
+  deadlines       Deadline[]
 }
 
 model GroupTask {
@@ -174,3 +177,44 @@ model SystemSetting {
   updatedByUserId  String?
   updatedBy        User?    @relation("UpdatedSettings", fields: [updatedByUserId], references: [id], onDelete: SetNull)
 }
+
+model Deadline {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  type        String   // "EXAM", "TEST", "ASSIGNMENT", "COURSE_END", "REGISTRATION_END"
+  groupId     String?  // null = system-wide
+  taskId      Int?     // related task ID
+  createdAt   DateTime @default(now())
+  createdBy   String
+  creator     User     @relation("CreatedDeadlines", fields: [createdBy], references: [id], onDelete: Cascade)
+  group       Group?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  reminders   Reminder[]
+
+  @@index([dueDate])
+  @@index([groupId])
+  @@index([type])
+}
+
+model Reminder {
+  id         String   @id @default(cuid())
+  deadlineId String
+  userId     String
+  sent       Boolean  @default(false)
+  sentAt     DateTime?
+  read       Boolean  @default(false)
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  deadline Deadline @relation(fields: [deadlineId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([deadlineId])
+  @@index([userId])
+  @@index([sent])
+  @@index([read])
+}
+
+// Extend User model with new relation
+// Add to User model: createdDeadlines  Deadline[]
