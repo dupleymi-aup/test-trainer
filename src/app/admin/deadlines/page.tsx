@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Deadline {
   id: string;
@@ -34,6 +35,7 @@ interface Deadline {
   type: string;
   groupId: string | null;
   taskId: number | null;
+  reminderSchedule: string | null;
   createdAt: string;
   group: { id: string; name: string } | null;
   creator: { name: string | null; email: string | null };
@@ -48,6 +50,7 @@ const deadlineSchema = z.object({
   groupId: z.string().optional(),
   taskId: z.string().optional(),
   targetUsers: z.enum(["ALL_STUDENTS", "GROUP_MEMBERS", "SPECIFIC"]).default("ALL_STUDENTS"),
+  reminderSchedule: z.array(z.number()).default([7, 3, 1, 0, -1]),
 });
 
 type DeadlineForm = z.infer<typeof deadlineSchema>;
@@ -88,6 +91,7 @@ export default function AdminDeadlinesPage() {
       groupId: "",
       taskId: "",
       targetUsers: "ALL_STUDENTS",
+      reminderSchedule: [7, 3, 1, 0, -1],
     },
   });
 
@@ -171,6 +175,7 @@ export default function AdminDeadlinesPage() {
 
   const openEdit = (dl: Deadline) => {
     setEditingDeadline(dl);
+    const schedule = dl.reminderSchedule ? (() => { try { return JSON.parse(dl.reminderSchedule) as number[]; } catch { return [7, 3, 1, 0, -1]; } })() : [7, 3, 1, 0, -1];
     form.reset({
       title: dl.title,
       description: dl.description || "",
@@ -179,6 +184,7 @@ export default function AdminDeadlinesPage() {
       groupId: dl.groupId || "",
       taskId: dl.taskId?.toString() || "",
       targetUsers: "ALL_STUDENTS",
+      reminderSchedule: schedule,
     });
     setShowCreateModal(true);
   };
@@ -292,6 +298,26 @@ export default function AdminDeadlinesPage() {
                         <Badge variant="outline">{dl._count.reminders}</Badge>
                       </TableCell>
                       <TableCell>
+                        {dl.reminderSchedule ? (
+                          <div className="flex gap-1 flex-wrap">
+                            {(() => {
+                              try {
+                                const schedule: number[] = JSON.parse(dl.reminderSchedule);
+                                return schedule.map((offset) => (
+                                  <Badge key={offset} variant="outline" className="text-xs">
+                                    {offset > 0 ? `${offset}д` : offset === 0 ? "день" : "проср."}
+                                  </Badge>
+                                ));
+                              } catch {
+                                return null;
+                              }
+                            })()}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">По умолч.</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {isOverdue ? (
                           <Badge variant="destructive" className="flex items-center gap-1">
                             <AlertTriangle className="h-3 w-3" /> Просрочен
@@ -388,6 +414,37 @@ export default function AdminDeadlinesPage() {
                     <SelectItem value="GROUP_MEMBERS">Только группе</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Напоминать</Label>
+                <div className="flex flex-wrap gap-4">
+                  {([
+                    { value: 7, label: "За 7 дней" },
+                    { value: 3, label: "За 3 дня" },
+                    { value: 1, label: "За 1 день" },
+                    { value: 0, label: "В день дедлайна" },
+                    { value: -1, label: "При просрочке" },
+                  ]).map((option) => (
+                    <div key={option.value} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`reminder-${option.value}`}
+                        checked={form.watch("reminderSchedule").includes(option.value)}
+                        onCheckedChange={(checked) => {
+                          const current = form.getValues("reminderSchedule");
+                          if (checked) {
+                            form.setValue("reminderSchedule", [...current, option.value]);
+                          } else {
+                            form.setValue("reminderSchedule", current.filter((v) => v !== option.value));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`reminder-${option.value}`} className="text-sm cursor-pointer">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <DialogFooter>

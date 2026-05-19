@@ -13,16 +13,253 @@ function sanitizeCSVValue(value: string): string {
   return value;
 }
 
+/**
+ * Log export activity to the activity log.
+ */
+async function logExport(userId: string, reportType: string, format: string, details?: Record<string, unknown>) {
+  try {
+    await db.activityLog.create({
+      data: {
+        userId,
+        action: "EXPORT_REPORT",
+        entity: "Report",
+        details: JSON.stringify({ reportType, format, ...details }),
+      },
+    });
+  } catch {
+    // Silently fail — export should not be blocked by logging errors
+  }
+}
+
 export async function POST(req: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
 
   const body = await req.json();
-  const { reportType = "comprehensive", startDate, endDate, format = "csv" } = body;
+  const { reportType = "comprehensive", startDate, endDate, format = "csv", groupId } = body;
+
+  const userId = guard.session.userId;
 
   const taskMap = new Map(
     tasks.map((t) => [String(t.id), { name: t.name, difficulty: t.difficulty }])
   );
+
+  // Helper: build data object for JSON export
+  if (format === "json") {
+    const result: Record<string, unknown> = { reportType, generatedAt: new Date().toISOString() };
+
+    if (reportType === "comprehensive") {
+      const [totalStudents, totalTeachers, totalGroups, totalAttempts] = await Promise.all([
+        db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
+        db.user.count({ where: { role: "TEACHER", deletedAt: null } }),
+        db.group.count(),
+        db.attempt.count({
+          where: {
+            createdAt: {
+              gte: startDate ? new Date(startDate) : undefined,
+              lte: endDate ? new Date(endDate) : undefined,
+            },
+          },
+        }),
+      ]);
+      result.summary = { totalStudents, totalTeachers, totalGroups, totalAttempts };
+
+      const students = await db.user.findMany({
+        where: { role: "STUDENT", deletedAt: null },
+        select: {
+          id: true, name: true, email: true, group: true, university: true,
+          attempts: {
+            where: {
+              createdAt: {
+                gte: startDate ? new Date(startDate) : undefined,
+                lte: endDate ? new Date(endDate) : undefined,
+              },
+            },
+            select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true },
+          },
+        },
+      });
+      result.students = students.map((s) => {
+        const attempts = s.attempts;
+        return {
+          id: s.id, name: s.name, email: s.email, group: s.group, university: s.university,
+          attemptsCount: attempts.length,
+          bestScore: attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0,
+          avgScore: attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length) : 0,
+        };
+      });
+    } else if (reportType === "teacher-performance") {
+      const teachers = await db.user.findMany({
+        where: { role: "TEACHER", deletedAt: null },
+        select: {
+          id: true, name: true, email: true,
+          createdGroups: {
+            select: {
+              id: true, name: true,
+              members: {
+                select: {
+                  user: {
+                    select: {
+                      id: true, attempts: { select: { score: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      result.teachers = teachers.map((t) => {
+        const allStudents = new Set(t.createdGroups.flatMap((g) => g.members.map((m) => m.user.id)));
+        const allAttempts = t.createdGroups.flatMap((g) =>
+          g.members.flatMap((m) => m.user.attempts.map((a) => ({ ...a, userId: m.user.id })))
+        );
+        return {
+          id: t.id, name: t.name || t.email,
+          groupsCount: t.createdGroups.length,
+          studentsCount: allStudents.size,
+          attemptsCount: allAttempts.length,
+          avgScore: allAttempts.length > 0 ? Math.round(allAttempts.reduce((s, a) => s + a.score, 0) / allAttempts.length) : 0,
+        };
+      });
+    } else if (reportType === "task-insights") {
+      const attempts = await db.attempt.findMany({
+        select: { taskId: true, score: true, ecCoverage: true, bvCoverage: true, timeSpent: true },
+      });
+      const taskData: Record<string, { scores: number[]; ecs: number[]; bvs: number[]; times: number[] }> = {};
+      attempts.forEach((a) => {
+        if (!taskData[a.taskId]) taskData[a.taskId] = { scores: [], ecs: [], bvs: [], times: [] };
+        taskData[a.taskId].scores.push(a.score);
+        taskData[a.taskId].ecs.push(a.ecCoverage);
+        taskData[a.taskId].bvs.push(a.bvCoverage);
+        taskData[a.taskId].times.push(a.timeSpent);
+      });
+      result.tasks = Object.entries(taskData).map(([taskId, data]) => {
+        const meta = taskMap.get(taskId);
+        return {
+          taskId, taskName: meta?.name || `Задание ${taskId}`,
+          difficulty: meta?.difficulty || "Unknown",
+          attemptsCount: data.scores.length,
+          avgScore: data.scores.length > 0 ? Math.round(data.scores.reduce((s, v) => s + v, 0) / data.scores.length) : 0,
+          avgEc: data.ecs.length > 0 ? Math.round(data.ecs.reduce((s, v) => s + v, 0) / data.ecs.length) : 0,
+          avgBv: data.bvs.length > 0 ? Math.round(data.bvs.reduce((s, v) => s + v, 0) / data.bvs.length) : 0,
+          avgTime: data.times.length > 0 ? Math.round(data.times.reduce((s, v) => s + v, 0) / data.times.length) : 0,
+          failRate: data.scores.length > 0 ? Math.round((data.scores.filter((s) => s < 50).length / data.scores.length) * 100) : 0,
+        };
+      });
+    } else if (reportType === "predictions") {
+      const now = new Date();
+      const fourteenDaysAgo = new Date(now); fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const students = await db.user.findMany({
+        where: { role: "STUDENT", deletedAt: null },
+        select: {
+          id: true, name: true, email: true, group: true, university: true, createdAt: true,
+          attempts: { select: { score: true, createdAt: true }, orderBy: { createdAt: "asc" } },
+        },
+      });
+      result.atRiskStudents = students.map((s) => {
+        const attempts = s.attempts;
+        if (attempts.length === 0) return null;
+        const bestScore = Math.max(...attempts.map((a) => a.score));
+        const avgScore = Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length);
+        const lastAttempt = attempts[attempts.length - 1].createdAt;
+        const first3 = attempts.slice(0, 3);
+        const last3 = attempts.slice(-3);
+        const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
+        const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
+        const trend = attempts.length >= 6 ? (last3Avg - first3Avg > 15 ? "improving" : last3Avg - first3Avg < -15 ? "declining" : "stable") : "stable";
+        const riskFactors: string[] = [];
+        if (bestScore < 50) riskFactors.push("low_performer");
+        if (trend === "declining") riskFactors.push("declining");
+        if (new Date(lastAttempt) < fourteenDaysAgo) riskFactors.push("inactive");
+        if (attempts.length < 3 && s.createdAt < sevenDaysAgo) riskFactors.push("low_engagement");
+        if (riskFactors.length === 0) return null;
+        return { id: s.id, name: s.name, email: s.email, group: s.group, university: s.university, bestScore, avgScore, trend, riskFactors };
+      }).filter(Boolean);
+    } else if (reportType === "group-detailed" && groupId) {
+      const group = await db.group.findUnique({
+        where: { id: groupId },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true, name: true, email: true, university: true,
+                  attempts: { select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true } },
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!group) return NextResponse.json({ error: "Group not found" }, { status: 404 });
+      result.group = { id: group.id, name: group.name };
+      result.students = group.members.map((m) => {
+        const attempts = m.user.attempts;
+        return {
+          id: m.user.id, name: m.user.name, email: m.user.email, university: m.user.university,
+          attemptsCount: attempts.length,
+          bestScore: attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0,
+          avgScore: attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0,
+        };
+      });
+    } else if (reportType === "student-list") {
+      const students = await db.user.findMany({
+        where: { role: "STUDENT", deletedAt: null },
+        select: {
+          id: true, name: true, email: true, group: true, university: true, createdAt: true,
+          attempts: { select: { score: true, createdAt: true }, orderBy: { createdAt: "asc" } },
+        },
+      });
+      result.students = students.map((s) => {
+        const attempts = s.attempts;
+        return {
+          id: s.id, name: s.name, email: s.email, group: s.group, university: s.university,
+          attemptsCount: attempts.length,
+          bestScore: attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0,
+          avgScore: attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length) : 0,
+          registeredAt: s.createdAt.toISOString(),
+        };
+      });
+    } else if (reportType === "attempt-log") {
+      const attempts = await db.attempt.findMany({
+        where: {
+          createdAt: {
+            gte: startDate ? new Date(startDate) : undefined,
+            lte: endDate ? new Date(endDate) : undefined,
+          },
+        },
+        include: { user: { select: { name: true, email: true } } },
+        orderBy: { createdAt: "desc" },
+      });
+      result.attempts = attempts.map((a) => {
+        const task = taskMap.get(a.taskId);
+        return {
+          studentName: a.user?.name, studentEmail: a.user?.email,
+          taskId: a.taskId, taskName: task?.name || `Задание ${a.taskId}`,
+          score: a.score, ecCoverage: a.ecCoverage, bvCoverage: a.bvCoverage,
+          correctness: a.correctness, timeSpent: a.timeSpent,
+          date: a.createdAt.toISOString(),
+        };
+      });
+    }
+
+    const jsonContent = JSON.stringify(result, null, 2);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const buffer = Buffer.from(await blob.arrayBuffer());
+
+    await logExport(userId, reportType, "json", { startDate, endDate, groupId });
+
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Disposition": `attachment; filename="admin-report-${reportType}.json"`,
+      },
+    });
+  }
+
+  // CSV export (existing logic below)
 
   if (reportType === "comprehensive") {
     // Comprehensive platform report
@@ -98,6 +335,8 @@ export async function POST(req: Request) {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
 
+    await logExport(userId, "comprehensive", "csv", { startDate, endDate });
+
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
@@ -156,6 +395,8 @@ export async function POST(req: Request) {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
 
+    await logExport(userId, "teacher-performance", "csv");
+
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
@@ -205,6 +446,8 @@ export async function POST(req: Request) {
     const csvContent = "\uFEFF" + lines.join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
+
+    await logExport(userId, "task-insights", "csv");
 
     return new NextResponse(buffer, {
       headers: {
@@ -272,6 +515,8 @@ export async function POST(req: Request) {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
 
+    await logExport(userId, "predictions", "csv");
+
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
@@ -334,6 +579,8 @@ export async function POST(req: Request) {
     const csvContent = "\uFEFF" + lines.join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
+
+    await logExport(userId, "group-detailed", "csv", { groupId, groupName: group.name });
 
     return new NextResponse(buffer, {
       headers: {
@@ -401,6 +648,8 @@ export async function POST(req: Request) {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
 
+    await logExport(userId, "student-list", "csv");
+
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
@@ -445,6 +694,8 @@ export async function POST(req: Request) {
     const csvContent = "\uFEFF" + lines.join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
     const buffer = Buffer.from(await blob.arrayBuffer());
+
+    await logExport(userId, "attempt-log", "csv", { startDate, endDate });
 
     return new NextResponse(buffer, {
       headers: {

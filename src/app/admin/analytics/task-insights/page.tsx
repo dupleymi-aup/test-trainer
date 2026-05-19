@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowRight, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface TaskInsightsData {
   taskInsights: Array<{
@@ -65,13 +66,19 @@ const difficultyColors: Record<string, string> = {
 export default function TaskInsightsPage() {
   const [data, setData] = useState<TaskInsightsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/analytics/task-insights")
+    const params = new URLSearchParams();
+    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+    if (filters?.groupId) params.set("groupId", filters.groupId);
+    const qs = params.toString();
+    fetch(`/api/admin/analytics/task-insights${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
@@ -105,6 +112,8 @@ export default function TaskInsightsPage() {
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
         </div>
+
+        <AnalyticsFilterBar onFilterChange={setFilters} showGroupFilter />
 
         {/* Task Difficulty Chart */}
         <Card>

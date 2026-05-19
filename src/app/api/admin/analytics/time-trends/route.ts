@@ -2,14 +2,40 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
 
+  const { searchParams } = new URL(request.url);
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const groupId = searchParams.get("groupId");
+
   const now = new Date();
 
-  // Get all attempts
+  // Build date filter
+  const dateFilter: Record<string, Date> = {};
+  if (dateFrom) dateFilter.gte = new Date(dateFrom);
+  if (dateTo) dateFilter.lte = new Date(dateTo);
+
+  // If groupId is provided, get student IDs from that group
+  let userIdFilter: Record<string, unknown> | undefined;
+  if (groupId) {
+    const groupMembers = await db.groupMember.findMany({
+      where: { groupId },
+      select: { userId: true },
+    });
+    const studentIds = groupMembers.map((m) => m.userId);
+    userIdFilter = { in: studentIds };
+  }
+
+  const attemptWhere: Record<string, unknown> = {};
+  if (Object.keys(dateFilter).length > 0) attemptWhere.createdAt = dateFilter;
+  if (userIdFilter) attemptWhere.userId = userIdFilter;
+
+  // Get all attempts with filters
   const attempts = await db.attempt.findMany({
+    where: attemptWhere,
     select: {
       userId: true,
       score: true,
@@ -85,8 +111,11 @@ export async function GET() {
   });
 
   // Cohort analysis (by registration month)
+  const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
+  if (userIdFilter) studentWhere.id = userIdFilter;
+
   const students = await db.user.findMany({
-    where: { role: "STUDENT", deletedAt: null },
+    where: studentWhere,
     select: { id: true, createdAt: true },
   });
 

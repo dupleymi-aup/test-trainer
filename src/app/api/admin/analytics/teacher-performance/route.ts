@@ -2,13 +2,22 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+
+  const { searchParams } = new URL(request.url);
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // Build date filter for attempts
+  const attemptDateFilter: Record<string, Date> = {};
+  if (dateFrom) attemptDateFilter.gte = new Date(dateFrom);
+  if (dateTo) attemptDateFilter.lte = new Date(dateTo);
 
   const teachers = await db.user.findMany({
     where: { role: "TEACHER", deletedAt: null },
@@ -29,6 +38,7 @@ export async function GET() {
                   name: true,
                   email: true,
                   attempts: {
+                    where: Object.keys(attemptDateFilter).length > 0 ? { createdAt: attemptDateFilter } : undefined,
                     select: {
                       id: true,
                       score: true,

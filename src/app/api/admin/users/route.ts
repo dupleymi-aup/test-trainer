@@ -15,6 +15,8 @@ export async function GET(req: Request) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
   const showDeleted = searchParams.get("showDeleted") === "true";
+  const sortBy = searchParams.get("sortBy") || "createdAt";
+  const sortDir = (searchParams.get("sortDir") || "desc") as "asc" | "desc";
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = {};
@@ -35,12 +37,22 @@ export async function GET(req: Request) {
     ];
   }
 
+  // Build sort order
+  const orderBy: Record<string, unknown> = {};
+  if (sortBy === "attempts") {
+    orderBy.attempts = { _count: sortDir };
+  } else if (sortBy === "name") {
+    orderBy.name = { sort: sortDir, nulls: "last" };
+  } else {
+    orderBy.createdAt = sortDir;
+  }
+
   const [users, total] = await Promise.all([
     db.user.findMany({
       where,
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       select: {
         id: true,
         name: true,

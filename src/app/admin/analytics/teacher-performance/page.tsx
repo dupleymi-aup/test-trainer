@@ -33,6 +33,7 @@ import {
   ChevronRight,
   ArrowRight,
 } from "lucide-react";
+import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface TeacherData {
   teachers: Array<{
@@ -73,13 +74,18 @@ export default function TeacherPerformancePage() {
   const [loading, setLoading] = useState(true);
   const [expandedTeachers, setExpandedTeachers] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<FilterState | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/analytics/teacher-performance")
+    const params = new URLSearchParams();
+    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+    const qs = params.toString();
+    fetch(`/api/admin/analytics/teacher-performance${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [filters]);
 
   const toggleTeacher = (id: string) => {
     const next = new Set(expandedTeachers);
@@ -121,6 +127,8 @@ export default function TeacherPerformancePage() {
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
         </div>
+
+        <AnalyticsFilterBar onFilterChange={setFilters} />
 
         {/* Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

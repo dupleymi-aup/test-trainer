@@ -41,6 +41,7 @@ model User {
   createdGroups  Group[]     @relation("CreatedGroups")
   createdDeadlines Deadline[] @relation("CreatedDeadlines")
   reminders        Reminder[]
+  notificationPreferences String?  // JSON: {"email": true, "inApp": true}
   updatedSettings SystemSetting[] @relation("UpdatedSettings")
 
   @@index([role])
@@ -186,6 +187,7 @@ model Deadline {
   type        String   // "EXAM", "TEST", "ASSIGNMENT", "COURSE_END", "REGISTRATION_END"
   groupId     String?  // null = system-wide
   taskId      Int?     // related task ID
+  reminderSchedule String?  // JSON array of days before dueDate, e.g. "[7,3,1,0,-1]"
   createdAt   DateTime @default(now())
   createdBy   String
   creator     User     @relation("CreatedDeadlines", fields: [createdBy], references: [id], onDelete: Cascade)
@@ -201,6 +203,7 @@ model Reminder {
   id         String   @id @default(cuid())
   deadlineId String
   userId     String
+  offsetDays Int      @default(0)  // Days before dueDate (negative = overdue)
   sent       Boolean  @default(false)
   sentAt     DateTime?
   read       Boolean  @default(false)
@@ -214,6 +217,7 @@ model Reminder {
   @@index([userId])
   @@index([sent])
   @@index([read])
+  @@index([offsetDays])
 }
 
 // Extend User model with new relation

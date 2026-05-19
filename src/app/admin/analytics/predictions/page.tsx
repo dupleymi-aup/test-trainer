@@ -33,6 +33,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 const riskFactorConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   low_performer: { label: "Низкая успеваемость", color: "bg-rose-100 text-rose-800 border-rose-200", icon: <TrendingDown className="h-3 w-3" /> },
@@ -68,13 +69,20 @@ interface PredictionsData {
 export default function PredictionsPage() {
   const [data, setData] = useState<PredictionsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/analytics/predictions")
+    const params = new URLSearchParams();
+    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+    if (filters?.groupId) params.set("groupId", filters.groupId);
+    if (filters?.university) params.set("university", filters.university);
+    const qs = params.toString();
+    fetch(`/api/admin/analytics/predictions${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
@@ -105,6 +113,8 @@ export default function PredictionsPage() {
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
         </div>
+
+        <AnalyticsFilterBar onFilterChange={setFilters} showGroupFilter showUniversityFilter />
 
         {/* Risk Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

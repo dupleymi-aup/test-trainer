@@ -5,12 +5,41 @@ import { tasks } from "@/lib/tasks";
 import { TestCaseCategory } from "@/lib/tasks";
 import type { StoredTestCase } from "@/lib/evaluator";
 
-export async function GET() {
+export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
 
+  const { searchParams } = new URL(request.url);
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const groupId = searchParams.get("groupId");
+
+  // If groupId is provided, get student IDs from that group
+  let userIdFilter: Record<string, unknown> | undefined;
+  if (groupId) {
+    const groupMembers = await db.groupMember.findMany({
+      where: { groupId },
+      select: { userId: true },
+    });
+    userIdFilter = { in: groupMembers.map((m) => m.userId) };
+  }
+
+  // Build attempt filters
+  const attemptWhere: Record<string, unknown> = {};
+  if (dateFrom || dateTo) {
+    const dateCond: Record<string, Date> = {};
+    if (dateFrom) dateCond.gte = new Date(dateFrom);
+    if (dateTo) dateCond.lte = new Date(dateTo);
+    attemptWhere.createdAt = dateCond;
+  }
+  if (userIdFilter) {
+    attemptWhere.userId = userIdFilter;
+  }
+
   const attempts = await db.attempt.findMany({
+    where: Object.keys(attemptWhere).length > 0 ? attemptWhere : undefined,
     select: {
+      userId: true,
       taskId: true,
       score: true,
       ecCoverage: true,

@@ -12,13 +12,32 @@ import {
 import {
   Download, FileSpreadsheet, FileJson, BarChart3, Target,
   GraduationCap, AlertTriangle, Users, FileText, Activity,
-  Loader2,
+  Loader2, Clock,
 } from "lucide-react";
 
 interface Group {
   id: string;
   name: string;
 }
+
+interface ExportLog {
+  id: string;
+  action: string;
+  entity: string | null;
+  details: string;
+  createdAt: string;
+  user: { name: string | null; email: string; role: string };
+}
+
+const reportLabels: Record<string, string> = {
+  comprehensive: "Комплексная аналитика",
+  "teacher-performance": "Преподаватели",
+  "task-insights": "Анализ задач",
+  predictions: "Прогнозы и риски",
+  "group-detailed": "Детализация группы",
+  "student-list": "Список студентов",
+  "attempt-log": "Журнал попыток",
+};
 
 const reportTypes = [
   {
@@ -79,9 +98,13 @@ export default function AdminExportPage() {
   const [dateTo, setDateTo] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
   const [exporting, setExporting] = useState<string | null>(null);
+  const [exportHistory, setExportHistory] = useState<ExportLog[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const historyLimit = 10;
 
   useEffect(() => {
-    fetch("/api/teacher/groups")
+    fetch("/api/admin/groups")
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setGroups(data);
@@ -91,7 +114,22 @@ export default function AdminExportPage() {
       });
   }, []);
 
-  const handleExport = async (reportType: string) => {
+  const fetchHistory = (page = 1) => {
+    fetch(`/api/admin/activity-log?action=EXPORT_REPORT&page=${page}&limit=${historyLimit}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setExportHistory(data.logs || []);
+        setHistoryTotal(data.pagination?.total || 0);
+        setHistoryPage(data.pagination?.page || 1);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchHistory(1);
+  }, []);
+
+  const handleExport = async (reportType: string, format: "csv" | "json" = "csv") => {
     if (reportType === "group-detailed" && !selectedGroup) {
       alert("Выберите группу для экспорта");
       return;
@@ -107,6 +145,7 @@ export default function AdminExportPage() {
           startDate: dateFrom || undefined,
           endDate: dateTo || undefined,
           groupId: selectedGroup || undefined,
+          format,
         }),
       });
 
@@ -117,9 +156,10 @@ export default function AdminExportPage() {
       }
 
       const blob = await res.blob();
-      const filename = res.headers.get("Content-Disposition")
+      const disposition = res.headers.get("Content-Disposition");
+      const filename = disposition
         ?.split("filename=")[1]
-        ?.replace(/"/g, "") || "report.csv";
+        ?.replace(/"/g, "") || `report.${format === "json" ? "json" : "csv"}`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -129,6 +169,7 @@ export default function AdminExportPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      fetchHistory(1);
     } catch (e) {
       alert("Ошибка при экспорте");
     } finally {
@@ -206,21 +247,103 @@ export default function AdminExportPage() {
                     size="sm"
                     className="flex-1"
                     disabled={exporting !== null}
-                    onClick={() => handleExport(rt.id)}
+                    onClick={() => handleExport(rt.id, "csv")}
                   >
                     {exporting === rt.id ? (
                       <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                     ) : (
                       <Download className="h-4 w-4 mr-1" />
                     )}
-                    Экспорт CSV
+                    CSV
                   </Button>
-                  <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={exporting !== null}
+                    onClick={() => handleExport(rt.id, "json")}
+                  >
+                    {exporting === rt.id ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <FileJson className="h-4 w-4 mr-1" />
+                    )}
+                    JSON
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {/* Export History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              История экспорта
+            </CardTitle>
+            <CardDescription>Последние выгрузки отчётов</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {exportHistory.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Нет выгрузок</p>
+            ) : (
+              <>
+                <div className="divide-y">
+                  {exportHistory.map((log) => {
+                    const details = (() => { try { return JSON.parse(log.details); } catch { return {}; } })();
+                    const reportName = reportLabels[details.reportType] || details.reportType || log.entity;
+                    const format = (details.format || "csv").toUpperCase();
+                    const dateRange = details.startDate && details.endDate
+                      ? `${new Date(details.startDate).toLocaleDateString("ru-RU")} – ${new Date(details.endDate).toLocaleDateString("ru-RU")}`
+                      : details.startDate ? `от ${new Date(details.startDate).toLocaleDateString("ru-RU")}` : "";
+                    return (
+                      <div key={log.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                        <Badge variant="outline" className="shrink-0">{format}</Badge>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{reportName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {log.user.name || log.user.email} {dateRange && `• ${dateRange}`}
+                          </p>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {new Date(log.createdAt).toLocaleString("ru-RU")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {historyTotal > historyLimit && (
+                  <div className="flex items-center justify-between px-4 py-3 border-t">
+                    <p className="text-xs text-muted-foreground">
+                      {historyTotal} записей
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={historyPage <= 1}
+                        onClick={() => { fetchHistory(historyPage - 1); }}
+                      >
+                        Назад
+                      </Button>
+                      <span className="text-xs">Стр. {historyPage}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={historyPage * historyLimit >= historyTotal}
+                        onClick={() => { fetchHistory(historyPage + 1); }}
+                      >
+                        Вперёд
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );

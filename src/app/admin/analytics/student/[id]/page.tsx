@@ -10,8 +10,20 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, TrendingUp, TrendingDown, Minus, Award, AlertCircle,
-  Clock, Zap, BarChart3, Users,
+  Clock, Zap, BarChart3, Users, Printer,
 } from "lucide-react";
+import { PrintButton } from "@/components/admin/analytics/print-button";
+
+// Print styles
+const printStyles = `
+@media print {
+  nav, header, [class*="sticky"], button, .print\\:hidden { display: none !important; }
+  .space-y-6 { margin: 0 !important; }
+  .grid { display: grid !important; gap: 0.75rem !important; }
+  body { font-size: 10px; }
+  .max-h-80 { max-height: none !important; overflow: visible !important; }
+}
+`;
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar,
@@ -77,6 +89,7 @@ export default function AdminStudentReportPage() {
 
   return (
     <AdminLayout>
+      <style>{printStyles}</style>
       <div className="space-y-6">
         {/* Header + Back */}
         <div className="flex items-center gap-3">
@@ -95,6 +108,7 @@ export default function AdminStudentReportPage() {
           <span className="text-xs text-muted-foreground">
             Регистрация: {new Date(student.createdAt).toLocaleDateString("ru-RU")}
           </span>
+          <PrintButton label="Печать отчёта" />
         </div>
 
         {/* Stats Cards */}

@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Users, ListChecks, Loader2, X, Search } from "lucide-react";
+import { Plus, Users, ListChecks, Loader2, X, Search, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -76,6 +76,18 @@ export default function AdminGroupsPage() {
   const [addMemberId, setAddMemberId] = useState("");
   const [membersLoading, setMembersLoading] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
+
+  // Bulk operations
+  const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkAction, setBulkAction] = useState<"tasks" | "members" | "delete">("tasks");
+  const [bulkTasks, setBulkTasks] = useState<GroupTask[]>([]);
+  const [bulkTaskLoading, setBulkTaskLoading] = useState(false);
+  const [bulkStudents, setBulkStudents] = useState<{ id: string; name: string | null; email: string }[]>([]);
+  const [bulkSelectedStudents, setBulkSelectedStudents] = useState<Set<string>>(new Set());
+  const [bulkStudentsLoading, setBulkStudentsLoading] = useState(false);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [searchGroup, setSearchGroup] = useState("");
 
   const fetchGroups = () => {
     fetch("/api/admin/groups")
@@ -247,6 +259,128 @@ export default function AdminGroupsPage() {
     }
   };
 
+  // Bulk operations
+  const toggleGroupSelect = (id: string) => {
+    setSelectedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllGroups = () => {
+    if (selectedGroups.size === filteredGroups.length) {
+      setSelectedGroups(new Set());
+    } else {
+      setSelectedGroups(new Set(filteredGroups.map((g) => g.id)));
+    }
+  };
+
+  const openBulkModal = async (action: "tasks" | "members" | "delete") => {
+    if (selectedGroups.size === 0) return;
+    setBulkAction(action);
+    setShowBulkModal(true);
+
+    if (action === "tasks") {
+      setBulkTaskLoading(true);
+      try {
+        const res = await fetch(`/api/admin/groups/${selectedGroups.values().next().value}/tasks`);
+        const data = await res.json();
+        setBulkTasks(data.tasks || []);
+      } catch {
+        toast.error("Ошибка загрузки заданий");
+      } finally {
+        setBulkTaskLoading(false);
+      }
+    } else if (action === "members") {
+      setBulkStudentsLoading(true);
+      try {
+        const res = await fetch("/api/admin/users?limit=1000");
+        const data = await res.json();
+        setBulkStudents(
+          (data.users || [])
+            .filter((u: { role: string }) => u.role === "STUDENT")
+            .map((s: { id: string; name: string | null; email: string }) => ({ id: s.id, name: s.name, email: s.email }))
+        );
+      } catch {
+        toast.error("Ошибка загрузки студентов");
+      } finally {
+        setBulkStudentsLoading(false);
+      }
+    }
+  };
+
+  const toggleBulkTask = (taskId: number) => {
+    setBulkTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, isAssigned: !t.isAssigned } : t)));
+  };
+
+  const toggleBulkStudent = (id: string) => {
+    setBulkSelectedStudents((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const executeBulkAction = async () => {
+    setBulkProcessing(true);
+    const groupIds = Array.from(selectedGroups);
+    let success = 0;
+    let errors = 0;
+
+    try {
+      if (bulkAction === "tasks") {
+        const assignedIds = bulkTasks.filter((t) => t.isAssigned).map((t) => t.id);
+        for (const gid of groupIds) {
+          try {
+            const res = await apiFetch(`/api/admin/groups/${gid}/tasks`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ taskIds: assignedIds }),
+            });
+            if (res.ok) success++; else errors++;
+          } catch { errors++; }
+        }
+        const counts: Record<string, number> = {};
+        groupIds.forEach((gid) => { counts[gid] = assignedIds.length; });
+        setTaskCount((prev) => ({ ...prev, ...counts }));
+      } else if (bulkAction === "members") {
+        const studentIds = Array.from(bulkSelectedStudents);
+        for (const gid of groupIds) {
+          for (const sid of studentIds) {
+            try {
+              await apiFetch(`/api/admin/groups/${gid}/members`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: sid }),
+              });
+              success++;
+            } catch { errors++; }
+          }
+        }
+      } else if (bulkAction === "delete") {
+        for (const gid of groupIds) {
+          try {
+            const res = await apiFetch(`/api/admin/groups/${gid}`, { method: "DELETE" });
+            if (res.ok) success++; else errors++;
+          } catch { errors++; }
+        }
+        fetchGroups();
+      }
+
+      toast.success(`Обработано: ${success} успешно, ${errors} ошибок`);
+      setShowBulkModal(false);
+      setSelectedGroups(new Set());
+      setBulkSelectedStudents(new Set());
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const filteredGroups = groups.filter((g) =>
+    !searchGroup || g.name.toLowerCase().includes(searchGroup.toLowerCase()) || (g.description || "").toLowerCase().includes(searchGroup.toLowerCase())
+  );
+
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
 
   return (
@@ -264,9 +398,46 @@ export default function AdminGroupsPage() {
         <Card>
           <CardHeader><CardTitle className="text-sm">Группы</CardTitle></CardHeader>
           <CardContent className="p-0">
+            {selectedGroups.size > 0 && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-950/30 border-b">
+                <span className="text-sm font-medium">Выбрано: {selectedGroups.size}</span>
+                <Button size="sm" variant="outline" onClick={() => openBulkModal("tasks")}>
+                  <ListChecks className="h-4 w-4 mr-1" /> Задания
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openBulkModal("members")}>
+                  <Users className="h-4 w-4 mr-1" /> Участники
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openBulkModal("delete")}>
+                  <X className="h-4 w-4 mr-1" /> Удалить
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedGroups(new Set())}>
+                  Снять
+                </Button>
+              </div>
+            )}
+            <div className="px-4 py-2 border-b">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск групп..."
+                  value={searchGroup}
+                  onChange={(e) => setSearchGroup(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <button onClick={selectAllGroups} className="flex items-center">
+                      {selectedGroups.size === filteredGroups.length && filteredGroups.length > 0 ? (
+                        <CheckSquare className="h-4 w-4" />
+                      ) : (
+                        <Square className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </TableHead>
                   <TableHead>Название</TableHead>
                   <TableHead>Описание</TableHead>
                   <TableHead>Создатель</TableHead>
@@ -277,8 +448,17 @@ export default function AdminGroupsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groups.map((g) => (
-                  <TableRow key={g.id}>
+                {filteredGroups.map((g) => (
+                  <TableRow key={g.id} className={selectedGroups.has(g.id) ? "bg-muted/50" : ""}>
+                    <TableCell>
+                      <button onClick={() => toggleGroupSelect(g.id)} className="flex items-center">
+                        {selectedGroups.has(g.id) ? (
+                          <CheckSquare className="h-4 w-4 text-primary" />
+                        ) : (
+                          <Square className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
+                    </TableCell>
                     <TableCell className="font-medium">{g.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{g.description || "—"}</TableCell>
                     <TableCell className="text-sm">{g.createdBy.name || g.createdBy.email}</TableCell>
@@ -451,6 +631,119 @@ export default function AdminGroupsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowMembersModal(false)}>Закрыть</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Operations Dialog */}
+      <Dialog open={showBulkModal} onOpenChange={setShowBulkModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>
+              {bulkAction === "tasks" && `Назначить задания для ${selectedGroups.size} групп`}
+              {bulkAction === "members" && `Добавить студентов в ${selectedGroups.size} групп`}
+              {bulkAction === "delete" && `Удалить ${selectedGroups.size} групп`}
+            </DialogTitle>
+            <DialogDescription>
+              {bulkAction === "tasks" && "Выбранные задания будут назначены всем выбранным группам"}
+              {bulkAction === "members" && "Выбранные студенты будут добавлены во все выбранные группы"}
+              {bulkAction === "delete" && "Это действие нельзя отменить. Все данные групп будут удалены."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {bulkAction === "tasks" && (
+            bulkTaskLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Загрузка заданий...</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2 mb-2">
+                  <Button variant="outline" size="sm" onClick={() => setBulkTasks((prev) => prev.map((t) => ({ ...t, isAssigned: true })))}>
+                    Выбрать все
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setBulkTasks((prev) => prev.map((t) => ({ ...t, isAssigned: false })))}>
+                    Снять все
+                  </Button>
+                  <span className="text-sm text-muted-foreground ml-auto">
+                    Выбрано: {bulkTasks.filter((t) => t.isAssigned).length}
+                  </span>
+                </div>
+                <div className="overflow-y-auto flex-1 pr-1">
+                  <div className="space-y-1">
+                    {bulkTasks.map((task) => (
+                      <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50">
+                        <Checkbox checked={task.isAssigned} onCheckedChange={() => toggleBulkTask(task.id)} className="mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-mono text-muted-foreground">#{task.id}</span>
+                            <span className="font-medium text-sm">{task.name}</span>
+                            <Badge className={difficultyColors[task.difficulty]} variant="outline">{task.difficulty}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )
+          )}
+
+          {bulkAction === "members" && (
+            bulkStudentsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Загрузка студентов...</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2 mb-2">
+                  <Button variant="outline" size="sm" onClick={() => setBulkSelectedStudents(new Set(bulkStudents.map((s) => s.id)))}>
+                    Выбрать всех
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setBulkSelectedStudents(new Set())}>
+                    Снять всех
+                  </Button>
+                  <span className="text-sm text-muted-foreground ml-auto">
+                    Выбрано: {bulkSelectedStudents.size}
+                  </span>
+                </div>
+                <div className="overflow-y-auto flex-1 pr-1">
+                  <div className="space-y-1">
+                    {bulkStudents.map((s) => (
+                      <div key={s.id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50">
+                        <Checkbox checked={bulkSelectedStudents.has(s.id)} onCheckedChange={() => toggleBulkStudent(s.id)} />
+                        <span className="font-medium text-sm">{s.name || s.email}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )
+          )}
+
+          {bulkAction === "delete" && (
+            <div className="py-4 text-center text-sm text-muted-foreground">
+              Группы будут удалены ({selectedGroups.size} шт.)
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkModal(false)} disabled={bulkProcessing}>
+              Отмена
+            </Button>
+            <Button
+              variant={bulkAction === "delete" ? "destructive" : "default"}
+              onClick={executeBulkAction}
+              disabled={bulkProcessing}
+            >
+              {bulkProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {bulkAction === "tasks" && "Назначить"}
+              {bulkAction === "members" && "Добавить"}
+              {bulkAction === "delete" && "Удалить"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

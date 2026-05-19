@@ -7,11 +7,15 @@ export async function GET() {
   if ("response" in guard) return guard.response;
 
   try {
-    // Run a simple query to check DB health
-    const [userCount, attemptCount, groupCount] = await Promise.all([
+    // Run queries to check DB health — all tables
+    const [userCount, attemptCount, groupCount, groupTaskCount, activityLogCount, settingsCount, verificationCodeCount] = await Promise.all([
       db.user.count(),
       db.attempt.count(),
       db.group.count(),
+      db.groupTask.count(),
+      db.activityLog.count(),
+      db.systemSetting.count(),
+      db.verificationCode.count(),
     ]);
 
     return NextResponse.json({
@@ -20,7 +24,12 @@ export async function GET() {
         users: userCount,
         attempts: attemptCount,
         groups: groupCount,
+        group_tasks: groupTaskCount,
+        activity_logs: activityLogCount,
+        system_settings: settingsCount,
+        verification_codes: verificationCodeCount,
       },
+      totalRecords: userCount + attemptCount + groupCount + groupTaskCount + activityLogCount + settingsCount + verificationCodeCount,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

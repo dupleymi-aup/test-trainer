@@ -10,6 +10,7 @@ import { RefreshCw } from "lucide-react";
 interface HealthStatus {
   status: string;
   tables?: Record<string, number>;
+  totalRecords?: number;
   error?: string;
   timestamp?: string;
 }
@@ -65,13 +66,30 @@ export default function AdminDatabasePage() {
           <Card>
             <CardHeader><CardTitle className="text-sm">Таблицы</CardTitle></CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {Object.entries(health.tables).map(([table, count]) => (
-                  <div key={table} className="flex justify-between text-sm">
-                    <span className="font-mono">{table}</span>
-                    <span className="text-muted-foreground">{count} записей</span>
-                  </div>
-                ))}
+              {health.totalRecords && (
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-sm text-muted-foreground">Всего записей:</span>
+                  <Badge>{health.totalRecords.toLocaleString()}</Badge>
+                </div>
+              )}
+              <div className="space-y-1">
+                {Object.entries(health.tables).map(([table, count]) => {
+                  const tableLabels: Record<string, string> = {
+                    users: "Пользователи",
+                    attempts: "Попытки",
+                    groups: "Группы",
+                    group_tasks: "Задания групп",
+                    activity_logs: "Журнал действий",
+                    system_settings: "Настройки",
+                    verification_codes: "Коды верификации",
+                  };
+                  return (
+                    <div key={table} className="flex justify-between text-sm py-1.5 border-b border-dashed last:border-0">
+                      <span className="font-medium">{tableLabels[table] || table}</span>
+                      <span className="text-muted-foreground">{count.toLocaleString()} записей</span>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

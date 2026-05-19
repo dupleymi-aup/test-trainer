@@ -21,6 +21,7 @@ interface Reminder {
   id: string;
   deadlineId: string;
   userId: string;
+  offsetDays: number;
   sent: boolean;
   sentAt: string | null;
   read: boolean;

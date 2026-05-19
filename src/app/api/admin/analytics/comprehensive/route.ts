@@ -4,34 +4,76 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+
+    const { searchParams } = new URL(request.url);
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    const groupId = searchParams.get("groupId");
+    const universityFilter = searchParams.get("university");
 
     const now = new Date();
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // If groupId is provided, get student IDs from that group
+    let userIdFilter: Set<string> | null = null;
+    if (groupId) {
+      const groupMembers = await db.groupMember.findMany({
+        where: { groupId },
+        select: { userId: true },
+      });
+      userIdFilter = new Set(groupMembers.map((m) => m.userId));
+    }
+
+    // Build student filter
+    const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
+    if (userIdFilter) studentWhere.id = { in: [...userIdFilter] };
+    if (universityFilter) studentWhere.university = universityFilter;
+
+    // Get filtered student IDs for active students check
+    const filteredStudentIds = await db.user.findMany({
+      where: studentWhere,
+      select: { id: true },
+    });
+    const filteredStudentIdSet = new Set(filteredStudentIds.map((s) => s.id));
+
+    // Build attempt where clause
+    const attemptWhere: Record<string, unknown> = {};
+    if (dateFrom || dateTo) {
+      const dateCond: Record<string, Date> = {};
+      if (dateFrom) dateCond.gte = new Date(dateFrom);
+      if (dateTo) dateCond.lte = new Date(dateTo);
+      attemptWhere.createdAt = dateCond;
+    }
+    if (userIdFilter) {
+      attemptWhere.userId = { in: [...userIdFilter] };
+    }
+
     // KPI metrics — limit attempts to last 10000 to prevent memory issues
     const [totalStudents, totalTeachers, totalGroups, allAttempts, activeStudents30d] =
       await Promise.all([
-        db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
+        db.user.count({ where: studentWhere }),
         db.user.count({ where: { role: "TEACHER", deletedAt: null } }),
         db.group.count(),
         db.attempt.findMany({
+          where: Object.keys(attemptWhere).length > 0 ? attemptWhere : undefined,
           select: { score: true, ecCoverage: true, bvCoverage: true, userId: true, createdAt: true },
           orderBy: { createdAt: "desc" },
           take: 10_000,
         }),
-      db.user.count({
-        where: {
-          role: "STUDENT",
-          deletedAt: null,
-          attempts: { some: { createdAt: { gte: thirtyDaysAgo } } },
-        },
-      }),
-    ]);
+        db.user.count({
+          where: {
+            role: "STUDENT",
+            deletedAt: null,
+            id: { in: [...filteredStudentIdSet] },
+            attempts: { some: dateFrom || dateTo ? { createdAt: { gte: thirtyDaysAgo } } : undefined },
+          },
+        }),
+      ]);
 
     // Pre-build userId -> attempts map for reuse across all sections
     const userAttemptsMap: Record<string, typeof allAttempts> = {};
@@ -65,13 +107,12 @@ export async function GET() {
   // Cohort analysis (by registration month) — run both queries in parallel
   const [students, studentsWithAttempts] = await Promise.all([
     db.user.findMany({
-      where: { role: "STUDENT", deletedAt: null },
+      where: studentWhere,
       select: { id: true, createdAt: true },
     }),
     db.user.findMany({
       where: {
-        role: "STUDENT",
-        deletedAt: null,
+        ...studentWhere,
         attempts: { some: {} },
       },
       select: { id: true, createdAt: true },

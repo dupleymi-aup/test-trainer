@@ -56,6 +56,9 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -96,6 +99,11 @@ const createUserSchema = z.object({
 
 type CreateUserForm = z.infer<typeof createUserSchema>;
 
+function SortIcon({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: string }) {
+  if (sortBy !== field) return <ArrowUpDown className="h-3 w-3 ml-1 text-muted-foreground" />;
+  return sortDir === "asc" ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,6 +125,17 @@ export default function AdminUsersPage() {
   const [newRole, setNewRole] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("createdAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
+    }
+  };
 
   const createForm = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
@@ -138,6 +157,8 @@ export default function AdminUsersPage() {
     params.set("page", String(page));
     params.set("limit", String(limit));
     if (showDeleted) params.set("showDeleted", "true");
+    params.set("sortBy", sortBy);
+    params.set("sortDir", sortDir);
 
     fetch(`/api/admin/users?${params}`)
       .then((r) => r.json())
@@ -161,7 +182,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [page, showDeleted]);
+  }, [page, showDeleted, sortBy, sortDir]);
 
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {
     const res = await apiFetch(`/api/admin/users/${id}/toggle-active`, { method: "PATCH" });
@@ -369,12 +390,24 @@ export default function AdminUsersPage() {
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Имя</TableHead>
+                <TableHead>
+                  <button onClick={() => handleSort("name")} className="flex items-center font-medium">
+                    Имя <SortIcon field="name" sortBy={sortBy} sortDir={sortDir} />
+                  </button>
+                </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Роль</TableHead>
                 <TableHead>Статус</TableHead>
-                <TableHead>Попытки</TableHead>
-                <TableHead>Дата регистрации</TableHead>
+                <TableHead>
+                  <button onClick={() => handleSort("attempts")} className="flex items-center font-medium">
+                    Попытки <SortIcon field="attempts" sortBy={sortBy} sortDir={sortDir} />
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button onClick={() => handleSort("createdAt")} className="flex items-center font-medium">
+                    Дата регистрации <SortIcon field="createdAt" sortBy={sortBy} sortDir={sortDir} />
+                  </button>
+                </TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>

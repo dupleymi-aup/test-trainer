@@ -34,6 +34,7 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
+import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface TimeTrendsData {
   monthlyTrends: Array<{ month: string; avgScore: number; avgEc: number; avgBv: number; attemptsCount: number }>;
@@ -52,12 +53,19 @@ export default function TimeTrendsPage() {
   const [data, setData] = useState<TimeTrendsData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [filters, setFilters] = useState<FilterState | null>(null);
+
   useEffect(() => {
-    fetch("/api/admin/analytics/time-trends")
+    const params = new URLSearchParams();
+    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+    if (filters?.groupId) params.set("groupId", filters.groupId);
+    const qs = params.toString();
+    fetch(`/api/admin/analytics/time-trends${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
@@ -83,6 +91,8 @@ export default function TimeTrendsPage() {
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
         </div>
+
+        <AnalyticsFilterBar onFilterChange={setFilters} showGroupFilter />
 
         {/* Growth Rates */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

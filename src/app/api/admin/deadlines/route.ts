@@ -13,6 +13,7 @@ const deadlineSchema = z.object({
   taskId: z.number().nullable().optional(),
   targetUsers: z.enum(["ALL_STUDENTS", "GROUP_MEMBERS", "SPECIFIC"]).default("ALL_STUDENTS"),
   specificUserIds: z.array(z.string()).optional(),
+  reminderSchedule: z.array(z.number()).optional(),
 });
 
 export async function GET(req: Request) {
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
     }
 
-    const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds } = parsed.data;
+    const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds, reminderSchedule } = parsed.data;
 
     const deadline = await db.deadline.create({
       data: {
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
         groupId: groupId || null,
         taskId: taskId || null,
         createdBy: session.userId,
+        reminderSchedule: reminderSchedule ? JSON.stringify(reminderSchedule) : null,
       },
       include: {
         group: { select: { id: true, name: true } },
@@ -86,7 +88,7 @@ export async function POST(req: Request) {
       });
       userIds = students.map((s) => s.id);
     } else if (targetUsers === "GROUP_MEMBERS" && groupId) {
-      const members = await db.groupMember.findMany({
+      const members = await db.userGroup.findMany({
         where: { groupId },
         select: { userId: true },
       });

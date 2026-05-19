@@ -37,6 +37,7 @@ import {
   Target,
   ArrowRight,
 } from "lucide-react";
+import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface ComprehensiveData {
   kpi: {
@@ -57,13 +58,20 @@ interface ComprehensiveData {
 export default function ComprehensiveAnalyticsPage() {
   const [data, setData] = useState<ComprehensiveData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<FilterState | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/analytics/comprehensive")
+    const params = new URLSearchParams();
+    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+    if (filters?.groupId) params.set("groupId", filters.groupId);
+    if (filters?.university) params.set("university", filters.university);
+    const qs = params.toString();
+    fetch(`/api/admin/analytics/comprehensive${qs ? `?${qs}` : ""}`)
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
@@ -81,6 +89,8 @@ export default function ComprehensiveAnalyticsPage() {
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
         </div>
+
+        <AnalyticsFilterBar onFilterChange={setFilters} showGroupFilter showUniversityFilter />
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">

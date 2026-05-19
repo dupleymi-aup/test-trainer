@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+  const { session } = guard;
+
+  // Rate limit activity log reads
+  const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminSettings);
+  if (rateResult.limited) {
+    return createRateLimitResponse(rateResult.resetAt);
+  }
 
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1");

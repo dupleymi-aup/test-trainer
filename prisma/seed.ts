@@ -59,6 +59,8 @@ async function main() {
     { key: "maxLoginAttempts", value: JSON.stringify(5) },
     { key: "sessionDuration", value: JSON.stringify(86400) },
     { key: "allowRegistration", value: JSON.stringify(true) },
+    { key: "defaultReminderSchedule", value: JSON.stringify([7, 3, 1, 0, -1]) },
+    { key: "emailNotifications", value: JSON.stringify(true) },
   ];
 
   for (const s of settings) {

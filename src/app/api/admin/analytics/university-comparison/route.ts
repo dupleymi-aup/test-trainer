@@ -3,9 +3,24 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 
-export async function GET() {
+export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+
+  const { searchParams } = new URL(request.url);
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const groupId = searchParams.get("groupId");
+
+  // If groupId is provided, get student IDs from that group
+  let userIdFilter: Set<string> | null = null;
+  if (groupId) {
+    const groupMembers = await db.groupMember.findMany({
+      where: { groupId },
+      select: { userId: true },
+    });
+    userIdFilter = new Set(groupMembers.map((m) => m.userId));
+  }
 
   // Get all students with university field
   const students = await db.user.findMany({
@@ -13,10 +28,25 @@ export async function GET() {
     select: { id: true, university: true },
   });
 
-  const userIdToUniversity = new Map(students.map((s) => [s.id, s.university]));
+  const userIdToUniversity = new Map(
+    students.filter((s) => !userIdFilter || userIdFilter.has(s.id)).map((s) => [s.id, s.university])
+  );
 
-  // Get all attempts
+  // Build date filter for attempts
+  const attemptWhere: Record<string, unknown> = {};
+  if (dateFrom || dateTo) {
+    const dateCond: Record<string, Date> = {};
+    if (dateFrom) dateCond.gte = new Date(dateFrom);
+    if (dateTo) dateCond.lte = new Date(dateTo);
+    attemptWhere.createdAt = dateCond;
+  }
+  if (userIdFilter) {
+    attemptWhere.userId = { in: [...userIdFilter] };
+  }
+
+  // Get all attempts with filters
   const attempts = await db.attempt.findMany({
+    where: attemptWhere,
     select: {
       userId: true,
       taskId: true,

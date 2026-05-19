@@ -30,9 +30,15 @@ const riskFactorLabels: Record<string, { label: string; recommendation: string }
   },
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+
+  const { searchParams } = new URL(request.url);
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const groupId = searchParams.get("groupId");
+  const universityFilter = searchParams.get("university");
 
   const now = new Date();
   const fourteenDaysAgo = new Date(now);
@@ -40,9 +46,24 @@ export async function GET() {
   const sevenDaysAgo = new Date(now);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  // Get all students
+  // If groupId is provided, get student IDs from that group
+  let userIdFilter: Set<string> | null = null;
+  if (groupId) {
+    const groupMembers = await db.groupMember.findMany({
+      where: { groupId },
+      select: { userId: true },
+    });
+    userIdFilter = new Set(groupMembers.map((m) => m.userId));
+  }
+
+  // Build student filter
+  const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
+  if (userIdFilter) studentWhere.id = { in: [...userIdFilter] };
+  if (universityFilter) studentWhere.university = universityFilter;
+
+  // Get all students with filters
   const students = await db.user.findMany({
-    where: { role: "STUDENT", deletedAt: null },
+    where: studentWhere,
     select: {
       id: true,
       name: true,
@@ -51,6 +72,16 @@ export async function GET() {
       university: true,
       createdAt: true,
       attempts: {
+        where: (() => {
+          const attemptWhere: Record<string, unknown> = {};
+          if (dateFrom || dateTo) {
+            const dateCond: Record<string, Date> = {};
+            if (dateFrom) dateCond.gte = new Date(dateFrom);
+            if (dateTo) dateCond.lte = new Date(dateTo);
+            attemptWhere.createdAt = dateCond;
+          }
+          return Object.keys(attemptWhere).length > 0 ? attemptWhere : undefined;
+        })(),
         select: {
           score: true,
           ecCoverage: true,
