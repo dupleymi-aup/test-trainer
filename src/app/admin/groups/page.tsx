@@ -91,7 +91,10 @@ export default function AdminGroupsPage() {
 
   const fetchGroups = () => {
     fetch("/api/admin/groups")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setGroups(data.groups);
         setLoading(false);
@@ -109,6 +112,10 @@ export default function AdminGroupsPage() {
     const promises = groups.map(async (g) => {
       try {
         const res = await fetch(`/api/admin/groups/${g.id}/tasks`);
+        if (!res.ok) {
+          counts[g.id] = 0;
+          return;
+        }
         const data = await res.json();
         counts[g.id] = data.tasks?.filter((t: GroupTask) => t.isAssigned).length || 0;
       } catch {
@@ -147,6 +154,7 @@ export default function AdminGroupsPage() {
     setTasksLoading(true);
     try {
       const res = await fetch(`/api/admin/groups/${group.id}/tasks`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setGroupTasks(data.tasks || []);
       setTotalTasks(data.tasks?.length || 15);
@@ -205,6 +213,7 @@ export default function AdminGroupsPage() {
         fetch(`/api/admin/groups/${group.id}/members`),
         fetch("/api/admin/users?limit=1000"),
       ]);
+      if (!membersRes.ok || !studentsRes.ok) throw new Error(`HTTP error`);
       const membersData = await membersRes.json();
       const studentsData = await studentsRes.json();
       setMembers(membersData.members || []);
@@ -285,6 +294,7 @@ export default function AdminGroupsPage() {
       setBulkTaskLoading(true);
       try {
         const res = await fetch(`/api/admin/groups/${selectedGroups.values().next().value}/tasks`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setBulkTasks(data.tasks || []);
       } catch {
@@ -296,6 +306,7 @@ export default function AdminGroupsPage() {
       setBulkStudentsLoading(true);
       try {
         const res = await fetch("/api/admin/users?limit=1000");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setBulkStudents(
           (data.users || [])

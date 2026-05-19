@@ -21,7 +21,10 @@ export default function AdminDatabasePage() {
 
   const checkHealth = () => {
     fetch("/api/admin/database/health")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setHealth(data);
         setLoading(false);

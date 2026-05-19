@@ -24,7 +24,10 @@ export default function VelocityPage() {
 
   useEffect(() => {
     fetch("/api/admin/analytics/velocity")
-      .then((r) => r.json()).then((d) => { setData(d); setLoading(false); })
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }).then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 

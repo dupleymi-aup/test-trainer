@@ -64,7 +64,10 @@ export default function AdminDatabaseAnalyticsPage() {
 
   useEffect(() => {
     fetch("/api/admin/database/analytics")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => {
         setData(d);
         setLoading(false);

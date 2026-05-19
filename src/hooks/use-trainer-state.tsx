@@ -101,7 +101,10 @@ export function useTrainerState() {
   // Fetch available tasks on mount (group-based permissions)
   useEffect(() => {
     fetch("/api/tasks/available")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (data.taskIds && data.taskIds.length < tasks.length) {
           setAvailableTaskIds(new Set(data.taskIds));

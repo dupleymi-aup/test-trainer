@@ -30,7 +30,10 @@ export function AnalyticsFilters({ onFilterChange }: AnalyticsFiltersProps) {
 
   useEffect(() => {
     fetch("/api/teacher/groups")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => setGroups(data.groups || []))
       .catch((err) => {
         console.warn("Failed to fetch groups:", err);

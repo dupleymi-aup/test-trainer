@@ -18,7 +18,7 @@ export default function TeacherAnalyticsPage() {
 
   useEffect(() => {
     fetch("/api/teacher/analytics")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);

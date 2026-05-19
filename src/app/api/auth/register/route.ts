@@ -12,7 +12,6 @@ const registerSchema = z.object({
   email: z.string().email("Неверный формат email").max(255, "Email слишком длинный"),
   phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
   password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
-  role: z.enum(["STUDENT", "TEACHER"]).default("STUDENT"),
 });
 
 function getClientIP(req: Request): string {
@@ -44,7 +43,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, phone, password, role: userRole } = parsed.data;
+    const { name, email, phone, password } = parsed.data;
+
+    // New users always default to STUDENT role — TEACHER role can only be granted by admin
+    const role = "STUDENT";
 
     const emailLower = email.toLowerCase().trim();
 
@@ -76,7 +78,7 @@ export async function POST(req: Request) {
         email: emailLower,
         phone: phone?.trim() || null,
         hashedPassword,
-        role: userRole,
+        role,
         isActive: true,
       },
       select: {

@@ -23,7 +23,7 @@ export default function TeacherReportsPage() {
 
   useEffect(() => {
     fetch("/api/teacher/groups")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setGroups(d.groups || []); setLoadingGroups(false); })
       .catch(() => setLoadingGroups(false));
   }, []);

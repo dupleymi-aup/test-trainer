@@ -106,7 +106,10 @@ export default function TimeActivityPage() {
 
     setLoading(true);
     fetch(`/api/admin/analytics/time-activity?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   };

@@ -66,7 +66,10 @@ export default function AdminEcBvHeatmapPage() {
 
   useEffect(() => {
     fetch("/api/admin/analytics/ec-bv-heatmap")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setEcHeatmap(data.ecHeatmap || []);
         setBvHeatmap(data.bvHeatmap || []);

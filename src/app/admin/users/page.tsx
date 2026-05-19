@@ -161,7 +161,10 @@ export default function AdminUsersPage() {
     params.set("sortDir", sortDir);
 
     fetch(`/api/admin/users?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setUsers(data.users);
         setTotalPages(data.pagination.totalPages);

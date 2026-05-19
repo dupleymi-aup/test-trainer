@@ -28,7 +28,10 @@ export function NotificationsBell() {
 
   useEffect(() => {
     fetch("/api/teacher/notifications")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);

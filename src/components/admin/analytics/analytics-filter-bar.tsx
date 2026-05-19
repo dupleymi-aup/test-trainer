@@ -49,7 +49,10 @@ export function AnalyticsFilterBar({
   useEffect(() => {
     if (showGroupFilter) {
       fetch("/api/admin/groups")
-        .then((r) => r.json())
+        .then(async (r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then((d) => setGroups(d.groups || []))
         .catch(() => {});
     }
@@ -58,7 +61,10 @@ export function AnalyticsFilterBar({
   useEffect(() => {
     if (showUniversityFilter) {
       fetch("/api/admin/analytics/comprehensive")
-        .then((r) => r.json())
+        .then(async (r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
         .then((d) => {
           if (d.universityPerformance) {
             const unis = d.universityPerformance.map(

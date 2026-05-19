@@ -31,7 +31,7 @@ export default function Home() {
           onShowShortcuts={() => state.setShowShortcuts(true)}
           onReplayOnboarding={handleReplayOnboarding}
         />
-        <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6">
+        <main id="main-content" className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6">
           <MarathonMode onExit={() => setMarathonActive(false)} />
         </main>
         <footer className="border-t bg-white/50 dark:bg-zinc-900/50 mt-auto">
@@ -53,7 +53,7 @@ export default function Home() {
         onMarathonClick={() => setMarathonActive(true)}
       />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6">
+      <main id="main-content" className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6">
         <ProgressStatsBar
           completedCount={state.completedCount}
           totalTasks={TOTAL_TASKS}

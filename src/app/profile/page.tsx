@@ -21,8 +21,6 @@ import {
   X,
   KeyRound,
   Beaker,
-  Eye,
-  EyeOff,
   BarChart3,
   RefreshCw,
   Download,
@@ -32,6 +30,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -129,9 +128,6 @@ function ProfileContent() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [newPasswordValue, setNewPasswordValue] = useState("");
   const [verifyCooldown, setVerifyCooldown] = useState(0);
   const [isSendingVerification, setIsSendingVerification] = useState(false);
@@ -623,25 +619,7 @@ function ProfileContent() {
                               <FormItem>
                                 <FormLabel>Текущий пароль</FormLabel>
                                 <FormControl>
-                                  <div className="relative">
-                                    <Input
-                                      {...field}
-                                      type={showCurrentPassword ? "text" : "password"}
-                                      placeholder="••••••••"
-                                    />
-                                    <button
-                                      type="button"
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                      tabIndex={-1}
-                                    >
-                                      {showCurrentPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                      ) : (
-                                        <Eye className="h-4 w-4" />
-                                      )}
-                                    </button>
-                                  </div>
+                                  <PasswordInput {...field} placeholder="••••••••" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -654,29 +632,14 @@ function ProfileContent() {
                               <FormItem>
                                 <FormLabel>Новый пароль</FormLabel>
                                 <FormControl>
-                                  <div className="relative">
-                                    <Input
-                                      {...field}
-                                      type={showNewPassword ? "text" : "password"}
-                                      placeholder="••••••••"
-                                      onChange={(e) => {
-                                        field.onChange(e);
-                                        setNewPasswordValue(e.target.value);
-                                      }}
-                                    />
-                                    <button
-                                      type="button"
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                      onClick={() => setShowNewPassword(!showNewPassword)}
-                                      tabIndex={-1}
-                                    >
-                                      {showNewPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                      ) : (
-                                        <Eye className="h-4 w-4" />
-                                      )}
-                                    </button>
-                                  </div>
+                                  <PasswordInput
+                                    {...field}
+                                    placeholder="••••••••"
+                                    onChange={(e) => {
+                                      field.onChange(e);
+                                      setNewPasswordValue(e.target.value);
+                                    }}
+                                  />
                                 </FormControl>
                                 <FormMessage />
                                 <PasswordStrengthIndicator password={newPasswordValue} />
@@ -690,25 +653,7 @@ function ProfileContent() {
                               <FormItem>
                                 <FormLabel>Подтвердите пароль</FormLabel>
                                 <FormControl>
-                                  <div className="relative">
-                                    <Input
-                                      {...field}
-                                      type={showConfirmPassword ? "text" : "password"}
-                                      placeholder="••••••••"
-                                    />
-                                    <button
-                                      type="button"
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                      tabIndex={-1}
-                                    >
-                                      {showConfirmPassword ? (
-                                        <EyeOff className="h-4 w-4" />
-                                      ) : (
-                                        <Eye className="h-4 w-4" />
-                                      )}
-                                    </button>
-                                  </div>
+                                  <PasswordInput {...field} placeholder="••••••••" />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

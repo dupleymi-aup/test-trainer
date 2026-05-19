@@ -100,14 +100,20 @@ export default function AdminDeadlinesPage() {
     if (showPast) params.set("showPast", "true");
 
     fetch(`/api/admin/deadlines?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setDeadlines(d.deadlines || []); setLoading(false); })
       .catch(() => setLoading(false));
   };
 
   const fetchGroups = () => {
     fetch("/api/admin/groups")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => setGroups(d.groups || []))
       .catch(() => {});
   };

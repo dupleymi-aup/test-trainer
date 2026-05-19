@@ -76,7 +76,7 @@ export default function EnhancedAnalyticsPage() {
     if (filters.endDate) params.set("endDate", filters.endDate);
 
     fetch(`/api/teacher/analytics/enhanced?${params.toString()}`)
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => {
         setData(d);
         setLoading(false);

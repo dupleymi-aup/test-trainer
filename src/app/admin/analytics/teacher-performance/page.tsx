@@ -82,7 +82,10 @@ export default function TeacherPerformancePage() {
     if (filters?.dateTo) params.set("dateTo", filters.dateTo);
     const qs = params.toString();
     fetch(`/api/admin/analytics/teacher-performance${qs ? `?${qs}` : ""}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [filters]);

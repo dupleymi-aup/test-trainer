@@ -26,8 +26,8 @@ export default function TeacherDashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/teacher/students").then((r) => r.json()),
-      fetch("/api/teacher/analytics").then((r) => r.json()),
+      fetch("/api/teacher/students").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch("/api/teacher/analytics").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
     ]).then(([studentsData, analytics]) => {
       setStudents(studentsData.students);
       setLoading(false);

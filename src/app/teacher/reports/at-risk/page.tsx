@@ -67,7 +67,7 @@ export default function AtRiskStudentsPage() {
 
   useEffect(() => {
     fetch("/api/teacher/reports/at-risk")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
         setStudents(data.atRiskStudents || []);
         setLoading(false);

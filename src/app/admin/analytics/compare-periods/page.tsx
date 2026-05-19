@@ -73,7 +73,10 @@ export default function ComparePeriodsPage() {
 
   useEffect(() => {
     fetch("/api/admin/groups")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => setGroups(d.groups || []))
       .catch(() => {});
   }, []);
@@ -94,7 +97,10 @@ export default function ComparePeriodsPage() {
     if (university) params.set("university", university);
 
     fetch(`/api/admin/analytics/compare-periods?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   };

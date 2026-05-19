@@ -105,7 +105,10 @@ export default function AdminExportPage() {
 
   useEffect(() => {
     fetch("/api/admin/groups")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (Array.isArray(data)) setGroups(data);
       })
@@ -116,7 +119,10 @@ export default function AdminExportPage() {
 
   const fetchHistory = (page = 1) => {
     fetch(`/api/admin/activity-log?action=EXPORT_REPORT&page=${page}&limit=${historyLimit}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setExportHistory(data.logs || []);
         setHistoryTotal(data.pagination?.total || 0);

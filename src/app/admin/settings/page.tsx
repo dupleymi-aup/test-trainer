@@ -36,7 +36,10 @@ export default function AdminSettingsPage() {
 
   const fetchSettings = () => {
     fetch("/api/admin/settings")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setSettings(data.settings);
         const locals: Record<string, unknown> = {};

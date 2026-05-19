@@ -26,13 +26,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
 const registerSchema = z
@@ -42,7 +35,6 @@ const registerSchema = z
     phone: z.string().min(10, "Номер телефона должен быть не менее 10 символов"),
     password: z.string().min(8, "Пароль должен быть не менее 8 символов"),
     confirmPassword: z.string(),
-    role: z.enum(["STUDENT", "TEACHER"]).default("STUDENT"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Пароли не совпадают",
@@ -66,7 +58,6 @@ export default function RegisterPage() {
       phone: "",
       password: "",
       confirmPassword: "",
-      role: "STUDENT",
     },
   });
 
@@ -81,7 +72,6 @@ export default function RegisterPage() {
           email: data.email,
           phone: data.phone,
           password: data.password,
-          role: data.role,
         }),
       });
 
@@ -111,7 +101,6 @@ export default function RegisterPage() {
         <CardTitle className="text-2xl">Регистрация</CardTitle>
         <CardDescription>
           Создайте аккаунт для сохранения прогресса
-          {form.watch("role") === "TEACHER" && " и управления группами"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -161,30 +150,6 @@ export default function RegisterPage() {
                       autoComplete="tel"
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Тип аккаунта</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите тип аккаунта" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="STUDENT">Студент</SelectItem>
-                      <SelectItem value="TEACHER">Преподаватель</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

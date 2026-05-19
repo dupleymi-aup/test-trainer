@@ -54,7 +54,7 @@ export default function CompletionMatrixPage() {
 
   useEffect(() => {
     fetch("/api/teacher/groups")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => setGroups(d.groups || []))
       .catch((err) => {
         console.warn("Failed to fetch groups:", err);
@@ -69,7 +69,7 @@ export default function CompletionMatrixPage() {
 
     setLoading(true);
     fetch(`/api/teacher/reports/completion-matrix?groupId=${selectedGroup}`)
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => {
         setData(d);
         setLoading(false);

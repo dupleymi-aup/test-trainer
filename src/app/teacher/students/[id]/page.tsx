@@ -44,7 +44,7 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
   useEffect(() => {
     params.then(({ id }) => {
       fetch(`/api/teacher/students/${id}/progress`)
-        .then((r) => r.json())
+        .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((d) => { setData(d); setLoading(false); })
         .catch(() => setLoading(false));
     });

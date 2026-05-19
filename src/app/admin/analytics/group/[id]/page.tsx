@@ -65,7 +65,10 @@ export default function AdminGroupAnalyticsPage() {
   useEffect(() => {
     if (!id) return;
     fetch(`/api/admin/analytics/group/${id}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [id]);

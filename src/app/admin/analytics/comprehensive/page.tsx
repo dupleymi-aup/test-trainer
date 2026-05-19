@@ -68,7 +68,10 @@ export default function ComprehensiveAnalyticsPage() {
     if (filters?.university) params.set("university", filters.university);
     const qs = params.toString();
     fetch(`/api/admin/analytics/comprehensive${qs ? `?${qs}` : ""}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [filters]);

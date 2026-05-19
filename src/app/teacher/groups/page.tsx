@@ -44,7 +44,7 @@ export default function TeacherGroupsPage() {
   const [addingStudent, setAddingStudent] = useState(false);
 
   const fetchGroups = () => {
-    fetch("/api/teacher/groups").then((r) => r.json()).then((d) => { setGroups(d.groups); setLoading(false); }).catch(() => setLoading(false));
+    fetch("/api/teacher/groups").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then((d) => { setGroups(d.groups); setLoading(false); }).catch(() => setLoading(false));
   };
 
   useEffect(() => { fetchGroups(); }, []);
@@ -69,6 +69,8 @@ export default function TeacherGroupsPage() {
         fetch(`/api/teacher/groups/${group.id}/members`),
         fetch("/api/teacher/students"),
       ]);
+      if (!membersRes.ok) throw new Error(`HTTP ${membersRes.status}`);
+      if (!studentsRes.ok) throw new Error(`HTTP ${studentsRes.status}`);
       const membersData = await membersRes.json();
       const studentsData = await studentsRes.json();
       setMembers(membersData.members || []);

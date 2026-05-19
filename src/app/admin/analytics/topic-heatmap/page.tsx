@@ -80,7 +80,10 @@ export default function AdminTopicHeatmapPage() {
     if (f.endDate) params.set("endDate", f.endDate);
 
     fetch(`/api/admin/analytics/topic-heatmap?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setMatrix(data.matrix || []);
         setGroupMastery(data.groupMastery || []);

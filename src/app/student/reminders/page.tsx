@@ -101,7 +101,7 @@ export default function StudentRemindersPage() {
   const fetchReminders = () => {
     setLoading(true);
     fetch("/api/student/reminders")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   };

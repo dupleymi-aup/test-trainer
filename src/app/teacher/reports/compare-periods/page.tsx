@@ -70,7 +70,7 @@ export default function ComparePeriodsPage() {
 
   useEffect(() => {
     fetch("/api/teacher/groups")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => setGroups(d.groups || []))
       .catch((err) => {
         console.warn("Failed to fetch groups:", err);
@@ -90,7 +90,7 @@ export default function ComparePeriodsPage() {
     if (groupId) params.set("groupId", groupId);
 
     fetch(`/api/teacher/reports/compare-periods?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => {
         setData(d);
         setLoading(false);

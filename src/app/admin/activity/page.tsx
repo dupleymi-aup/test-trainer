@@ -69,7 +69,10 @@ export default function AdminActivityPage() {
     if (userId) params.set("userId", userId);
 
     fetch(`/api/admin/activity-log?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         let filtered = data.logs || [];
         if (search) {

@@ -66,7 +66,10 @@ export default function TeacherComparisonPage() {
 
   useEffect(() => {
     fetch("/api/admin/analytics/teacher-comparison")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);

@@ -76,7 +76,10 @@ export default function AdminAtRiskPage() {
     if (university) params.set("university", university);
 
     fetch(`/api/admin/reports/students?${params}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setStudents(data.students || []);
         setPagination(data.pagination || pagination);

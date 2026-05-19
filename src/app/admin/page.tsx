@@ -81,9 +81,9 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/analytics/predictions").then((r) => r.json()).catch(() => null),
-      fetch("/api/teacher/notifications").then((r) => r.json()).catch(() => null),
+      fetch("/api/admin/stats").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch("/api/admin/analytics/predictions").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch(() => null),
+      fetch("/api/teacher/notifications").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch(() => null),
     ]).then(([statsData, riskResp, notifResp]) => {
       setStats(statsData);
       if (riskResp?.riskOverview) setRiskData(riskResp.riskOverview);

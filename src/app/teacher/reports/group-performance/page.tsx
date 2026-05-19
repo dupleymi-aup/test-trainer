@@ -42,7 +42,7 @@ export default function GroupPerformancePage() {
 
   useEffect(() => {
     fetch("/api/teacher/reports/group-performance")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
         setGroups(data.groups || []);
         setLoading(false);

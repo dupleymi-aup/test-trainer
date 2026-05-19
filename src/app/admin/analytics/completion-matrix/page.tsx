@@ -53,7 +53,10 @@ export default function AdminCompletionMatrixPage() {
 
   useEffect(() => {
     fetch("/api/admin/groups")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => setGroups(d.groups || []))
       .catch(() => {});
   }, []);
@@ -62,7 +65,10 @@ export default function AdminCompletionMatrixPage() {
     if (!selectedGroup) { setData(null); return; }
     setLoading(true);
     fetch(`/api/admin/analytics/completion-matrix?groupId=${selectedGroup}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, [selectedGroup]);

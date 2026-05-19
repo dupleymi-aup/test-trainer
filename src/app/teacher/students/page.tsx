@@ -28,7 +28,7 @@ export default function TeacherStudentsPage() {
 
   useEffect(() => {
     fetch("/api/teacher/students")
-      .then((r) => r.json())
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => { setStudents(data.students); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);

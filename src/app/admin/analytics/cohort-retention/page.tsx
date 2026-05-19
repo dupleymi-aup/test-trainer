@@ -77,7 +77,10 @@ export default function AdminCohortRetentionPage() {
 
   useEffect(() => {
     fetch("/api/admin/analytics/cohort-retention")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         setCohortChartData(data.cohortChartData || []);
         setWeeklyTrends(data.weeklyTrends || []);
