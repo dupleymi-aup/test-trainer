@@ -247,6 +247,65 @@ export async function POST(req: Request) {
           date: a.createdAt.toISOString(),
         };
       });
+    } else if (reportType === "item-difficulty") {
+      // Fetch attempts for IRT analysis
+      const attempts = await db.attempt.findMany({
+        select: { taskId: true, score: true, timeSpent: true, userId: true, createdAt: true },
+        where: {
+          createdAt: {
+            gte: startDate ? new Date(startDate) : undefined,
+            lte: endDate ? new Date(endDate) : undefined,
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
+      const taskAttempts: Record<string, typeof attempts> = {};
+      for (const a of attempts) {
+        if (!taskAttempts[a.taskId]) taskAttempts[a.taskId] = [];
+        taskAttempts[a.taskId].push(a);
+      }
+      result.itemDifficulty = Object.entries(taskAttempts).map(([taskId, atts]) => {
+        const meta = taskMap.get(taskId);
+        const scores = atts.map((a) => a.score);
+        const avgScore = scores.length > 0 ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length) : 0;
+        return {
+          taskId, taskName: meta?.name || `Задание ${taskId}`,
+          attemptsCount: atts.length, avgScore,
+          pValue: Math.round((avgScore / 100) * 1000) / 1000,
+        };
+      });
+    } else if (reportType === "time-score-correlation") {
+      const attempts = await db.attempt.findMany({
+        select: { taskId: true, score: true, timeSpent: true, userId: true },
+        where: { timeSpent: { gt: 0 }, createdAt: { gte: startDate ? new Date(startDate) : undefined, lte: endDate ? new Date(endDate) : undefined } },
+        take: 10_000,
+      });
+      result.timeScoreData = attempts.map((a) => {
+        const meta = taskMap.get(a.taskId);
+        return { taskId: a.taskId, taskName: meta?.name || `Задание ${a.taskId}`, score: a.score, timeSpent: Math.round(a.timeSpent / 60) };
+      });
+    } else if (reportType === "completion-funnel") {
+      const students = await db.user.findMany({ where: { role: "STUDENT", deletedAt: null }, select: { id: true } });
+      const attempts = await db.attempt.findMany({ select: { taskId: true, userId: true, score: true } });
+      const studentsByTask: Record<string, number> = {};
+      for (const a of attempts) {
+        if (!studentsByTask[a.taskId]) studentsByTask[a.taskId] = 0;
+        studentsByTask[a.taskId]++;
+      }
+      result.funnel = Object.entries(studentsByTask).map(([taskId, count]) => {
+        const meta = taskMap.get(taskId);
+        return { taskId, taskName: meta?.name || `Задание ${taskId}`, uniqueStudents: count };
+      }).sort((a, b) => Number(a.taskId) - Number(b.taskId));
+    } else if (reportType === "error-patterns") {
+      const attempts = await db.attempt.findMany({
+        select: { taskId: true, score: true, ecCoverage: true, bvCoverage: true },
+        where: { createdAt: { gte: startDate ? new Date(startDate) : undefined, lte: endDate ? new Date(endDate) : undefined } },
+        take: 10_000,
+      });
+      result.errorPatterns = attempts.filter((a) => a.score < 60).map((a) => {
+        const meta = taskMap.get(a.taskId);
+        return { taskId: a.taskId, taskName: meta?.name || `Задание ${a.taskId}`, score: a.score, ecCoverage: a.ecCoverage, bvCoverage: a.bvCoverage };
+      });
     }
 
     const jsonContent = JSON.stringify(result, null, 2);
@@ -705,6 +764,134 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
         "Content-Disposition": 'attachment; filename="admin-report-attempt-log.csv"',
+      },
+    });
+  }
+
+  // PDF export — simple text-based report using jsPDF
+  if (format === "pdf") {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+
+    doc.setFont("helvetica");
+    doc.setFontSize(16);
+    doc.text("Отчёт администратора платформы", 14, 20);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Сгенерирован: ${new Date().toLocaleString("ru-RU")}`, 14, 28);
+    doc.text(`Тип отчёта: ${reportType}`, 14, 33);
+
+    doc.setLineWidth(0.5);
+    doc.line(14, 37, 196, 37);
+
+    let y = 45;
+    const addSection = (title: string, lines: string[]) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "bold");
+      doc.text(title, 14, y);
+      y += 7;
+      doc.setFontSize(9);
+      doc.setTextColor(60);
+      doc.setFont("helvetica", "normal");
+      for (const line of lines) {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(line, 14, y);
+        y += 5;
+      }
+      y += 4;
+    };
+
+    // Fetch summary data for the PDF
+    const [totalStudents, totalTeachers, totalGroups, totalAttempts] = await Promise.all([
+      db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
+      db.user.count({ where: { role: "TEACHER", deletedAt: null } }),
+      db.group.count(),
+      db.attempt.count({
+        where: {
+          createdAt: {
+            gte: startDate ? new Date(startDate) : undefined,
+            lte: endDate ? new Date(endDate) : undefined,
+          },
+        },
+      }),
+    ]);
+
+    const avgScoreResult = await db.attempt.aggregate({
+      _avg: { score: true },
+      where: {
+        createdAt: {
+          gte: startDate ? new Date(startDate) : undefined,
+          lte: endDate ? new Date(endDate) : undefined,
+        },
+      },
+    });
+    const avgScore = Math.round(avgScoreResult._avg.score ?? 0);
+
+    addSection("Ключевые метрики", [
+      `Студенты: ${totalStudents}`,
+      `Преподаватели: ${totalTeachers}`,
+      `Группы: ${totalGroups}`,
+      `Попытки: ${totalAttempts}`,
+      `Средний балл: ${avgScore}%`,
+    ]);
+
+    // Top groups
+    const groups = await db.group.findMany({ select: { id: true, name: true } });
+    const memberIds = [...new Set((await db.userGroup.findMany({
+      where: { groupId: { in: groups.map((g) => g.id) } },
+      select: { userId: true },
+    })).map((m) => m.userId))];
+
+    const attemptsByUser: Record<string, number[]> = {};
+    if (memberIds.length > 0) {
+      const attempts = await db.attempt.findMany({
+        where: { userId: { in: memberIds } },
+        select: { userId: true, score: true },
+        take: 50_000,
+      });
+      for (const a of attempts) {
+        if (!attemptsByUser[a.userId]) attemptsByUser[a.userId] = [];
+        attemptsByUser[a.userId].push(a.score);
+      }
+    }
+
+    const membersByGroup: Record<string, string[]> = {};
+    const allMembers = await db.userGroup.findMany({
+      where: { groupId: { in: groups.map((g) => g.id) } },
+      select: { userId: true, groupId: true },
+    });
+    for (const m of allMembers) {
+      if (!membersByGroup[m.groupId]) membersByGroup[m.groupId] = [];
+      membersByGroup[m.groupId].push(m.userId);
+    }
+
+    const groupScores = groups
+      .map((g) => {
+        const userIds = membersByGroup[g.id] || [];
+        const scores = userIds.flatMap((uid) => attemptsByUser[uid] || []);
+        if (scores.length === 0) return null;
+        return { name: g.name, avg: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length), count: scores.length };
+      })
+      .filter(Boolean)
+      .sort((a, b) => (b as any).avg - (a as any).avg)
+      .slice(0, 10);
+
+    addSection(
+      "Топ группы",
+      groupScores.map((g: any, i: number) => `${i + 1}. ${g.name} — ${g.avg}% (${g.count} попыток)`)
+    );
+
+    const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+
+    await logExport(userId, reportType, "pdf", { startDate, endDate });
+
+    return new NextResponse(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="admin-report-${reportType}.pdf"`,
       },
     });
   }

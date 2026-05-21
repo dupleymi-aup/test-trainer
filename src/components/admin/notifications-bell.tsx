@@ -27,7 +27,7 @@ export function NotificationsBell() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    fetch("/api/teacher/notifications")
+    fetch("/api/admin/notifications?unreadOnly=true&limit=20")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -43,16 +43,15 @@ export function NotificationsBell() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "LOW_PERFORMER":
+      case "LOW_PERFORMER": case "RISK_THRESHOLD":
         return <AlertTriangle className="h-4 w-4 text-rose-600" />;
-      case "DECLINING":
+      case "DECLINING": case "SCORE_DROP":
         return <TrendingDown className="h-4 w-4 text-amber-600" />;
-      case "INACTIVE":
+      case "INACTIVE": case "INACTIVE_GROUPS":
         return <Clock className="h-4 w-4 text-blue-600" />;
       case "LOW_ENGAGEMENT":
         return <UserX className="h-4 w-4 text-purple-600" />;
-      case "POOR_EC_COVERAGE":
-      case "POOR_BV_COVERAGE":
+      case "POOR_EC_COVERAGE": case "POOR_BV_COVERAGE":
         return <BookOpen className="h-4 w-4 text-orange-600" />;
       default:
         return <Bell className="h-4 w-4" />;
@@ -67,7 +66,12 @@ export function NotificationsBell() {
       case "LOW_ENGAGEMENT": return "Мало попыток";
       case "POOR_EC_COVERAGE": return "Плохое покрытие EC";
       case "POOR_BV_COVERAGE": return "Плохое покрытие BV";
-      default: return type;
+      case "RISK_THRESHOLD": return "Превышен порог риска";
+      case "INACTIVE_GROUPS": return "Неактивные группы";
+      case "SCORE_DROP": return "Снижение среднего балла";
+      case "SCHEDULED_REPORT": return "Автоматический отчёт";
+      case "DEADLINE_APPROACHING": return "Срок подходит к концу";
+      default: return type.replace(/_/g, " ");
     }
   };
 

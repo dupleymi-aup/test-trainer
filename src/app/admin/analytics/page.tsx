@@ -54,6 +54,9 @@ import {
   Award,
   Siren,
   CalendarClock,
+  Filter,
+  Brain,
+  RotateCcw,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -96,9 +99,19 @@ const reportCards = [
   { href: "/admin/analytics/task-detail", title: "Детальный анализ задач", description: "Распределение баллов, типичные ошибки, тренды, студенты с трудностями", icon: BarChart3, color: "text-emerald-600" },
   { href: "/admin/analytics/student-comparison", title: "Сравнение студентов", description: "Side-by-side сравнение 2-5 студентов с радаром и траекториями", icon: Users, color: "text-blue-600" },
   { href: "/admin/analytics/performance-dashboard", title: "Успеваемость студентов", description: "Сводная таблица всех студентов с сортировкой, фильтрами и рисками", icon: Users, color: "text-indigo-600" },
+  { href: "/admin/analytics/item-difficulty", title: "Анализ сложности заданий", description: "IRT-анализ: сложность (p-value), дифференциация, угадываемость, качество заданий", icon: Target, color: "text-violet-600" },
+  { href: "/admin/analytics/time-score-correlation", title: "Корреляция времени и баллов", description: "Связь времени выполнения с качеством, поведенческие сегменты, scatter-анализ", icon: Brain, color: "text-sky-600" },
+  { href: "/admin/analytics/completion-funnel", title: "Воронка прохождения", description: "Где студенты сходят, bottleneck-задания, распределение completion", icon: Filter, color: "text-orange-600" },
+  { href: "/admin/analytics/error-patterns", title: "Анализ типичных ошибок", description: "Проблемные EC/BV, студенты с худшим покрытием, тренды ошибок по месяцам", icon: AlertTriangle, color: "text-red-600" },
+  { href: "/admin/analytics/activity-time", title: "Активность по времени", description: "Heatmap день×час, пики активности, периоды суток, тренды по дням", icon: Clock, color: "text-sky-600" },
+  { href: "/admin/analytics/completion-forecast", title: "Прогноз завершения", description: "Кто завершит курс, скорость, недели до завершения, уровень риска", icon: Calendar, color: "text-teal-600" },
+  { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преподавателей", description: "Композитный score, рейтинг, влияние на прогресс студентов, радар", icon: GraduationCap, color: "text-amber-600" },
+  { href: "/admin/analytics/cohort-analysis", title: "Анализ когорт", description: "Кривые удержения по месяцам регистрации, сравнение когорт", icon: Users, color: "text-indigo-600" },
+  { href: "/admin/analytics/student-return", title: "Анализ возврата", description: "Студенты после перерыва: прогресс до/после, догоняют ли", icon: RotateCcw, color: "text-cyan-600" },
+  { href: "/admin/analytics/group-task-matrix", title: "Группы × Задачи", description: "Матрица сравнения групп по заданиям, Δ от платформы", icon: FolderKanban, color: "text-teal-600" },
   { href: "/admin/alerts", title: "Системные алерты", description: "Авто-обнаружение рисков: студенты, группы, задания", icon: Siren, color: "text-red-600" },
   { href: "/admin/deadlines", title: "Дедлайны и напоминания", description: "Управление сроками экзаменов, зачётов, заданий", icon: CalendarClock, color: "text-orange-600" },
-  { href: "/admin/reports/export", title: "Экспорт отчётов", description: "Централизованный экспорт всех отчётов в CSV/JSON", icon: Download, color: "text-cyan-600" },
+  { href: "/admin/reports/export", title: "Экспорт отчётов", description: "Централизованный экспорт всех отчётов в CSV/JSON/PDF", icon: Download, color: "text-cyan-600" },
 ];
 
 export default function AdminAnalyticsHubPage() {

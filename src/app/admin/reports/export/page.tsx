@@ -12,7 +12,7 @@ import {
 import {
   Download, FileSpreadsheet, FileJson, BarChart3, Target,
   GraduationCap, AlertTriangle, Users, FileText, Activity,
-  Loader2, Clock,
+  Loader2, Clock, Calendar, FolderKanban,
 } from "lucide-react";
 
 interface Group {
@@ -37,6 +37,16 @@ const reportLabels: Record<string, string> = {
   "group-detailed": "Детализация группы",
   "student-list": "Список студентов",
   "attempt-log": "Журнал попыток",
+  "item-difficulty": "Анализ сложности заданий",
+  "time-score-correlation": "Корреляция времени и баллов",
+  "completion-funnel": "Воронка прохождения",
+  "error-patterns": "Анализ типичных ошибок",
+  "activity-time": "Активность по времени",
+  "completion-forecast": "Прогноз завершения",
+  "teacher-effectiveness": "Эффективность преподавателей",
+  "cohort-analysis": "Анализ когорт",
+  "student-return": "Анализ возврата студентов",
+  "group-task-matrix": "Матрица групп × задач",
 };
 
 const reportTypes = [
@@ -89,6 +99,76 @@ const reportTypes = [
     description: "Полный лог всех попыток с фильтрацией по дате",
     icon: Activity,
     color: "text-cyan-600",
+  },
+  {
+    id: "item-difficulty",
+    title: "Анализ сложности заданий",
+    description: "IRT-анализ: сложность, дифференциация, угадываемость заданий",
+    icon: Target,
+    color: "text-violet-600",
+  },
+  {
+    id: "time-score-correlation",
+    title: "Корреляция времени и баллов",
+    description: "Связь времени выполнения с качеством, поведенческие сегменты",
+    icon: Clock,
+    color: "text-sky-600",
+  },
+  {
+    id: "completion-funnel",
+    title: "Воронка прохождения",
+    description: "Где студенты сходят, bottleneck-задания, completion rate",
+    icon: BarChart3,
+    color: "text-orange-600",
+  },
+  {
+    id: "error-patterns",
+    title: "Анализ типичных ошибок",
+    description: "Проблемные EC/BV, студенты с худшим покрытием, тренды ошибок",
+    icon: AlertTriangle,
+    color: "text-red-600",
+  },
+  {
+    id: "activity-time",
+    title: "Активность по времени",
+    description: "Heatmap день×час, пики активности, периоды суток",
+    icon: Clock,
+    color: "text-sky-600",
+  },
+  {
+    id: "completion-forecast",
+    title: "Прогноз завершения",
+    description: "Кто завершит курс, скорость, недели до завершения, риск",
+    icon: Calendar,
+    color: "text-teal-600",
+  },
+  {
+    id: "teacher-effectiveness",
+    title: "Эффективность преподавателей",
+    description: "Композитный score, рейтинг, влияние на прогресс студентов",
+    icon: GraduationCap,
+    color: "text-amber-600",
+  },
+  {
+    id: "cohort-analysis",
+    title: "Анализ когорт",
+    description: "Кривые удержения, сравнение когорт по месяцам",
+    icon: Users,
+    color: "text-indigo-600",
+  },
+  {
+    id: "student-return",
+    title: "Анализ возврата",
+    description: "Студенты после перерыва: прогресс до/после, догоняют ли",
+    icon: Calendar,
+    color: "text-cyan-600",
+  },
+  {
+    id: "group-task-matrix",
+    title: "Матрица групп × задач",
+    description: "Сравнение групп по заданиям, отклонение от платформы",
+    icon: FolderKanban,
+    color: "text-teal-600",
   },
 ];
 

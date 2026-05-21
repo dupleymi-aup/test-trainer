@@ -21,7 +21,13 @@ import {
   Route,
   GraduationCap,
   Bell,
+  Target,
+  Filter,
+  Clock,
+  Calendar,
+  TrendingUp,
 } from "lucide-react";
+import { DonutChart } from "@/components/admin/charts/donut-chart";
 
 interface Stats {
   totalUsers: number;
@@ -71,6 +77,16 @@ const quickReports = [
   { href: "/admin/analytics/improvement-leaderboard", title: "Лидеры улучшений", icon: Trophy, color: "text-amber-500" },
   { href: "/admin/analytics/velocity", title: "Скорость обучения", icon: Zap, color: "text-yellow-600" },
   { href: "/admin/analytics/learning-path", title: "Путь обучения", icon: Route, color: "text-violet-600" },
+  { href: "/admin/analytics/item-difficulty", title: "Сложность заданий", icon: Target, color: "text-violet-600" },
+  { href: "/admin/analytics/completion-funnel", title: "Воронка прохождения", icon: Filter, color: "text-orange-600" },
+  { href: "/admin/analytics/time-score-correlation", title: "Время и баллы", icon: Clock, color: "text-sky-600" },
+  { href: "/admin/analytics/error-patterns", title: "Типичные ошибки", icon: AlertTriangle, color: "text-red-600" },
+  { href: "/admin/analytics/activity-time", title: "Активность по времени", icon: Calendar, color: "text-teal-600" },
+  { href: "/admin/analytics/completion-forecast", title: "Прогноз завершения", icon: TrendingUp, color: "text-emerald-600" },
+  { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преп.", icon: GraduationCap, color: "text-amber-600" },
+  { href: "/admin/analytics/cohort-analysis", title: "Анализ когорт", icon: Users, color: "text-indigo-600" },
+  { href: "/admin/analytics/student-return", title: "Анализ возврата", icon: Calendar, color: "text-cyan-600" },
+  { href: "/admin/analytics/group-task-matrix", title: "Группы × Задачи", icon: FolderKanban, color: "text-teal-600" },
 ];
 
 export default function AdminDashboardPage() {
@@ -219,47 +235,49 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Users by role */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Пользователи по ролям</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3 flex-wrap">
-              {Object.entries(stats.usersByRole).map(([role, count]) => (
-                <div key={role} className="flex items-center gap-2">
-                  <Badge className={roleColors[role]}>{roleLabels[role]}</Badge>
-                  <span className="text-lg font-bold">{count}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Users by role with donut chart */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Пользователи по ролям</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DonutChart
+                data={Object.entries(stats.usersByRole).map(([role, count], i) => ({
+                  name: roleLabels[role] || role,
+                  value: count,
+                  color: ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"][i] || "hsl(var(--muted))",
+                }))}
+                centerLabel="Всего"
+                centerValue={stats.totalUsers}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Recent activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Последние действия</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {stats.recentActivity.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Нет действий</p>
-              ) : (
-                stats.recentActivity.map((log) => (
-                  <div key={log.id} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/30">
-                    <Badge variant="outline" className="text-xs">{log.action}</Badge>
-                    <span className="text-muted-foreground">{log.user.name || log.user.email}</span>
-                    {log.entity && <span className="text-muted-foreground">→ {log.entity}</span>}
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {new Date(log.createdAt).toLocaleString("ru-RU")}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Последние действия</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {stats.recentActivity.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">Нет действий</p>
+                ) : (
+                  stats.recentActivity.slice(0, 5).map((log) => (
+                    <div key={log.id} className="flex items-center gap-3 text-sm p-2 rounded bg-muted/30">
+                      <Badge variant="outline" className="text-xs">{log.action}</Badge>
+                      <span className="text-muted-foreground">{log.user.name || log.user.email}</span>
+                      {log.entity && <span className="text-muted-foreground">→ {log.entity}</span>}
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {new Date(log.createdAt).toLocaleString("ru-RU")}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AdminLayout>
   );

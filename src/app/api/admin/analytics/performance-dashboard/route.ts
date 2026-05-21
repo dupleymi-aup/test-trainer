@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { batchComputeStudentRisk, AttemptData } from "@/lib/risk-analysis";
 
 export async function GET(req: NextRequest) {
   try {
@@ -62,37 +63,30 @@ export async function GET(req: NextRequest) {
 
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
-    const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
+
+    // Use shared risk analysis library
+    const riskMap = batchComputeStudentRisk(
+      students.map((s) => ({
+        id: s.id,
+        createdAt: s.createdAt,
+        attempts: s.attempts.map((a) => ({
+          score: a.score,
+          ecCoverage: a.ecCoverage,
+          bvCoverage: a.bvCoverage,
+          createdAt: a.createdAt,
+        })) as AttemptData[],
+      }))
+    );
 
     const studentData = students.map((s) => {
       const attempts = s.attempts;
-      const scores = attempts.map((a) => a.score);
-      const avgScore = attempts.length > 0 ? Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length) : 0;
-      const bestScore = attempts.length > 0 ? Math.max(...scores) : 0;
-      const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.ecCoverage, 0) / attempts.length) : 0;
-      const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.bvCoverage, 0) / attempts.length) : 0;
+      const riskResult = riskMap.get(s.id);
+      const stats = riskResult?.stats;
+      const risk = riskResult?.risk;
+
       const lastAttempt = attempts.length > 0 ? attempts[attempts.length - 1] : null;
       const lastAttemptDate = lastAttempt?.createdAt.toISOString().split("T")[0] || null;
       const attemptsLast7Days = attempts.filter((a) => a.createdAt >= sevenDaysAgo).length;
-
-      // Risk level
-      const first3 = attempts.slice(0, 3);
-      const last3 = attempts.slice(-3);
-      const first3Avg = first3.length > 0 ? first3.reduce((s, a) => s + a.score, 0) / first3.length : 0;
-      const last3Avg = last3.length > 0 ? last3.reduce((s, a) => s + a.score, 0) / last3.length : 0;
-      const trend = attempts.length >= 6
-        ? last3Avg - first3Avg > 15 ? "improving" : last3Avg - first3Avg < -15 ? "declining" : "stable"
-        : "stable";
-
-      let riskLevel = "low";
-      let riskScore = 0;
-      if (bestScore < 50) riskScore++;
-      if (trend === "declining") riskScore++;
-      if (lastAttempt && lastAttempt.createdAt < fourteenDaysAgo) riskScore++;
-      if (attempts.length < 3 && s.createdAt < sevenDaysAgo) riskScore++;
-      if (avgEc < 50) riskScore++;
-      if (avgBv < 50) riskScore++;
-      riskLevel = riskScore >= 4 ? "high" : riskScore >= 2 ? "medium" : "low";
 
       return {
         studentId: s.id,
@@ -101,16 +95,16 @@ export async function GET(req: NextRequest) {
         university: s.university || "",
         registeredAt: s.createdAt.toISOString().split("T")[0],
         metrics: {
-          avgScore,
-          bestScore,
-          avgEc,
-          avgBv,
-          totalAttempts: attempts.length,
+          avgScore: stats?.avgScore ?? 0,
+          bestScore: stats?.bestScore ?? 0,
+          avgEc: stats?.avgEc ?? 0,
+          avgBv: stats?.avgBv ?? 0,
+          totalAttempts: stats?.totalAttempts ?? 0,
           attemptsLast7Days,
           lastAttemptDate,
-          trend,
-          riskLevel,
-          riskScore,
+          trend: risk?.trend ?? "stable",
+          riskLevel: risk?.dropoutRisk ?? "low",
+          riskScore: risk ? risk.riskFactors.length + (risk.trend === "declining" ? 1 : 0) + (stats && stats.bestScore < 30 ? 1 : 0) : 0,
         },
       };
     });

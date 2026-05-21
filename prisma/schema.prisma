@@ -168,6 +168,27 @@ model ActivityLog {
 
   @@index([userId])
   @@index([createdAt])
+  @@index([action])
+  @@index([action, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // "RISK_THRESHOLD", "DEADLINE_APPROACHING", "SCHEDULED_REPORT", etc.
+  severity  String   // "critical", "warning", "info"
+  title     String
+  message   String?
+  entity    String?  // "student", "group", "task", "system"
+  entityId  String?
+  actionUrl String?
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([read])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([type])
 }
 
 model SystemSetting {

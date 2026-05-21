@@ -132,6 +132,8 @@ export async function GET(request: Request) {
   // System-level insights
   const allAttempts = await db.attempt.findMany({
     select: { taskId: true, score: true },
+    take: 10_000,
+    orderBy: { createdAt: "desc" },
   });
 
   const taskMap = new Map(

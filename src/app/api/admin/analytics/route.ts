@@ -66,6 +66,7 @@ export async function GET() {
       createdAt: true,
     },
     orderBy: { createdAt: "asc" },
+    take: 10_000,
   });
 
   const volumeMap: Record<string, { count: number; totalScore: number }> = {};
@@ -102,43 +103,64 @@ export async function GET() {
     else distribution["81-100"]++;
   });
 
-  // Group Performance
+  // Group Performance — two-step query to avoid N+1
   const groups = await db.group.findMany({
-    select: {
-      id: true,
-      name: true,
-      members: {
-        select: {
-          user: {
-            select: {
-              attempts: {
-                select: {
-                  score: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    select: { id: true, name: true },
   });
+
+  // Step 1: Get all group member IDs
+  const groupMembers = await db.userGroup.findMany({
+    where: { groupId: { in: groups.map((g) => g.id) } },
+    select: { userId: true, groupId: true },
+  });
+
+  const membersByGroup: Record<string, string[]> = {};
+  for (const m of groupMembers) {
+    if (!membersByGroup[m.groupId]) membersByGroup[m.groupId] = [];
+    membersByGroup[m.groupId].push(m.userId);
+  }
+
+  // Step 2: Aggregate attempts per user
+  const memberIds = [...new Set(groupMembers.map((m) => m.userId))];
+  const attemptsByUser: Record<string, { count: number; totalScore: number }> = {};
+
+  if (memberIds.length > 0) {
+    const attempts = await db.attempt.findMany({
+      where: { userId: { in: memberIds } },
+      select: { userId: true, score: true },
+      take: 50_000,
+    });
+
+    for (const a of attempts) {
+      if (!attemptsByUser[a.userId]) attemptsByUser[a.userId] = { count: 0, totalScore: 0 };
+      attemptsByUser[a.userId].count++;
+      attemptsByUser[a.userId].totalScore += a.score;
+    }
+  }
 
   const groupPerformance = groups
     .map((g) => {
-      const allGroupAttempts = g.members.flatMap(
-        (m) => m.user.attempts
-      );
-      if (allGroupAttempts.length === 0) return null;
+      const userIds = membersByGroup[g.id] || [];
+      if (userIds.length === 0) return null;
+
+      let totalCount = 0;
+      let totalScore = 0;
+      for (const uid of userIds) {
+        const a = attemptsByUser[uid];
+        if (a) {
+          totalCount += a.count;
+          totalScore += a.totalScore;
+        }
+      }
+
+      if (totalCount === 0) return null;
 
       return {
         groupId: g.id,
         groupName: g.name,
-        avgScore: Math.round(
-          allGroupAttempts.reduce((s, a) => s + a.score, 0) /
-            allGroupAttempts.length
-        ),
-        studentCount: g.members.length,
-        totalAttempts: allGroupAttempts.length,
+        avgScore: Math.round(totalScore / totalCount),
+        studentCount: userIds.length,
+        totalAttempts: totalCount,
       };
     })
     .filter(Boolean);

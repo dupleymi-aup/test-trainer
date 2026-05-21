@@ -179,6 +179,8 @@ export async function GET() {
   // 3. Tasks with high fail rate
   const allAttempts = await db.attempt.findMany({
     select: { taskId: true, score: true },
+    take: 10_000,
+    orderBy: { createdAt: "desc" },
   });
 
   const taskScores: Record<string, number[]> = {};

@@ -143,6 +143,29 @@ export function computeStudentRisk(
   return { riskFactors, recommendations, dropoutRisk, trend };
 }
 
+export interface StudentWithAttempts {
+  id: string;
+  createdAt: Date;
+  attempts: AttemptData[];
+}
+
+/**
+ * Compute risk for multiple students at once.
+ * Returns a Map keyed by student ID for efficient lookups.
+ */
+export function batchComputeStudentRisk(
+  students: StudentWithAttempts[]
+): Map<string, { stats: StatsResult; risk: RiskResult }> {
+  const results = new Map<string, { stats: StatsResult; risk: RiskResult }>();
+  for (const s of students) {
+    results.set(s.id, {
+      stats: computeStudentStats(s.attempts),
+      risk: computeStudentRisk(s.attempts, s.createdAt),
+    });
+  }
+  return results;
+}
+
 export function generateRecommendations(
   weakAreas: Array<{ topic: string; avgScore: number }>,
   avgEc: number,

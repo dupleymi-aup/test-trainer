@@ -174,10 +174,13 @@
   header,
   footer,
   nav,
-  button:not(.print-show),
+  .sidebar,
+  button:not(.print-show):not([data-print-btn]),
   .no-print,
   [data-radix-tabs-list],
-  .print-hide {
+  .print-hide,
+  [role="navigation"],
+  aside {
     display: none !important;
   }
 
@@ -196,6 +199,7 @@
   body {
     background: white !important;
     color: black !important;
+    font-size: 10pt !important;
   }
 
   /* Show card borders */
@@ -221,7 +225,22 @@
   }
 
   /* Avoid page breaks inside cards */
-  .rounded-lg {
+  .rounded-lg, .card {
+    break-inside: avoid;
+  }
+
+  /* Admin layout should be full width */
+  .min-h-screen {
+    padding: 0 !important;
+  }
+
+  /* Print report headers */
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+
+  /* Ensure charts render */
+  .recharts-wrapper {
     break-inside: avoid;
   }
 }
