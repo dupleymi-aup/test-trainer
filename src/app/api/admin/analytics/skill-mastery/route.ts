@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 interface EcSkill {
   ecId: string;
@@ -51,6 +52,11 @@ export async function GET(request: Request) {
     studentWhere.id = { in: memberIds.map((m) => m.userId) };
   }
   if (universityFilter) studentWhere.university = universityFilter;
+
+  // Check cache
+  const cacheKey = makeCacheKey("skill-mastery", { groupId, universityFilter });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const students = await db.user.findMany({
     where: studentWhere,
@@ -233,8 +239,8 @@ export async function GET(request: Request) {
   const improvingEc = ecSkills.filter((s) => s.trend === "improving").slice(0, 5);
   const decliningEc = ecSkills.filter((s) => s.trend === "declining").slice(0, 5);
 
-  return NextResponse.json({
-    ecSkills: ecSkills.slice(0, 50), // limit for UI
+  const result = {
+    ecSkills: ecSkills.slice(0, 50),
     bvSkills: bvSkills.slice(0, 50),
     summary: {
       totalEcSkills,
@@ -246,5 +252,7 @@ export async function GET(request: Request) {
       improvingEc,
       decliningEc,
     },
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

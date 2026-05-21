@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(request: Request) {
   const guard = await requireAdmin();
@@ -9,6 +10,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
+
+  // Check cache
+  const cacheKey = makeCacheKey("teacher-performance", { dateFrom, dateTo });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
@@ -156,5 +162,7 @@ export async function GET(request: Request) {
     };
   });
 
-  return NextResponse.json({ teachers: teacherPerformance });
+  const result = { teachers: teacherPerformance };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { TestCaseCategory } from "@/lib/tasks";
 import type { StoredTestCase } from "@/lib/evaluator";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(request: Request) {
   const guard = await requireAdmin();
@@ -13,6 +14,11 @@ export async function GET(request: Request) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   const groupId = searchParams.get("groupId");
+
+  // Check cache
+  const cacheKey = makeCacheKey("task-insights", { dateFrom, dateTo, groupId });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   // If groupId is provided, get student IDs from that group
   let userIdFilter: Record<string, unknown> | undefined;
@@ -206,8 +212,7 @@ export async function GET(request: Request) {
     }))
     .sort((a, b) => a.avgScore - b.avgScore);
 
-  return NextResponse.json({
-    taskInsights,
-    topicPerformance,
-  });
+  const result = { taskInsights, topicPerformance };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

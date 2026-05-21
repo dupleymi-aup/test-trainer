@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 function calculateMetrics(attempts: { userId: string; taskId: string; score: number; ecCoverage: number; bvCoverage: number; correctness: number; timeSpent: number }[]) {
   const totalAttempts = attempts.length;
@@ -75,6 +76,11 @@ export async function GET(req: Request) {
     });
   }
 
+  // Check cache
+  const cacheKey = makeCacheKey("compare-periods", { period1Start, period1End, period2Start, period2End, groupId, university });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
+
   let userIds: string[] | undefined;
   if (groupId) {
     const usersInGroup = await db.userGroup.findMany({ where: { groupId }, select: { userId: true } });
@@ -126,5 +132,7 @@ export async function GET(req: Request) {
     avgBv: { period1: period1Metrics.avgBv, period2: period2Metrics.avgBv, change: period2Metrics.avgBv - period1Metrics.avgBv },
   };
 
-  return NextResponse.json({ period1: { start: period1Start, end: period1End }, period2: { start: period2Start, end: period2End }, period1Metrics, period2Metrics, comparison });
+  const result = { period1: { start: period1Start, end: period1End }, period2: { start: period2Start, end: period2End }, period1Metrics, period2Metrics, comparison };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

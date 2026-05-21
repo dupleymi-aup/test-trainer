@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(req: Request) {
   const guard = await requireAdmin();
@@ -10,6 +11,11 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
+
+  // Check cache
+  const cacheKey = makeCacheKey("topic-heatmap", { startDate, endDate });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   // Build task-to-topics map
   const taskTopics = new Map<number, string[]>();
@@ -134,11 +140,13 @@ export async function GET(req: Request) {
     };
   }).sort((a, b) => a.avgScore - b.avgScore);
 
-  return NextResponse.json({
+  const result = {
     matrix,
     groupMastery,
     topicSummary,
     allTopics,
     groupNames: groups.map((g) => g.name),
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

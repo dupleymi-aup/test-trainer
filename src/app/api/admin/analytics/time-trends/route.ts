@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(request: Request) {
   const guard = await requireAdmin();
@@ -10,6 +11,11 @@ export async function GET(request: Request) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   const groupId = searchParams.get("groupId");
+
+  // Check cache
+  const cacheKey = makeCacheKey("time-trends", { dateFrom, dateTo, groupId });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const now = new Date();
 
@@ -218,7 +224,7 @@ export async function GET(request: Request) {
     .slice(0, 3)
     .map((m) => m.month);
 
-  return NextResponse.json({
+  const result = {
     monthlyTrends,
     weeklyPatterns,
     hourlyPatterns,
@@ -229,5 +235,7 @@ export async function GET(request: Request) {
       peakDays,
       peakMonths,
     },
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

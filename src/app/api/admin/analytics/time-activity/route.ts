@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 const DAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -12,6 +13,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");
   const universityFilter = searchParams.get("university");
+
+  // Check cache
+  const cacheKey = makeCacheKey("time-activity", { groupId, universityFilter });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   // Build student filter
   const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
@@ -213,7 +219,7 @@ export async function GET(request: Request) {
     };
   });
 
-  return NextResponse.json({
+  const result = {
     heatmap: heatmapCells,
     hourlyDistribution,
     dailyDistribution,
@@ -229,5 +235,7 @@ export async function GET(request: Request) {
       bestScoringHour: { label: `${bestScoringHour.hour}:00`, avgScore: bestScoringHour.avgScore },
       periodStats,
     },
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

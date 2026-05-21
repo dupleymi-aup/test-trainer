@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(request: Request) {
   const guard = await requireAdmin();
@@ -11,6 +12,11 @@ export async function GET(request: Request) {
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   const groupId = searchParams.get("groupId");
+
+  // Check cache
+  const cacheKey = makeCacheKey("university-comparison", { dateFrom, dateTo, groupId });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   // If groupId is provided, get student IDs from that group
   let userIdFilter: Set<string> | null = null;
@@ -155,5 +161,7 @@ export async function GET(request: Request) {
     })
     .sort((a, b) => b.avgScore - a.avgScore);
 
-  return NextResponse.json({ universities: universityComparison });
+  const result = { universities: universityComparison };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

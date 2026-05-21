@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET() {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+
+  const cacheKey = makeCacheKey("improvement-leaderboard");
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const students = await db.user.findMany({
     where: { role: "STUDENT", isActive: true, deletedAt: null },
@@ -61,5 +66,7 @@ export async function GET() {
     .map(([name, data]) => ({ university: name, avgDelta: Math.round(data.totalDelta / data.count), studentCount: data.count }))
     .sort((a, b) => b.avgDelta - a.avgDelta);
 
-  return NextResponse.json({ studentImprovement: studentImprovement.slice(0, 50), groupImprovement, universityImprovement });
+  const result = { studentImprovement: studentImprovement.slice(0, 50), groupImprovement, universityImprovement };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

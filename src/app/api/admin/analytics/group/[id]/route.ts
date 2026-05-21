@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(
   _req: Request,
@@ -11,6 +12,11 @@ export async function GET(
   if ("response" in guard) return guard.response;
 
   const { id } = await params;
+
+  // Check cache
+  const cacheKey = makeCacheKey("group-detail", { id });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const group = await db.group.findUnique({
     where: { id },
@@ -189,7 +195,7 @@ export async function GET(
   const tasksAssigned = group.assignedTasks.length;
   const tasksCompleted = taskCompletionMatrix.filter((t) => t.completedCount > 0).length;
 
-  return NextResponse.json({
+  const result = {
     group: {
       id: group.id, name: group.name, description: group.description || "",
       createdBy: group.createdBy ? { name: group.createdBy.name || "", email: group.createdBy.email || "" } : null,
@@ -201,5 +207,8 @@ export async function GET(
     taskComparison,
     activityTimeline,
     summary: { totalMembers, activeMembers, totalAttempts, avgGroupScore, avgEc, avgBv, tasksAssigned, tasksCompleted },
-  });
+  };
+
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

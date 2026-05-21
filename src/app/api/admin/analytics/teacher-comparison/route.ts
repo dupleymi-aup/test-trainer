@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 interface TeacherMetrics {
   teacherId: string;
@@ -31,6 +32,10 @@ interface TeacherMetrics {
 export async function GET(request: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+
+  const cacheKey = makeCacheKey("teacher-comparison");
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
@@ -193,9 +198,11 @@ export async function GET(request: Request) {
       : 0,
   };
 
-  return NextResponse.json({
+  const result = {
     teachers: teacherMetrics,
     platformAvg,
     totalTeachers: teacherMetrics.length,
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

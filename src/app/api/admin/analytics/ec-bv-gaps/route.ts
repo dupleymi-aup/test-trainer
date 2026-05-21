@@ -2,10 +2,16 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET() {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+
+  // Check cache
+  const cacheKey = makeCacheKey("ec-bv-gaps");
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const attempts = await db.attempt.findMany({
     select: { userId: true, taskId: true, score: true, coveredEcIds: true, coveredBvDescriptions: true },
@@ -107,5 +113,7 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ taskGaps: taskResults, worstECs, worstBVs });
+  const result = { taskGaps: taskResults, worstECs, worstBVs };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

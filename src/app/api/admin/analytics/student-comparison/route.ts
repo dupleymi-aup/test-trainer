@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,6 +20,11 @@ export async function GET(req: NextRequest) {
     if (ids.length < 2 || ids.length > 5) {
       return NextResponse.json({ error: "Provide 2-5 student IDs" }, { status: 400 });
     }
+
+    // Check cache
+    const cacheKey = makeCacheKey("student-comparison", { studentIds });
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
 
     const students = await db.user.findMany({
       where: { id: { in: ids }, role: "STUDENT", deletedAt: null },
@@ -107,7 +113,9 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ students: comparison, count: comparison.length });
+    const result = { students: comparison, count: comparison.length };
+    setCache(cacheKey, result, DEFAULT_TTL.medium);
+    return NextResponse.json(result);
   } catch (error) {
     logger.error("Failed to fetch student comparison", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch student comparison" }, { status: 500 });

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { computeStudentStats, generateRecommendations } from "@/lib/risk-analysis";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(
   _req: Request,
@@ -12,6 +13,11 @@ export async function GET(
   if ("response" in guard) return guard.response;
 
   const { id } = await params;
+
+  // Check cache
+  const cacheKey = makeCacheKey("student-detail", { id });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const student = await db.user.findUnique({
     where: { id, role: "STUDENT" },
@@ -174,7 +180,7 @@ export async function GET(
   // Recommendations
   const recommendations = generateRecommendations(weakAreas, stats.avgEc, stats.avgBv, stats.avgCorrectness, stats.totalAttempts);
 
-  return NextResponse.json({
+  const result = {
     student,
     stats: {
       ...stats,
@@ -198,5 +204,8 @@ export async function GET(
     timeAnalysis: { avgTimePerTask, totalTimeSpent, timeDistribution },
     recommendations,
     percentileByTask,
-  });
+  };
+
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

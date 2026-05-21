@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(req: Request) {
   const guard = await requireAdmin();
@@ -13,6 +14,11 @@ export async function GET(req: Request) {
   if (!groupId) {
     return NextResponse.json({ error: "groupId is required" }, { status: 400 });
   }
+
+  // Check cache
+  const cacheKey = makeCacheKey("completion-matrix", { groupId });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   const usersInGroup = await db.userGroup.findMany({
     where: { groupId },
@@ -50,9 +56,11 @@ export async function GET(req: Request) {
     select: { id: true, name: true, email: true },
   });
 
-  return NextResponse.json({
+  const result = {
     students,
     tasks: tasks.map((t) => ({ taskId: String(t.id), taskName: t.name, difficulty: t.difficulty })),
     matrix,
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

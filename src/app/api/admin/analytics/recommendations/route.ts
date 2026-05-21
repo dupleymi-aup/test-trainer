@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 interface TaskRecommendation {
   taskId: number;
@@ -36,6 +37,11 @@ export async function GET(request: Request) {
   const universityFilter = searchParams.get("university");
   const riskLevel = searchParams.get("riskLevel");
   const limit = parseInt(searchParams.get("limit") || "50");
+
+  // Check cache
+  const cacheKey = makeCacheKey("recommendations", { groupId, universityFilter, riskLevel, limit });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
 
   // Build student filter
   const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
@@ -326,7 +332,7 @@ export async function GET(request: Request) {
     .slice(0, 10)
     .map(([gap, count]) => ({ gap, count }));
 
-  return NextResponse.json({
+  const result = {
     students: limited,
     summary: {
       totalStudents,
@@ -335,5 +341,7 @@ export async function GET(request: Request) {
       topRecommendedTasks,
       topGaps,
     },
-  });
+  };
+  setCache(cacheKey, result, DEFAULT_TTL.expensive);
+  return NextResponse.json(result);
 }

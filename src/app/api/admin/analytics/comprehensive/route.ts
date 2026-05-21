@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(request: Request) {
   try {
@@ -14,6 +15,11 @@ export async function GET(request: Request) {
     const dateTo = searchParams.get("dateTo");
     const groupId = searchParams.get("groupId");
     const universityFilter = searchParams.get("university");
+
+    // Check cache
+    const cacheKey = makeCacheKey("comprehensive", { dateFrom, dateTo, groupId, universityFilter });
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
 
     const now = new Date();
     const thirtyDaysAgo = new Date(now);
@@ -309,7 +315,7 @@ export async function GET(request: Request) {
     ? Math.round(allAttempts.reduce((s, a) => s + a.score, 0) / allAttempts.length)
     : 0;
 
-  return NextResponse.json({
+    const result = {
     kpi: {
       totalStudents,
       totalTeachers,
@@ -329,7 +335,10 @@ export async function GET(request: Request) {
       lowEngagement,
       total: lowPerformers + declining + inactive + lowEngagement,
     },
-  });
+  };
+
+    setCache(cacheKey, result, DEFAULT_TTL.expensive);
+    return NextResponse.json(result);
   } catch (error) {
     logger.error("Failed to fetch comprehensive analytics", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch comprehensive analytics" }, { status: 500 });
