@@ -33,6 +33,9 @@ import {
   Timeline,
   GitBranch,
   LineChart as LineChartIcon,
+  ClipboardList,
+  Users2,
+  ListFilter,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { NotificationsBell } from "@/components/admin/notifications-bell";
@@ -67,6 +70,9 @@ const navItems = [
   { href: "/admin/analytics/group-comparison", label: "Сравнение групп", icon: GitBranch },
   { href: "/admin/analytics/forecasting", label: "Прогнозирование", icon: LineChartIcon },
   { href: "/admin/analytics/anomalies", label: "Аномалии", icon: Siren },
+  { href: "/admin/analytics/task-detail", label: "Анализ задач", icon: ClipboardList },
+  { href: "/admin/analytics/student-comparison", label: "Сравнение студентов", icon: Users2 },
+  { href: "/admin/analytics/performance-dashboard", label: "Успеваемость студентов", icon: ListFilter },
   { href: "/admin/alerts", label: "Системные алерты", icon: Siren },
   { href: "/admin/deadlines", label: "Дедлайны", icon: CalendarClock },
   { href: "/admin/notifications", label: "Уведомления", icon: Bell },

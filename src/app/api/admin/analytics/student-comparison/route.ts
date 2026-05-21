@@ -1,0 +1,115 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-guard";
+import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+
+export async function GET(req: NextRequest) {
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+
+    const { searchParams } = new URL(req.url);
+    const studentIds = searchParams.get("studentIds");
+
+    if (!studentIds) {
+      return NextResponse.json({ error: "studentIds parameter required (comma-separated)" }, { status: 400 });
+    }
+
+    const ids = studentIds.split(",");
+    if (ids.length < 2 || ids.length > 5) {
+      return NextResponse.json({ error: "Provide 2-5 student IDs" }, { status: 400 });
+    }
+
+    const students = await db.user.findMany({
+      where: { id: { in: ids }, role: "STUDENT", deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        group: true,
+        university: true,
+        createdAt: true,
+        attempts: {
+          select: {
+            id: true,
+            taskId: true,
+            score: true,
+            ecCoverage: true,
+            bvCoverage: true,
+            correctness: true,
+            timeSpent: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    const comparison = students.map((s) => {
+      const attempts = s.attempts;
+      const scores = attempts.map((a) => a.score);
+      const avgScore = attempts.length > 0 ? Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length) : 0;
+      const bestScore = attempts.length > 0 ? Math.max(...scores) : 0;
+      const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.ecCoverage, 0) / attempts.length) : 0;
+      const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.bvCoverage, 0) / attempts.length) : 0;
+      const avgCorrectness = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.correctness, 0) / attempts.length) : 0;
+      const avgTime = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.timeSpent, 0) / attempts.length) : 0;
+
+      // Trend
+      const first3 = attempts.slice(0, 3);
+      const last3 = attempts.slice(-3);
+      const first3Avg = first3.length > 0 ? first3.reduce((s, a) => s + a.score, 0) / first3.length : 0;
+      const last3Avg = last3.length > 0 ? last3.reduce((s, a) => s + a.score, 0) / last3.length : 0;
+      const trend = attempts.length >= 6
+        ? last3Avg - first3Avg > 15 ? "improving" : last3Avg - first3Avg < -15 ? "declining" : "stable"
+        : "stable";
+
+      // Score trajectory
+      const trajectory = attempts.map((a, i) => ({
+        attempt: i + 1,
+        score: a.score,
+        date: a.createdAt.toISOString().split("T")[0],
+      }));
+
+      // Task breakdown
+      const byTask: Record<string, { scores: number[] }> = {};
+      for (const a of attempts) {
+        if (!byTask[a.taskId]) byTask[a.taskId] = { scores: [] };
+        byTask[a.taskId].scores.push(a.score);
+      }
+      const taskBreakdown = Object.entries(byTask).map(([tid, data]) => ({
+        taskId: tid,
+        bestScore: Math.max(...data.scores),
+        avgScore: Math.round(data.scores.reduce((s, v) => s + v, 0) / data.scores.length),
+        attempts: data.scores.length,
+      }));
+
+      return {
+        student: {
+          id: s.id,
+          name: s.name || s.email || "Unknown",
+          group: s.group || "",
+          university: s.university || "",
+          registeredAt: s.createdAt.toISOString().split("T")[0],
+        },
+        metrics: {
+          avgScore,
+          bestScore,
+          avgEc,
+          avgBv,
+          avgCorrectness,
+          avgTime,
+          totalAttempts: attempts.length,
+          trend,
+        },
+        trajectory,
+        taskBreakdown,
+      };
+    });
+
+    return NextResponse.json({ students: comparison, count: comparison.length });
+  } catch (error) {
+    logger.error("Failed to fetch student comparison", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch student comparison" }, { status: 500 });
+  }
+}
