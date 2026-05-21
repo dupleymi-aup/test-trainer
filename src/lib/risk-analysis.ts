@@ -186,5 +186,164 @@ export function generateRecommendations(
   return recommendations;
 }
 
+export interface AnomalyEntry {
+  studentId: string;
+  studentName: string;
+  group: string;
+  anomalyType: string;
+  details: string;
+  severity: "high" | "medium" | "low";
+  timestamp: Date;
+}
+
+/**
+ * Detect anomalies in a student's attempt history.
+ * Checks for: sudden drops, score spikes, returned students, time anomalies, first-attempt perfection.
+ */
+export function computeAnomalyFlags(
+  studentId: string,
+  studentName: string,
+  group: string,
+  attempts: { score: number; timeSpent?: number; testId?: number; createdAt: Date }[],
+  allStudentAvgTime: Record<number, number> = {}
+): AnomalyEntry[] {
+  const anomalies: AnomalyEntry[] = [];
+  if (attempts.length < 2) return anomalies;
+
+  const scores = attempts.map((a) => a.score);
+
+  for (let i = 1; i < attempts.length; i++) {
+    const delta = scores[i] - scores[i - 1];
+
+    // Sudden drop
+    if (delta < -25) {
+      anomalies.push({
+        studentId,
+        studentName,
+        group,
+        anomalyType: "sudden_drop",
+        details: `Резкое снижение: ${scores[i - 1]}% → ${scores[i]}% (Δ ${delta}%)`,
+        severity: "high",
+        timestamp: attempts[i].createdAt,
+      });
+    }
+
+    // Score spike (possible cheating or breakthrough)
+    if (delta > 30) {
+      anomalies.push({
+        studentId,
+        studentName,
+        group,
+        anomalyType: "score_spike",
+        details: `Резкий рост: ${scores[i - 1]}% → ${scores[i]}% (Δ +${delta}%)`,
+        severity: "medium",
+        timestamp: attempts[i].createdAt,
+      });
+    }
+  }
+
+  // Returned student: gap > 21 days between attempts
+  for (let i = 1; i < attempts.length; i++) {
+    const gap = attempts[i].createdAt.getTime() - attempts[i - 1].createdAt.getTime();
+    const gapDays = gap / (1000 * 60 * 60 * 24);
+    if (gapDays > 21) {
+      anomalies.push({
+        studentId,
+        studentName,
+        group,
+        anomalyType: "returned_student",
+        details: `Возврат после ${Math.round(gapDays)} дней отсутствия`,
+        severity: "low",
+        timestamp: attempts[i].createdAt,
+      });
+    }
+  }
+
+  // Time anomaly: timeSpent > 2x average for same task
+  for (let i = 0; i < attempts.length; i++) {
+    const a = attempts[i];
+    if (a.testId !== undefined && a.timeSpent !== undefined && allStudentAvgTime[a.testId]) {
+      const avgTime = allStudentAvgTime[a.testId];
+      if (a.timeSpent > avgTime * 2) {
+        anomalies.push({
+          studentId,
+          studentName,
+          group,
+          anomalyType: "time_anomaly",
+          details: `Время выполнения задачи #${a.testId}: ${Math.round(a.timeSpent / 60)} мин (среднее: ${Math.round(avgTime / 60)} мин)`,
+          severity: "medium",
+          timestamp: a.createdAt,
+        });
+      }
+    }
+  }
+
+  // Perfection anomaly: 100% on first attempt for a typically difficult task
+  if (attempts.length >= 1 && attempts[0].score === 100) {
+    const avgScoreForTask = scores.reduce((s, v) => s + v, 0) / scores.length;
+    if (avgScoreForTask < 70) {
+      anomalies.push({
+        studentId,
+        studentName,
+        group,
+        anomalyType: "first_attempt_perfection",
+        details: `100% на первой попытке при среднем балле ${Math.round(avgScoreForTask)}%`,
+        severity: "medium",
+        timestamp: attempts[0].createdAt,
+      });
+    }
+  }
+
+  return anomalies;
+}
+
+/**
+ * Predict the next score based on linear trend from attempts.
+ * Returns predicted score and trend direction.
+ */
+export function predictNextScore(
+  attempts: { score: number; createdAt: Date }[]
+): { predicted: number; trend: "improving" | "declining" | "stable"; confidence: number } | null {
+  if (attempts.length < 3) return null;
+
+  const points: [number, number][] = attempts.map((a, i) => [i, a.score]);
+
+  let sumX = 0,
+    sumY = 0,
+    sumXY = 0,
+    sumX2 = 0;
+  const n = points.length;
+  for (const [x, y] of points) {
+    sumX += x;
+    sumY += y;
+    sumXY += x * y;
+    sumX2 += x * x;
+  }
+
+  const denom = n * sumX2 - sumX * sumX;
+  if (denom === 0) return null;
+
+  const slope = (n * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / n;
+
+  const meanY = sumY / n;
+  let ssTot = 0;
+  let ssRes = 0;
+  for (const [x, y] of points) {
+    const predicted = slope * x + intercept;
+    ssTot += (y - meanY) ** 2;
+    ssRes += (y - predicted) ** 2;
+  }
+  const r2 = ssTot === 0 ? 1 : Math.max(0, Math.min(1, 1 - ssRes / ssTot));
+
+  const nextX = n;
+  const predicted = Math.max(0, Math.min(100, slope * nextX + intercept));
+
+  const trend = slope > 3 ? "improving" : slope < -3 ? "declining" : "stable";
+  const confidence = Math.round(r2 * 100);
+
+  return { predicted: Math.round(predicted), trend, confidence };
+}
+
 export const { label: _, recommendation: __, ...riskLabels } = riskFactorLabels;
 export { riskFactorLabels };

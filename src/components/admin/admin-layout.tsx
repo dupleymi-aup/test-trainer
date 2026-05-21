@@ -30,6 +30,9 @@ import {
   Award,
   Siren,
   CalendarClock,
+  Timeline,
+  GitBranch,
+  LineChart as LineChartIcon,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { NotificationsBell } from "@/components/admin/notifications-bell";
@@ -59,6 +62,11 @@ const navItems = [
   { href: "/admin/analytics/recommendations", label: "Рекомендации", icon: Lightbulb },
   { href: "/admin/analytics/skill-mastery", label: "Освоение навыков", icon: Layers },
   { href: "/admin/analytics/at-risk", label: "Студенты группы риска", icon: AlertTriangle },
+  { href: "/admin/analytics/student-timeline", label: "Траектория студента", icon: Timeline },
+  { href: "/admin/analytics/topic-breakdown", label: "Анализ тем", icon: Layers },
+  { href: "/admin/analytics/group-comparison", label: "Сравнение групп", icon: GitBranch },
+  { href: "/admin/analytics/forecasting", label: "Прогнозирование", icon: LineChartIcon },
+  { href: "/admin/analytics/anomalies", label: "Аномалии", icon: Siren },
   { href: "/admin/alerts", label: "Системные алерты", icon: Siren },
   { href: "/admin/deadlines", label: "Дедлайны", icon: CalendarClock },
   { href: "/admin/notifications", label: "Уведомления", icon: Bell },

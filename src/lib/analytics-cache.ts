@@ -1,0 +1,73 @@
+interface CacheEntry {
+  data: unknown;
+  expires: number;
+}
+
+const cache = new Map<string, CacheEntry>();
+
+const DEFAULT_TTL = {
+  expensive: 5 * 60 * 1000, // 5 min for heavy aggregations
+  simple: 1 * 60 * 1000,    // 1 min for simple counts
+  medium: 3 * 60 * 1000,    // 3 min for medium queries
+};
+
+function hashParams(params: Record<string, unknown>): string {
+  const sorted = Object.keys(params)
+    .sort()
+    .map((k) => `${k}=${String(params[k] ?? "")}`)
+    .join("&");
+  let h = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    h = (Math.imul(31, h) + sorted.charCodeAt(i)) | 0;
+  }
+  return h.toString(36);
+}
+
+export function makeCacheKey(route: string, params: Record<string, unknown> = {}): string {
+  return params && Object.keys(params).length
+    ? `analytics:${route}:${hashParams(params)}`
+    : `analytics:${route}`;
+}
+
+export function getCache<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expires) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.data as T;
+}
+
+export function setCache(key: string, data: unknown, ttlMs: number = DEFAULT_TTL.medium): void {
+  cache.set(key, { data, expires: Date.now() + ttlMs });
+}
+
+export function invalidateCache(pattern: string): number {
+  let count = 0;
+  const regex = new RegExp(
+    "^" + pattern.replace(/\*/g, ".*") + "$"
+  );
+  for (const key of cache.keys()) {
+    if (regex.test(key)) {
+      cache.delete(key);
+      count++;
+    }
+  }
+  return count;
+}
+
+export function clearCache(): void {
+  cache.clear();
+}
+
+export function getCacheStats(): { size: number; keys: string[] } {
+  const now = Date.now();
+  // Clean expired entries
+  for (const [key, entry] of cache.entries()) {
+    if (now > entry.expires) cache.delete(key);
+  }
+  return { size: cache.size, keys: [...cache.keys()] };
+}
+
+export { DEFAULT_TTL };

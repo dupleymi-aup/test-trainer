@@ -3,11 +3,16 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET() {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+
+    const cacheKey = makeCacheKey("hub");
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -227,7 +232,7 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json({
+  const result = {
     platformEngagement: {
       dau: dau.length,
       wau: wau.length,
@@ -250,7 +255,10 @@ export async function GET() {
           : 0,
       inactive30Days,
     },
-  });
+  };
+
+  setCache(cacheKey, result, DEFAULT_TTL.medium);
+  return NextResponse.json(result);
   } catch (error) {
     logger.error("Failed to fetch admin analytics", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });

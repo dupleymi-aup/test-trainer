@@ -3,6 +3,8 @@ import {
   computeStudentStats,
   computeStudentRisk,
   generateRecommendations,
+  computeAnomalyFlags,
+  predictNextScore,
 } from "./risk-analysis";
 
 function makeAttempt(overrides: Partial<Parameters<typeof computeStudentRisk>[0][number]> = {}) {
@@ -236,5 +238,134 @@ describe("generateRecommendations", () => {
       40, 40, 50, 2
     );
     expect(recs.length).toBeGreaterThan(1);
+  });
+});
+
+describe("computeAnomalyFlags", () => {
+  const now = new Date("2024-01-15");
+  const day = (n: number) => new Date(now.getTime() - n * 86400000);
+
+  it("returns empty for less than 2 attempts", () => {
+    const result = computeAnomalyFlags("1", "Test", "G1", [
+      { score: 50, createdAt: now },
+    ]);
+    expect(result).toEqual([]);
+  });
+
+  it("detects sudden drop", () => {
+    const result = computeAnomalyFlags("1", "Test", "G1", [
+      { score: 80, createdAt: day(2) },
+      { score: 40, createdAt: day(1) },
+    ]);
+    expect(result.some((a) => a.anomalyType === "sudden_drop")).toBe(true);
+    expect(result.some((a) => a.severity === "high")).toBe(true);
+  });
+
+  it("detects score spike", () => {
+    const result = computeAnomalyFlags("1", "Test", "G1", [
+      { score: 30, createdAt: day(2) },
+      { score: 70, createdAt: day(1) },
+    ]);
+    expect(result.some((a) => a.anomalyType === "score_spike")).toBe(true);
+    expect(result.some((a) => a.severity === "medium")).toBe(true);
+  });
+
+  it("detects returned student", () => {
+    const result = computeAnomalyFlags("1", "Test", "G1", [
+      { score: 70, createdAt: day(30) },
+      { score: 60, createdAt: day(5) },
+    ]);
+    expect(result.some((a) => a.anomalyType === "returned_student")).toBe(true);
+  });
+
+  it("detects time anomaly", () => {
+    const result = computeAnomalyFlags("1", "Test", "G1", [
+      { score: 70, timeSpent: 600, testId: 1, taskId: "1", createdAt: day(2) },
+      { score: 60, timeSpent: 1800, testId: 1, taskId: "1", createdAt: day(1) },
+    ], { 1: 500 });
+    expect(result.some((a) => a.anomalyType === "time_anomaly")).toBe(true);
+  });
+
+  it("does not detect time anomaly when within threshold", () => {
+    const result = computeAnomalyFlags("1", "Test", "G1", [
+      { score: 70, timeSpent: 600, testId: 1, taskId: "1", createdAt: day(2) },
+      { score: 60, timeSpent: 800, testId: 1, taskId: "1", createdAt: day(1) },
+    ], { 1: 500 });
+    expect(result.some((a) => a.anomalyType === "time_anomaly")).toBe(false);
+  });
+});
+
+describe("predictNextScore", () => {
+  const day = (n: number) => new Date(Date.now() - n * 86400000);
+
+  it("returns null for less than 3 attempts", () => {
+    expect(predictNextScore([
+      { score: 50, createdAt: day(2) },
+      { score: 60, createdAt: day(1) },
+    ])).toBeNull();
+  });
+
+  it("predicts improving trend", () => {
+    const result = predictNextScore([
+      { score: 40, createdAt: day(5) },
+      { score: 50, createdAt: day(4) },
+      { score: 60, createdAt: day(3) },
+      { score: 70, createdAt: day(2) },
+      { score: 80, createdAt: day(1) },
+    ]);
+    expect(result).not.toBeNull();
+    expect(result!.trend).toBe("improving");
+    expect(result!.predicted).toBeGreaterThan(80);
+  });
+
+  it("predicts declining trend", () => {
+    const result = predictNextScore([
+      { score: 90, createdAt: day(5) },
+      { score: 80, createdAt: day(4) },
+      { score: 70, createdAt: day(3) },
+      { score: 60, createdAt: day(2) },
+      { score: 50, createdAt: day(1) },
+    ]);
+    expect(result).not.toBeNull();
+    expect(result!.trend).toBe("declining");
+    expect(result!.predicted).toBeLessThan(50);
+  });
+
+  it("predicts stable trend", () => {
+    const result = predictNextScore([
+      { score: 70, createdAt: day(5) },
+      { score: 72, createdAt: day(4) },
+      { score: 68, createdAt: day(3) },
+      { score: 71, createdAt: day(2) },
+      { score: 69, createdAt: day(1) },
+    ]);
+    expect(result).not.toBeNull();
+    expect(result!.trend).toBe("stable");
+  });
+
+  it("clamps prediction to 0-100 range", () => {
+    const result = predictNextScore([
+      { score: 95, createdAt: day(5) },
+      { score: 97, createdAt: day(4) },
+      { score: 98, createdAt: day(3) },
+      { score: 99, createdAt: day(2) },
+      { score: 100, createdAt: day(1) },
+    ]);
+    expect(result).not.toBeNull();
+    expect(result!.predicted).toBeLessThanOrEqual(100);
+    expect(result!.predicted).toBeGreaterThanOrEqual(0);
+  });
+
+  it("returns confidence between 0 and 100", () => {
+    const result = predictNextScore([
+      { score: 50, createdAt: day(5) },
+      { score: 55, createdAt: day(4) },
+      { score: 60, createdAt: day(3) },
+      { score: 65, createdAt: day(2) },
+      { score: 70, createdAt: day(1) },
+    ]);
+    expect(result).not.toBeNull();
+    expect(result!.confidence).toBeGreaterThanOrEqual(0);
+    expect(result!.confidence).toBeLessThanOrEqual(100);
   });
 });

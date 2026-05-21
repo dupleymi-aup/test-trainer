@@ -2,33 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-
-const riskFactorLabels: Record<string, { label: string; recommendation: string }> = {
-  low_performer: {
-    label: "Низкая успеваемость",
-    recommendation: "Рекомендуется дополнительная практика и консультация с преподавателем",
-  },
-  declining: {
-    label: "Снижение прогресса",
-    recommendation: "Необходимо выявить причины снижения и скорректировать учебный план",
-  },
-  inactive: {
-    label: "Длительная неактивность",
-    recommendation: "Связаться со студентом для выяснения причин отсутствия",
-  },
-  low_engagement: {
-    label: "Низкая вовлечённость",
-    recommendation: "Мотивировать студента к регулярным занятиям",
-  },
-  poor_ec_coverage: {
-    label: "Плохое покрытие классов эквивалентности",
-    recommendation: "Изучить тему классов эквивалентности и пройти дополнительные задания",
-  },
-  poor_bv_coverage: {
-    label: "Плохое покрытие граничных значений",
-    recommendation: "Обратить внимание на тестирование граничных значений",
-  },
-};
+import { computeStudentRisk, computeStudentStats, riskLabels } from "@/lib/risk-analysis";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(request: Request) {
   const guard = await requireAdmin();
@@ -40,16 +15,19 @@ export async function GET(request: Request) {
   const groupId = searchParams.get("groupId");
   const universityFilter = searchParams.get("university");
 
-  const now = new Date();
-  const fourteenDaysAgo = new Date(now);
+  const cacheKey = makeCacheKey("predictions", { dateFrom: dateFrom || "", dateTo: dateTo || "", groupId: groupId || "", university: universityFilter || "" });
+  const cached = getCache(cacheKey);
+  if (cached) return NextResponse.json(cached);
+
+  const fourteenDaysAgo = new Date();
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const sevenDaysAgo = new Date(now);
+  const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   // If groupId is provided, get student IDs from that group
   let userIdFilter: Set<string> | null = null;
   if (groupId) {
-    const groupMembers = await db.groupMember.findMany({
+    const groupMembers = await db.userGroup.findMany({
       where: { groupId },
       select: { userId: true },
     });
@@ -113,67 +91,17 @@ export async function GET(request: Request) {
     const attempts = student.attempts;
     if (attempts.length === 0) continue;
 
-    const riskFactors: string[] = [];
-    const recommendations: string[] = [];
+    // Use shared risk analysis library
+    const riskResult = computeStudentRisk(
+      attempts.map((a) => ({ ...a, correctness: undefined, timeSpent: undefined })),
+      student.createdAt
+    );
 
-    const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
-    const avgScore = Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length);
-    const avgEc = Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length);
-    const avgBv = Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length);
-    const lastAttempt = attempts[attempts.length - 1];
-    const lastAttemptDate = lastAttempt?.createdAt.toISOString() || null;
+    if (riskResult.riskFactors.length === 0) continue;
 
-    // Trend calculation
-    const first3 = attempts.slice(0, 3);
-    const last3 = attempts.slice(-3);
-    const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
-    const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
-    const trend =
-      attempts.length >= 6
-        ? last3Avg - first3Avg > 15
-          ? "improving"
-          : last3Avg - first3Avg < -15
-            ? "declining"
-            : "stable"
-        : "stable";
-
-    // Risk factor detection
-    if (bestScore < 50) {
-      riskFactors.push("low_performer");
-      recommendations.push(riskFactorLabels.low_performer.recommendation);
-    }
-
-    if (trend === "declining") {
-      riskFactors.push("declining");
-      recommendations.push(riskFactorLabels.declining.recommendation);
-    }
-
-    if (new Date(lastAttemptDate!) < fourteenDaysAgo) {
-      riskFactors.push("inactive");
-      recommendations.push(riskFactorLabels.inactive.recommendation);
-    }
-
-    if (attempts.length < 3 && student.createdAt < sevenDaysAgo) {
-      riskFactors.push("low_engagement");
-      recommendations.push(riskFactorLabels.low_engagement.recommendation);
-    }
-
-    if (avgEc < 50) {
-      riskFactors.push("poor_ec_coverage");
-      recommendations.push(riskFactorLabels.poor_ec_coverage.recommendation);
-    }
-
-    if (avgBv < 50) {
-      riskFactors.push("poor_bv_coverage");
-      recommendations.push(riskFactorLabels.poor_bv_coverage.recommendation);
-    }
-
-    if (riskFactors.length === 0) continue;
-
-    // Dropout risk calculation
-    const riskScore = riskFactors.length + (trend === "declining" ? 1 : 0) + (bestScore < 30 ? 1 : 0);
-    const dropoutRisk: "high" | "medium" | "low" =
-      riskScore >= 4 ? "high" : riskScore >= 2 ? "medium" : "low";
+    const stats = computeStudentStats(
+      attempts.map((a) => ({ ...a, correctness: undefined, timeSpent: undefined }))
+    );
 
     atRiskStudents.push({
       student: {
@@ -183,18 +111,18 @@ export async function GET(request: Request) {
         group: student.group || "",
         university: student.university || "",
       },
-      riskFactors,
+      riskFactors: riskResult.riskFactors,
       stats: {
-        bestScore,
-        avgScore,
-        avgEc,
-        avgBv,
-        lastAttemptDate,
-        attemptsCount: attempts.length,
-        trend,
+        bestScore: stats.bestScore,
+        avgScore: stats.avgScore,
+        avgEc: stats.avgEc,
+        avgBv: stats.avgBv,
+        lastAttemptDate: attempts[attempts.length - 1]?.createdAt.toISOString() || null,
+        attemptsCount: stats.totalAttempts,
+        trend: riskResult.trend,
       },
-      recommendations,
-      dropoutRisk,
+      recommendations: riskResult.recommendations,
+      dropoutRisk: riskResult.dropoutRisk,
     });
   }
 
@@ -289,7 +217,7 @@ export async function GET(request: Request) {
     })
     .filter((g) => g.recommendation !== null);
 
-  return NextResponse.json({
+  const result = {
     atRiskStudents,
     totalAtRisk: atRiskStudents.length,
     systemInsights: {
@@ -297,5 +225,8 @@ export async function GET(request: Request) {
       weakTopics,
       groupRecommendations,
     },
-  });
+  };
+
+  setCache(cacheKey, result, DEFAULT_TTL.medium);
+  return NextResponse.json(result);
 }
