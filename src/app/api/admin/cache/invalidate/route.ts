@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { invalidateCache, clearCache, getCacheStats } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminCacheInvalidate:${ip}`, rateLimits.adminCacheInvalidate);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json().catch(() => ({}));
     const { pattern } = body as { pattern?: string };

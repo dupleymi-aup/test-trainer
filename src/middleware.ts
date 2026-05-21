@@ -38,14 +38,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // CSRF check for state-changing methods on authenticated API routes
+  // Auth API routes are excluded since you can't have a CSRF token before login
   const isApiRoute = pathname.startsWith("/api/");
-  const isAuthApiRoute = pathname.startsWith("/api/auth");
-  if (
-    isApiRoute &&
-    !isAuthApiRoute &&
-    token &&
-    stateChangingMethods.includes(method)
-  ) {
+  const isAuthApiRoute = pathname.startsWith("/api/auth/");
+  if (isApiRoute && !isAuthApiRoute && token && stateChangingMethods.includes(method)) {
     const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
     const headerToken = request.headers.get(CSRF_HEADER_NAME);
     if (!verifyCSRFToken(cookieToken, headerToken)) {
@@ -121,5 +117,8 @@ export const config = {
     "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\..*).*)",
     "/api/admin/:path*",
     "/api/teacher/:path*",
+    "/api/student/:path*",
+    "/api/attempts/:path*",
+    "/api/tasks/:path*",
   ],
 };

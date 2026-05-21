@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const deadlineSchema = z.object({
   title: z.string().min(1, "Название обязательно"),
@@ -53,6 +54,12 @@ export async function POST(req: Request) {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminDeadlineCrud:${ip}`, rateLimits.adminDeadlineCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json();
     const parsed = deadlineSchema.safeParse(body);
@@ -130,6 +137,12 @@ export async function PATCH(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminDeadlineCrud:${ip}`, rateLimits.adminDeadlineCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
@@ -170,6 +183,12 @@ export async function DELETE(req: Request) {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminDeadlineCrud:${ip}`, rateLimits.adminDeadlineCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

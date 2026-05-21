@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
@@ -34,6 +35,12 @@ export async function POST(req: Request) {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminGroupCrud:${ip}`, rateLimits.adminGroupCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json();
     const parsed = createGroupSchema.safeParse(body);

@@ -74,6 +74,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -91,6 +93,9 @@ model VerificationCode {
   email     String?
   expires   DateTime
   createdAt DateTime @default(now())
+
+  @@index([code])
+  @@index([expires])
 }
 
 model Group {
@@ -116,6 +121,7 @@ model GroupTask {
 
   @@unique([groupId, taskId])
   @@index([groupId])
+  @@index([taskId])
 }
 
 model UserGroup {
@@ -129,6 +135,7 @@ model UserGroup {
 
   @@id([userId, groupId])
   @@index([groupId])
+  @@index([userId])
 }
 
 model Attempt {
@@ -151,6 +158,7 @@ model Attempt {
   @@index([taskId])
   @@index([createdAt])
   @@index([userId, createdAt])
+  @@index([userId, taskId])
 }
 
 model ActivityLog {
@@ -164,7 +172,7 @@ model ActivityLog {
   userAgent String?
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -189,6 +197,7 @@ model Notification {
   @@index([severity])
   @@index([createdAt])
   @@index([type])
+  @@index([read, createdAt])
 }
 
 model SystemSetting {
@@ -218,6 +227,7 @@ model Deadline {
   @@index([dueDate])
   @@index([groupId])
   @@index([type])
+  @@index([taskId])
 }
 
 model Reminder {
@@ -239,7 +249,5 @@ model Reminder {
   @@index([sent])
   @@index([read])
   @@index([offsetDays])
+  @@index([deadlineId, userId])
 }
-
-// Extend User model with new relation
-// Add to User model: createdDeadlines  Deadline[]

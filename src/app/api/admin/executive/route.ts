@@ -162,8 +162,10 @@ export async function GET() {
       }
     }
 
+    interface GroupPerf { groupId: string; name: string; avgScore: number; studentCount: number }
+
     const topGroups = groups
-      .map((g) => {
+      .map((g): GroupPerf | null => {
         const userIds = membersByGroup[g.id] || [];
         if (userIds.length === 0) return null;
         const allScores = userIds.flatMap((uid) => attemptsByUser[uid] || []);
@@ -175,8 +177,8 @@ export async function GET() {
           studentCount: userIds.length,
         };
       })
-      .filter(Boolean)
-      .sort((a, b) => (b as any).avgScore - (a as any).avgScore)
+      .filter((g): g is GroupPerf => g !== null)
+      .sort((a, b) => b.avgScore - a.avgScore)
       .slice(0, 5);
 
     const result = {

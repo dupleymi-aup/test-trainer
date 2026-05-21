@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const createAttemptSchema = z.object({
   taskId: z.string().min(1),
@@ -26,6 +27,12 @@ export async function POST(req: Request) {
   try {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`attemptSubmission:${ip}`, rateLimits.attemptSubmission);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json();
     const parsed = createAttemptSchema.safeParse(body);

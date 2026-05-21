@@ -4,6 +4,20 @@
  * For production with multiple server instances, replace with Redis-based limiting.
  */
 
+/**
+ * Extract client IP from request headers, considering proxy headers.
+ */
+export function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    // Take the first IP (original client)
+    return forwarded.split(",")[0].trim();
+  }
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp;
+  return "unknown";
+}
+
 interface RateLimitEntry {
   count: number;
   resetAt: number;
@@ -40,6 +54,22 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   adminSettings: { max: 10, windowMs: 15 * 60 * 1000 },
   /** Profile updates: 10 per 15 minutes */
   profileUpdate: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Admin user CRUD: 20 per 15 minutes */
+  adminUserCrud: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Admin group CRUD: 20 per 15 minutes */
+  adminGroupCrud: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Admin deadline CRUD: 20 per 15 minutes */
+  adminDeadlineCrud: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Admin cache invalidation: 10 per 15 minutes */
+  adminCacheInvalidate: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Admin role changes: 10 per 15 minutes (privilege escalation protection) */
+  adminRoleChange: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Attempt submissions: 30 per 15 minutes */
+  attemptSubmission: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Student reminder updates: 20 per 15 minutes */
+  studentReminders: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Student preferences updates: 10 per 15 minutes */
+  studentPreferences: { max: 10, windowMs: 15 * 60 * 1000 },
 };
 
 /**

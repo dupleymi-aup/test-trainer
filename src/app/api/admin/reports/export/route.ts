@@ -868,20 +868,22 @@ export async function POST(req: Request) {
       membersByGroup[m.groupId].push(m.userId);
     }
 
-    const groupScores = groups
-      .map((g) => {
+    interface GroupScore { name: string; avg: number; count: number }
+
+    const groupScores: GroupScore[] = groups
+      .map((g): GroupScore | null => {
         const userIds = membersByGroup[g.id] || [];
         const scores = userIds.flatMap((uid) => attemptsByUser[uid] || []);
         if (scores.length === 0) return null;
         return { name: g.name, avg: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length), count: scores.length };
       })
-      .filter(Boolean)
-      .sort((a, b) => (b as any).avg - (a as any).avg)
+      .filter((g): g is GroupScore => g !== null)
+      .sort((a, b) => b.avg - a.avg)
       .slice(0, 10);
 
     addSection(
       "Топ группы",
-      groupScores.map((g: any, i: number) => `${i + 1}. ${g.name} — ${g.avg}% (${g.count} попыток)`)
+      groupScores.map((g, i: number) => `${i + 1}. ${g.name} — ${g.avg}% (${g.count} попыток)`)
     );
 
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"));

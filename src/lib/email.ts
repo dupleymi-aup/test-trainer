@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { logger } from "@/lib/logger";
 
 interface SendEmailOptions {
   to: string;
@@ -49,7 +50,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
     });
     return true;
   } catch (error) {
-    console.error("[EMAIL] Failed to send email:", error);
+    logger.error("Failed to send email", error instanceof Error ? error : undefined);
     throw error;
   }
 }

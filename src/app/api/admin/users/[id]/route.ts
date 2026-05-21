@@ -2,46 +2,53 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
-  const { id } = await params;
-  const user = await db.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      role: true,
-      isActive: true,
-      deletedAt: true,
-      avatar: true,
-      bio: true,
-      university: true,
-      group: true,
-      createdAt: true,
-      updatedAt: true,
-      _count: {
-        select: {
-          attempts: true,
-          activityLogs: true,
-          groups: true,
+    const { id } = await params;
+    const user = await db.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        deletedAt: true,
+        avatar: true,
+        bio: true,
+        university: true,
+        group: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            attempts: true,
+            activityLogs: true,
+            groups: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    logger.error("Failed to fetch user", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
   }
-
-  return NextResponse.json({ user });
 }
 
 const updateUserSchema = z.object({
@@ -58,84 +65,106 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  const { id } = await params;
-  const body = await req.json();
-  const parsed = updateUserSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminUserCrud:${ip}`, rateLimits.adminUserCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
+
+    const { id } = await params;
+    const body = await req.json();
+    const parsed = updateUserSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    }
+
+    const existing = await db.user.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const user = await db.user.update({
+      where: { id },
+      data: parsed.data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        updatedAt: true,
+      },
+    });
+
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "USER_UPDATE",
+        entity: "User",
+        entityId: id,
+        details: JSON.stringify(parsed.data),
+      },
+    });
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    logger.error("Failed to update user", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
-
-  const existing = await db.user.findUnique({ where: { id } });
-  if (!existing) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  const user = await db.user.update({
-    where: { id },
-    data: parsed.data,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      role: true,
-      isActive: true,
-      updatedAt: true,
-    },
-  });
-
-  await db.activityLog.create({
-    data: {
-      userId: session.userId,
-      action: "USER_UPDATE",
-      entity: "User",
-      entityId: id,
-      details: JSON.stringify(parsed.data),
-    },
-  });
-
-  return NextResponse.json({ user });
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  const { id } = await params;
+    const ip = getClientIp(_req);
+    const rateLimit = checkRateLimit(`adminUserCrud:${ip}`, rateLimits.adminUserCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
-  // Prevent self-deletion
-  if (id === session.userId) {
-    return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+    const { id } = await params;
+
+    // Prevent self-deletion
+    if (id === session.userId) {
+      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+    }
+
+    const existing = await db.user.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Soft delete
+    await db.user.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "USER_DELETE",
+        entity: "User",
+        entityId: id,
+        details: JSON.stringify({ email: existing.email }),
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("Failed to delete user", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
-
-  const existing = await db.user.findUnique({ where: { id } });
-  if (!existing) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  // Soft delete
-  await db.user.update({
-    where: { id },
-    data: { deletedAt: new Date() },
-  });
-
-  await db.activityLog.create({
-    data: {
-      userId: session.userId,
-      action: "USER_DELETE",
-      entity: "User",
-      entityId: id,
-      details: JSON.stringify({ email: existing.email }),
-    },
-  });
-
-  return NextResponse.json({ success: true });
 }

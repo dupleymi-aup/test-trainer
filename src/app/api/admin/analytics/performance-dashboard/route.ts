@@ -78,7 +78,29 @@ export async function GET(req: NextRequest) {
       }))
     );
 
-    const studentData = students.map((s) => {
+    interface StudentMetrics {
+      avgScore: number;
+      bestScore: number;
+      avgEc: number;
+      avgBv: number;
+      totalAttempts: number;
+      attemptsLast7Days: number;
+      lastAttemptDate: string | null;
+      trend: string;
+      riskLevel: string;
+      riskScore: number;
+    }
+
+    interface StudentRow {
+      studentId: string;
+      name: string;
+      group: string;
+      university: string;
+      registeredAt: string;
+      metrics: StudentMetrics;
+    }
+
+    const studentData: StudentRow[] = students.map((s) => {
       const attempts = s.attempts;
       const riskResult = riskMap.get(s.id);
       const stats = riskResult?.stats;
@@ -110,8 +132,8 @@ export async function GET(req: NextRequest) {
     });
 
     // Sort
-    const sortFn = (a: any, b: any) => {
-      const key = sortBy as keyof typeof a.metrics;
+    const sortFn = (a: StudentRow, b: StudentRow) => {
+      const key = sortBy as keyof StudentMetrics;
       const aVal = a.metrics[key];
       const bVal = b.metrics[key];
       if (typeof aVal === "string" && typeof bVal === "string") {
