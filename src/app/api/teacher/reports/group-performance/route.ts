@@ -91,7 +91,7 @@ export async function GET(req: Request) {
   students.forEach((student) => {
     const attempts = student.attempts;
     const bestScore =
-      attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+      attempts.reduce((max, a) => Math.max(max, a.score), 0);
     const avgScore =
       attempts.length > 0
         ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length)

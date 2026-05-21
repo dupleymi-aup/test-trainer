@@ -36,7 +36,12 @@ export async function POST(
   const { session } = guard;
 
   const { id } = await params;
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const parsed = addMemberSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });

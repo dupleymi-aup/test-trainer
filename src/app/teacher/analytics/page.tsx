@@ -34,7 +34,7 @@ export default function TeacherAnalyticsPage() {
           <CardContent>
             <div className="flex gap-4 items-end h-32">
               {Object.entries(data.distribution).map(([range, count]) => {
-                const max = Math.max(...Object.values(data.distribution), 1);
+                const max = Object.values(data.distribution).reduce((m, v) => Math.max(m, v), 1);
                 const height = (count / max) * 100;
                 return (
                   <div key={range} className="flex-1 flex flex-col items-center gap-1">

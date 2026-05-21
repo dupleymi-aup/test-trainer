@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 /**
  * Sanitize a value to prevent CSV injection attacks.
+ * Excel/Calc can execute formulas if a cell starts with =, +, -, @.
+ * Also checks trimmed value to catch whitespace-prefixed attacks.
  */
 function sanitizeCSVValue(value: string): string {
-  if (value.startsWith("=") || value.startsWith("+") || value.startsWith("-") || value.startsWith("@")) {
+  const trimmed = value.trimStart();
+  if (trimmed.startsWith("=") || trimmed.startsWith("+") || trimmed.startsWith("-") || trimmed.startsWith("@")) {
     return "\t" + value;
   }
   return value;
@@ -84,7 +88,7 @@ export async function POST(req: Request) {
         return {
           id: s.id, name: s.name, email: s.email, group: s.group, university: s.university,
           attemptsCount: attempts.length,
-          bestScore: attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0,
+          bestScore: attempts.length > 0 ? attempts.reduce((max, a) => Math.max(max, a.score), 0) : 0,
           avgScore: attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length) : 0,
         };
       });
@@ -161,7 +165,7 @@ export async function POST(req: Request) {
       result.atRiskStudents = students.map((s) => {
         const attempts = s.attempts;
         if (attempts.length === 0) return null;
-        const bestScore = Math.max(...attempts.map((a) => a.score));
+        const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
         const avgScore = Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length);
         const lastAttempt = attempts[attempts.length - 1].createdAt;
         const first3 = attempts.slice(0, 3);
@@ -200,7 +204,7 @@ export async function POST(req: Request) {
         return {
           id: m.user.id, name: m.user.name, email: m.user.email, university: m.user.university,
           attemptsCount: attempts.length,
-          bestScore: attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0,
+          bestScore: attempts.length > 0 ? attempts.reduce((max, a) => Math.max(max, a.score), 0) : 0,
           avgScore: attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0,
         };
       });
@@ -217,7 +221,7 @@ export async function POST(req: Request) {
         return {
           id: s.id, name: s.name, email: s.email, group: s.group, university: s.university,
           attemptsCount: attempts.length,
-          bestScore: attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0,
+          bestScore: attempts.length > 0 ? attempts.reduce((max, a) => Math.max(max, a.score), 0) : 0,
           avgScore: attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length) : 0,
           registeredAt: s.createdAt.toISOString(),
         };
@@ -311,7 +315,7 @@ export async function POST(req: Request) {
 
     for (const s of students) {
       const attempts = s.attempts;
-      const bestScore = attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+      const bestScore = attempts.length > 0 ? attempts.reduce((max, a) => Math.max(max, a.score), 0) : 0;
       const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length) : 0;
       const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.ecCoverage, 0) / attempts.length) : 0;
       const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.bvCoverage, 0) / attempts.length) : 0;
@@ -480,7 +484,7 @@ export async function POST(req: Request) {
       const attempts = s.attempts;
       if (attempts.length === 0) continue;
 
-      const bestScore = Math.max(...attempts.map((a) => a.score));
+      const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
       const avgScore = Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length);
       const lastAttempt = attempts[attempts.length - 1].createdAt;
 
@@ -557,7 +561,7 @@ export async function POST(req: Request) {
 
     for (const m of group.members) {
       const attempts = m.user.attempts;
-      const bestScore = attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+      const bestScore = attempts.length > 0 ? attempts.reduce((max, a) => Math.max(max, a.score), 0) : 0;
       const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
       const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length) : 0;
       const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length) : 0;
@@ -609,7 +613,7 @@ export async function POST(req: Request) {
 
     for (const s of students) {
       const attempts = s.attempts;
-      const bestScore = attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+      const bestScore = attempts.length > 0 ? attempts.reduce((max, a) => Math.max(max, a.score), 0) : 0;
       const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length) : 0;
       const lastAttempt = attempts.length > 0 ? attempts[attempts.length - 1].createdAt : null;
 
@@ -709,7 +713,18 @@ export async function POST(req: Request) {
   const baseUrl = req.headers.get("host")
     ? `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
     : "http://localhost:3000";
-  const analytics = await fetch(`${baseUrl}/api/admin/analytics/comprehensive`).then((r) => r.json());
+
+  let analytics;
+  try {
+    const res = await fetch(`${baseUrl}/api/admin/analytics/comprehensive`);
+    if (!res.ok) {
+      throw new Error(`Internal fetch failed: HTTP ${res.status}`);
+    }
+    analytics = await res.json();
+  } catch (error) {
+    logger.error("Failed to fetch comprehensive analytics for export", error instanceof Error ? error : undefined);
+    analytics = { error: "Could not generate analytics report. Try again later." };
+  }
 
   return NextResponse.json(analytics, {
     headers: {

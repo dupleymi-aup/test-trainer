@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     // Enrich with progress stats (no N+1 — attempts already loaded)
     const studentsWithStats = students.map((student) => {
       const attempts = student.attempts;
-      const bestScore = attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+      const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
       const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length) : 0;
       const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length) : 0;
       const sorted = [...attempts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

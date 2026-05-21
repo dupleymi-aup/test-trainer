@@ -288,7 +288,7 @@ export async function GET(request: Request) {
   for (const [userId, attempts] of Object.entries(userAttemptsMap)) {
     if (attempts.length === 0) continue;
 
-    const bestScore = Math.max(...attempts.map((a) => a.score));
+    const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
     const lastAttempt = attempts[attempts.length - 1];
     const lastAttemptTime = lastAttempt.createdAt.getTime();
     const first3 = attempts.slice(0, 3);

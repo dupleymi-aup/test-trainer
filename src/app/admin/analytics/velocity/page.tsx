@@ -48,7 +48,7 @@ export default function VelocityPage() {
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Студентов</div><div className="text-2xl font-bold">{data.studentVelocity.length}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> Ср. скорость</div><div className="text-2xl font-bold">{avgVelocity}/нед</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Улучшают</div><div className="text-2xl font-bold text-emerald-600">{improving}</div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Макс. скорость</div><div className="text-2xl font-bold">{Math.max(...data.studentVelocity.map((v) => v.attemptsPerWeek), 0)}/нед</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Макс. скорость</div><div className="text-2xl font-bold">{data.studentVelocity.reduce((max, v) => Math.max(max, v.attemptsPerWeek), 0)}/нед</div></CardContent></Card>
         </div>
 
         {/* Weekly trend chart */}

@@ -36,7 +36,9 @@ export function NotificationsBell() {
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("Failed to fetch notifications:", err);
+      });
   }, []);
 
   const getNotificationIcon = (type: string) => {

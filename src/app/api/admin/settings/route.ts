@@ -32,11 +32,19 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      settings: settings.map((s) => ({
-        key: s.key,
-        value: JSON.parse(s.value),
-        updatedAt: s.updatedAt,
-      })),
+      settings: settings.map((s) => {
+        let parsedValue;
+        try {
+          parsedValue = JSON.parse(s.value);
+        } catch {
+          parsedValue = s.value;
+        }
+        return {
+          key: s.key,
+          value: parsedValue,
+          updatedAt: s.updatedAt,
+        };
+      }),
     });
   } catch (error) {
     logger.error("Failed to fetch settings", error instanceof Error ? error : undefined);
@@ -86,7 +94,13 @@ export async function PATCH(req: Request) {
       },
     });
 
-    return NextResponse.json({ setting: { key: setting.key, value: JSON.parse(setting.value) } });
+    let parsedValue;
+    try {
+      parsedValue = JSON.parse(setting.value);
+    } catch {
+      parsedValue = setting.value;
+    }
+    return NextResponse.json({ setting: { key: setting.key, value: parsedValue } });
   } catch (error) {
     logger.error("Failed to update settings", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });

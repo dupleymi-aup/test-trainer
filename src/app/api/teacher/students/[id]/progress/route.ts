@@ -44,7 +44,7 @@ export async function GET(
   }));
 
   // Compute stats
-  const bestScore = attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+  const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
   const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
   const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length) : 0;
   const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length) : 0;
@@ -80,7 +80,7 @@ export async function GET(
     return {
       taskId,
       taskName: meta?.name || `Задание ${taskId}`,
-      bestScore: Math.max(...atts.map((a) => a.score)),
+      bestScore: atts.reduce((max, a) => Math.max(max, a.score), 0),
       attemptsCount: atts.length,
       avgEc: Math.round(atts.reduce((s, a) => s + a.ecCoverage, 0) / atts.length),
       avgBv: Math.round(atts.reduce((s, a) => s + a.bvCoverage, 0) / atts.length),

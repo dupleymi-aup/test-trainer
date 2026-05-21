@@ -5,10 +5,11 @@ import { db } from "@/lib/db";
 /**
  * Sanitize a value to prevent CSV injection attacks.
  * Excel/Calc can execute formulas if a cell starts with =, +, -, @.
- * Prefixing with a tab neutralizes these attacks while keeping data readable.
+ * Also checks trimmed value to catch whitespace-prefixed attacks while keeping data readable.
  */
 function sanitizeCSVValue(value: string): string {
-  if (value.startsWith("=") || value.startsWith("+") || value.startsWith("-") || value.startsWith("@")) {
+  const trimmed = value.trimStart();
+  if (trimmed.startsWith("=") || trimmed.startsWith("+") || trimmed.startsWith("-") || trimmed.startsWith("@")) {
     return "\t" + value;
   }
   return value;
@@ -18,7 +19,12 @@ export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
   if ("response" in guard) return guard.response;
 
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const { groupId, startDate, endDate, exportType = "summary" } = body;
 
   // Build student query
@@ -131,7 +137,7 @@ export async function POST(req: Request) {
     for (const s of students) {
       const attempts = s.attempts;
       const bestScore =
-        attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+        attempts.reduce((max, a) => Math.max(max, a.score), 0);
       const avgScore =
         attempts.length > 0
           ? Math.round(
@@ -196,7 +202,7 @@ export async function POST(req: Request) {
     for (const s of students) {
       const attempts = s.attempts;
       const bestScore =
-        attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+        attempts.reduce((max, a) => Math.max(max, a.score), 0);
       const avgScore =
         attempts.length > 0
           ? Math.round(

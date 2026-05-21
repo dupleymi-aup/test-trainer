@@ -57,7 +57,7 @@ export function computeStudentStats(attempts: AttemptData[]): StatsResult {
   }
 
   return {
-    bestScore: Math.max(...attempts.map((a) => a.score)),
+    bestScore: attempts.reduce((max, a) => Math.max(max, a.score), 0),
     avgScore: Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length),
     avgEc: Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length),
     avgBv: Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length),

@@ -116,7 +116,7 @@ export async function GET(request: Request) {
     const riskFactors: string[] = [];
     const recommendations: string[] = [];
 
-    const bestScore = Math.max(...attempts.map((a) => a.score));
+    const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
     const avgScore = Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length);
     const avgEc = Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length);
     const avgBv = Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length);
@@ -271,7 +271,7 @@ export async function GET(request: Request) {
         : 0;
       const atRiskCount = g.members.filter((m) =>
         m.user.attempts.length > 0 &&
-        Math.max(...m.user.attempts.map((a) => a.score)) < 50
+        m.user.attempts.reduce((max, a) => Math.max(max, a.score), 0) < 50
       ).length;
 
       return {

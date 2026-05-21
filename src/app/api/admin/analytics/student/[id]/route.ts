@@ -77,7 +77,7 @@ export async function GET(
 
   const taskPerformance = Object.entries(taskAttemptsMap).map(([taskId, atts]) => {
     const meta = taskMap.get(taskId);
-    const bestScore = Math.max(...atts.map((a) => a.score));
+    const bestScore = atts.reduce((max, a) => Math.max(max, a.score), 0);
     const avgScore = Math.round(atts.reduce((s, a) => s + a.score, 0) / atts.length);
     const avgEc = Math.round(atts.reduce((s, a) => s + a.ecCoverage, 0) / atts.length);
     const avgBv = Math.round(atts.reduce((s, a) => s + a.bvCoverage, 0) / atts.length);
@@ -130,7 +130,7 @@ export async function GET(
 
     const groupBestScores = groupMembers.map((m) => {
       const userAttempts = m.user.attempts;
-      return userAttempts.length > 0 ? Math.max(...userAttempts.map((a) => a.score)) : 0;
+      return userAttempts.reduce((max, a) => Math.max(max, a.score), 0);
     });
     groupBestScores.sort((a, b) => b - a);
 
@@ -166,7 +166,7 @@ export async function GET(
   // Percentile by task
   const percentileByTask = taskPerformance.map((tp) => {
     const allForTask = attempts.filter((a) => a.taskId === tp.taskId);
-    const platformBest = Math.max(...allForTask.map((a) => a.score));
+    const platformBest = allForTask.reduce((max, a) => Math.max(max, a.score), 0);
     const platformAvg = Math.round(allForTask.reduce((s, a) => s + a.score, 0) / allForTask.length);
     return { taskId: tp.taskId, taskName: tp.taskName, studentBest: tp.bestScore, groupAvg: platformAvg };
   });

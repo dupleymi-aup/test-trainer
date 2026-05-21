@@ -41,7 +41,7 @@ export async function GET(
   // Members with stats
   const members = group.members.map((m) => {
     const attempts = m.user.attempts;
-    const bestScore = attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+    const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
     const avgScore = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
 
     // Trend
@@ -89,9 +89,7 @@ export async function GET(
     const avgScore = memberAttempts.length > 0
       ? Math.round(memberAttempts.reduce((s, a) => s + a.score, 0) / memberAttempts.length)
       : 0;
-    const bestScore = memberAttempts.length > 0
-      ? Math.max(...memberAttempts.map((a) => a.score))
-      : 0;
+    const bestScore = memberAttempts.reduce((max, a) => Math.max(max, a.score), 0);
     const completionRate = group.members.length > 0
       ? Math.round((uniqueMembers / group.members.length) * 100)
       : 0;

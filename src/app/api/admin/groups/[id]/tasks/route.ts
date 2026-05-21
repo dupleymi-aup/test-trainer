@@ -55,7 +55,12 @@ export async function POST(
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
 
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const parsed = assignTasksSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
@@ -120,7 +125,12 @@ export async function DELETE(
     });
   } else {
     // Remove multiple from body
-    const body = await req.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = assignTasksSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });

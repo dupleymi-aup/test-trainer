@@ -6,7 +6,12 @@ export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
   if ("response" in guard) return guard.response;
 
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const { groupId, startDate, endDate } = body;
 
   // Build student query
@@ -58,7 +63,7 @@ export async function POST(req: Request) {
   const studentsWithStats = students.map((student) => {
     const attempts = student.attempts;
     const bestScore =
-      attempts.length > 0 ? Math.max(...attempts.map((a) => a.score)) : 0;
+      attempts.reduce((max, a) => Math.max(max, a.score), 0);
     const avgScore =
       attempts.length > 0
         ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length)

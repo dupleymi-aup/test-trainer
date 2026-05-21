@@ -230,10 +230,12 @@ export function ExamMode() {
   };
 
   const beginExam = () => {
-    // Shuffle selected tasks
-    const shuffled = selectedTasks
-      .map((id) => tasks.find((t) => t.id === id)!)
-      .sort(() => Math.random() - 0.5);
+    // Shuffle selected tasks using Fisher-Yates
+    const shuffled = selectedTasks.map((id) => tasks.find((t) => t.id === id)!);
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     setExamTasks(shuffled);
     setExamTestCases({});
     setExamResults([]);
@@ -488,7 +490,11 @@ export function ExamMode() {
                 </button>
                 <button
                   onClick={() => {
-                    const shuffled = [...tasks].sort(() => Math.random() - 0.5);
+                    const shuffled = [...tasks];
+                    for (let i = shuffled.length - 1; i > 0; i--) {
+                      const j = Math.floor(Math.random() * (i + 1));
+                      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                    }
                     const picked = shuffled.slice(0, 5).map(t => t.id);
                     setSelectedTasks(picked);
                     setTimeLimit(15);
