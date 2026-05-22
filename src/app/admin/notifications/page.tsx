@@ -38,9 +38,10 @@ export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/teacher/notifications")
+    fetch("/api/admin/notifications")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -50,10 +51,11 @@ export default function AdminNotificationsPage() {
         setUnreadCount(data.unreadCount || 0);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
 
   return (
     <AdminLayout>

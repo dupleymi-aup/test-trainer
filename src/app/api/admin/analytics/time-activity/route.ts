@@ -117,6 +117,16 @@ export async function GET(request: Request) {
     }
   }
 
+  // Convert uniqueStudents Set to count for JSON serialization
+  const dailyDistributionSerialized = dailyDistribution.map((dd) => ({
+    day: dd.day,
+    name: dd.name,
+    attempts: dd.attempts,
+    avgScore: dd.avgScore,
+    avgTime: dd.avgTime,
+    uniqueStudents: dd.uniqueStudents.size,
+  }));
+
   // Find peak hours (top 5)
   for (let h = 0; h < 24; h++) {
     if (hourlyDistribution[h].attempts > 0) {
@@ -222,7 +232,7 @@ export async function GET(request: Request) {
   const result = {
     heatmap: heatmapCells,
     hourlyDistribution,
-    dailyDistribution,
+    dailyDistribution: dailyDistributionSerialized,
     topPeakHours,
     lowActivityHours,
     summary: {

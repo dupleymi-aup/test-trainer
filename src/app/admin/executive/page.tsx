@@ -44,16 +44,18 @@ const roleLabels: Record<string, string> = { STUDENT: "Студенты", TEACHE
 export default function ExecutivePage() {
   const [data, setData] = useState<ExecutiveData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/executive")
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
 
   const { kpi, roleDistribution, riskBreakdown, topRiskStudents, activityTrend, topGroups } = data;
 
@@ -105,7 +107,7 @@ export default function ExecutivePage() {
                   color: ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"][i],
                 }))}
                 centerLabel="Всего"
-                centerValue={kpi.totalStudents + kpi.totalTeachers + roleDistribution.find(r => r.role === "ADMIN")?._count}
+                centerValue={kpi.totalStudents + kpi.totalTeachers + roleDistribution.find(r => r.role === "ADMIN")?.count}
               />
             </CardContent>
           </Card>

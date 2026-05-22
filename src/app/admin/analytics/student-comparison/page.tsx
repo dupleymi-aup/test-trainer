@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -23,6 +23,8 @@ interface StudentComparisonData {
   count: number;
 }
 
+type StudentData = StudentComparisonData["students"][number];
+
 function TrendBadge({ trend }: { trend: string }) {
   const colors = { improving: "bg-emerald-100 text-emerald-700", declining: "bg-rose-100 text-rose-700", stable: "bg-gray-100 text-gray-700" };
   const labels = { improving: "Рост", declining: "Снижение", stable: "Стабильно" };
@@ -32,16 +34,22 @@ function TrendBadge({ trend }: { trend: string }) {
 export default function StudentComparisonPage() {
   const [data, setData] = useState<StudentComparisonData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [studentIds, setStudentIds] = useState("");
 
   const fetchData = async () => {
     if (!studentIds.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const r = await fetch(`/api/admin/analytics/student-comparison?studentIds=${encodeURIComponent(studentIds.trim())}`);
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!r.ok) {
+        const body = await r.text().catch(() => "");
+        throw new Error(`HTTP ${r.status}${body ? `: ${body}` : ""}`);
+      }
       setData(await r.json());
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
       setData(null);
     } finally {
       setLoading(false);
@@ -111,7 +119,11 @@ export default function StudentComparisonPage() {
 
         {loading && <div className="text-center py-8">Загрузка...</div>}
 
-        {!loading && !data && (
+        {error && !loading && (
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+        )}
+
+        {!loading && !data && !error && (
           <Card><CardContent className="py-12 text-center text-muted-foreground">Введите ID студентов для сравнения</CardContent></Card>
         )}
 
@@ -130,14 +142,14 @@ export default function StudentComparisonPage() {
                   </thead>
                   <tbody>
                     {[
-                      { label: "Ср. балл", fn: (s: any) => <Badge variant={s.metrics.avgScore >= 75 ? "default" : s.metrics.avgScore >= 50 ? "secondary" : "destructive"}>{s.metrics.avgScore}%</Badge> },
-                      { label: "Лучший балл", fn: (s: any) => <Badge variant="default">{s.metrics.bestScore}%</Badge> },
-                      { label: "Ср. EC", fn: (s: any) => <span>{s.metrics.avgEc}%</span> },
-                      { label: "Ср. BV", fn: (s: any) => <span>{s.metrics.avgBv}%</span> },
-                      { label: "Корректность", fn: (s: any) => <span>{s.metrics.avgCorrectness}%</span> },
-                      { label: "Ср. время", fn: (s: any) => <span>{formatTime(s.metrics.avgTime)}</span> },
-                      { label: "Попытки", fn: (s: any) => <span>{s.metrics.totalAttempts}</span> },
-                      { label: "Тренд", fn: (s: any) => <TrendBadge trend={s.metrics.trend} /> },
+                      { label: "Ср. балл", fn: (s: StudentData) => <Badge variant={s.metrics.avgScore >= 75 ? "default" : s.metrics.avgScore >= 50 ? "secondary" : "destructive"}>{s.metrics.avgScore}%</Badge> },
+                      { label: "Лучший балл", fn: (s: StudentData) => <Badge variant="default">{s.metrics.bestScore}%</Badge> },
+                      { label: "Ср. EC", fn: (s: StudentData) => <span>{s.metrics.avgEc}%</span> },
+                      { label: "Ср. BV", fn: (s: StudentData) => <span>{s.metrics.avgBv}%</span> },
+                      { label: "Корректность", fn: (s: StudentData) => <span>{s.metrics.avgCorrectness}%</span> },
+                      { label: "Ср. время", fn: (s: StudentData) => <span>{formatTime(s.metrics.avgTime)}</span> },
+                      { label: "Попытки", fn: (s: StudentData) => <span>{s.metrics.totalAttempts}</span> },
+                      { label: "Тренд", fn: (s: StudentData) => <TrendBadge trend={s.metrics.trend} /> },
                     ].map((row) => (
                       <tr key={row.label} className="border-b">
                         <td className="p-2 font-medium">{row.label}</td>
@@ -182,9 +194,24 @@ export default function StudentComparisonPage() {
                       <YAxis className="text-xs" domain={[0, 100]} />
                       <Tooltip />
                       <Legend />
-                      {data.students.map((s, i) => (
-                        <Line key={s.student.id} type="monotone" dataKey="score" name={s.student.name} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 3 }} filter={(d: any) => d.payload.student === s.student.name} />
-                      ))}
+                      {data.students.map((s, i) => {
+                        const studentTrajectory = s.trajectory.map((t) => ({
+                          attempt: t.attempt,
+                          score: t.score,
+                        }));
+                        return (
+                          <Line
+                            key={s.student.id}
+                            type="monotone"
+                            data={studentTrajectory}
+                            dataKey="score"
+                            name={s.student.name}
+                            stroke={colors[i % colors.length]}
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                          />
+                        );
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (

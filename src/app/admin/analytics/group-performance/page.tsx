@@ -40,16 +40,17 @@ interface GroupData {
 export default function AdminGroupPerformancePage() {
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/teacher/reports/group-performance")
+    fetch("/api/admin/analytics/group-performance")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((data) => { setGroups(data.groups || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
   }, []);
 
   const toggleGroup = (groupName: string) => {
@@ -60,6 +61,7 @@ export default function AdminGroupPerformancePage() {
   };
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
 
   return (
     <AdminLayout>

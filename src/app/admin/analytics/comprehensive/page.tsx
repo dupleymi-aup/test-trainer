@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 import {
   AreaChart,
   Area,
@@ -79,9 +80,7 @@ export default function ComprehensiveAnalyticsPage() {
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const scoreBadge = (score: number) => (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>{score}%</Badge>
-  );
+  const { kpi, universityBreakdown, teacherMetrics, timeDistribution, peakHours, lowActivityHours } = data;
 
   return (
     <AdminLayout>
@@ -169,7 +168,7 @@ export default function ComprehensiveAnalyticsPage() {
                     <TableRow key={u.university}>
                       <TableCell className="font-medium">{u.university}</TableCell>
                       <TableCell className="text-right">{u.studentCount}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(u.avgScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={u.avgScore} /></TableCell>
                       <TableCell className="text-right">{u.totalAttempts}</TableCell>
                     </TableRow>
                   ))}
@@ -194,7 +193,7 @@ export default function ComprehensiveAnalyticsPage() {
                       <TableCell className="font-medium">{t.name}</TableCell>
                       <TableCell className="text-right">{t.groupsCount}</TableCell>
                       <TableCell className="text-right">{t.studentsCount}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(t.avgStudentScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={t.avgStudentScore} /></TableCell>
                       <TableCell className="text-right">
                         {t.trend === "improving" ? <TrendingUp className="h-4 w-4 text-green-600 inline" /> :
                          t.trend === "declining" ? <TrendingDown className="h-4 w-4 text-rose-600 inline" /> :

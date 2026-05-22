@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
+import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import {
   BarChart,
   Bar,
@@ -68,15 +70,7 @@ export default function UniversityComparisonPage() {
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const scoreBadge = (score: number) => (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>{score}%</Badge>
-  );
-
-  const trendIcon = (trend: string) => {
-    if (trend === "improving") return <TrendingUp className="h-4 w-4 text-green-600 inline" />;
-    if (trend === "declining") return <TrendingDown className="h-4 w-4 text-rose-600 inline" />;
-    return <Minus className="h-4 w-4 text-muted-foreground inline" />;
-  };
+  const universities = data.universities;
 
   const barData = data.universities.slice(0, 10).map((u) => ({
     name: u.university.length > 20 ? u.university.slice(0, 20) + "..." : u.university,
@@ -168,8 +162,8 @@ export default function UniversityComparisonPage() {
                       <TableCell className="font-bold">{i + 1}</TableCell>
                       <TableCell className="font-medium">{u.university}</TableCell>
                       <TableCell className="text-right">{u.studentCount}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(u.avgScore)}</TableCell>
-                      <TableCell className="text-right">{trendIcon(u.trend)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={u.avgScore} /></TableCell>
+                      <TableCell className="text-right"><TrendIndicator trend={u.trend} compact /></TableCell>
                     </TableRow>
                   ))}
                   {data.universities.length === 0 && (

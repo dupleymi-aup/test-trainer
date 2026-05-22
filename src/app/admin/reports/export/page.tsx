@@ -193,8 +193,8 @@ export default function AdminExportPage() {
       .then((data) => {
         if (Array.isArray(data)) setGroups(data);
       })
-      .catch((err) => {
-        console.warn("Failed to fetch groups:", err);
+      .catch(() => {
+        // Non-critical: groups filter is optional
       });
   }, []);
 
@@ -209,7 +209,9 @@ export default function AdminExportPage() {
         setHistoryTotal(data.pagination?.total || 0);
         setHistoryPage(data.pagination?.page || 1);
       })
-      .catch((err) => console.warn("Failed to fetch export history:", err));
+      .catch(() => {
+        // Non-critical: export history is optional
+      });
   };
 
   useEffect(() => {

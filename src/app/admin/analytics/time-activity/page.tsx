@@ -35,6 +35,7 @@ interface DailyData {
   attempts: number;
   avgScore: number;
   avgTime: number;
+  uniqueStudents: number;
 }
 
 interface Summary {
@@ -140,7 +141,7 @@ export default function TimeActivityPage() {
     day: d.name,
     attempts: d.attempts,
     avgScore: d.avgScore,
-    students: d.uniqueStudents?.size || 0,
+    students: d.uniqueStudents,
   }));
 
   return (
