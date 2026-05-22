@@ -3,6 +3,23 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const validSettingKeys = [
+  "maxLoginAttempts",
+  "sessionDuration",
+  "allowRegistration",
+  "passwordMinLength",
+  "dataRetentionDays",
+  "emailNotifications",
+  "smsNotifications",
+  "rateLimitWindow",
+];
+
+const updateSettingSchema = z.object({
+  key: z.enum(validSettingKeys as [string, ...string[]]),
+  value: z.union([z.string(), z.number(), z.boolean(), z.null()]),
+});
 
 export async function GET() {
   try {
@@ -65,11 +82,16 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { key, value } = body;
+    const parsed = updateSettingSchema.safeParse(body);
 
-    if (!key) {
-      return NextResponse.json({ error: "Key is required" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
     }
+
+    const { key, value } = parsed.data;
 
     const setting = await db.systemSetting.upsert({
       where: { key },

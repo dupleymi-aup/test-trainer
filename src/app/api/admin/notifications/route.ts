@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const createNotificationSchema = z.object({
+  type: z.string().max(100),
+  severity: z.string().max(50),
+  title: z.string().max(200),
+  message: z.string().max(2000).optional().nullable(),
+  entity: z.string().max(100).optional().nullable(),
+  entityId: z.string().max(100).optional().nullable(),
+  actionUrl: z.string().max(500).optional().nullable(),
+});
+
+const markReadSchema = z.object({
+  ids: z.array(z.string()).optional(),
+});
 
 /**
  * GET /api/admin/notifications
@@ -60,7 +75,16 @@ export async function PATCH(req: NextRequest) {
     if ("response" in guard) return guard.response;
 
     const body = await req.json().catch(() => ({}));
-    const { ids } = body as { ids?: string[] };
+    const parsed = markReadSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { ids } = parsed.data;
 
     if (ids && ids.length > 0) {
       await db.notification.updateMany({
@@ -91,14 +115,16 @@ export async function POST(req: NextRequest) {
     if ("response" in guard) return guard.response;
 
     const body = await req.json();
-    const { type, severity, title, message, entity, entityId, actionUrl } = body;
+    const parsed = createNotificationSchema.safeParse(body);
 
-    if (!type || !severity || !title) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "type, severity, and title are required" },
+        { error: "Invalid data", details: parsed.error.errors },
         { status: 400 }
       );
     }
+
+    const { type, severity, title, message, entity, entityId, actionUrl } = parsed.data;
 
     const notification = await db.notification.create({
       data: {

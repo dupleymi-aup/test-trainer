@@ -3,6 +3,27 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const exportReportSchema = z.object({
+  reportType: z.enum([
+    "comprehensive",
+    "teacher-performance",
+    "task-insights",
+    "predictions",
+    "group-detailed",
+    "student-list",
+    "attempt-log",
+    "item-difficulty",
+    "time-score-correlation",
+    "completion-funnel",
+    "error-patterns",
+  ]).default("comprehensive"),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  format: z.enum(["csv", "json", "pdf"]).default("csv"),
+  groupId: z.string().optional(),
+});
 
 /**
  * Sanitize a value to prevent CSV injection attacks.
@@ -39,8 +60,22 @@ export async function POST(req: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
 
-  const body = await req.json();
-  const { reportType = "comprehensive", startDate, endDate, format = "csv", groupId } = body;
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const parsed = exportReportSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid data", details: parsed.error.errors },
+      { status: 400 }
+    );
+  }
+
+  const { reportType, startDate, endDate, format, groupId } = parsed.data;
 
   const userId = guard.session.userId;
 
@@ -589,7 +624,6 @@ export async function POST(req: Request) {
   }
 
   if (reportType === "group-detailed") {
-    const { groupId } = body;
     if (!groupId) {
       return NextResponse.json({ error: "groupId is required for group-detailed export" }, { status: 400 });
     }

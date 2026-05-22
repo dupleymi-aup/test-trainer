@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const exportJsonSchema = z.object({
+  groupId: z.string().optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+});
 
 export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
@@ -14,7 +21,16 @@ export async function POST(req: Request) {
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
-    const { groupId, startDate, endDate } = body;
+
+    const parsed = exportJsonSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { groupId, startDate, endDate } = parsed.data;
 
     // Build student query
     const where: Record<string, unknown> = {

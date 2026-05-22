@@ -2,6 +2,14 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const exportSchema = z.object({
+  groupId: z.string().optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  exportType: z.enum(["summary", "detailed", "at-risk"]).default("summary"),
+});
 
 /**
  * Sanitize a value to prevent CSV injection attacks.
@@ -27,7 +35,16 @@ export async function POST(req: Request) {
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
-    const { groupId, startDate, endDate, exportType = "summary" } = body;
+
+    const parsed = exportSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { groupId, startDate, endDate, exportType } = parsed.data;
 
     // Build student query
     const where: Record<string, unknown> = {

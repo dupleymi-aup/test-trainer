@@ -4,6 +4,17 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const updateReminderSchema = z.object({
+  reminderId: z.string().optional(),
+  action: z.enum(["mark_read", "mark_all_read"]),
+}).refine((data) => {
+  if (data.action === "mark_read" && !data.reminderId) {
+    return { error: "reminderId is required for mark_read action", path: ["reminderId"] };
+  }
+  return true;
+});
 
 export async function GET() {
   try {
@@ -69,7 +80,16 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json();
-    const { reminderId, action } = body;
+    const parsed = updateReminderSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { reminderId, action } = parsed.data;
 
     if (action === "mark_read") {
       await db.reminder.updateMany({

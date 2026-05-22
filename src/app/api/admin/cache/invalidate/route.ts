@@ -3,6 +3,11 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { invalidateCache, clearCache, getCacheStats } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { z } from "zod";
+
+const invalidateCacheSchema = z.object({
+  pattern: z.string().max(200).regex(/^[a-zA-Z0-9\-_.*:]*$/).optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +21,16 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { pattern } = body as { pattern?: string };
+    const parsed = invalidateCacheSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { pattern } = parsed.data;
 
     if (pattern) {
       const count = invalidateCache(pattern);

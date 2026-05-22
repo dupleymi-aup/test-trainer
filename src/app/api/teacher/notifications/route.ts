@@ -11,6 +11,11 @@ const notificationSchema = z.object({
   studentId: z.string().optional(),
 });
 
+const updateNotificationSchema = z.object({
+  notificationId: z.string(),
+  read: z.boolean(),
+});
+
 export async function GET() {
   try {
     const guard = await requireTeacherOrAdmin();
@@ -101,7 +106,16 @@ export async function PATCH(req: Request) {
     if ("response" in guard) return guard.response;
 
     const body = await req.json();
-    const { notificationId, read } = body;
+    const parsed = updateNotificationSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid data", details: parsed.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { notificationId: _notificationId, read: _read } = parsed.data;
 
     // Mark as read (in this case, we just log it)
     // Since ActivityLog doesn't have a read field, we just return success
