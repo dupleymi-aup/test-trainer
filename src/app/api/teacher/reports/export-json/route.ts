@@ -13,6 +13,7 @@ const exportJsonSchema = z.object({
 export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
   if ("response" in guard) return guard.response;
+  const { session } = guard;
 
   try {
     let body: Record<string, unknown>;
@@ -32,15 +33,27 @@ export async function POST(req: Request) {
 
     const { groupId, startDate, endDate } = parsed.data;
 
+    // Require groupId to prevent teachers from exporting all students on the platform
+    if (!groupId) {
+      return NextResponse.json({ error: "groupId is required" }, { status: 400 });
+    }
+
+    // Verify the teacher owns this group (admins can export any group)
+    const group = await db.group.findUnique({ where: { id: groupId }, select: { createdByUserId: true } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    if (session.role !== "ADMIN" && group.createdByUserId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden: you can only export data from your own groups" }, { status: 403 });
+    }
+
     // Build student query
     const where: Record<string, unknown> = {
       role: "STUDENT",
       deletedAt: null,
+      groups: { some: { groupId } },
     };
-
-    if (groupId) {
-      where.groups = { some: { groupId } };
-    }
 
     const students = await db.user.findMany({
       where,

@@ -43,6 +43,18 @@ export async function POST(
     const { session } = guard;
 
     const { id } = await params;
+
+    // Verify group exists and user has permission
+    const group = await db.group.findUnique({ where: { id }, select: { createdByUserId: true } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    // Only group creator or admin can add members
+    if (session.role !== "ADMIN" && group.createdByUserId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden: you can only manage members of your own groups" }, { status: 403 });
+    }
+
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -84,6 +96,7 @@ export async function DELETE(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const { id } = await params;
     const { searchParams } = new URL(req.url);
@@ -91,6 +104,17 @@ export async function DELETE(
 
     if (!userId) {
       return NextResponse.json({ error: "userId is required" }, { status: 400 });
+    }
+
+    // Verify group exists and user has permission
+    const group = await db.group.findUnique({ where: { id }, select: { createdByUserId: true } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    // Only group creator or admin can remove members
+    if (session.role !== "ADMIN" && group.createdByUserId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden: you can only manage members of your own groups" }, { status: 403 });
     }
 
     await db.userGroup.delete({
