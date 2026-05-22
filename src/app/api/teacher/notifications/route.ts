@@ -16,12 +16,12 @@ export async function GET() {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 
-    const { user } = guard;
+    const { session } = guard;
 
     // Get notifications for this teacher
     const notifications = await db.activityLog.findMany({
       where: {
-        userId: user.id,
+        userId: session.userId,
         action: { startsWith: "ALERT_" },
         createdAt: {
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // last 7 days
@@ -57,10 +57,10 @@ export async function POST(req: Request) {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 
-    const { user } = guard;
+    const { session } = guard;
 
     // Rate limit: 20 notifications per hour per teacher
-    const result = checkRateLimit(`notifications:${user.id}`, rateLimits.notifications);
+    const result = checkRateLimit(`notifications:${session.userId}`, rateLimits.notifications);
     if (result.limited) {
       return createRateLimitResponse(result.resetAt);
     }
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     // Create notification
     const notification = await db.activityLog.create({
       data: {
-        userId: user.id,
+        userId: session.userId,
         action: `ALERT_${type}`,
         entity: "Student",
         entityId: studentId,

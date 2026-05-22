@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
+import { secureCompare } from "@/lib/crypto";
 
 // Send reminders for deadlines approaching within the specified hours
 export async function POST(req: Request) {
@@ -10,10 +11,10 @@ export async function POST(req: Request) {
     // Support both admin session (manual trigger) and cron secret (automated)
     let userId: string | undefined;
 
-    // Try cron secret first
+    // Try cron secret first using constant-time comparison to prevent timing attacks
     const authHeader = req.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ") && process.env.CRON_SECRET) {
-      if (authHeader.slice(7) === process.env.CRON_SECRET) {
+      if (secureCompare(authHeader.slice(7), process.env.CRON_SECRET)) {
         userId = "cron";
       }
     }
