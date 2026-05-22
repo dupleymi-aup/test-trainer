@@ -139,7 +139,7 @@ function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases:
   const uncovered = useMemo(() => {
     if (!task || testCases.length === 0) return null;
     const result = evaluateTestCases(task, testCases);
-    if (result.uncoveredEcIds.length === 0 && result.uncoveredBvDescriptions.size === 0) return null;
+    if (result.uncoveredEcIds.length === 0 && result.uncoveredBvDescriptions.length === 0) return null;
 
     const uncoveredEcs = result.uncoveredEcIds
       .map((id) => task.equivalenceClasses.find((ec) => ec.id === id))
@@ -147,7 +147,7 @@ function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases:
       .map((ec) => ({ id: ec!.id, name: ec!.name, description: ec!.description }));
 
     const uncoveredBvs = task.boundaryValues
-      .filter((bv) => result.uncoveredBvDescriptions.has(bv.description))
+      .filter((bv) => result.uncoveredBvDescriptions.includes(bv.description))
       .map((bv) => ({ description: bv.description, value: bv.value }));
 
     return { ecs: uncoveredEcs, bvs: uncoveredBvs };

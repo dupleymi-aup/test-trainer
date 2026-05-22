@@ -71,9 +71,9 @@ export default function AdminTopicHeatmapPage() {
   const [topicSummary, setTopicSummary] = useState<TopicSummary[]>([]);
   const [groupNames, setGroupNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<Partial<FilterState>>({});
 
-  const fetchData = (f: FilterState) => {
+  const fetchData = (f: Partial<FilterState>) => {
     setFilters(f);
     const params = new URLSearchParams();
     if (f.startDate) params.set("startDate", f.startDate);
@@ -110,7 +110,7 @@ export default function AdminTopicHeatmapPage() {
           </p>
         </div>
 
-        <AnalyticsFilterBar onFilterChange={fetchData} filters={filters} />
+        <AnalyticsFilterBar onFilterChange={fetchData} />
 
         {/* Topic Heatmap Matrix */}
         <Card>

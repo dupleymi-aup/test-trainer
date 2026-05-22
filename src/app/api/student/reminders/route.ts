@@ -84,7 +84,7 @@ export async function PATCH(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.errors },
+        { error: "Invalid data", details: parsed.error.message },
         { status: 400 }
       );
     }

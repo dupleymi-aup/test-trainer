@@ -16,9 +16,12 @@ import { Filter, X } from "lucide-react";
 export interface FilterState {
   dateFrom: string;
   dateTo: string;
+  startDate: string;
+  endDate: string;
   groupId: string;
   university: string;
   riskLevel: string;
+  studentId: string;
 }
 
 interface AnalyticsFilterBarProps {
@@ -65,12 +68,12 @@ export function AnalyticsFilterBar({
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
         })
-        .then((d) => {
+        .then((d: any) => {
           if (d.universityPerformance) {
-            const unis = d.universityPerformance.map(
-              (u: { university: string }) => u.university
+            const unis = (d.universityPerformance as Array<{ university: string }>).map(
+              (u) => u.university
             );
-            setUniversities([...new Set(unis)].filter(Boolean));
+            setUniversities([...new Set(unis)].filter(Boolean) as string[]);
           }
         })
         .catch((err) => console.warn("Failed to fetch university performance:", err));
@@ -78,7 +81,7 @@ export function AnalyticsFilterBar({
   }, [showUniversityFilter]);
 
   const handleApply = () => {
-    onFilterChange({ dateFrom, dateTo, groupId, university, riskLevel: showRiskFilter ? riskLevel : "" });
+    onFilterChange({ dateFrom, dateTo, startDate: "", endDate: "", groupId, university, riskLevel: showRiskFilter ? riskLevel : "", studentId: "" });
   };
 
   const handleReset = () => {
@@ -87,7 +90,7 @@ export function AnalyticsFilterBar({
     setGroupId("");
     setUniversity("");
     setRiskLevel("");
-    onFilterChange({ dateFrom: "", dateTo: "", groupId: "", university: "", riskLevel: "" });
+    onFilterChange({ dateFrom: "", dateTo: "", startDate: "", endDate: "", groupId: "", university: "", riskLevel: "", studentId: "" });
   };
 
   const hasActiveFilters = dateFrom || dateTo || groupId || university || (showRiskFilter && riskLevel);

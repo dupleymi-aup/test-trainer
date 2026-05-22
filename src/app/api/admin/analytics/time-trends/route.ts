@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     // If groupId is provided, get student IDs from that group
     let userIdFilter: Record<string, unknown> | undefined;
     if (groupId) {
-      const groupMembers = await db.groupMember.findMany({
+      const groupMembers = await db.userGroup.findMany({
         where: { groupId },
         select: { userId: true },
       });

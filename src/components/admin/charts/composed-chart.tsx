@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ComposedChart,
+  ComposedChart as RechartsComposedChart,
   Bar,
   Line,
   XAxis,
@@ -49,7 +49,7 @@ export function ComposedChart({
         </h3>
       )}
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart>
+        <RechartsComposedChart>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis
             dataKey="label"
@@ -93,7 +93,7 @@ export function ComposedChart({
               }}
             />
           )}
-        </ComposedChart>
+        </RechartsComposedChart>
       </ResponsiveContainer>
     </div>
   );

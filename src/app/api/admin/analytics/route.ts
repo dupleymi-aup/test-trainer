@@ -89,7 +89,7 @@ export async function GET() {
 
   // Performance Distribution
   const allAttempts = await db.attempt.findMany({
-    select: { score: true },
+    select: { taskId: true, score: true },
     take: 1000,
     orderBy: { createdAt: "desc" },
   });

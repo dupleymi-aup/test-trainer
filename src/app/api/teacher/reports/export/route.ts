@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     const parsed = exportSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.errors },
+        { error: "Invalid data", details: parsed.error.message },
         { status: 400 }
       );
     }

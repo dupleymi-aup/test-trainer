@@ -444,7 +444,7 @@ export function useTrainerState() {
         ecDescription: ec.description,
         suggestedInput,
         exampleValues: ec.exampleValues.map((v) => Array.isArray(v) ? v.join(", ") : String(v)),
-        taskId: selectedTask.id,
+        taskId: String(selectedTask.id),
       },
     }));
   }, [selectedTask, testCases]);
@@ -553,7 +553,7 @@ export function useTrainerState() {
     });
 
     saveAttempt({
-      taskId: selectedTask.id,
+      taskId: String(selectedTask.id),
       score: result.overallScore,
       ecCoverage: result.ecCoverage,
       bvCoverage: result.boundaryCoverage,
@@ -570,7 +570,7 @@ export function useTrainerState() {
     // Sync to server (fire-and-forget)
     const timeSpentSeconds = elapsedTime > 0 ? elapsedTime : 0;
     syncAttemptToServer({
-      taskId: selectedTask.id,
+      taskId: String(selectedTask.id),
       testCases: testCases.map((tc) => ({
         id: tc.id,
         inputs: tc.inputs,

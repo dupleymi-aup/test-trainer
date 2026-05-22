@@ -79,7 +79,7 @@ export async function PATCH(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.errors },
+        { error: "Invalid data", details: parsed.error.message },
         { status: 400 }
       );
     }
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.errors },
+        { error: "Invalid data", details: parsed.error.message },
         { status: 400 }
       );
     }

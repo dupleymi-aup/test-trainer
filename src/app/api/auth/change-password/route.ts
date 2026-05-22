@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: parsed.error.errors },
+        { error: "Неверные данные", details: parsed.error.message },
         { status: 400 }
       );
     }

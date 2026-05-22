@@ -78,6 +78,10 @@ export async function GET(req: Request) {
       });
     }
 
+    if (!period2Start || !period2End) {
+      return NextResponse.json({ error: "Both period2Start and period2End are required" }, { status: 400 });
+    }
+
     // Check cache
     const cacheKey = makeCacheKey("compare-periods", { period1Start, period1End, period2Start, period2End, groupId, university });
     const cached = getCache(cacheKey);

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertTriangle, AlertCircle, Info, RefreshCw } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
-import { AnalyticsFilterBar } from "@/components/admin/analytics/analytics-filter-bar";
+import { AnalyticsFilterBar, type FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface AnomalyEntry {
   studentId: string;
@@ -54,9 +54,10 @@ export default function AnomaliesPage() {
   const [loading, setLoading] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
-  const fetchData = async (params: Record<string, string> = {}) => {
+  const fetchData = async (params: Partial<FilterState> = {}) => {
     setLoading(true);
-    const qs = new URLSearchParams(params).toString();
+    const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
+    const qs = new URLSearchParams(entries).toString();
     try {
       const r = await fetch(`/api/admin/analytics/anomalies${qs ? `?${qs}` : ""}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);

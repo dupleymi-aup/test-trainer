@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Укажите телефон и код", details: parsed.error.errors },
+        { error: "Укажите телефон и код", details: parsed.error.message },
         { status: 400 }
       );
     }

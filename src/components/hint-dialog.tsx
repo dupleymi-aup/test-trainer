@@ -10,8 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb, ChevronRight, Plus } from "lucide-react";
-import { tasks, runReferenceFunction } from "@/lib/tasks";
-import type { TestCase, TestCaseCategory } from "@/lib/tasks";
+import { tasks, runReferenceFunction, type TestCaseCategory } from "@/lib/tasks";
+import type { TestCase } from "@/lib/evaluator";
 import { toast } from "sonner";
 
 interface HintInfo {
@@ -84,7 +84,7 @@ export function HintDialog({
 
   const expectedOutput = step >= 1 ? generateExpectedOutput(hint.suggestedInput.split(", ").map((s) => s.trim())) : null;
   const hasError = expectedOutput?.startsWith("Ошибка:");
-  const category = expectedOutput ? inferCategory(hint.ecDescription, hasError) : null;
+  const category = expectedOutput ? inferCategory(hint.ecDescription, hasError ?? false) : null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setOpen(false); }}>

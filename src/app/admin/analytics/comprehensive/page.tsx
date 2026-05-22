@@ -80,8 +80,6 @@ export default function ComprehensiveAnalyticsPage() {
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const { kpi, universityBreakdown, teacherMetrics, timeDistribution, peakHours, lowActivityHours } = data;
-
   return (
     <AdminLayout>
       <div className="space-y-6">

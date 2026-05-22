@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Отсутствует токен", details: parsed.error.errors },
+        { error: "Отсутствует токен", details: parsed.error.message },
         { status: 400 }
       );
     }

@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     // If groupId is provided, get student IDs from that group
     let userIdFilter: Set<string> | null = null;
     if (groupId) {
-      const groupMembers = await db.groupMember.findMany({
+      const groupMembers = await db.userGroup.findMany({
         where: { groupId },
         select: { userId: true },
       });
@@ -213,25 +213,32 @@ export async function GET(request: Request) {
 
   const teacherLeaderboard = teachers
     .map((t) => {
-      const allStudentAttempts = t.createdGroups.flatMap((g) =>
-        g.members.flatMap((m) => m.user.attempts)
-      );
-      const uniqueStudents = new Set(
-        t.createdGroups.flatMap((g) => g.members.map((m) => m.user.id))
-      );
-      const avgScore = allStudentAttempts.length > 0
-        ? Math.round(allStudentAttempts.reduce((s, a) => s + a.score, 0) / allStudentAttempts.length)
+      // Collect attempts with userId tracking
+      const allAttempts: Array<{ userId: string; score: number; ecCoverage: number; bvCoverage: number; createdAt: Date }> = [];
+      const uniqueStudents = new Set<string>();
+
+      for (const g of t.createdGroups) {
+        for (const m of g.members) {
+          uniqueStudents.add(m.user.id);
+          for (const a of m.user.attempts) {
+            allAttempts.push({ userId: m.user.id, ...a });
+          }
+        }
+      }
+
+      const avgScore = allAttempts.length > 0
+        ? Math.round(allAttempts.reduce((s, a) => s + a.score, 0) / allAttempts.length)
         : 0;
 
       // Pre-group attempts by userId for O(1) lookup
-      const attemptsByStudent: Record<string, typeof allStudentAttempts> = {};
-      for (const a of allStudentAttempts) {
+      const attemptsByStudent: Record<string, typeof allAttempts> = {};
+      for (const a of allAttempts) {
         if (!attemptsByStudent[a.userId]) attemptsByStudent[a.userId] = [];
         attemptsByStudent[a.userId].push(a);
       }
 
       // Calculate trend (first 10 vs last 10 attempts) — sort once by pre-parsed timestamps
-      const sorted = [...allStudentAttempts].sort(
+      const sorted = [...allAttempts].sort(
         (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
       );
       const first10 = sorted.slice(0, 10);
@@ -255,12 +262,12 @@ export async function GET(request: Request) {
         groupsCount: t.createdGroups.length,
         studentsCount: uniqueStudents.size,
         avgStudentScore: avgScore,
-        avgAttemptsPerStudent: uniqueStudents.size > 0 ? Math.round(allStudentAttempts.length / uniqueStudents.size) : 0,
+        avgAttemptsPerStudent: uniqueStudents.size > 0 ? Math.round(allAttempts.length / uniqueStudents.size) : 0,
         activeStudentsRate: uniqueStudents.size > 0
           ? Math.round(((uniqueStudents.size - inactiveCount) / uniqueStudents.size) * 100)
           : 0,
         trend,
-        totalAttempts: allStudentAttempts.length,
+        totalAttempts: allAttempts.length,
       };
     })
     .filter((t) => t.studentsCount > 0)

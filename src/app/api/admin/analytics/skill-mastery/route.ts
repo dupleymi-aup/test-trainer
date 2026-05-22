@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
 
   if (groupId) {
-    const memberIds = await db.groupMember.findMany({
+    const memberIds = await db.userGroup.findMany({
       where: { groupId },
       select: { userId: true },
     });

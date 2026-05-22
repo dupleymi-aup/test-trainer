@@ -186,6 +186,7 @@ export function TabContent({
             onReorder={onReorder}
             onBulkRemove={onBulkRemove}
             onClearAll={onClearAll}
+            elapsedTime={elapsedTime}
           />
         )}
 

@@ -70,7 +70,7 @@ export async function POST(
     }
     const parsed = assignTasksSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
 
     const validTaskIds = new Set(tasks.map((t) => t.id));
@@ -79,9 +79,12 @@ export async function POST(
       return NextResponse.json({ error: "Invalid task IDs", invalidTaskIds }, { status: 400 });
     }
 
+    const uniquePairs = [...new Set(parsed.data.taskIds.map((taskId) => `${id}-${taskId}`))];
     await db.groupTask.createMany({
-      data: parsed.data.taskIds.map((taskId) => ({ groupId: id, taskId })),
-      skipDuplicates: true,
+      data: uniquePairs.map((key) => {
+        const [groupId, taskId] = key.split('-');
+        return { groupId, taskId: parseInt(taskId) };
+      }),
     });
 
     await db.activityLog.create({
@@ -145,7 +148,7 @@ export async function DELETE(
       }
       const parsed = assignTasksSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+        return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
       }
 
       await db.groupTask.deleteMany({

@@ -71,10 +71,10 @@ const difficultyColors: Record<string, string> = {
 export default function SkillMasteryPage() {
   const [data, setData] = useState<SkillMasteryData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<Partial<FilterState>>({});
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null);
 
-  const fetchData = (f: FilterState) => {
+  const fetchData = (f: Partial<FilterState>) => {
     const params = new URLSearchParams();
     if (f.groupId) params.set("groupId", f.groupId);
     if (f.university) params.set("university", f.university);

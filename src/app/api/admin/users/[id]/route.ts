@@ -80,7 +80,7 @@ export async function PATCH(
     const body = await req.json();
     const parsed = updateUserSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
 
     const existing = await db.user.findUnique({ where: { id } });

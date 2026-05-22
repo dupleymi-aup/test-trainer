@@ -40,7 +40,6 @@ export async function GET(req: Request) {
           lte: endDate ? new Date(endDate) : undefined,
         },
       },
-      include: { user: { select: { group: true } } },
       select: {
         taskId: true,
         score: true,

@@ -92,6 +92,7 @@ export default function Home() {
           onShowHint={state.handleShowHint}
           onFillAllEc={state.handleFillAllEc}
           onFillAllBv={state.handleFillAllBv}
+          onRandomTask={state.handleRandomTask}
           onReorder={state.handleReorderTestCases}
           onBulkRemove={state.handleBulkRemove}
           onClearAll={state.handleClearAll}
@@ -115,7 +116,10 @@ export default function Home() {
       <CommandPalette
         activeTab={state.activeTab}
         onTabChange={state.setActiveTab as (tab: string) => void}
-        onSelectTask={state.handleSelectTask}
+        onSelectTask={(taskId: number) => {
+          const task = state.filteredTasks.find((t) => t.id === taskId);
+          if (task) state.handleSelectTask(task);
+        }}
         onRandomTask={state.handleRandomTask}
         onSubmit={state.handleSubmit}
         onReset={state.handleReset}
@@ -126,7 +130,7 @@ export default function Home() {
         onExport={state.handleExportProgress}
         onImport={state.handleImportProgress}
         onResetAllProgress={state.handleResetAllProgress}
-        availableTaskIds={state.availableTaskIds}
+        availableTaskIds={new Set(state.filteredTasks.map((t) => t.id))}
       />
     </div>
   );

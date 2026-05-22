@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = createAttemptSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
 
     const { taskId, testCases, score, ecCoverage, bvCoverage, correctness, coveredEcIds, coveredBvDescriptions, timeSpent } = parsed.data;

@@ -1,7 +1,7 @@
-import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, HelpCircle } from "lucide-react";
 
 interface TrendIndicatorProps {
-  trend: "improving" | "stable" | "declining";
+  trend: "improving" | "stable" | "declining" | "none";
   compact?: boolean;
 }
 
@@ -20,6 +20,11 @@ const trendConfig = {
     icon: ArrowDownRight,
     label: "Снижается",
     className: "text-red-600",
+  },
+  none: {
+    icon: HelpCircle,
+    label: "Нет данных",
+    className: "text-gray-400",
   },
 };
 

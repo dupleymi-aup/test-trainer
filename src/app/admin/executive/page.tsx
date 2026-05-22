@@ -107,7 +107,7 @@ export default function ExecutivePage() {
                   color: ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"][i],
                 }))}
                 centerLabel="Всего"
-                centerValue={kpi.totalStudents + kpi.totalTeachers + roleDistribution.find(r => r.role === "ADMIN")?.count}
+                centerValue={kpi.totalStudents + kpi.totalTeachers + (roleDistribution.find(r => r.role === "ADMIN")?.count ?? 0)}
               />
             </CardContent>
           </Card>

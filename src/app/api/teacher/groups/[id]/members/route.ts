@@ -74,7 +74,7 @@ export async function POST(
     }
     const parsed = addMemberSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
 
     const existing = await db.userGroup.findUnique({

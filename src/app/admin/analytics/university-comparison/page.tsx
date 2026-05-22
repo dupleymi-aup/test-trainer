@@ -163,7 +163,7 @@ export default function UniversityComparisonPage() {
                       <TableCell className="font-medium">{u.university}</TableCell>
                       <TableCell className="text-right">{u.studentCount}</TableCell>
                       <TableCell className="text-right"><ScoreBadge score={u.avgScore} /></TableCell>
-                      <TableCell className="text-right"><TrendIndicator trend={u.trend} compact /></TableCell>
+                      <TableCell className="text-right"><TrendIndicator trend={u.trend as "improving" | "stable" | "declining" | "none"} compact /></TableCell>
                     </TableRow>
                   ))}
                   {data.universities.length === 0 && (

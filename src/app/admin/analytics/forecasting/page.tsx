@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, TrendingDown, Minus, LineChart as LineChartIcon } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
-import { AnalyticsFilterBar } from "@/components/admin/analytics/analytics-filter-bar";
+import { AnalyticsFilterBar, type FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ReferenceLine,
 } from "recharts";
@@ -49,9 +49,10 @@ export default function ForecastingPage() {
   const [loading, setLoading] = useState(false);
   const [filterConfidence, setFilterConfidence] = useState<string>("all");
 
-  const fetchData = async (params: Record<string, string> = {}) => {
+  const fetchData = async (params: Partial<FilterState> = {}) => {
     setLoading(true);
-    const qs = new URLSearchParams(params).toString();
+    const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
+    const qs = new URLSearchParams(entries).toString();
     try {
       const r = await fetch(`/api/admin/analytics/forecasting${qs ? `?${qs}` : ""}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -122,7 +123,7 @@ export default function ForecastingPage() {
                       <Legend />
                       <ReferenceLine x={75} stroke="#ef4444" strokeDasharray="5 5" label="Цель 75%" />
                       <ReferenceLine y={75} stroke="#ef4444" strokeDasharray="5 5" />
-                      <Scatter name="Студенты" data={chartData} fill="hsl(var(--primary))" r={(d: { confidence: number }) => Math.max(3, d.confidence / 15)} />
+                      <Scatter name="Студенты" data={chartData} fill="hsl(var(--primary))" />
                     </ScatterChart>
                   </ResponsiveContainer>
                 ) : (

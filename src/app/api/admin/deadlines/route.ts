@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = deadlineSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
 
     const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds, reminderSchedule } = parsed.data;
@@ -150,15 +150,19 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const parsed = deadlineSchema.partial().safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
+
+    const updateData: Record<string, unknown> = { ...parsed.data };
+    if (parsed.data.dueDate) updateData.dueDate = new Date(parsed.data.dueDate);
+    if (updateData.groupId === undefined) delete updateData.groupId;
+    if (updateData.taskId === undefined) delete updateData.taskId;
+    if (updateData.targetUsers === undefined) delete updateData.targetUsers;
+    if (updateData.reminderSchedule === undefined) delete updateData.reminderSchedule;
 
     const deadline = await db.deadline.update({
       where: { id },
-      data: {
-        ...parsed.data,
-        dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined,
-      },
+      data: updateData,
     });
 
     await db.activityLog.create({

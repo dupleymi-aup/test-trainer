@@ -176,6 +176,8 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
   const [copied, setCopied] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
+  if (!result) return null;
+
   const grade = getGrade(result.overallScore);
 
   // Compare with best previous attempt

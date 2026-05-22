@@ -49,8 +49,8 @@ const deadlineSchema = z.object({
   type: z.enum(["EXAM", "TEST", "ASSIGNMENT", "COURSE_END", "REGISTRATION_END"]),
   groupId: z.string().optional(),
   taskId: z.string().optional(),
-  targetUsers: z.enum(["ALL_STUDENTS", "GROUP_MEMBERS", "SPECIFIC"]).default("ALL_STUDENTS"),
-  reminderSchedule: z.array(z.number()).default([7, 3, 1, 0, -1]),
+  targetUsers: z.enum(["ALL_STUDENTS", "GROUP_MEMBERS", "SPECIFIC"]).optional(),
+  reminderSchedule: z.array(z.number()).optional(),
 });
 
 type DeadlineForm = z.infer<typeof deadlineSchema>;
@@ -437,9 +437,9 @@ export default function AdminDeadlinesPage() {
                     <div key={option.value} className="flex items-center gap-2">
                       <Checkbox
                         id={`reminder-${option.value}`}
-                        checked={form.watch("reminderSchedule").includes(option.value)}
+                        checked={(form.watch("reminderSchedule") ?? []).includes(option.value)}
                         onCheckedChange={(checked) => {
-                          const current = form.getValues("reminderSchedule");
+                          const current = form.getValues("reminderSchedule") ?? [];
                           if (checked) {
                             form.setValue("reminderSchedule", [...current, option.value]);
                           } else {

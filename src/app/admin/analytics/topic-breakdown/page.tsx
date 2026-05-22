@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
-import { AnalyticsFilterBar } from "@/components/admin/analytics/analytics-filter-bar";
+import { AnalyticsFilterBar, type FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   LineChart, Line,
@@ -55,9 +55,10 @@ export default function TopicBreakdownPage() {
   const [loading, setLoading] = useState(false);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
 
-  const fetchData = async (params: Record<string, string> = {}) => {
+  const fetchData = async (params: Partial<FilterState> = {}) => {
     setLoading(true);
-    const qs = new URLSearchParams(params).toString();
+    const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
+    const qs = new URLSearchParams(entries).toString();
     try {
       const r = await fetch(`/api/admin/analytics/topic-breakdown${qs ? `?${qs}` : ""}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);

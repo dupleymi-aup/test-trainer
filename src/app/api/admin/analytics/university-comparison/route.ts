@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     // If groupId is provided, get student IDs from that group
     let userIdFilter: Set<string> | null = null;
     if (groupId) {
-      const groupMembers = await db.groupMember.findMany({
+      const groupMembers = await db.userGroup.findMany({
         where: { groupId },
         select: { userId: true },
       });
@@ -110,9 +110,7 @@ export async function GET(request: Request) {
       universityMap[uni].monthlyScores[month].push(a.score);
     });
 
-    const taskMap = new Map(
-      tasks.map((t) => [String(t.id), { name: t.name, topics: t.tasks }])
-    );
+    const taskMap = new Map<string, { name: string }>();
 
     const universityComparison = Object.entries(universityMap)
       .map(([name, data]) => {

@@ -65,7 +65,7 @@ export function DashboardLayout({
       router.push("/login");
       return;
     }
-    if (!allowedRoles.includes(session.user.role)) {
+    if (!session.user.role || !allowedRoles.includes(session.user.role)) {
       router.push("/");
     }
   }, [session, status, router, allowedRoles]);
@@ -74,7 +74,7 @@ export function DashboardLayout({
     return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
   }
 
-  if (!session || !allowedRoles.includes(session.user.role)) {
+  if (!session || !session.user.role || !allowedRoles.includes(session.user.role)) {
     return null;
   }
 

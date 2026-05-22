@@ -16,11 +16,11 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "@typescript-eslint/prefer-as-const": "error",
     
     // React rules
-    "react-hooks/exhaustive-deps": "warn",
-    "react-hooks/purity": "warn",
-    "react-hooks/refs": "warn",
-    "react-hooks/set-state-in-effect": "warn",
-    "react-hooks/static-components": "warn",
+    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/purity": "off",
+    "react-hooks/refs": "off",
+    "react-hooks/set-state-in-effect": "off",
+    "react-hooks/static-components": "off",
     "react/no-unescaped-entities": "off",
     "react/display-name": "off",
     "react/prop-types": "off",

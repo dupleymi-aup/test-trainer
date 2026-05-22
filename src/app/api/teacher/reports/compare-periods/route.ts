@@ -48,6 +48,10 @@ export async function GET(req: Request) {
       });
     }
 
+    if (!period2Start || !period2End) {
+      return NextResponse.json({ error: "Both period2Start and period2End are required" }, { status: 400 });
+    }
+
     // Fetch attempts for both periods (scoped to group members)
     const [attempts1, attempts2] = await Promise.all([
       db.attempt.findMany({

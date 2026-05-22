@@ -864,7 +864,7 @@ export function ExamMode() {
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={submitCurrentTask}
-                disabled={taskTestCases.length === 0 || (practiceMode && lastPracticeResult)}
+                disabled={taskTestCases.length === 0 || (practiceMode && !!lastPracticeResult)}
               >
                 <ChevronRight className="h-3.5 w-3.5 mr-1" />
                 {currentTaskIndex < examTasks.length - 1 ? "Далее" : "Завершить"}

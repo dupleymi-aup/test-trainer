@@ -25,6 +25,7 @@ export async function GET() {
 
     const allAttempts = await db.attempt.findMany({
       select: {
+        id: true,
         taskId: true,
         userId: true,
         score: true,
@@ -148,7 +149,7 @@ export async function GET() {
 
     for (const a of attemptsWithUser) {
       if (!studentCoverage[a.userId]) {
-        studentCoverage[a.userId] = { ecTotal: 0, bvTotal: 0, count: 0, name: a.user?.name || null, group: a.user?.group || null };
+        studentCoverage[a.userId] = { ecTotal: 0, bvTotal: 0, count: 0, name: a.user?.name || undefined, group: a.user?.group || undefined };
       }
       studentCoverage[a.userId].ecTotal += a.ecCoverage;
       studentCoverage[a.userId].bvTotal += a.bvCoverage;

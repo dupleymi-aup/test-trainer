@@ -49,7 +49,7 @@ export async function GET(request: Request) {
   const studentWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
 
   if (groupId) {
-    const memberIds = await db.groupMember.findMany({
+    const memberIds = await db.userGroup.findMany({
       where: { groupId },
       select: { userId: true },
     });
@@ -280,7 +280,7 @@ export async function GET(request: Request) {
 
     results.push({
       studentId: student.id,
-      name: student.name || student.email,
+      name: student.name || student.email || "Без имени",
       email: student.email || "",
       group: student.group,
       university: student.university,

@@ -71,7 +71,7 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const parsed = preferencesSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
     }
 
     const user = await db.user.findUnique({
