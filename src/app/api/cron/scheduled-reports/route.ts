@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { secureCompare } from "@/lib/crypto";
 
 /**
  * GET /api/cron/scheduled-reports
@@ -10,11 +11,15 @@ import { logger } from "@/lib/logger";
  * Schedule: Monday 8:00 AM UTC (configure in vercel.json)
  */
 export async function GET(req: Request) {
-  // Verify cron secret
+  // Verify cron secret using constant-time comparison to prevent timing attacks
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  if (
+    !cronSecret ||
+    !authHeader?.startsWith("Bearer ") ||
+    !secureCompare(authHeader.slice(7), cronSecret)
+  ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

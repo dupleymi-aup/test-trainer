@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 /**
  * Sanitize a value to prevent CSV injection attacks.
@@ -19,262 +20,267 @@ export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
   if ("response" in guard) return guard.response;
 
-  let body: Record<string, unknown>;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  const { groupId, startDate, endDate, exportType = "summary" } = body;
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { groupId, startDate, endDate, exportType = "summary" } = body;
 
-  // Build student query
-  const where: Record<string, unknown> = {
-    role: "STUDENT",
-    deletedAt: null,
-  };
+    // Build student query
+    const where: Record<string, unknown> = {
+      role: "STUDENT",
+      deletedAt: null,
+    };
 
-  if (groupId) {
-    where.groups = { some: { groupId } };
-  }
+    if (groupId) {
+      where.groups = { some: { groupId } };
+    }
 
-  const students = await db.user.findMany({
-    where,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      group: true,
-      university: true,
-      createdAt: true,
-      attempts: {
-        where: {
-          createdAt: {
-            gte: startDate ? new Date(startDate) : undefined,
-            lte: endDate ? new Date(endDate) : undefined,
+    const students = await db.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        group: true,
+        university: true,
+        createdAt: true,
+        attempts: {
+          where: {
+            createdAt: {
+              gte: startDate ? new Date(startDate) : undefined,
+              lte: endDate ? new Date(endDate) : undefined,
+            },
+          },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            score: true,
+            ecCoverage: true,
+            bvCoverage: true,
+            correctness: true,
+            timeSpent: true,
+            createdAt: true,
+            taskId: true,
           },
         },
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          score: true,
-          ecCoverage: true,
-          bvCoverage: true,
-          correctness: true,
-          timeSpent: true,
-          createdAt: true,
-          taskId: true,
-        },
       },
-    },
-  });
+    });
 
-  const now = new Date();
-  const fourteenDaysAgo = new Date(now);
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const now = new Date();
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const sevenDaysAgo = new Date(now);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  // Generate CSV based on export type
-  const lines: string[] = [];
+    // Generate CSV based on export type
+    const lines: string[] = [];
 
-  if (exportType === "detailed") {
-    // Detailed: one row per attempt
-    lines.push(
-      [
-        "Имя",
-        "Email",
-        "Группа",
-        "Университет",
-        "ID попытки",
-        "Задание",
-        "Балл",
-        "EC",
-        "BV",
-        "Корректность",
-        "Время (с)",
-        "Дата",
-      ].join(";")
-    );
+    if (exportType === "detailed") {
+      // Detailed: one row per attempt
+      lines.push(
+        [
+          "Имя",
+          "Email",
+          "Группа",
+          "Университет",
+          "ID попытки",
+          "Задание",
+          "Балл",
+          "EC",
+          "BV",
+          "Корректность",
+          "Время (с)",
+          "Дата",
+        ].join(";")
+      );
 
-    for (const s of students) {
-      if (s.attempts.length === 0) continue;
+      for (const s of students) {
+        if (s.attempts.length === 0) continue;
 
-      for (const attempt of s.attempts) {
+        for (const attempt of s.attempts) {
+          lines.push(
+            [
+              `"${sanitizeCSVValue(s.name ?? "")}"`,
+              `"${sanitizeCSVValue(s.email ?? "")}"`,
+              `"${sanitizeCSVValue(s.group ?? "")}"`,
+              `"${sanitizeCSVValue(s.university ?? "")}"`,
+              attempt.id,
+              attempt.taskId,
+              String(attempt.score),
+              String(attempt.ecCoverage),
+              String(attempt.bvCoverage),
+              String(attempt.correctness),
+              String(attempt.timeSpent),
+              new Date(attempt.createdAt).toLocaleString("ru-RU"),
+            ].join(";")
+          );
+        }
+      }
+    } else if (exportType === "at-risk") {
+      // At-risk students report
+      lines.push(
+        [
+          "Имя",
+          "Email",
+          "Группа",
+          "Лучший балл",
+          "Средний балл",
+          "Попыток",
+          "Последняя попытка",
+          "Факторы риска",
+        ].join(";")
+      );
+
+      for (const s of students) {
+        const attempts = s.attempts;
+        const bestScore =
+          attempts.reduce((max, a) => Math.max(max, a.score), 0);
+        const avgScore =
+          attempts.length > 0
+            ? Math.round(
+                attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length
+              )
+            : 0;
+        const lastAttempt =
+          attempts.length > 0 ? attempts[attempts.length - 1].createdAt : null;
+
+        // Check risk factors
+        const riskFactors: string[] = [];
+        if (bestScore < 50 && attempts.length > 0)
+          riskFactors.push("Низкий балл");
+        if (
+          attempts.length >= 6 &&
+          attempts.slice(-3).reduce((s, a) => s + a.score, 0) / 3 -
+            attempts.slice(0, 3).reduce((s, a) => s + a.score, 0) / 3 <
+            -15
+        )
+          riskFactors.push("Снижение");
+        if (lastAttempt && lastAttempt < fourteenDaysAgo)
+          riskFactors.push("Неактивен");
+        if (attempts.length < 3 && s.createdAt < sevenDaysAgo)
+          riskFactors.push("Мало попыток");
+
+        if (riskFactors.length === 0) continue;
+
         lines.push(
           [
             `"${sanitizeCSVValue(s.name ?? "")}"`,
             `"${sanitizeCSVValue(s.email ?? "")}"`,
             `"${sanitizeCSVValue(s.group ?? "")}"`,
+            String(bestScore),
+            String(avgScore),
+            String(attempts.length),
+            lastAttempt ? new Date(lastAttempt).toLocaleDateString("ru-RU") : "Нет",
+            `"${riskFactors.join(", ")}"`,
+          ].join(";")
+        );
+      }
+    } else {
+      // Summary (default): one row per student
+      lines.push(
+        [
+          "Имя",
+          "Email",
+          "Телефон",
+          "Группа",
+          "Университет",
+          "Дата регистрации",
+          "Попыток",
+          "Лучший балл",
+          "Средний балл",
+          "Ср. EC",
+          "Ср. BV",
+          "Ср. корректность",
+          "Ср. время (с)",
+          "Последняя попытка",
+        ].join(";")
+      );
+
+      for (const s of students) {
+        const attempts = s.attempts;
+        const bestScore =
+          attempts.reduce((max, a) => Math.max(max, a.score), 0);
+        const avgScore =
+          attempts.length > 0
+            ? Math.round(
+                attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length
+              )
+            : 0;
+        const avgEc =
+          attempts.length > 0
+            ? Math.round(
+                attempts.reduce((sum, a) => sum + a.ecCoverage, 0) /
+                  attempts.length
+              )
+            : 0;
+        const avgBv =
+          attempts.length > 0
+            ? Math.round(
+                attempts.reduce((sum, a) => sum + a.bvCoverage, 0) /
+                  attempts.length
+              )
+            : 0;
+        const avgCorrectness =
+          attempts.length > 0
+            ? Math.round(
+                attempts.reduce((sum, a) => sum + a.correctness, 0) /
+                  attempts.length
+              )
+            : 0;
+        const avgTime =
+          attempts.length > 0
+            ? Math.round(
+                attempts.reduce((sum, a) => sum + a.timeSpent, 0) /
+                  attempts.length
+              )
+            : 0;
+        const lastAttempt =
+          attempts.length > 0 ? attempts[attempts.length - 1].createdAt : null;
+
+        lines.push(
+          [
+            `"${sanitizeCSVValue(s.name ?? "")}"`,
+            `"${sanitizeCSVValue(s.email ?? "")}"`,
+            `"${sanitizeCSVValue(s.phone ?? "")}"`,
+            `"${sanitizeCSVValue(s.group ?? "")}"`,
             `"${sanitizeCSVValue(s.university ?? "")}"`,
-            attempt.id,
-            attempt.taskId,
-            String(attempt.score),
-            String(attempt.ecCoverage),
-            String(attempt.bvCoverage),
-            String(attempt.correctness),
-            String(attempt.timeSpent),
-            new Date(attempt.createdAt).toLocaleString("ru-RU"),
+            new Date(s.createdAt).toLocaleDateString("ru-RU"),
+            String(attempts.length),
+            String(bestScore),
+            String(avgScore),
+            String(avgEc),
+            String(avgBv),
+            String(avgCorrectness),
+            String(avgTime),
+            lastAttempt ? new Date(lastAttempt).toLocaleDateString("ru-RU") : "Нет",
           ].join(";")
         );
       }
     }
-  } else if (exportType === "at-risk") {
-    // At-risk students report
-    lines.push(
-      [
-        "Имя",
-        "Email",
-        "Группа",
-        "Лучший балл",
-        "Средний балл",
-        "Попыток",
-        "Последняя попытка",
-        "Факторы риска",
-      ].join(";")
-    );
 
-    for (const s of students) {
-      const attempts = s.attempts;
-      const bestScore =
-        attempts.reduce((max, a) => Math.max(max, a.score), 0);
-      const avgScore =
-        attempts.length > 0
-          ? Math.round(
-              attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length
-            )
-          : 0;
-      const lastAttempt =
-        attempts.length > 0 ? attempts[attempts.length - 1].createdAt : null;
+    const csvContent = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+    const buffer = Buffer.from(await blob.arrayBuffer());
 
-      // Check risk factors
-      const riskFactors: string[] = [];
-      if (bestScore < 50 && attempts.length > 0)
-        riskFactors.push("Низкий балл");
-      if (
-        attempts.length >= 6 &&
-        attempts.slice(-3).reduce((s, a) => s + a.score, 0) / 3 -
-          attempts.slice(0, 3).reduce((s, a) => s + a.score, 0) / 3 <
-          -15
-      )
-        riskFactors.push("Снижение");
-      if (lastAttempt && lastAttempt < fourteenDaysAgo)
-        riskFactors.push("Неактивен");
-      if (attempts.length < 3 && s.createdAt < sevenDaysAgo)
-        riskFactors.push("Мало попыток");
+    const filenames = {
+      summary: "student-report-summary.csv",
+      detailed: "student-report-detailed.csv",
+      "at-risk": "student-report-at-risk.csv",
+    };
 
-      if (riskFactors.length === 0) continue;
-
-      lines.push(
-        [
-          `"${sanitizeCSVValue(s.name ?? "")}"`,
-          `"${sanitizeCSVValue(s.email ?? "")}"`,
-          `"${sanitizeCSVValue(s.group ?? "")}"`,
-          String(bestScore),
-          String(avgScore),
-          String(attempts.length),
-          lastAttempt ? new Date(lastAttempt).toLocaleDateString("ru-RU") : "Нет",
-          `"${riskFactors.join(", ")}"`,
-        ].join(";")
-      );
-    }
-  } else {
-    // Summary (default): one row per student
-    lines.push(
-      [
-        "Имя",
-        "Email",
-        "Телефон",
-        "Группа",
-        "Университет",
-        "Дата регистрации",
-        "Попыток",
-        "Лучший балл",
-        "Средний балл",
-        "Ср. EC",
-        "Ср. BV",
-        "Ср. корректность",
-        "Ср. время (с)",
-        "Последняя попытка",
-      ].join(";")
-    );
-
-    for (const s of students) {
-      const attempts = s.attempts;
-      const bestScore =
-        attempts.reduce((max, a) => Math.max(max, a.score), 0);
-      const avgScore =
-        attempts.length > 0
-          ? Math.round(
-              attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length
-            )
-          : 0;
-      const avgEc =
-        attempts.length > 0
-          ? Math.round(
-              attempts.reduce((sum, a) => sum + a.ecCoverage, 0) /
-                attempts.length
-            )
-          : 0;
-      const avgBv =
-        attempts.length > 0
-          ? Math.round(
-              attempts.reduce((sum, a) => sum + a.bvCoverage, 0) /
-                attempts.length
-            )
-          : 0;
-      const avgCorrectness =
-        attempts.length > 0
-          ? Math.round(
-              attempts.reduce((sum, a) => sum + a.correctness, 0) /
-                attempts.length
-            )
-          : 0;
-      const avgTime =
-        attempts.length > 0
-          ? Math.round(
-              attempts.reduce((sum, a) => sum + a.timeSpent, 0) /
-                attempts.length
-            )
-          : 0;
-      const lastAttempt =
-        attempts.length > 0 ? attempts[attempts.length - 1].createdAt : null;
-
-      lines.push(
-        [
-          `"${sanitizeCSVValue(s.name ?? "")}"`,
-          `"${sanitizeCSVValue(s.email ?? "")}"`,
-          `"${sanitizeCSVValue(s.phone ?? "")}"`,
-          `"${sanitizeCSVValue(s.group ?? "")}"`,
-          `"${sanitizeCSVValue(s.university ?? "")}"`,
-          new Date(s.createdAt).toLocaleDateString("ru-RU"),
-          String(attempts.length),
-          String(bestScore),
-          String(avgScore),
-          String(avgEc),
-          String(avgBv),
-          String(avgCorrectness),
-          String(avgTime),
-          lastAttempt ? new Date(lastAttempt).toLocaleDateString("ru-RU") : "Нет",
-        ].join(";")
-      );
-    }
+    return new NextResponse(buffer, {
+      headers: {
+        "Content-Type": "text/csv;charset=utf-8",
+        "Content-Disposition": `attachment; filename="${filenames[exportType as keyof typeof filenames] || "student-report.csv"}"`,
+      },
+    });
+  } catch (error) {
+    logger.error("Export CSV failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to export data" }, { status: 500 });
   }
-
-  const csvContent = "\uFEFF" + lines.join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-  const buffer = Buffer.from(await blob.arrayBuffer());
-
-  const filenames = {
-    summary: "student-report-summary.csv",
-    detailed: "student-report-detailed.csv",
-    "at-risk": "student-report-at-risk.csv",
-  };
-
-  return new NextResponse(buffer, {
-    headers: {
-      "Content-Type": "text/csv;charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filenames[exportType as keyof typeof filenames] || "student-report.csv"}"`,
-    },
-  });
 }

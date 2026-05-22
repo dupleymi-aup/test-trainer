@@ -1,137 +1,143 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
   if ("response" in guard) return guard.response;
 
-  let body: Record<string, unknown>;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  const { groupId, startDate, endDate } = body;
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { groupId, startDate, endDate } = body;
 
-  // Build student query
-  const where: Record<string, unknown> = {
-    role: "STUDENT",
-    deletedAt: null,
-  };
-
-  if (groupId) {
-    where.groups = { some: { groupId } };
-  }
-
-  const students = await db.user.findMany({
-    where,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      group: true,
-      university: true,
-      createdAt: true,
-      attempts: {
-        where: {
-          createdAt: {
-            gte: startDate ? new Date(startDate) : undefined,
-            lte: endDate ? new Date(endDate) : undefined,
-          },
-        },
-        select: {
-          id: true,
-          taskId: true,
-          score: true,
-          ecCoverage: true,
-          bvCoverage: true,
-          correctness: true,
-          timeSpent: true,
-          testCases: true,
-          coveredEcIds: true,
-          coveredBvDescriptions: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
-
-  // Enrich with stats
-  const studentsWithStats = students.map((student) => {
-    const attempts = student.attempts;
-    const bestScore =
-      attempts.reduce((max, a) => Math.max(max, a.score), 0);
-    const avgScore =
-      attempts.length > 0
-        ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length)
-        : 0;
-    const avgEc =
-      attempts.length > 0
-        ? Math.round(
-            attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length
-          )
-        : 0;
-    const avgBv =
-      attempts.length > 0
-        ? Math.round(
-            attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length
-          )
-        : 0;
-
-    // Parse testCases and covered data from JSON strings
-    const parsedAttempts = attempts.map((a) => ({
-      ...a,
-      testCases: JSON.parse(a.testCases),
-      coveredEcIds: JSON.parse(a.coveredEcIds),
-      coveredBvDescriptions: JSON.parse(a.coveredBvDescriptions),
-      createdAt: a.createdAt.toISOString(),
-    }));
-
-    return {
-      id: student.id,
-      name: student.name,
-      email: student.email,
-      phone: student.phone,
-      group: student.group,
-      university: student.university,
-      registeredAt: student.createdAt.toISOString(),
-      stats: {
-        totalAttempts: attempts.length,
-        bestScore,
-        avgScore,
-        avgEc,
-        avgBv,
-      },
-      attempts: parsedAttempts,
+    // Build student query
+    const where: Record<string, unknown> = {
+      role: "STUDENT",
+      deletedAt: null,
     };
-  });
 
-  const exportData = {
-    exportedAt: new Date().toISOString(),
-    filters: {
-      groupId: groupId || null,
-      startDate: startDate || null,
-      endDate: endDate || null,
-    },
-    students: studentsWithStats,
-    summary: {
-      totalStudents: studentsWithStats.length,
-      totalAttempts: studentsWithStats.reduce(
-        (s, st) => s + st.stats.totalAttempts,
-        0
-      ),
-      avgBestScore:
-        studentsWithStats.length > 0
+    if (groupId) {
+      where.groups = { some: { groupId } };
+    }
+
+    const students = await db.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        group: true,
+        university: true,
+        createdAt: true,
+        attempts: {
+          where: {
+            createdAt: {
+              gte: startDate ? new Date(startDate) : undefined,
+              lte: endDate ? new Date(endDate) : undefined,
+            },
+          },
+          select: {
+            id: true,
+            taskId: true,
+            score: true,
+            ecCoverage: true,
+            bvCoverage: true,
+            correctness: true,
+            timeSpent: true,
+            testCases: true,
+            coveredEcIds: true,
+            coveredBvDescriptions: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    // Enrich with stats
+    const studentsWithStats = students.map((student) => {
+      const attempts = student.attempts;
+      const bestScore =
+        attempts.reduce((max, a) => Math.max(max, a.score), 0);
+      const avgScore =
+        attempts.length > 0
+          ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length)
+          : 0;
+      const avgEc =
+        attempts.length > 0
           ? Math.round(
-              studentsWithStats.reduce((s, st) => s + st.stats.bestScore, 0) /
-                studentsWithStats.length
+              attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length
             )
-          : 0,
-    },
-  };
+          : 0;
+      const avgBv =
+        attempts.length > 0
+          ? Math.round(
+              attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length
+            )
+          : 0;
 
-  return NextResponse.json(exportData);
+      // Parse testCases and covered data from JSON strings
+      const parsedAttempts = attempts.map((a) => ({
+        ...a,
+        testCases: JSON.parse(a.testCases),
+        coveredEcIds: JSON.parse(a.coveredEcIds),
+        coveredBvDescriptions: JSON.parse(a.coveredBvDescriptions),
+        createdAt: a.createdAt.toISOString(),
+      }));
+
+      return {
+        id: student.id,
+        name: student.name,
+        email: student.email,
+        phone: student.phone,
+        group: student.group,
+        university: student.university,
+        registeredAt: student.createdAt.toISOString(),
+        stats: {
+          totalAttempts: attempts.length,
+          bestScore,
+          avgScore,
+          avgEc,
+          avgBv,
+        },
+        attempts: parsedAttempts,
+      };
+    });
+
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      filters: {
+        groupId: groupId || null,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      },
+      students: studentsWithStats,
+      summary: {
+        totalStudents: studentsWithStats.length,
+        totalAttempts: studentsWithStats.reduce(
+          (s, st) => s + st.stats.totalAttempts,
+          0
+        ),
+        avgBestScore:
+          studentsWithStats.length > 0
+            ? Math.round(
+                studentsWithStats.reduce((s, st) => s + st.stats.bestScore, 0) /
+                  studentsWithStats.length
+              )
+            : 0,
+      },
+    };
+
+    return NextResponse.json(exportData);
+  } catch (error) {
+    logger.error("Export JSON failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to export data" }, { status: 500 });
+  }
 }
