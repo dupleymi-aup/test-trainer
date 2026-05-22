@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   const guard = await requireAdmin();
@@ -33,6 +34,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    logger.error("Database health check failed", error instanceof Error ? error : undefined);
     return NextResponse.json(
       {
         status: "unhealthy",

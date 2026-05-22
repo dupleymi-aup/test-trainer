@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
         createdAt: true,
         user: { select: { name: true, group: true } },
       },
+      take: 50_000,
       orderBy: { createdAt: "asc" },
     });
 

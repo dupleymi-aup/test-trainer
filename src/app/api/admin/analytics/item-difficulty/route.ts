@@ -30,6 +30,7 @@ export async function GET() {
         userId: true,
         createdAt: true,
       },
+      take: 50_000,
       orderBy: { createdAt: "asc" },
     });
 

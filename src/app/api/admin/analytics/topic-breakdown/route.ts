@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
 
     const attempts = await db.attempt.findMany({
       where: whereClause as object,
+      take: 50_000,
       orderBy: { createdAt: "asc" },
     });
 

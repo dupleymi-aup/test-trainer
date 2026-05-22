@@ -27,6 +27,7 @@ export async function GET() {
 
     const teachers = await db.user.findMany({
       where: { role: "TEACHER", deletedAt: null },
+      take: 100,
       select: {
         id: true,
         name: true,
@@ -47,6 +48,7 @@ export async function GET() {
                     createdAt: true,
                     attempts: {
                       select: { taskId: true, score: true, createdAt: true },
+                      take: 50_000,
                       orderBy: { createdAt: "asc" },
                     },
                   },

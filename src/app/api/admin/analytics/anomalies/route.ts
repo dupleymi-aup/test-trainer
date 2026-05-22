@@ -43,6 +43,7 @@ export async function GET(req: NextRequest) {
     // Batch fetch attempts
     const attempts = await db.attempt.findMany({
       where: { userId: { in: studentIds } },
+      take: 50_000,
       orderBy: [{ userId: "asc" }, { createdAt: "asc" }],
     });
 

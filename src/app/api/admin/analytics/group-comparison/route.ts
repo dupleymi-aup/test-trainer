@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     if (cached) return NextResponse.json(cached);
 
     const groups = await db.group.findMany({
+      take: 100,
       select: {
         id: true,
         name: true,
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
                     timeSpent: true,
                     createdAt: true,
                   },
+                  take: 50_000,
                   orderBy: { createdAt: "asc" },
                 },
               },
