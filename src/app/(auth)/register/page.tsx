@@ -91,7 +91,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <div className="w-full max-h-[calc(100vh-4rem)] overflow-y-auto">
+      <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
@@ -240,5 +241,6 @@ export default function RegisterPage() {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }

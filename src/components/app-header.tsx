@@ -50,9 +50,9 @@ export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarat
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             {streak.currentStreak > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 mr-1">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
                 <Flame className="h-3.5 w-3.5 text-orange-500" />
                 <span className="text-xs font-bold text-orange-700 dark:text-orange-400">
                   {streak.currentStreak}

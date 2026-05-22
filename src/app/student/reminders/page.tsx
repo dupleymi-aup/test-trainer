@@ -54,11 +54,11 @@ interface RemindersData {
 }
 
 const typeConfig: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
-  EXAM: { label: "Экзамен", icon: <GraduationCap className="h-4 w-4" />, color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/30 border-rose-200" },
-  TEST: { label: "Зачёт", icon: <FileText className="h-4 w-4" />, color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/30 border-amber-200" },
-  ASSIGNMENT: { label: "Задание", icon: <BookOpen className="h-4 w-4" />, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200" },
-  COURSE_END: { label: "Окончание курса", icon: <CalendarClock className="h-4 w-4" />, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200" },
-  REGISTRATION_END: { label: "Окончание регистрации", icon: <Clock className="h-4 w-4" />, color: "text-orange-600", bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200" },
+  EXAM: { label: "Экзамен", icon: <GraduationCap className="h-4 w-4" />, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30 border-rose-200" },
+  TEST: { label: "Зачёт", icon: <FileText className="h-4 w-4" />, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30 border-amber-200" },
+  ASSIGNMENT: { label: "Задание", icon: <BookOpen className="h-4 w-4" />, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200" },
+  COURSE_END: { label: "Окончание курса", icon: <CalendarClock className="h-4 w-4" />, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200" },
+  REGISTRATION_END: { label: "Окончание регистрации", icon: <Clock className="h-4 w-4" />, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200" },
 };
 
 function formatDate(dateStr: string) {
@@ -79,15 +79,15 @@ function getTimeRemaining(dueDateStr: string) {
 
   if (diffMs < 0) {
     const daysOverdue = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
-    return { text: `Просрочен на ${daysOverdue} дн.`, isOverdue: true, color: "text-rose-600" };
+    return { text: `Просрочен на ${daysOverdue} дн.`, isOverdue: true, color: "text-rose-600 dark:text-rose-400" };
   }
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (hours < 24) return { text: `Осталось ${hours} ч.`, isOverdue: false, color: "text-amber-600" };
-  if (days === 1) return { text: "Остался 1 день", isOverdue: false, color: "text-amber-600" };
-  if (days <= 7) return { text: `Осталось ${days} дн.`, isOverdue: false, color: "text-blue-600" };
+  if (hours < 24) return { text: `Осталось ${hours} ч.`, isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
+  if (days === 1) return { text: "Остался 1 день", isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
+  if (days <= 7) return { text: `Осталось ${days} дн.`, isOverdue: false, color: "text-blue-600 dark:text-blue-400" };
   return { text: `Осталось ${days} дн.`, isOverdue: false, color: "text-muted-foreground" };
 }
 
@@ -166,7 +166,7 @@ export default function StudentRemindersPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Bell className="h-6 w-6 text-amber-600" />
+              <Bell className="h-6 w-6 text-amber-600 dark:text-amber-400" />
               Напоминания
             </h1>
             <p className="text-muted-foreground mt-1">Сроки экзаменов, зачётов и заданий</p>
@@ -211,25 +211,25 @@ export default function StudentRemindersPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Bell className="h-3 w-3 text-amber-600" /> Непрочитанные
+                <Bell className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Непрочитанные
               </div>
-              <div className="text-2xl font-bold text-amber-600">{data.counts.unread}</div>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{data.counts.unread}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3 text-rose-600" /> Просроченные
+                <AlertTriangle className="h-3 w-3 text-rose-600 dark:text-rose-400" /> Просроченные
               </div>
-              <div className="text-2xl font-bold text-rose-600">{data.counts.overdue}</div>
+              <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">{data.counts.overdue}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3 text-blue-600" /> Ближайшие 7 дн.
+                <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" /> Ближайшие 7 дн.
               </div>
-              <div className="text-2xl font-bold text-blue-600">{data.counts.nextWeek}</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{data.counts.nextWeek}</div>
             </CardContent>
           </Card>
         </div>
@@ -257,7 +257,7 @@ export default function StudentRemindersPage() {
               <CardContent className="p-0">
                 {reminders.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500 dark:text-green-400" />
                     Нет напоминаний в этой категории
                   </div>
                 ) : (
@@ -316,11 +316,11 @@ export default function StudentRemindersPage() {
                             </TableCell>
                             <TableCell>
                               {reminder.read ? (
-                                <Badge variant="outline" className="text-green-600">
+                                <Badge variant="outline" className="text-green-600 dark:text-green-400">
                                   <CheckCircle className="h-3 w-3 mr-1" /> Прочитано
                                 </Badge>
                               ) : (
-                                <Badge variant="secondary" className="text-amber-600">
+                                <Badge variant="secondary" className="text-amber-600 dark:text-amber-400">
                                   <Bell className="h-3 w-3 mr-1" /> Новое
                                 </Badge>
                               )}

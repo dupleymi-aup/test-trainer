@@ -26,6 +26,7 @@ import {
   Clock,
   Calendar,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import { DonutChart } from "@/components/admin/charts/donut-chart";
 
@@ -108,8 +109,8 @@ export default function AdminDashboardPage() {
     }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (!stats) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></AdminLayout>;
+  if (!stats) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-destructive" /><span className="ml-3 text-sm text-destructive">Ошибка загрузки</span></div></AdminLayout>;
 
   const statCards = [
     { label: "Студенты", value: stats.usersByRole["STUDENT"] || 0, icon: Users, color: "text-blue-600", href: "/admin/users" },

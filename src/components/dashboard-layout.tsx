@@ -2,17 +2,31 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, type LucideIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, ChevronDown, ChevronRight, Search, type LucideIcon, Loader2, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface DashboardNavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+}
+
+interface NavGroup {
+  label: string;
+  items: DashboardNavItem[];
 }
 
 interface ActiveColorClasses {
@@ -30,7 +44,8 @@ interface ActiveColorClasses {
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  navItems: DashboardNavItem[];
+  navItems?: DashboardNavItem[];
+  navGroups?: NavGroup[];
   /** Role(s) required to access the dashboard */
   allowedRoles: string[];
   /** Dashboard title shown in the header */
@@ -48,6 +63,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({
   children,
   navItems,
+  navGroups,
   allowedRoles,
   title,
   titleIcon: TitleIcon,
@@ -58,6 +74,10 @@ export function DashboardLayout({
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  const [navSearch, setNavSearch] = useState("");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -71,7 +91,7 @@ export function DashboardLayout({
   }, [session, status, router, allowedRoles]);
 
   if (status === "loading") {
-    return <div className="flex items-center justify-center min-h-screen">Загрузка...</div>;
+    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div>;
   }
 
   if (!session || !session.user.role || !allowedRoles.includes(session.user.role)) {
@@ -86,24 +106,125 @@ export function DashboardLayout({
     "font-medium"
   );
 
+  const toggleGroup = (label: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  const renderNavItem = (item: DashboardNavItem) => {
+    const isActive = pathname === item.href;
+    const matchesSearch = navSearch
+      ? item.label.toLowerCase().includes(navSearch.toLowerCase())
+      : true;
+    if (!matchesSearch) return null;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+          isActive
+            ? activeClass
+            : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
+        )}
+        aria-current={isActive ? "page" : undefined}
+      >
+        <item.icon className="h-4 w-4" />
+        {item.label}
+      </Link>
+    );
+  };
+
+  const renderNav = () => {
+    if (navGroups && navGroups.length > 0) {
+      return navGroups.map((group) => {
+        const isCollapsed = collapsedGroups.has(group.label);
+        const hasActive = group.items.some((item) => pathname === item.href);
+        // Auto-expand group with active item
+        const effectiveCollapsed = isCollapsed && !hasActive;
+
+        return (
+          <div key={group.label} className="mb-2">
+            <button
+              onClick={() => toggleGroup(group.label)}
+              className="w-full flex items-center justify-between px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span>{group.label}</span>
+              {effectiveCollapsed ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+            </button>
+            {!effectiveCollapsed && (
+              <div className="space-y-0.5 ml-1">
+                {group.items.map((item) => renderNavItem(item))}
+              </div>
+            )}
+          </div>
+        );
+      });
+    }
+
+    // Fallback to flat navItems
+    return (navItems || []).map((item) => renderNavItem(item));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+          {isMobile && (
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <SheetHeader className="px-4 pt-4 pb-2 border-b">
+                  <SheetTitle className="flex items-center gap-2 text-left">
+                    <TitleIcon className={cn("h-5 w-5", activeColor.icon)} />
+                    {title}
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="px-3 py-2 max-h-[calc(100vh-5rem)] overflow-y-auto">
+                  {navGroups && navGroups.length > 0 && (
+                    <div className="px-1 mb-2">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          placeholder="Поиск..."
+                          value={navSearch}
+                          onChange={(e) => setNavSearch(e.target.value)}
+                          className="h-7 pl-7 text-xs pr-2"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {renderNav()}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
           <Link href={backLink}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              На главную
+              <span className="hidden sm:inline">На главную</span>
             </Button>
           </Link>
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2 ml-2">
             <TitleIcon className={cn("h-5 w-5", activeColor.icon)} />
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
           <div className="ml-auto flex items-center gap-2">
             {notifications}
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               {session.user.name || session.user.email}
             </span>
           </div>
@@ -111,30 +232,28 @@ export function DashboardLayout({
       </header>
 
       <div className="max-w-7xl mx-auto flex gap-6 p-4">
-        {/* Sidebar */}
-        <nav className="w-56 shrink-0" role="navigation" aria-label={title}>
-          <div className="space-y-1 sticky top-20">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
-                    isActive
-                      ? activeClass
-                      : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
-                  )}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
+        {/* Sidebar - desktop only */}
+        {!isMobile && (
+          <aside className="w-56 shrink-0" role="navigation" aria-label={title}>
+            <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar">
+              {/* Search input for grouped nav */}
+              {navGroups && navGroups.length > 0 && (
+                <div className="px-1 mb-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Поиск..."
+                      value={navSearch}
+                      onChange={(e) => setNavSearch(e.target.value)}
+                      className="h-7 pl-7 text-xs pr-2"
+                    />
+                  </div>
+                </div>
+              )}
+              {renderNav()}
+            </div>
+          </aside>
+        )}
 
         {/* Content */}
         <main id="main-content" className="flex-1 min-w-0">{children}</main>

@@ -76,22 +76,11 @@ interface TestListProps {
   onClearAll?: () => void;
 }
 
-function CoverageBar({ task, testCases }: { task: Task | null; testCases: TestCase[] }) {
-  const coverage = useMemo(() => {
-    if (!task || testCases.length === 0) return { ecCovered: 0, ecTotal: 0, bvCovered: 0, bvTotal: 0 };
-    const result = evaluateTestCases(task, testCases);
-    return {
-      ecCovered: result.coveredEcsCount,
-      ecTotal: result.totalEcs,
-      bvCovered: result.coveredBvsCount,
-      bvTotal: result.totalBvs,
-    };
-  }, [task, testCases]);
+function CoverageBar({ task, evaluationResult }: { task: Task | null; evaluationResult: ReturnType<typeof evaluateTestCases> | null }) {
+  if (!task || !evaluationResult) return null;
 
-  if (!task || testCases.length === 0) return null;
-
-  const ecPercent = coverage.ecTotal > 0 ? (coverage.ecCovered / coverage.ecTotal) * 100 : 0;
-  const bvPercent = coverage.bvTotal > 0 ? (coverage.bvCovered / coverage.bvTotal) * 100 : 0;
+  const ecPercent = evaluationResult.totalEcs > 0 ? (evaluationResult.coveredEcsCount / evaluationResult.totalEcs) * 100 : 0;
+  const bvPercent = evaluationResult.totalBvs > 0 ? (evaluationResult.coveredBvsCount / evaluationResult.totalBvs) * 100 : 0;
 
   const colorClass = (pct: number) =>
     pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
@@ -105,7 +94,7 @@ function CoverageBar({ task, testCases }: { task: Task | null; testCases: TestCa
         {/* EC coverage */}
         <div className="flex-1 space-y-0.5">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="font-medium text-muted-foreground">EC: {coverage.ecCovered}/{coverage.ecTotal}</span>
+            <span className="font-medium text-muted-foreground">EC: {evaluationResult.coveredEcsCount}/{evaluationResult.totalEcs}</span>
             <span className={`font-semibold ${textColor(ecPercent)}`}>{Math.round(ecPercent)}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -118,7 +107,7 @@ function CoverageBar({ task, testCases }: { task: Task | null; testCases: TestCa
         {/* BV coverage */}
         <div className="flex-1 space-y-0.5">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="font-medium text-muted-foreground">BV: {coverage.bvCovered}/{coverage.bvTotal}</span>
+            <span className="font-medium text-muted-foreground">BV: {evaluationResult.coveredBvsCount}/{evaluationResult.totalBvs}</span>
             <span className={`font-semibold ${textColor(bvPercent)}`}>{Math.round(bvPercent)}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -133,25 +122,24 @@ function CoverageBar({ task, testCases }: { task: Task | null; testCases: TestCa
   );
 }
 
-function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases: TestCase[] }) {
+function UncoveredChecklist({ task, evaluationResult }: { task: Task | null; evaluationResult: ReturnType<typeof evaluateTestCases> | null }) {
   const [open, setOpen] = useState(false);
 
   const uncovered = useMemo(() => {
-    if (!task || testCases.length === 0) return null;
-    const result = evaluateTestCases(task, testCases);
-    if (result.uncoveredEcIds.length === 0 && result.uncoveredBvDescriptions.length === 0) return null;
+    if (!task || !evaluationResult) return null;
+    if (evaluationResult.uncoveredEcIds.length === 0 && evaluationResult.uncoveredBvDescriptions.length === 0) return null;
 
-    const uncoveredEcs = result.uncoveredEcIds
+    const uncoveredEcs = evaluationResult.uncoveredEcIds
       .map((id) => task.equivalenceClasses.find((ec) => ec.id === id))
       .filter(Boolean)
       .map((ec) => ({ id: ec!.id, name: ec!.name, description: ec!.description }));
 
     const uncoveredBvs = task.boundaryValues
-      .filter((bv) => result.uncoveredBvDescriptions.includes(bv.description))
+      .filter((bv) => evaluationResult.uncoveredBvDescriptions.includes(bv.description))
       .map((bv) => ({ description: bv.description, value: bv.value }));
 
     return { ecs: uncoveredEcs, bvs: uncoveredBvs };
-  }, [task, testCases]);
+  }, [task, evaluationResult]);
 
   if (!uncovered) return null;
 
@@ -163,7 +151,7 @@ function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases:
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
-        <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+        <AlertCircle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
         <span className="font-medium">Не покрыто: {total}</span>
         {open ? (
           <ChevronUp className="h-3 w-3 ml-auto shrink-0" />
@@ -181,7 +169,7 @@ function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases:
                   key={ec.id}
                   className="text-[11px] bg-muted/40 rounded-md px-2 py-1.5 flex items-start gap-2"
                 >
-                  <span className="text-amber-500 shrink-0 mt-px">○</span>
+                  <span className="text-amber-500 dark:text-amber-400 shrink-0 mt-px">○</span>
                   <div>
                     <span className="font-medium">{ec.name}</span>
                     <span className="text-muted-foreground ml-1">— {ec.description}</span>
@@ -198,7 +186,7 @@ function UncoveredChecklist({ task, testCases }: { task: Task | null; testCases:
                   key={i}
                   className="text-[11px] bg-muted/40 rounded-md px-2 py-1.5 flex items-start gap-2"
                 >
-                  <span className="text-amber-500 shrink-0 mt-px">○</span>
+                  <span className="text-amber-500 dark:text-amber-400 shrink-0 mt-px">○</span>
                   <div>
                     <code className="font-mono text-amber-700 dark:text-amber-400">
                       {Array.isArray(bv.value) ? `[${bv.value.join(", ")}]` : String(bv.value)}
@@ -277,7 +265,7 @@ function SortableRow({
     <TableCell className="py-2 w-10">
       <button onClick={() => onToggleSelect(tc.id)} aria-label="Выбрать">
         {selected ? (
-          <CheckSquare className="h-4 w-4 text-emerald-600" />
+          <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         ) : (
           <Square className="h-4 w-4 text-muted-foreground/40 hover:text-muted-foreground" />
         )}
@@ -345,7 +333,7 @@ function SortableRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
+              className="h-7 w-7 text-muted-foreground hover:text-emerald-600 dark:text-emerald-400"
               onClick={saveEditing}
               aria-label="Сохранить"
             >
@@ -422,7 +410,7 @@ function SortableRow({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
+                  className="h-7 w-7 text-muted-foreground hover:text-emerald-600 dark:text-emerald-400"
                   onClick={() => onDuplicate(tc.id)}
                   aria-label={`Дублировать тест-кейс ${idx + 1}`}
                 >
@@ -461,6 +449,11 @@ export const TestList = React.memo(function TestList({ task, testCases, onRemove
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+
+  const evaluationResult = useMemo(() => {
+    if (!task || testCases.length === 0) return null;
+    return evaluateTestCases(task, testCases);
+  }, [task, testCases]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -636,7 +629,7 @@ export const TestList = React.memo(function TestList({ task, testCases, onRemove
       <CardContent className="p-0">
         {/* Bulk selection floating bar */}
         {bulkMode && selectedIds.size > 0 && (
-          <div className="mx-4 mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800">
+          <div className="sticky top-0 z-10 mx-4 mb-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 shadow-sm">
             <span className="text-xs font-medium text-rose-700 dark:text-rose-400">
               Выбрано: {selectedIds.size}
             </span>
@@ -654,10 +647,10 @@ export const TestList = React.memo(function TestList({ task, testCases, onRemove
         )}
 
         {/* Coverage bar */}
-        <CoverageBar task={task} testCases={testCases} />
+        <CoverageBar task={task} evaluationResult={evaluationResult} />
 
         {/* Uncovered checklist */}
-        <UncoveredChecklist task={task} testCases={testCases} />
+        <UncoveredChecklist task={task} evaluationResult={evaluationResult} />
 
         <div className="max-h-80 overflow-y-auto custom-scrollbar">
           <DndContext
@@ -672,7 +665,7 @@ export const TestList = React.memo(function TestList({ task, testCases, onRemove
                     <TableHead className="text-xs w-10">
                       <button onClick={toggleSelectAll} aria-label="Выбрать все">
                         {selectedIds.size === testCases.length ? (
-                          <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
+                          <CheckSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
                           <Square className="h-3.5 w-3.5 text-muted-foreground/40" />
                         )}

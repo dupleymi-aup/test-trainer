@@ -67,6 +67,22 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
     });
   }, [attempts]);
 
+  const categoryDistribution = useMemo(() => {
+    const catTotals: Record<string, number> = { "Нормальное значение": 0, "Граничное значение": 0, "Исключение": 0, "Недопустимый тип": 0 };
+    attempts.forEach((a) => {
+      if (a.categoryDistribution) {
+        Object.entries(a.categoryDistribution).forEach(([cat, count]) => {
+          catTotals[cat] = (catTotals[cat] || 0) + count;
+        });
+      }
+    });
+    const totalCats = Object.values(catTotals).reduce((s, v) => s + v, 0);
+    if (totalCats === 0) return null;
+
+    const imbalance = Object.values(catTotals).some((v) => v > 0 && v / totalCats < 0.1);
+    return { catTotals, totalCats, imbalance };
+  }, [attempts]);
+
   const totalAttempts = attempts.length;
   const avgOverallScore = totalAttempts > 0
     ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / totalAttempts)
@@ -168,7 +184,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
         <CardContent className="pt-6">
           <div className="text-center mb-4">
             <h2 className="text-lg font-bold flex items-center justify-center gap-2">
-              <BarChart3 className="h-5 w-5 text-emerald-600" />
+              <BarChart3 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Статистика
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
@@ -196,15 +212,15 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
 
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-emerald-600">{totalAttempts}</p>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{totalAttempts}</p>
               <p className="text-xs text-muted-foreground">Попыток</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-teal-600">{avgOverallScore}%</p>
+              <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{avgOverallScore}%</p>
               <p className="text-xs text-muted-foreground">Средний балл</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-600">
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                 {taskStats.filter((t) => t.bestScore >= 90).length}/{tasks.length}
               </p>
               <p className="text-xs text-muted-foreground">Отлично</p>
@@ -215,7 +231,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
           {attempts.length >= 2 && (
             <div className="mt-4 pt-3 border-t border-border/50">
               <h3 className="text-xs font-medium mb-2 flex items-center gap-1.5">
-                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 Динамика оценок
               </h3>
               <ResponsiveContainer width="100%" height={160}>
@@ -265,11 +281,11 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
           {timedAttemptsCount > 0 && (
             <div className="mt-4 pt-3 border-t border-border/50 grid grid-cols-2 gap-4 text-center">
               <div>
-                <p className="text-lg font-bold text-violet-600">{formatTime(avgTimeMs)}</p>
+                <p className="text-lg font-bold text-violet-600 dark:text-violet-400">{formatTime(avgTimeMs)}</p>
                 <p className="text-xs text-muted-foreground">Среднее время/задание</p>
               </div>
               <div>
-                <p className="text-lg font-bold text-indigo-600">{formatTime(totalTimeMs)}</p>
+                <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{formatTime(totalTimeMs)}</p>
                 <p className="text-xs text-muted-foreground">Общее время</p>
               </div>
             </div>
@@ -296,18 +312,8 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
           )}
 
           {/* Category distribution analytics */}
-          {(() => {
-            const catTotals: Record<string, number> = { "Нормальное значение": 0, "Граничное значение": 0, "Исключение": 0, "Недопустимый тип": 0 };
-            attempts.forEach((a) => {
-              if (a.categoryDistribution) {
-                Object.entries(a.categoryDistribution).forEach(([cat, count]) => {
-                  catTotals[cat] = (catTotals[cat] || 0) + count;
-                });
-              }
-            });
-            const totalCats = Object.values(catTotals).reduce((s, v) => s + v, 0);
-            if (totalCats === 0) return null;
-
+          {categoryDistribution && (() => {
+            const { catTotals, totalCats, imbalance } = categoryDistribution;
             const catColors: Record<string, string> = {
               "Нормальное значение": "bg-emerald-500",
               "Граничное значение": "bg-amber-500",
@@ -320,9 +326,6 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
               "Исключение": "Исключения",
               "Недопустимый тип": "Недопустимый тип",
             };
-
-            // Detect imbalance: if any category is < 10% of total
-            const imbalance = Object.values(catTotals).some((v) => v > 0 && v / totalCats < 0.1);
 
             return (
               <div className="mt-4 pt-3 border-t border-border/50">
@@ -371,7 +374,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
         <Card className="border-violet-200 dark:border-violet-800">
           <CardContent className="pt-5 pb-4">
             <h3 className="text-sm font-semibold flex items-center gap-2 mb-4">
-              <Target className="h-4 w-4 text-violet-600" />
+              <Target className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               Карта навыков
             </h3>
             <div className="space-y-3">
@@ -475,7 +478,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                           {attempt.score}%
                         </span>
                         {trendDiff !== 0 && (
-                          <span className={`text-[10px] font-medium flex items-center gap-0.5 ${trendDiff > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                          <span className={`text-[10px] font-medium flex items-center gap-0.5 ${trendDiff > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                             {trendDiff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                             {trendDiff > 0 ? "+" : ""}{trendDiff}%
                           </span>
@@ -506,7 +509,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
       {/* Per-task stats */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Target className="h-4 w-4" />
+          <Target className="h-4 w-4 text-muted-foreground" />
           Детализация по заданиям
         </h3>
         {taskStats.map(({ task, bestScore, avgScore, attempts: count, trend, history, sparklineData, avgTimeMs }) => {
@@ -534,7 +537,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   {trend !== 0 && (
-                    <span className={`text-[10px] font-medium ${trend > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    <span className={`text-[10px] font-medium ${trend > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                       {trend > 0 ? "↑" : "↓"}{Math.abs(trend)}%
                     </span>
                   )}

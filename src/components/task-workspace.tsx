@@ -94,7 +94,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
         <Card className="border-emerald-200 dark:border-emerald-800">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2 mb-1">
-              <Info className="h-4 w-4 text-emerald-600" />
+              <Info className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <CardTitle className="text-base">{task.name}</CardTitle>
               <Badge variant="secondary" className="ml-auto text-xs">
                 {task.difficulty}
@@ -187,7 +187,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
                   </Badge>
                 )}
               </div>
-              <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
+              <div className="space-y-1.5">
                 {task.equivalenceClasses.map((ec) => {
                   const isCovered = coverage?.coveredEcIds.includes(ec.id) ?? false;
                   const isExpanded = expandedEcs.has(ec.id);
@@ -208,12 +208,12 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
                       >
                         {coverage && (
                           isCovered ? (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           ) : (
                             <XCircle className="h-3.5 w-3.5 text-rose-400/60 shrink-0" />
                           )
                         )}
-                        {!coverage && <Tag className="h-3 w-3 text-teal-500 shrink-0" />}
+                        {!coverage && <Tag className="h-3 w-3 text-teal-500 dark:text-teal-400 shrink-0" />}
                         <span className="font-medium">{ec.name}</span>
                         <ChevronRight className={`h-3 w-3 text-muted-foreground ml-auto transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                       </button>
@@ -244,7 +244,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
             {/* Boundary values */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <GitBranch className="h-3.5 w-3.5 text-amber-600" />
+                <GitBranch className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                 <span className="text-xs font-medium">
                   Граничные значения ({task.boundaryValues.length})
                 </span>
@@ -273,7 +273,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
                       <div className="flex items-center gap-1">
                         {coverage && (
                           isCovered ? (
-                            <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           ) : (
                             <XCircle className="h-3 w-3 text-rose-400/60 shrink-0" />
                           )
@@ -310,7 +310,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
               className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 rounded-t-lg transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-amber-600" />
+                <Lightbulb className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <span className="text-sm font-semibold">Типичные ошибки</span>
                 <Badge variant="secondary" className="text-[10px]">
                   {task.commonMistakes.length}
@@ -345,7 +345,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
             className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 rounded-t-lg transition-colors"
           >
             <div className="flex items-center gap-2">
-              <StickyNote className="h-4 w-4 text-amber-600" />
+              <StickyNote className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               <span className="text-sm font-semibold">Мои заметки</span>
               {note.length > 0 && (
                 <Badge variant="secondary" className="text-[10px]">

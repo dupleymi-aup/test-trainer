@@ -96,7 +96,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <Plus className="h-4 w-4 text-emerald-600" />
+          <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           Добавить тест-кейс
         </CardTitle>
       </CardHeader>

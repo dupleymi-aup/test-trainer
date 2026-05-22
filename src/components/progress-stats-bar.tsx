@@ -51,7 +51,7 @@ export const ProgressStatsBar = React.memo(function ProgressStatsBar({
     <div className="mb-4 sm:mb-6">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 text-sm">
-          <Trophy className="h-4 w-4 text-emerald-600" />
+          <Trophy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <span className="font-medium">
             Выполнено: {completedCount} из {totalTasks} заданий
           </span>
@@ -120,19 +120,21 @@ export const ProgressStatsBar = React.memo(function ProgressStatsBar({
       </div>
 
       {completedCount > 0 && (
-        <div className="flex flex-wrap gap-2 mt-3">
-          {Object.entries(savedProgress).map(([taskId, progress]) => {
-            const task = tasks.find((t) => t.id === Number(taskId));
-            if (!task) return null;
-            return (
-              <span
-                key={taskId}
-                className="text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-              >
-                {task.name}: {progress.score}%
-              </span>
-            );
-          })}
+        <div className="mt-3 -mx-1 px-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar snap-x snap-mandatory">
+            {Object.entries(savedProgress).map(([taskId, progress]) => {
+              const task = tasks.find((t) => t.id === Number(taskId));
+              if (!task) return null;
+              return (
+                <span
+                  key={taskId}
+                  className="shrink-0 snap-start text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                >
+                  {task.name}: {progress.score}%
+                </span>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

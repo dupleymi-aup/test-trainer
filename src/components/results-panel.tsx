@@ -111,11 +111,11 @@ function ScoreCircle({
 }
 
 function getGrade(score: number): { text: string; color: string; emoji: string } {
-  if (score >= 90) return { text: "Отлично", color: "text-emerald-600", emoji: "🌟" };
-  if (score >= 75) return { text: "Хорошо", color: "text-teal-600", emoji: "👍" };
-  if (score >= 60) return { text: "Удовлетворительно", color: "text-amber-600", emoji: "📝" };
-  if (score >= 40) return { text: "Неудовлетворительно", color: "text-orange-600", emoji: "⚠️" };
-  return { text: "Плохо", color: "text-rose-600", emoji: "❌" };
+  if (score >= 90) return { text: "Отлично", color: "text-emerald-600 dark:text-emerald-400", emoji: "🌟" };
+  if (score >= 75) return { text: "Хорошо", color: "text-teal-600 dark:text-teal-400", emoji: "👍" };
+  if (score >= 60) return { text: "Удовлетворительно", color: "text-amber-600 dark:text-amber-400", emoji: "📝" };
+  if (score >= 40) return { text: "Неудовлетворительно", color: "text-orange-600 dark:text-orange-400", emoji: "⚠️" };
+  return { text: "Плохо", color: "text-rose-600 dark:text-rose-400", emoji: "❌" };
 }
 
 function formatResultsAsText(result: EvaluationResult): string {
@@ -244,6 +244,80 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
     return { lines, categories: Object.keys(byCategory) };
   }, [result]);
 
+  const strategyWarnings = useMemo(() => {
+    const warnings: { icon: React.ReactNode; title: string; details: string; color: string }[] = [];
+
+    const categoryCounts: Record<string, number> = {};
+    result.results.forEach((r) => {
+      const cat = r.testCase.category;
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+    });
+
+    const totalTests = result.results.length;
+    const hasNormal = categoryCounts["Нормальное значение"] > 0;
+    const hasBoundary = categoryCounts["Граничное значение"] > 0;
+    const hasException = categoryCounts["Исключение"] > 0;
+    const hasInvalidType = categoryCounts["Недопустимый тип"] > 0;
+
+    if (hasNormal && !hasException && !hasInvalidType && totalTests >= 2) {
+      warnings.push({
+        icon: <AlertTriangle className="h-4 w-4" />,
+        title: "Тестируются только нормальные значения",
+        details: "Вы добавили тесты для корректных входов, но не проверили обработку ошибок. Добавьте тесты для исключений и невалидных типов данных.",
+        color: "amber",
+      });
+    }
+
+    if (!hasBoundary && result.totalBvs > 3 && totalTests >= 3) {
+      warnings.push({
+        icon: <AlertTriangle className="h-4 w-4" />,
+        title: "Отсутствуют граничные значения",
+        details: `У этой задачи ${result.totalBvs} граничных значений. Границы диапазонов — наиболее вероятное место ошибок. Протестируйте min, max и соседние значения.`,
+        color: "amber",
+      });
+    }
+
+    if (totalTests < 3) {
+      warnings.push({
+        icon: <Info className="h-4 w-4" />,
+        title: "Слишком мало тест-кейсов",
+        details: `Всего ${totalTests} тест. Для полного покрытия этой задачи (${result.totalEcs} EC + ${result.totalBvs} BV) рекомендуется минимум ${Math.min(result.totalEcs + result.totalBvs, 8)} тестов.`,
+        color: "blue",
+      });
+    }
+
+    if (result.ecCoverage >= 80 && result.correctnessScore < 70) {
+      warnings.push({
+        icon: <AlertTriangle className="h-4 w-4" />,
+        title: "Хорошее покрытие, но есть ошибки в ожиданиях",
+        details: "Вы покрыли большинство классов эквивалентности, но часть ожидаемых результатов не совпадает с фактическими. Проверьте код функции и уточните ожидания.",
+        color: "amber",
+      });
+    }
+
+    if (result.correctnessScore >= 90 && result.ecCoverage < 50) {
+      warnings.push({
+        icon: <Info className="h-4 w-4" />,
+        title: "Точные ожидания, но малое покрытие",
+        details: "Все ваши ожидаемые результаты верны, но вы протестировали менее половины классов эквивалентности. Добавьте тесты для непокрытых классов.",
+        color: "blue",
+      });
+    }
+
+    const categoryKeys = Object.keys(categoryCounts);
+    if (categoryKeys.length === 1 && totalTests >= 3) {
+      const onlyCat = categoryKeys[0];
+      warnings.push({
+        icon: <AlertTriangle className="h-4 w-4" />,
+        title: `Все тесты в категории «${onlyCat}»`,
+        details: "Разнообразьте категории: тестируйте нормальные значения, границы, исключения и недопустимые типы для полного покрытия.",
+        color: "amber",
+      });
+    }
+
+    return warnings;
+  }, [result]);
+
   const handleExportCsv = () => {
     if (!result) return;
     const lines: string[] = [];
@@ -327,7 +401,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                 <span className="text-muted-foreground">Лучший:</span>
                 <span className="font-bold text-amber-600 dark:text-amber-400">{bestScore}%</span>
                 {result.overallScore !== bestScore && (
-                  <span className={`font-medium ${result.overallScore > bestScore ? "text-emerald-600" : "text-rose-600"}`}>
+                  <span className={`font-medium ${result.overallScore > bestScore ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                     {result.overallScore > bestScore ? "↑" : "↓"}{Math.abs(result.overallScore - bestScore)}%
                   </span>
                 )}
@@ -380,7 +454,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
         <Card className="border-blue-200 dark:border-blue-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-blue-600" />
+              <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               Анализ результатов по категориям
             </CardTitle>
           </CardHeader>
@@ -414,7 +488,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Target className="h-4 w-4 text-teal-600" />
+              <Target className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               Классы эквивалентности
               <Badge variant="secondary" className="ml-auto text-xs">
                 {result.coveredEcsCount}/{result.totalEcs}
@@ -438,9 +512,9 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                         }`}
                       >
                         {covered ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         ) : (
-                          <XCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                          <XCircle className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
                         )}
                         <span className={covered ? "text-emerald-800 dark:text-emerald-300" : "text-rose-700 dark:text-rose-400"}>
                           {ec.name}
@@ -467,7 +541,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Award className="h-4 w-4 text-amber-600" />
+              <Award className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               Граничные значения
               <Badge variant="secondary" className="ml-auto text-xs">
                 {result.coveredBvsCount}/{result.totalBvs}
@@ -493,9 +567,9 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                         }`}
                       >
                         {covered ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         ) : (
-                          <XCircle className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                          <XCircle className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
                         )}
                         <span className={covered ? "text-emerald-800 dark:text-emerald-300" : "text-rose-700 dark:text-rose-400"}>
                           {bv.description}:{" "}
@@ -556,7 +630,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                 onClick={handleCopy}
               >
                 {copied ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 ) : (
                   <Copy className="h-3.5 w-3.5" />
                 )}
@@ -595,20 +669,38 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                           </code>
                         </TableCell>
                         <TableCell className="py-2">
-                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono max-w-[100px] inline-block truncate">
-                            {r.testCase.expectedOutput}
-                          </code>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono max-w-[100px] inline-block truncate cursor-help">
+                                  {r.testCase.expectedOutput}
+                                </code>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs font-mono text-xs">
+                                {r.testCase.expectedOutput}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell className="py-2">
-                          <code
-                            className={`text-xs px-1.5 py-0.5 rounded font-mono max-w-[150px] inline-block truncate ${
-                              r.isCorrect
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
-                                : "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
-                            }`}
-                          >
-                            {r.actualOutput}
-                          </code>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <code
+                                  className={`text-xs px-1.5 py-0.5 rounded font-mono max-w-[150px] inline-block truncate cursor-help ${
+                                    r.isCorrect
+                                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                      : "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
+                                  }`}
+                                >
+                                  {r.actualOutput}
+                                </code>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" className="max-w-xs font-mono text-xs">
+                                {r.actualOutput}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell className="py-2">
                           {r.isCorrect ? (
@@ -704,7 +796,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                               {/* Hint for incorrect tests */}
                               {!r.isCorrect && (
                                 <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10">
-                                  <Lightbulb className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                                  <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                                   <div className="text-xs text-blue-800 dark:text-blue-300">
                                     <p className="font-medium mb-0.5">Как исправить?</p>
                                     <p className="text-[11px] opacity-80">
@@ -727,91 +819,11 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
       </Card>
 
       {/* Smart category distribution warnings */}
-      {(() => {
-        const warnings: { icon: React.ReactNode; title: string; details: string; color: string }[] = [];
-
-        // Analyze category distribution
-        const categoryCounts: Record<string, number> = {};
-        result.results.forEach((r) => {
-          const cat = r.testCase.category;
-          categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-        });
-
-        const totalTests = result.results.length;
-        const hasNormal = categoryCounts["Нормальное значение"] > 0;
-        const hasBoundary = categoryCounts["Граничное значение"] > 0;
-        const hasException = categoryCounts["Исключение"] > 0;
-        const hasInvalidType = categoryCounts["Недопустимый тип"] > 0;
-
-        // Check if only testing normal values
-        if (hasNormal && !hasException && !hasInvalidType && totalTests >= 2) {
-          warnings.push({
-            icon: <AlertTriangle className="h-4 w-4" />,
-            title: "Тестируются только нормальные значения",
-            details: "Вы добавили тесты для корректных входов, но не проверили обработку ошибок. Добавьте тесты для исключений и невалидных типов данных.",
-            color: "amber",
-          });
-        }
-
-        // Check if missing boundary values
-        if (!hasBoundary && result.totalBvs > 3 && totalTests >= 3) {
-          warnings.push({
-            icon: <AlertTriangle className="h-4 w-4" />,
-            title: "Отсутствуют граничные значения",
-            details: `У этой задачи ${result.totalBvs} граничных значений. Границы диапазонов — наиболее вероятное место ошибок. Протестируйте min, max и соседние значения.`,
-            color: "amber",
-          });
-        }
-
-        // Check if only 1-2 test cases total
-        if (totalTests < 3) {
-          warnings.push({
-            icon: <Info className="h-4 w-4" />,
-            title: "Слишком мало тест-кейсов",
-            details: `Всего ${totalTests} тест. Для полного покрытия этой задачи (${result.totalEcs} EC + ${result.totalBvs} BV) рекомендуется минимум ${Math.min(result.totalEcs + result.totalBvs, 8)} тестов.`,
-            color: "blue",
-          });
-        }
-
-        // Check if EC coverage is high but correctness is low
-        if (result.ecCoverage >= 80 && result.correctnessScore < 70) {
-          warnings.push({
-            icon: <AlertTriangle className="h-4 w-4" />,
-            title: "Хорошее покрытие, но есть ошибки в ожиданиях",
-            details: "Вы покрыли большинство классов эквивалентности, но часть ожидаемых результатов не совпадает с фактическими. Проверьте код функции и уточните ожидания.",
-            color: "amber",
-          });
-        }
-
-        // Check if correctness is high but coverage is low
-        if (result.correctnessScore >= 90 && result.ecCoverage < 50) {
-          warnings.push({
-            icon: <Info className="h-4 w-4" />,
-            title: "Точные ожидания, но малое покрытие",
-            details: "Все ваши ожидаемые результаты верны, но вы протестировали менее половины классов эквивалентности. Добавьте тесты для непокрытых классов.",
-            color: "blue",
-          });
-        }
-
-        // Check if all test cases are from same category
-        const categoryKeys = Object.keys(categoryCounts);
-        if (categoryKeys.length === 1 && totalTests >= 3) {
-          const onlyCat = categoryKeys[0];
-          warnings.push({
-            icon: <AlertTriangle className="h-4 w-4" />,
-            title: `Все тесты в категории «${onlyCat}»`,
-            details: "Разнообразьте категории: тестируйте нормальные значения, границы, исключения и недопустимые типы для полного покрытия.",
-            color: "amber",
-          });
-        }
-
-        if (warnings.length === 0) return null;
-
-        return (
+      {strategyWarnings.length > 0 && (
           <Card className="border-blue-200 dark:border-blue-800">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-blue-600" />
+                <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 Стратегия тестирования
               </CardTitle>
             </CardHeader>
@@ -834,15 +846,14 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
               ))}
             </CardContent>
           </Card>
-        );
-      })()}
+      )}
 
       {/* Hints for improvement */}
       {(result.uncoveredEcIds.length > 0 || result.uncoveredBvDescriptions.length > 0) && (
         <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-amber-600" />
+              <Lightbulb className="h-4 w-4 text-amber-600 dark:text-amber-400" />
               Рекомендации по улучшению
             </CardTitle>
           </CardHeader>
@@ -895,7 +906,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
         <Card className="border-blue-200 dark:border-blue-800">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-blue-600" />
+              <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               Сравнение с лучшей попыткой
               <Badge variant="secondary" className="ml-auto text-xs">
                 Лучший: {comparison.bestScore}%
@@ -908,9 +919,9 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                 <p className="text-muted-foreground mb-1">Классы эквивалентности</p>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Было:</span>
-                  <span className="font-bold text-amber-600">{comparison.bestEc}%</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">{comparison.bestEc}%</span>
                   <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                  <span className={`font-bold ${result.ecCoverage >= comparison.bestEc ? "text-emerald-600" : "text-rose-600"}`}>
+                  <span className={`font-bold ${result.ecCoverage >= comparison.bestEc ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                     {result.ecCoverage}%
                   </span>
                 </div>
@@ -919,9 +930,9 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                 <p className="text-muted-foreground mb-1">Граничные значения</p>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Было:</span>
-                  <span className="font-bold text-amber-600">{comparison.bestBv}%</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">{comparison.bestBv}%</span>
                   <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                  <span className={`font-bold ${result.boundaryCoverage >= comparison.bestBv ? "text-emerald-600" : "text-rose-600"}`}>
+                  <span className={`font-bold ${result.boundaryCoverage >= comparison.bestBv ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                     {result.boundaryCoverage}%
                   </span>
                 </div>

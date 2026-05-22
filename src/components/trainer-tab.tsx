@@ -104,7 +104,7 @@ export function TrainerTab({
         />
       </div>
 
-      <div className="hidden lg:block h-[calc(100vh-200px)]">
+      <div className="hidden lg:block h-[calc(100dvh-6rem)]">
         <ResizablePanelGroup direction="horizontal" autoSaveId="trainer-split">
           <ResizablePanel defaultSize={50} minSize={30} className="overflow-hidden">
             <div className="h-full overflow-auto pr-4">

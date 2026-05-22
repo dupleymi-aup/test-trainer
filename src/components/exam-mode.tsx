@@ -452,7 +452,7 @@ export function ExamMode() {
         <Card className="border-emerald-200 dark:border-emerald-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Timer className="h-5 w-5 text-emerald-600" />
+              <Timer className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Режим экзамена
             </CardTitle>
           </CardHeader>
@@ -624,7 +624,7 @@ export function ExamMode() {
         <Card className="border-amber-200 dark:border-amber-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-amber-600" />
+              <Lightbulb className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               Советы перед экзаменом
             </CardTitle>
           </CardHeader>
@@ -638,21 +638,21 @@ export function ExamMode() {
 
             <div className="space-y-2">
               <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
-                <Target className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <Target className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Стратегия покрытия</p>
                   <p className="text-[11px] text-muted-foreground">Сначала тестируйте нормальные значения, затем границы, потом исключения. Не тратьте время на один класс дважды.</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/10">
-                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Распределение времени</p>
                   <p className="text-[11px] text-muted-foreground">≈ {Math.floor(timePerTask / 60)}:{(timePerTask % 60).toString().padStart(2, "0")} на задание. Если застряли — переходите к следующему.</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/10">
-                <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-blue-800 dark:text-blue-300">Проверяйте ожидания</p>
                   <p className="text-[11px] text-muted-foreground">Используйте кнопку калькулятора для точного ожидаемого результата. Неверное ожидание = потеря баллов корректности.</p>
@@ -700,8 +700,8 @@ export function ExamMode() {
         <div className={`p-3 rounded-lg border ${isTimeLow ? "border-rose-300 bg-rose-50 dark:bg-rose-900/20" : "border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20"}`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Timer className={`h-4 w-4 ${isTimeLow ? "text-rose-600" : "text-emerald-600"}`} />
-              <span className={`font-mono text-lg font-bold ${isTimeLow ? "text-rose-600" : "text-emerald-700 dark:text-emerald-400"}`}>
+              <Timer className={`h-4 w-4 ${isTimeLow ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`} />
+              <span className={`font-mono text-lg font-bold ${isTimeLow ? "text-rose-600 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400"}`}>
                 {formatTime(timeRemaining)}
               </span>
             </div>
@@ -936,7 +936,7 @@ export function ExamMode() {
       <Confetti active={showConfetti} />
       <Card className="border-emerald-200 dark:border-emerald-800">
         <CardContent className="pt-6 text-center">
-          <Trophy className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+          <Trophy className="h-10 w-10 text-amber-500 dark:text-amber-400 mx-auto mb-2" />
           <h2 className="text-xl font-bold">Экзамен завершён!</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Средняя оценка: <strong className="text-lg">{avgScore}%</strong> по {examResults.length} заданиям
@@ -968,7 +968,7 @@ export function ExamMode() {
       <Card className="border-blue-200 dark:border-blue-800">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-blue-600" />
+            <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             Анализ результатов
           </CardTitle>
         </CardHeader>
@@ -981,7 +981,7 @@ export function ExamMode() {
             return (
               <>
                 <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-900/10">
-                  <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-xs font-medium text-rose-800 dark:text-rose-300">Слабое место: {weakest.task.name} ({weakest.overallScore}%)</p>
                     <p className="text-[11px] text-muted-foreground">
@@ -994,7 +994,7 @@ export function ExamMode() {
                 </div>
                 {strongest.overallScore !== weakest.overallScore && (
                   <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Сильное место: {strongest.task.name} ({strongest.overallScore}%)</p>
                       <p className="text-[11px] text-muted-foreground">Лучший результат на экзамене. Вы хорошо понимаете этот тип задач.</p>

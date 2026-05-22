@@ -116,7 +116,7 @@ export function CommandPalette({
               <tab.icon className="h-4 w-4" />
               {tab.label}
               {tab.id === activeTab && (
-                <span className="ml-auto text-xs text-emerald-600">активно</span>
+                <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">активно</span>
               )}
             </CommandItem>
           ))}

@@ -110,7 +110,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
         <Card className="border-blue-200 dark:border-blue-800 mb-4">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-start gap-2 text-sm text-muted-foreground">
-              <Lightbulb className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+              <Lightbulb className="h-4 w-4 text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-foreground text-xs mb-1">
                   Текущее задание: {task.name}
@@ -183,7 +183,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm flex items-center gap-1.5">
                   Классы эквивалентности
-                  {viewedSections.has("ec") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("ec") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                   {isRecommended("ec") && (
                     <Badge variant="default" className="text-[9px] px-1 py-0 h-4 bg-emerald-600 hover:bg-emerald-700">Рекомендуется</Badge>
                   )}
@@ -207,7 +207,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 </p>
                 <ul className="space-y-1.5">
                   <li className="flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5">●</span>
+                    <span className="text-emerald-500 dark:text-emerald-400 mt-0.5">●</span>
                     <span>
                       <strong>Валидные классы</strong> — допустимые входные данные, для которых
                       функция должна работать корректно
@@ -255,7 +255,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm flex items-center gap-1.5">
                   Граничные значения
-                  {viewedSections.has("bv") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("bv") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                   {isRecommended("bv") && (
                     <Badge variant="default" className="text-[9px] px-1 py-0 h-4 bg-amber-600 hover:bg-amber-700">Рекомендуется</Badge>
                   )}
@@ -330,7 +330,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Категории тест-кейсов
-                  {viewedSections.has("categories") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("categories") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Как классифицировать тесты
@@ -395,7 +395,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Советы
-                  {viewedSections.has("tips") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("tips") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Лучшие практики тестирования
@@ -407,35 +407,35 @@ export function TheoryPanel({ task }: { task?: Task }) {
             <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
               <ul className="space-y-2">
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">1.</span>
+                  <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">1.</span>
                   <span>
                     <strong>Покройте все классы эквивалентности</strong> — для каждого класса
                     создайте хотя бы один тест-кейс
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">2.</span>
+                  <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">2.</span>
                   <span>
                     <strong>Не забывайте о граничных значениях</strong> — тестируйте границы и
                     значения рядом с ними
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">3.</span>
+                  <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">3.</span>
                   <span>
                     <strong>Тестируйте невалидные данные</strong> — проверьте, как функция
                     обрабатывает ошибки
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">4.</span>
+                  <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">4.</span>
                   <span>
                     <strong>Проверяйте типы</strong> — передайте данные неверного типа и
                     убедитесь, что функция корректно обработает это
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-0.5 shrink-0">5.</span>
+                  <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">5.</span>
                   <span>
                     <strong>Используйте осмысленные комментарии</strong> — записывайте, почему
                     выбран конкретный тест-кейс
@@ -458,7 +458,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Диаграммы состояний
-                  {viewedSections.has("state-transition") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("state-transition") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Тестирование переходов между состояниями
@@ -534,7 +534,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Таблицы решений
-                  {viewedSections.has("decision-tables") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("decision-tables") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Систематический подход к логическим условиям
@@ -622,7 +622,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Попарное тестирование
-                  {viewedSections.has("pairwise") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("pairwise") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Сокращение комбинаций с гарантированным покрытием пар
@@ -693,7 +693,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Метрики покрытия
-                  {viewedSections.has("metrics") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("metrics") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Как оценивается качество тестирования
@@ -799,7 +799,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Предугадывание ошибок
-                  {viewedSections.has("error-guessing") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("error-guessing") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Интуитивный поиск типичных дефектов
@@ -885,7 +885,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Типичные ошибки студентов
-                  {viewedSections.has("common-mistakes") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("common-mistakes") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Чего следует избегать при написании тестов
@@ -1011,7 +1011,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="text-left">
                 <h3 className="font-semibold text-sm">
                   Алгоритм создания тестов
-                  {viewedSections.has("testing-strategy") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                  {viewedSections.has("testing-strategy") && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" />}
                 </h3>
                 <p className="text-xs text-muted-foreground">
                   Пошаговая стратегия для любой функции
@@ -1118,27 +1118,27 @@ export function TheoryPanel({ task }: { task?: Task }) {
                 </p>
                 <ul className="space-y-1 text-xs">
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>Все валидные классы покрыты (зелёные)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>Все невалидные классы покрыты (красные)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>Все граничные значения протестированы</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>Проверены недопустимые типы данных</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>Ожидаемые результаты совпадают с эталоном</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>Добавлены 1–2 error guessing теста</span>
                   </li>
                 </ul>
@@ -1152,7 +1152,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
       <Card className="border-violet-200 dark:border-violet-800 mt-4">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <Brain className="h-5 w-5 text-violet-600" />
+            <Brain className="h-5 w-5 text-violet-600 dark:text-violet-400" />
             Проверь себя
             <span className="text-xs font-normal text-muted-foreground ml-auto">
               {quizQuestions.length} вопросов
@@ -1180,7 +1180,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
             return (
               <div key={q.id} className="space-y-2">
                 <p className="text-sm font-medium">
-                  <span className="text-violet-600 mr-1">{qi + 1}.</span>
+                  <span className="text-violet-600 dark:text-violet-400 mr-1">{qi + 1}.</span>
                   {q.question}
                 </p>
                 <div className="space-y-1.5">
@@ -1206,10 +1206,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
                         className={`w-full text-left text-xs p-2.5 rounded-lg border transition-colors flex items-center gap-2 ${optClass}`}
                       >
                         {quizSubmitted && oi === q.correctIndex && (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         )}
                         {isWrong && (
-                          <XCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                          <XCircle className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
                         )}
                         {!quizSubmitted && (
                           <span

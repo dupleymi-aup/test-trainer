@@ -48,3 +48,34 @@ export function LoadingSkeleton({
     </div>
   );
 }
+
+/** Full-page loading state with spinner and skeleton cards */
+export function PageLoadingSkeleton({
+  text = "Загрузка...",
+}: {
+  text?: string;
+}) {
+  return (
+    <div className="p-6 space-y-6 animate-pulse" role="status" aria-label={text}>
+      {/* Header skeleton */}
+      <div className="h-8 w-48 rounded bg-muted" />
+      {/* Card skeletons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="h-32 rounded-lg border bg-card p-4 space-y-3">
+            <div className="h-4 w-3/4 rounded bg-muted" />
+            <div className="h-3 w-full rounded bg-muted" />
+            <div className="h-3 w-2/3 rounded bg-muted" />
+          </div>
+        ))}
+      </div>
+      {/* Table skeleton */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="h-4 w-1/4 rounded bg-muted" />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-10 w-full rounded bg-muted/50" />
+        ))}
+      </div>
+    </div>
+  );
+}

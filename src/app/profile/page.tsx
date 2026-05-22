@@ -111,7 +111,7 @@ export default function ProfilePage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
       </div>
     }>
       <ProfileContent />
@@ -311,7 +311,7 @@ function ProfileContent() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600 dark:text-emerald-400" />
       </div>
     );
   }
@@ -392,7 +392,7 @@ function ProfileContent() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-auto p-0 text-xs text-emerald-600 hover:text-emerald-700"
+                            className="h-auto p-0 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
                             onClick={handleResendVerification}
                             disabled={isSendingVerification}
                           >

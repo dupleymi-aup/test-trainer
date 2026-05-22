@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Users, FileText, TrendingUp } from "lucide-react";
+import { Users, FileText, TrendingUp, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface Student {
@@ -34,7 +34,7 @@ export default function TeacherDashboardPage() {
     }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  if (loading) return <TeacherLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></TeacherLayout>;
 
   const avgScore = students.length > 0 ? Math.round(students.reduce((s, st) => s + st.bestScore, 0) / students.length) : 0;
 

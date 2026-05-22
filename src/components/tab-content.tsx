@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ListChecks,
@@ -97,6 +98,17 @@ export function TabContent({
   onBackToTasks,
   onRandomTask,
 }: TabContentProps) {
+  const achievementContext = useMemo<AchievementContext>(() => ({
+    completedTasks: Object.keys(savedProgress).length,
+    totalTasks: tasks.length,
+    bestScores: Object.fromEntries(Object.entries(savedProgress).map(([id, p]) => [id, p.score])),
+    totalAttempts: attemptHistory.length,
+    perfectScores: Object.values(savedProgress).filter((p) => p.score >= 100).length,
+    attemptHistory: attemptHistory.map((h) => ({ taskId: h.taskId, score: h.score, timestamp: h.timestamp })),
+    maxEcCoverage: attemptHistory.reduce((max, h) => Math.max(max, h.ecCoverage ?? 0), 0),
+    maxBvCoverage: attemptHistory.reduce((max, h) => Math.max(max, h.bvCoverage ?? 0), 0),
+  }), [savedProgress, attemptHistory]);
+
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
       <TabsList className="flex flex-wrap sm:grid sm:grid-cols-6 w-full mb-4 sm:mb-6 h-auto p-1 bg-muted/50 gap-1">
@@ -105,8 +117,8 @@ export function TabContent({
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden xs:inline sm:inline">Задания</span>
-          <span className="xs:hidden sm:hidden">Зад</span>
+          <span className="hidden sm:inline">Задания</span>
+          <span className="sm:hidden">Зад</span>
         </TabsTrigger>
         <TabsTrigger
           value="trainer"
@@ -114,8 +126,8 @@ export function TabContent({
           disabled={!selectedTask}
         >
           <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden xs:inline sm:inline">Тренажёр</span>
-          <span className="xs:hidden sm:hidden">Тр</span>
+          <span className="hidden sm:inline">Тренажёр</span>
+          <span className="sm:hidden">Тр</span>
         </TabsTrigger>
         <TabsTrigger
           value="results"
@@ -123,32 +135,32 @@ export function TabContent({
           disabled={!evaluationResult}
         >
           <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden xs:inline sm:inline">Результаты</span>
-          <span className="xs:hidden sm:hidden">Рез</span>
+          <span className="hidden sm:inline">Результаты</span>
+          <span className="sm:hidden">Рез</span>
         </TabsTrigger>
         <TabsTrigger
           value="statistics"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden xs:inline sm:inline">Статистика</span>
-          <span className="xs:hidden sm:hidden">Ст</span>
+          <span className="hidden sm:inline">Статистика</span>
+          <span className="sm:hidden">Ст</span>
         </TabsTrigger>
         <TabsTrigger
           value="exam"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <Timer className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden xs:inline sm:inline">Экзамен</span>
-          <span className="xs:hidden sm:hidden">Эк</span>
+          <span className="hidden sm:inline">Экзамен</span>
+          <span className="sm:hidden">Эк</span>
         </TabsTrigger>
         <TabsTrigger
           value="theory"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden xs:inline sm:inline">Теория</span>
-          <span className="xs:hidden sm:hidden">Т</span>
+          <span className="hidden sm:inline">Теория</span>
+          <span className="sm:hidden">Т</span>
         </TabsTrigger>
       </TabsList>
 
@@ -255,19 +267,7 @@ export function TabContent({
             </div>
             <div className="max-w-3xl mx-auto space-y-6">
               <StatisticsPanel attempts={attemptHistory} />
-              {(() => {
-                const achievementCtx: AchievementContext = {
-                  completedTasks: Object.keys(savedProgress).length,
-                  totalTasks: tasks.length,
-                  bestScores: Object.fromEntries(Object.entries(savedProgress).map(([id, p]) => [id, p.score])),
-                  totalAttempts: attemptHistory.length,
-                  perfectScores: Object.values(savedProgress).filter((p) => p.score >= 100).length,
-                  attemptHistory: attemptHistory.map((h) => ({ taskId: h.taskId, score: h.score, timestamp: h.timestamp })),
-                  maxEcCoverage: attemptHistory.reduce((max, h) => Math.max(max, h.ecCoverage ?? 0), 0),
-                  maxBvCoverage: attemptHistory.reduce((max, h) => Math.max(max, h.bvCoverage ?? 0), 0),
-                };
-                return <AchievementsPanel context={achievementCtx} />;
-              })()}
+              <AchievementsPanel context={achievementContext} />
             </div>
           </motion.div>
         )}
