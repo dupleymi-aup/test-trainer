@@ -94,3 +94,48 @@ export async function requireTeacherOrAdmin(): Promise<
 
   return { session: { userId: user.id, role: user.role } };
 }
+
+/**
+ * Verify that the teacher (from session) owns the specified group.
+ * Admins bypass ownership check. Returns the group if authorized.
+ * Use this to prevent teachers from accessing data outside their groups.
+ */
+export async function requireTeacherGroup(
+  groupId: string,
+  session: { userId: string; role: string }
+): Promise<{ group: { id: string; createdByUserId: string } } | { response: NextResponse }> {
+  if (!groupId) {
+    return { response: NextResponse.json({ error: "groupId is required" }, { status: 400 }) };
+  }
+
+  const group = await db.group.findUnique({
+    where: { id: groupId },
+    select: { id: true, createdByUserId: true },
+  });
+
+  if (!group) {
+    return { response: NextResponse.json({ error: "Group not found" }, { status: 404 }) };
+  }
+
+  if (session.role !== "ADMIN" && group.createdByUserId !== session.userId) {
+    return { response: NextResponse.json({ error: "Forbidden: you can only access your own groups" }, { status: 403 }) };
+  }
+
+  return { group };
+}
+
+/**
+ * Get all group IDs that a teacher owns. Returns all group IDs for admins.
+ */
+export async function getTeacherGroupIds(userId: string, role: string): Promise<string[]> {
+  if (role === "ADMIN") {
+    const allGroups = await db.group.findMany({ select: { id: true } });
+    return allGroups.map((g) => g.id);
+  }
+
+  const groups = await db.group.findMany({
+    where: { createdByUserId: userId },
+    select: { id: true },
+  });
+  return groups.map((g) => g.id);
+}

@@ -11,8 +11,22 @@ export async function GET(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const { id } = await params;
+
+    // Verify the student belongs to a group managed by this teacher
+    const membership = await db.userGroup.findFirst({
+      where: {
+        userId: id,
+        group: { createdByUserId: session.userId },
+      },
+    });
+
+    // Admins can view any student; teachers can only view students in their groups
+    if (!membership && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden: student is not in your group" }, { status: 403 });
+    }
 
     const student = await db.user.findUnique({
       where: { id, role: "STUDENT" },

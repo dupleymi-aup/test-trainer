@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -7,19 +7,21 @@ export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const { searchParams } = new URL(req.url);
     const groupId = searchParams.get("groupId");
     const search = searchParams.get("search");
 
+    // Require groupId to prevent teachers from accessing all students on the platform
+    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if ("response" in groupCheck) return groupCheck.response;
+
     const where: Record<string, unknown> = {
       role: "STUDENT",
       deletedAt: null,
+      groups: { some: { groupId: groupCheck.group.id } },
     };
-
-    if (groupId) {
-      where.groups = { some: { groupId } };
-    }
 
     if (search) {
       where.OR = [

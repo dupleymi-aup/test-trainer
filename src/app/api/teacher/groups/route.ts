@@ -8,8 +8,13 @@ export async function GET() {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    // Filter groups by teacher ownership — prevent access to all groups on platform
+    const where = session.role === "ADMIN" ? {} : { createdByUserId: session.userId };
 
     const groups = await db.group.findMany({
+      where,
       include: {
         _count: { select: { members: true } },
         createdBy: { select: { name: true, email: true } },

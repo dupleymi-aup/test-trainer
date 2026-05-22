@@ -1,15 +1,30 @@
 import { NextResponse } from "next/server";
-import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-    // Fetch all students with attempts
+    const { searchParams } = new URL(req.url);
+    const groupId = searchParams.get("groupId");
+
+    // Require groupId to prevent teachers from accessing all students on the platform
+    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if ("response" in groupCheck) return groupCheck.response;
+
+    // Get students in this group only
+    const userGroups = await db.userGroup.findMany({
+      where: { groupId: groupCheck.group.id },
+      select: { userId: true },
+    });
+    const userIds = userGroups.map((ug) => ug.userId);
+
     const students = await db.user.findMany({
       where: {
+        id: { in: userIds },
         role: "STUDENT",
         deletedAt: null,
       },
@@ -57,7 +72,6 @@ export async function GET() {
       const attempts = student.attempts;
       const riskFactors: string[] = [];
 
-      // Calculate stats
       const bestScore =
         attempts.reduce((max, a) => Math.max(max, a.score), 0);
       const avgScore =
@@ -69,12 +83,10 @@ export async function GET() {
           ? attempts[attempts.length - 1].createdAt
           : null;
 
-      // 1. Low performer: bestScore < 50
       if (bestScore < 50 && attempts.length > 0) {
         riskFactors.push("low_performer");
       }
 
-      // 2. Declining trend: last 3 avg < first 3 avg by >15 points
       if (attempts.length >= 6) {
         const first3 = attempts.slice(0, 3);
         const last3 = attempts.slice(-3);
@@ -86,7 +98,6 @@ export async function GET() {
         }
       }
 
-      // 3. Inactive: last attempt > 14 days ago AND has at least 1 previous attempt
       if (
         attempts.length > 0 &&
         lastAttemptDate &&
@@ -95,14 +106,11 @@ export async function GET() {
         riskFactors.push("inactive");
       }
 
-      // 4. Low engagement: attempts < 3 AND registered > 7 days ago
       if (attempts.length < 3 && student.createdAt < sevenDaysAgo) {
         riskFactors.push("low_engagement");
       }
 
-      // Only include if at least one risk factor
       if (riskFactors.length > 0) {
-        // Generate recommendation
         const recommendations: string[] = [];
         if (riskFactors.includes("low_performer")) {
           recommendations.push(
@@ -151,7 +159,6 @@ export async function GET() {
       }
     });
 
-    // Sort by number of risk factors (most at-risk first)
     atRiskStudents.sort((a, b) => b.riskFactors.length - a.riskFactors.length);
 
     return NextResponse.json({ atRiskStudents });
