@@ -3,37 +3,43 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
-  const { id } = await params;
+    const { id } = await params;
 
-  const group = await db.group.findUnique({ where: { id } });
-  if (!group) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    const group = await db.group.findUnique({ where: { id } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    const assignedTasks = await db.groupTask.findMany({
+      where: { groupId: id },
+      select: { taskId: true },
+    });
+
+    const assignedTaskIds = new Set(assignedTasks.map((t) => t.taskId));
+
+    const allTasks = tasks.map((t) => ({
+      id: t.id,
+      name: t.name,
+      difficulty: t.difficulty,
+      description: t.description,
+      isAssigned: assignedTaskIds.has(t.id),
+    }));
+
+    return NextResponse.json({ tasks: allTasks });
+  } catch (error) {
+    logger.error("Admin group tasks GET failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch group tasks" }, { status: 500 });
   }
-
-  const assignedTasks = await db.groupTask.findMany({
-    where: { groupId: id },
-    select: { taskId: true },
-  });
-
-  const assignedTaskIds = new Set(assignedTasks.map((t) => t.taskId));
-
-  const allTasks = tasks.map((t) => ({
-    id: t.id,
-    name: t.name,
-    difficulty: t.difficulty,
-    description: t.description,
-    isAssigned: assignedTaskIds.has(t.id),
-  }));
-
-  return NextResponse.json({ tasks: allTasks });
 }
 
 const assignTasksSchema = z.object({
@@ -44,87 +50,18 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
-
-  const { id } = await params;
-
-  const group = await db.group.findUnique({ where: { id } });
-  if (!group) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
-  }
-
-  let body: Record<string, unknown>;
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  const parsed = assignTasksSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
-  }
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  const validTaskIds = new Set(tasks.map((t) => t.id));
-  const invalidTaskIds = parsed.data.taskIds.filter((tid) => !validTaskIds.has(tid));
-  if (invalidTaskIds.length > 0) {
-    return NextResponse.json({ error: "Invalid task IDs", invalidTaskIds }, { status: 400 });
-  }
+    const { id } = await params;
 
-  await db.groupTask.createMany({
-    data: parsed.data.taskIds.map((taskId) => ({ groupId: id, taskId })),
-    skipDuplicates: true,
-  });
+    const group = await db.group.findUnique({ where: { id } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
 
-  await db.activityLog.create({
-    data: {
-      userId: session.userId,
-      action: "GROUP_TASKS_ASSIGN",
-      entity: "Group",
-      entityId: id,
-      details: JSON.stringify({ taskIds: parsed.data.taskIds }),
-    },
-  });
-
-  return NextResponse.json({ success: true });
-}
-
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
-
-  const { id } = await params;
-
-  const group = await db.group.findUnique({ where: { id } });
-  if (!group) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
-  }
-
-  const { searchParams } = new URL(req.url);
-  const taskId = searchParams.get("taskId");
-
-  if (taskId) {
-    // Remove single task
-    await db.groupTask.deleteMany({
-      where: { groupId: id, taskId: parseInt(taskId) },
-    });
-
-    await db.activityLog.create({
-      data: {
-        userId: session.userId,
-        action: "GROUP_TASKS_REMOVE",
-        entity: "Group",
-        entityId: id,
-        details: JSON.stringify({ taskIds: [parseInt(taskId)] }),
-      },
-    });
-  } else {
-    // Remove multiple from body
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -136,20 +73,99 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
     }
 
-    await db.groupTask.deleteMany({
-      where: { groupId: id, taskId: { in: parsed.data.taskIds } },
+    const validTaskIds = new Set(tasks.map((t) => t.id));
+    const invalidTaskIds = parsed.data.taskIds.filter((tid) => !validTaskIds.has(tid));
+    if (invalidTaskIds.length > 0) {
+      return NextResponse.json({ error: "Invalid task IDs", invalidTaskIds }, { status: 400 });
+    }
+
+    await db.groupTask.createMany({
+      data: parsed.data.taskIds.map((taskId) => ({ groupId: id, taskId })),
+      skipDuplicates: true,
     });
 
     await db.activityLog.create({
       data: {
         userId: session.userId,
-        action: "GROUP_TASKS_REMOVE",
+        action: "GROUP_TASKS_ASSIGN",
         entity: "Group",
         entityId: id,
         details: JSON.stringify({ taskIds: parsed.data.taskIds }),
       },
     });
-  }
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("Admin group tasks POST failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to assign tasks" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    const { id } = await params;
+
+    const group = await db.group.findUnique({ where: { id } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const taskId = searchParams.get("taskId");
+
+    if (taskId) {
+      // Remove single task
+      await db.groupTask.deleteMany({
+        where: { groupId: id, taskId: parseInt(taskId) },
+      });
+
+      await db.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "GROUP_TASKS_REMOVE",
+          entity: "Group",
+          entityId: id,
+          details: JSON.stringify({ taskIds: [parseInt(taskId)] }),
+        },
+      });
+    } else {
+      // Remove multiple from body
+      let body: Record<string, unknown>;
+      try {
+        body = await req.json();
+      } catch {
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      }
+      const parsed = assignTasksSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      }
+
+      await db.groupTask.deleteMany({
+        where: { groupId: id, taskId: { in: parsed.data.taskIds } },
+      });
+
+      await db.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "GROUP_TASKS_REMOVE",
+          entity: "Group",
+          entityId: id,
+          details: JSON.stringify({ taskIds: parsed.data.taskIds }),
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("Admin group tasks DELETE failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to remove tasks" }, { status: 500 });
+  }
 }
