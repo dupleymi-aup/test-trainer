@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
@@ -10,16 +10,8 @@ const loginSchema = z.object({
   password: z.string().min(1, "Пароль обязателен"),
 });
 
-function getClientIP(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
 export async function POST(req: Request) {
-  const ip = getClientIP(req);
+  const ip = getClientIp(req);
   const result = checkRateLimit(`login:${ip}`, rateLimits.login);
   if (result.limited) {
     return NextResponse.json(

@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 
@@ -14,16 +14,8 @@ const registerSchema = z.object({
   password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
 });
 
-function getClientIP(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
 export async function POST(req: Request) {
-  const ip = getClientIP(req);
+  const ip = getClientIp(req);
   const result = checkRateLimit(`register:${ip}`, rateLimits.register);
   if (result.limited) {
     return NextResponse.json(

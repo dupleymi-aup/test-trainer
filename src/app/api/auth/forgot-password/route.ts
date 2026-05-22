@@ -4,7 +4,7 @@ import { z } from "zod";
 import { sendEmail, generatePasswordResetEmail } from "@/lib/email";
 import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 const forgotPasswordSchema = z.object({
@@ -14,16 +14,8 @@ const forgotPasswordSchema = z.object({
   message: "Укажите email или номер телефона",
 });
 
-function getClientIP(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
 export async function POST(req: Request) {
-  const ip = getClientIP(req);
+  const ip = getClientIp(req);
   const result = checkRateLimit(`forgot-password:${ip}`, rateLimits.forgotPassword);
   if (result.limited) {
     return createRateLimitResponse(result.resetAt);

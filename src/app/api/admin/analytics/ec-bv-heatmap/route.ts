@@ -53,11 +53,11 @@ export async function GET(req: Request) {
 
     // Parse covered ECs
     let coveredEc: string[] = [];
-    try { coveredEc = JSON.parse(a.coveredEcIds || "[]"); } catch {}
+    try { coveredEc = JSON.parse(a.coveredEcIds || "[]"); } catch { /* invalid JSON treated as empty array */ }
 
     // Parse covered BVs
     let coveredBv: string[] = [];
-    try { coveredBv = JSON.parse(a.coveredBvDescriptions || "[]"); } catch {}
+    try { coveredBv = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { /* invalid JSON treated as empty array */ }
 
     // Track EC coverage
     for (const ecId of ecIds) {

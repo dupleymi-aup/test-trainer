@@ -9,7 +9,7 @@ const createAttemptSchema = z.object({
   taskId: z.string().min(1),
   testCases: z.array(z.object({
     id: z.string(),
-    inputs: z.array(z.any()),
+    inputs: z.array(z.unknown()),
     expectedOutput: z.string(),
     category: z.string(),
     comment: z.string().optional(),

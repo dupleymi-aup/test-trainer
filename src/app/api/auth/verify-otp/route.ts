@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 const verifyOtpSchema = z.object({
@@ -10,16 +10,8 @@ const verifyOtpSchema = z.object({
   code: z.string().min(1, "Код обязателен"),
 });
 
-function getClientIP(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
 export async function POST(req: Request) {
-  const ip = getClientIP(req);
+  const ip = getClientIp(req);
   const result = checkRateLimit(`verify-otp:${ip}`, rateLimits.verifyOtp);
   if (result.limited) {
     return createRateLimitResponse(result.resetAt);

@@ -54,7 +54,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
     if (trimmed === "null") return null;
     const num = Number(trimmed);
     if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
-    try { const p = JSON.parse(trimmed); if (typeof p === "object") return p; } catch {}
+    try { const p = JSON.parse(trimmed); if (typeof p === "object") return p; } catch { if (process.env.NODE_ENV === "development") console.warn("parseInputForRef: JSON.parse failed for:", trimmed); }
     return trimmed;
   }, []);
 

@@ -277,7 +277,9 @@ export function ExamMode() {
     try {
       const p = JSON.parse(trimmed);
       if (typeof p === "object") return p;
-    } catch {}
+    } catch {
+      if (process.env.NODE_ENV === "development") console.warn("parseInputForRef: JSON.parse failed for:", trimmed);
+    }
     return trimmed;
   }, []);
 
