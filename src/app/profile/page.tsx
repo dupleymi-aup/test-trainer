@@ -56,6 +56,7 @@ import { PasswordStrengthIndicator } from "@/components/password-strength-indica
 import { StatisticsPanel } from "@/components/statistics-panel";
 import { AchievementsPanel } from "@/components/achievements-panel";
 import { loadAttemptHistory, exportAllProgress, importAllProgress, clearAllProgress } from "@/lib/storage";
+import { apiFetch } from "@/lib/api-client";
 
 const roleLabels: Record<string, string> = {
   student: "Студент",
@@ -161,7 +162,7 @@ function ProfileContent() {
     if (status === "authenticated") {
       (async () => {
         try {
-          const res = await fetch("/api/auth/profile");
+          const res = await apiFetch("/api/auth/profile");
           const json = await res.json();
           if (res.ok) {
             setProfile(json.user);
@@ -187,7 +188,7 @@ function ProfileContent() {
   const onProfileSubmit = async (data: ProfileForm) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/auth/profile", {
+      const res = await apiFetch("/api/auth/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -211,7 +212,7 @@ function ProfileContent() {
   const onPasswordSubmit = async (data: PasswordForm) => {
     setIsSavingPassword(true);
     try {
-      const res = await fetch("/api/auth/change-password", {
+      const res = await apiFetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

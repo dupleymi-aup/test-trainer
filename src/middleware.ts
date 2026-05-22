@@ -38,10 +38,21 @@ export async function middleware(request: NextRequest) {
   }
 
   // CSRF check for state-changing methods on authenticated API routes
-  // Auth API routes are excluded since you can't have a CSRF token before login
+  // Only pre-auth routes are excluded (you can't have a CSRF token before login)
+  // Authenticated mutation routes (change-password, profile, etc.) require CSRF
   const isApiRoute = pathname.startsWith("/api/");
-  const isAuthApiRoute = pathname.startsWith("/api/auth/");
-  if (isApiRoute && !isAuthApiRoute && token && stateChangingMethods.includes(method)) {
+  const preAuthRoutes = [
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/forgot-password",
+    "/api/auth/reset-password",
+    "/api/auth/verify-otp",
+  ];
+  const isPreAuthRoute = preAuthRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  if (isApiRoute && !isPreAuthRoute && token && stateChangingMethods.includes(method)) {
     const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
     const headerToken = request.headers.get(CSRF_HEADER_NAME);
     if (!verifyCSRFToken(cookieToken, headerToken)) {
@@ -107,18 +118,22 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth API routes)
+     * Match all request paths except for:
+     * - pre-auth API routes (login, register, forgot-password, reset-password, verify-otp)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public assets
      */
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/((?!api/auth/login|api/auth/register|api/auth/forgot-password|api/auth/reset-password|api/auth/verify-otp|_next/static|_next/image|favicon.ico|.*\\..*).*)",
     "/api/admin/:path*",
     "/api/teacher/:path*",
     "/api/student/:path*",
     "/api/attempts/:path*",
     "/api/tasks/:path*",
+    "/api/auth/change-password",
+    "/api/auth/profile",
+    "/api/auth/resend-verification",
+    "/api/auth/verify-email",
   ],
 };
