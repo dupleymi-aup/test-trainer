@@ -41,6 +41,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure this is actually a password-reset token, not another token type
+    if (!verificationToken.identifier.startsWith("password-reset:")) {
+      return NextResponse.json(
+        { error: "Неверный токен или срок его действия истёк" },
+        { status: 400 }
+      );
+    }
+
     // Extract user ID from identifier (format: password-reset:userId)
     const identifierParts = verificationToken.identifier.split(":");
     const userId = identifierParts[identifierParts.length - 1];

@@ -32,6 +32,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Ensure this is actually an email-verify token, not another token type
+    if (!verificationToken.identifier.startsWith("email-verify:")) {
+      return NextResponse.json(
+        { error: "Неверный токен или срок его действия истёк" },
+        { status: 400 }
+      );
+    }
+
     // Extract user ID from identifier (format: email-verify:userId)
     const identifierParts = verificationToken.identifier.split(":");
     const userId = identifierParts[identifierParts.length - 1];

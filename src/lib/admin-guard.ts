@@ -22,7 +22,7 @@ export async function requireAuth(): Promise<
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { role: true, isActive: true },
+    select: { id: true, role: true, isActive: true },
   });
 
   if (!user) {
@@ -52,7 +52,7 @@ export async function requireAdmin(): Promise<
   // Fetch fresh role from DB (never trust client-side role)
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { role: true, isActive: true },
+    select: { id: true, role: true, isActive: true },
   });
 
   if (!user || user.role !== "ADMIN") {
@@ -81,7 +81,7 @@ export async function requireTeacherOrAdmin(): Promise<
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { role: true, isActive: true },
+    select: { id: true, role: true, isActive: true },
   });
 
   if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
