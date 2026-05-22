@@ -181,6 +181,9 @@ function useToast() {
       if (index > -1) {
         listeners.splice(index, 1)
       }
+      // Clean up all pending toast timeouts on unmount
+      toastTimeouts.forEach((timeout) => clearTimeout(timeout))
+      toastTimeouts.clear()
     }
   }, [state])
 

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Beaker, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";

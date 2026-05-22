@@ -231,7 +231,13 @@ export function ExamMode() {
 
   const beginExam = () => {
     // Shuffle selected tasks using Fisher-Yates
-    const shuffled = selectedTasks.map((id) => tasks.find((t) => t.id === id)!);
+    const shuffled = selectedTasks
+      .map((id) => tasks.find((t) => t.id === id))
+      .filter((t): t is NonNullable<typeof t> => t !== undefined);
+    if (shuffled.length === 0) {
+      toast.error("Выбранные задания не найдены");
+      return;
+    }
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -241,7 +247,7 @@ export function ExamMode() {
     setExamResults([]);
     setLastPracticeResult(null);
     setCurrentTaskIndex(0);
-    setExamInputs(shuffled.length > 0 ? shuffled[0].params.map(() => "") : []);
+    setExamInputs(shuffled[0].params.map(() => ""));
     setExamExpected("");
     setTimeRemaining(timeLimit * 60);
     setExamState("running");
