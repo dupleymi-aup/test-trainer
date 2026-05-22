@@ -163,7 +163,7 @@ model Attempt {
 
 model ActivityLog {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String?  // null for system operations (cron jobs)
   action    String   // e.g., "USER_CREATE", "ROLE_CHANGE", "GROUP_UPDATE"
   entity    String?  // e.g., "User", "Group", "Setting"
   entityId  String?
@@ -172,7 +172,7 @@ model ActivityLog {
   userAgent String?
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])

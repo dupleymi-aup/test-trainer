@@ -33,7 +33,6 @@ export async function GET(req: Request) {
 
     await db.activityLog.create({
       data: {
-        userId: "cron",
         action: "CRON_REMINDERS_SENT",
         entity: "Reminder",
         details: JSON.stringify(result),
