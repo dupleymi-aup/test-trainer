@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { logger } from "@/lib/logger";
 
 interface TaskRecommendation {
   taskId: number;
@@ -29,8 +30,9 @@ interface StudentRecommendation {
 }
 
 export async function GET(request: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");
@@ -342,6 +344,10 @@ export async function GET(request: Request) {
       topGaps,
     },
   };
-  setCache(cacheKey, result, DEFAULT_TTL.expensive);
-  return NextResponse.json(result);
+    setCache(cacheKey, result, DEFAULT_TTL.expensive);
+    return NextResponse.json(result);
+  } catch (error) {
+    logger.error("Recommendations analytics failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

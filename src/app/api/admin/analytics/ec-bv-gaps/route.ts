@@ -3,10 +3,12 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
   // Check cache
   const cacheKey = makeCacheKey("ec-bv-gaps");
@@ -114,6 +116,10 @@ export async function GET() {
   }
 
   const result = { taskGaps: taskResults, worstECs, worstBVs };
-  setCache(cacheKey, result, DEFAULT_TTL.expensive);
-  return NextResponse.json(result);
+    setCache(cacheKey, result, DEFAULT_TTL.expensive);
+    return NextResponse.json(result);
+  } catch (error) {
+    logger.error("EC-BV gaps analytics failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

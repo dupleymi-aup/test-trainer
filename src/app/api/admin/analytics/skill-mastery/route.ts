@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { logger } from "@/lib/logger";
 
 interface EcSkill {
   ecId: string;
@@ -34,8 +35,9 @@ interface BvSkill {
 }
 
 export async function GET(request: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");
@@ -253,6 +255,10 @@ export async function GET(request: Request) {
       decliningEc,
     },
   };
-  setCache(cacheKey, result, DEFAULT_TTL.expensive);
-  return NextResponse.json(result);
+    setCache(cacheKey, result, DEFAULT_TTL.expensive);
+    return NextResponse.json(result);
+  } catch (error) {
+    logger.error("Skill mastery analytics failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

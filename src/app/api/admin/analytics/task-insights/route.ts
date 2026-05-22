@@ -5,10 +5,12 @@ import { tasks } from "@/lib/tasks";
 import { TestCaseCategory } from "@/lib/tasks";
 import type { StoredTestCase } from "@/lib/evaluator";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
   const { searchParams } = new URL(request.url);
   const dateFrom = searchParams.get("dateFrom");
@@ -213,6 +215,10 @@ export async function GET(request: Request) {
     .sort((a, b) => a.avgScore - b.avgScore);
 
   const result = { taskInsights, topicPerformance };
-  setCache(cacheKey, result, DEFAULT_TTL.expensive);
-  return NextResponse.json(result);
+    setCache(cacheKey, result, DEFAULT_TTL.expensive);
+    return NextResponse.json(result);
+  } catch (error) {
+    logger.error("Task insights analytics failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
