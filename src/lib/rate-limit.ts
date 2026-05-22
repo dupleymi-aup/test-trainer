@@ -94,13 +94,12 @@ export function checkRateLimit(
     return { limited: false, remaining: config.max - 1, resetAt: now + config.windowMs };
   }
 
-  // Within window
-  entry.count += 1;
-
-  if (entry.count > config.max) {
+  // Within window — check limit BEFORE incrementing
+  if (entry.count >= config.max) {
     return { limited: true, remaining: 0, resetAt: entry.resetAt };
   }
 
+  entry.count += 1;
   return { limited: false, remaining: config.max - entry.count, resetAt: entry.resetAt };
 }
 

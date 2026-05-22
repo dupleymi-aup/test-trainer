@@ -57,6 +57,23 @@ describe("checkRateLimit", () => {
     expect(r2a.limited).toBe(true);
     expect(r2b.limited).toBe(true);
   });
+
+  it("does not increment counter after rate limit is exceeded", () => {
+    const config = { max: 2, windowMs: 60000 };
+    checkRateLimit("counter-key", config);
+    checkRateLimit("counter-key", config);
+    // Third request should be blocked
+    const r3 = checkRateLimit("counter-key", config);
+    expect(r3.limited).toBe(true);
+    // Fourth request should still be blocked (counter should not grow)
+    const r4 = checkRateLimit("counter-key", config);
+    expect(r4.limited).toBe(true);
+    // After window expires, counter should reset to allow fresh requests
+    vi.advanceTimersByTime(61000);
+    const r5 = checkRateLimit("counter-key", config);
+    expect(r5.limited).toBe(false);
+    expect(r5.remaining).toBe(1);
+  });
 });
 
 describe("cleanupExpiredEntries", () => {
