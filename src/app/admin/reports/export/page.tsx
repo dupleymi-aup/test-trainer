@@ -14,6 +14,7 @@ import {
   GraduationCap, AlertTriangle, Users, FileText, Activity,
   Loader2, Clock, Calendar, FolderKanban,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Group {
   id: string;
@@ -208,7 +209,7 @@ export default function AdminExportPage() {
         setHistoryTotal(data.pagination?.total || 0);
         setHistoryPage(data.pagination?.page || 1);
       })
-      .catch(() => {});
+      .catch((err) => console.warn("Failed to fetch export history:", err));
   };
 
   useEffect(() => {
@@ -217,7 +218,7 @@ export default function AdminExportPage() {
 
   const handleExport = async (reportType: string, format: "csv" | "json" = "csv") => {
     if (reportType === "group-detailed" && !selectedGroup) {
-      alert("Выберите группу для экспорта");
+      toast.error("Выберите группу для экспорта");
       return;
     }
 
@@ -237,7 +238,7 @@ export default function AdminExportPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Ошибка экспорта");
+        toast.error(err.error || "Ошибка экспорта");
         return;
       }
 
@@ -257,7 +258,7 @@ export default function AdminExportPage() {
       URL.revokeObjectURL(url);
       fetchHistory(1);
     } catch (e) {
-      alert("Ошибка при экспорте");
+      toast.error("Ошибка при экспорте");
     } finally {
       setExporting(null);
     }

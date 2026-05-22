@@ -115,7 +115,7 @@ export default function AdminDeadlinesPage() {
         return r.json();
       })
       .then((d) => setGroups(d.groups || []))
-      .catch(() => {});
+      .catch((err) => console.warn("Failed to fetch groups:", err));
   };
 
   useEffect(() => { fetchDeadlines(); fetchGroups(); }, [showPast]);

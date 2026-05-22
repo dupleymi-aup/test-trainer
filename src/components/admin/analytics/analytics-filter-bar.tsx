@@ -54,7 +54,7 @@ export function AnalyticsFilterBar({
           return r.json();
         })
         .then((d) => setGroups(d.groups || []))
-        .catch(() => {});
+        .catch((err) => console.warn("Failed to fetch groups:", err));
     }
   }, [showGroupFilter]);
 
@@ -73,7 +73,7 @@ export function AnalyticsFilterBar({
             setUniversities([...new Set(unis)].filter(Boolean));
           }
         })
-        .catch(() => {});
+        .catch((err) => console.warn("Failed to fetch university performance:", err));
     }
   }, [showUniversityFilter]);
 

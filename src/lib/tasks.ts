@@ -1352,7 +1352,7 @@ export const tasks: Task[] = [
   } else if (isPremium) {
     shipping = region === "international" ? 200 : 100;
   } else if (orderAmount >= 2000) {
-    shipping = region === "international" ? 300 : 0; // Бесплатно от 2000
+    shipping = 0; // Бесплатно от 2000 для всех регионов
   } else if (orderAmount >= 500) {
     shipping = region === "local" ? 100 : region === "national" ? 200 : 400;
   } else {
@@ -1364,7 +1364,7 @@ export const tasks: Task[] = [
       { id: "ec1", name: "EC1: Премиум, >= 1000", description: "Бесплатная доставка для премиум", exampleValues: [[true, 1000, "local"], [true, 5000, "international"]] },
       { id: "ec2", name: "EC2: Премиум, < 1000, local/national", description: "Скидка премиум на местные/национальные", exampleValues: [[true, 500, "local"], [true, 999, "national"]] },
       { id: "ec3", name: "EC3: Премиум, < 1000, international", description: "Международная для премиум", exampleValues: [[true, 500, "international"]] },
-      { id: "ec4", name: "EC4: Обычный, >= 2000", description: "Бесплатно для обычных от 2000", exampleValues: [[false, 2000, "local"], [false, 3000, "national"]] },
+      { id: "ec4", name: "EC4: Обычный, >= 2000", description: "Бесплатно для обычных от 2000", exampleValues: [[false, 2000, "local"], [false, 3000, "national"], [false, 3000, "international"]] },
       { id: "ec5", name: "EC5: Обычный, 500–1999, local", description: "Средняя сумма, локальная", exampleValues: [[false, 500, "local"], [false, 1500, "local"]] },
       { id: "ec6", name: "EC6: Обычный, 500–1999, national", description: "Средняя сумма, национальная", exampleValues: [[false, 500, "national"]] },
       { id: "ec7", name: "EC7: Обычный, 500–1999, international", description: "Средняя сумма, международная", exampleValues: [[false, 500, "international"]] },
