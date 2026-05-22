@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
+import { secureCompare } from "@/lib/crypto";
 
 /**
  * Vercel Cron endpoint for automated reminder sending.
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
   }
 
-  if (authHeader.slice(7) !== process.env.CRON_SECRET) {
+  if (!secureCompare(authHeader.slice(7), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 

@@ -28,3 +28,17 @@ export function generateSecureOTP(): string {
   const num = buffer.readUIntBE(0, 3) % 1_000_000;
   return String(num).padStart(6, "0");
 }
+
+/**
+ * Constant-time string comparison to prevent timing attacks.
+ * Use this when comparing secrets, tokens, or passwords.
+ */
+export function secureCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}

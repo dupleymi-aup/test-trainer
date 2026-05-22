@@ -45,9 +45,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Delete used code
-    await db.verificationCode.delete({ where: { id: verificationCode.id } });
-
     // Generate a reset token for the user
     const user = await db.user.findUnique({ where: { phone: phone.trim() } });
     if (!user) {
@@ -59,13 +56,17 @@ export async function POST(req: Request) {
 
     const resetToken = generateSecureToken();
 
-    await db.verificationToken.create({
-      data: {
-        identifier: `password-reset:${user.id}`,
-        token: resetToken,
-        expires: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-      },
-    });
+    // Delete used code and create reset token atomically
+    await db.$transaction([
+      db.verificationCode.delete({ where: { id: verificationCode.id } }),
+      db.verificationToken.create({
+        data: {
+          identifier: `password-reset:${user.id}`,
+          token: resetToken,
+          expires: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       message: "Код подтверждён",

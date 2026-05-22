@@ -47,13 +47,15 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    await db.user.update({
-      where: { id: userId },
-      data: { hashedPassword },
-    });
-
-    // Delete used token
-    await db.verificationToken.delete({ where: { token } });
+    // Use transaction to ensure both operations succeed or fail together
+    // Prevents token reuse if password update succeeds but token deletion fails
+    await db.$transaction([
+      db.user.update({
+        where: { id: userId },
+        data: { hashedPassword },
+      }),
+      db.verificationToken.delete({ where: { token } }),
+    ]);
 
     return NextResponse.json({ message: "Пароль успешно изменён" });
   } catch (error) {
