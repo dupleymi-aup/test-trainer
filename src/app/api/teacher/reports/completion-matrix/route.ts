@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 
@@ -7,20 +7,18 @@ export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const { searchParams } = new URL(req.url);
     const groupId = searchParams.get("groupId");
 
-    if (!groupId) {
-      return NextResponse.json(
-        { error: "groupId is required" },
-        { status: 400 }
-      );
-    }
+    // Verify the teacher owns this group to prevent accessing other teachers' groups
+    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if ("response" in groupCheck) return groupCheck.response;
 
     // Get students in group
     const usersInGroup = await db.userGroup.findMany({
-      where: { groupId },
+      where: { groupId: groupCheck.group.id },
       select: { userId: true },
     });
     const userIds = usersInGroup.map((u) => u.userId);

@@ -11,8 +11,19 @@ export async function GET(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const { id } = await params;
+
+    // Verify the teacher owns this group
+    const group = await db.group.findUnique({ where: { id }, select: { createdByUserId: true } });
+    if (!group) {
+      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    }
+    if (session.role !== "ADMIN" && group.createdByUserId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden: you can only view members of your own groups" }, { status: 403 });
+    }
+
     const members = await db.userGroup.findMany({
       where: { groupId: id },
       include: {

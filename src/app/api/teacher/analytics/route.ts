@@ -1,14 +1,39 @@
 import { NextResponse } from "next/server";
-import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    const { searchParams } = new URL(req.url);
+    const groupId = searchParams.get("groupId");
+
+    // Require groupId to prevent teachers from accessing platform-wide analytics
+    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if ("response" in groupCheck) return groupCheck.response;
+
+    // Get student IDs in this group
+    const userGroups = await db.userGroup.findMany({
+      where: { groupId: groupCheck.group.id },
+      select: { userId: true },
+    });
+    const userIds = userGroups.map((ug) => ug.userId);
+
+    if (userIds.length === 0) {
+      return NextResponse.json({
+        distribution: { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 },
+        taskDifficulty: [],
+        overallAvg: 0,
+        totalAttempts: 0,
+      });
+    }
 
     const attempts = await db.attempt.findMany({
+      where: { userId: { in: userIds } },
       select: {
         score: true,
         ecCoverage: true,
@@ -20,38 +45,38 @@ export async function GET() {
       take: 500,
     });
 
-  // Score distribution
-  const distribution = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
-  attempts.forEach((a) => {
-    if (a.score <= 20) distribution["0-20"]++;
-    else if (a.score <= 40) distribution["21-40"]++;
-    else if (a.score <= 60) distribution["41-60"]++;
-    else if (a.score <= 80) distribution["61-80"]++;
-    else distribution["81-100"]++;
-  });
+    // Score distribution
+    const distribution = { "0-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0 };
+    attempts.forEach((a) => {
+      if (a.score <= 20) distribution["0-20"]++;
+      else if (a.score <= 40) distribution["21-40"]++;
+      else if (a.score <= 60) distribution["41-60"]++;
+      else if (a.score <= 80) distribution["61-80"]++;
+      else distribution["81-100"]++;
+    });
 
-  // Task difficulty (by average score)
-  const taskScores: Record<string, number[]> = {};
-  attempts.forEach((a) => {
-    if (!taskScores[a.taskId]) taskScores[a.taskId] = [];
-    taskScores[a.taskId].push(a.score);
-  });
+    // Task difficulty (by average score)
+    const taskScores: Record<string, number[]> = {};
+    attempts.forEach((a) => {
+      if (!taskScores[a.taskId]) taskScores[a.taskId] = [];
+      taskScores[a.taskId].push(a.score);
+    });
 
-  const taskDifficulty = Object.entries(taskScores).map(([taskId, scores]) => ({
-    taskId,
-    avgScore: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
-    attemptsCount: scores.length,
-  }));
+    const taskDifficulty = Object.entries(taskScores).map(([taskId, scores]) => ({
+      taskId,
+      avgScore: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
+      attemptsCount: scores.length,
+    }));
 
-  // Overall stats
-  const overallAvg = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
+    // Overall stats
+    const overallAvg = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length) : 0;
 
-  return NextResponse.json({
-    distribution,
-    taskDifficulty,
-    overallAvg,
-    totalAttempts: attempts.length,
-  });
+    return NextResponse.json({
+      distribution,
+      taskDifficulty,
+      overallAvg,
+      totalAttempts: attempts.length,
+    });
   } catch (error) {
     logger.error("Failed to fetch teacher analytics", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });

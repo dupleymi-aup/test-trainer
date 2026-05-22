@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 
@@ -7,6 +7,7 @@ export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const { searchParams } = new URL(req.url);
     const period1Start = searchParams.get("period1Start");
@@ -14,6 +15,17 @@ export async function GET(req: Request) {
     const period2Start = searchParams.get("period2Start");
     const period2End = searchParams.get("period2End");
     const groupId = searchParams.get("groupId");
+
+    // Require groupId to prevent teachers from accessing platform-wide data
+    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if ("response" in groupCheck) return groupCheck.response;
+
+    // Get student IDs in this group
+    const userGroups = await db.userGroup.findMany({
+      where: { groupId: groupCheck.group.id },
+      select: { userId: true },
+    });
+    const userIds = userGroups.map((u) => u.userId);
 
     if (!period1Start || !period1End) {
       // Default: compare last 30 days vs previous 30 days
@@ -36,21 +48,11 @@ export async function GET(req: Request) {
       });
     }
 
-    // Build user filter
-    let userIds: string[] | undefined;
-    if (groupId) {
-      const usersInGroup = await db.userGroup.findMany({
-        where: { groupId },
-        select: { userId: true },
-      });
-      userIds = usersInGroup.map((u) => u.userId);
-    }
-
-    // Fetch attempts for both periods
+    // Fetch attempts for both periods (scoped to group members)
     const [attempts1, attempts2] = await Promise.all([
       db.attempt.findMany({
         where: {
-          userId: userIds ? { in: userIds } : undefined,
+          userId: { in: userIds },
           createdAt: {
             gte: new Date(period1Start),
             lte: new Date(period1End),
@@ -68,7 +70,7 @@ export async function GET(req: Request) {
       }),
       db.attempt.findMany({
         where: {
-          userId: userIds ? { in: userIds } : undefined,
+          userId: { in: userIds },
           createdAt: {
             gte: new Date(period2Start),
             lte: new Date(period2End),
