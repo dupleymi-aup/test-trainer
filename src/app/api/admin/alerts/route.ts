@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
+import { logger } from "@/lib/logger";
 
 export interface SystemAlert {
   id: string;
@@ -16,8 +17,9 @@ export interface SystemAlert {
 }
 
 export async function GET() {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
   const now = new Date();
   const fourteenDaysAgo = new Date(now);
@@ -363,4 +365,8 @@ export async function GET() {
   };
 
   return NextResponse.json({ alerts, summary });
+  } catch (error) {
+    logger.error("alerts-route failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

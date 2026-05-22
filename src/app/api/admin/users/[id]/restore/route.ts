@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
   const { id } = await params;
 
@@ -41,4 +43,8 @@ export async function PATCH(
   });
 
   return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("user-restore-route failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

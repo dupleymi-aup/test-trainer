@@ -3,15 +3,17 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
 
-  const { id } = await params;
+    const { id } = await params;
 
   // Check cache
   const cacheKey = makeCacheKey("group-detail", { id });
@@ -209,6 +211,10 @@ export async function GET(
     summary: { totalMembers, activeMembers, totalAttempts, avgGroupScore, avgEc, avgBv, tasksAssigned, tasksCompleted },
   };
 
-  setCache(cacheKey, result, DEFAULT_TTL.expensive);
-  return NextResponse.json(result);
+    setCache(cacheKey, result, DEFAULT_TTL.expensive);
+    return NextResponse.json(result);
+  } catch (error) {
+    logger.error("Group analytics failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

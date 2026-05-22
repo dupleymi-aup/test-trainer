@@ -2,51 +2,57 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const { session } = guard;
+  try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-  // Rate limit activity log reads
-  const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminSettings);
-  if (rateResult.limited) {
-    return createRateLimitResponse(rateResult.resetAt);
-  }
+    // Rate limit activity log reads
+    const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminSettings);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
+    }
 
-  const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
-  const action = searchParams.get("action");
-  const userId = searchParams.get("userId");
-  const skip = (page - 1) * limit;
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const action = searchParams.get("action");
+    const userId = searchParams.get("userId");
+    const skip = (page - 1) * limit;
 
-  const where: Record<string, unknown> = {};
-  if (action) where.action = action;
-  if (userId) where.userId = userId;
+    const where: Record<string, unknown> = {};
+    if (action) where.action = action;
+    if (userId) where.userId = userId;
 
-  const [logs, total] = await Promise.all([
-    db.activityLog.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: { name: true, email: true, role: true },
+    const [logs, total] = await Promise.all([
+      db.activityLog.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: {
+            select: { name: true, email: true, role: true },
+          },
         },
-      },
-    }),
-    db.activityLog.count({ where }),
-  ]);
+      }),
+      db.activityLog.count({ where }),
+    ]);
 
-  return NextResponse.json({
-    logs,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  });
+    return NextResponse.json({
+      logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    logger.error("Activity log fetch failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
