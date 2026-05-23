@@ -44,7 +44,8 @@ export async function GET(req: Request) {
   if (sortBy === "attempts") {
     orderBy.attempts = { _count: sortDir };
   } else if (sortBy === "name") {
-    orderBy.name = { sort: sortDir, nulls: "last" };
+    // Note: nulls: "last" is SQL-specific; MongoDB sorts nulls first by default
+    orderBy.name = { sort: sortDir };
   } else {
     orderBy.createdAt = sortDir;
   }

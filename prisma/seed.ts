@@ -1,10 +1,18 @@
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+const dbType = process.env.DB_TYPE || "sqlite"
+
+// MongoDB uses a separate seed script
+if (dbType === "mongodb") {
+  console.log("MongoDB detected — skipping Prisma seed. Use scripts/seed-mongodb.ts instead.")
+  process.exit(0)
+}
+
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Starting database seed...");
+  console.log(`Starting database seed for ${dbType}...`);
 
   const hashedPassword = await bcrypt.hash("admin123", 12);
   const teacherPassword = await bcrypt.hash("teacher123", 12);

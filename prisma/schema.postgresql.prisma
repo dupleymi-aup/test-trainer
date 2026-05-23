@@ -1,14 +1,12 @@
-// This is your Prisma schema file for SQLite (default database)
-// For PostgreSQL, use schema.postgresql.prisma
-// For MongoDB, use the separate MongoDB client (src/lib/mongodb.ts)
-// Learn more: https://pris.ly/d/prisma-schema
+// PostgreSQL Prisma schema for TestTrainer
+// Generated from schema.prisma — keep models in sync
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -43,7 +41,7 @@ model User {
   createdGroups  Group[]     @relation("CreatedGroups")
   createdDeadlines Deadline[] @relation("CreatedDeadlines")
   reminders        Reminder[]
-  notificationPreferences String?  // JSON: {"email": true, "inApp": true}
+  notificationPreferences String?
   updatedSettings SystemSetting[] @relation("UpdatedSettings")
 
   @@index([role])
@@ -144,14 +142,14 @@ model Attempt {
   id                    String   @id @default(cuid())
   userId                String
   taskId                String
-  testCases             String   // JSON array of test cases
+  testCases             String
   score                 Int
   ecCoverage            Int
   bvCoverage            Int
   correctness           Int
-  coveredEcIds          String   // JSON array of covered EC IDs
-  coveredBvDescriptions String   // JSON array of covered BV descriptions
-  timeSpent             Int      // seconds
+  coveredEcIds          String
+  coveredBvDescriptions String
+  timeSpent             Int
   createdAt             DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -165,11 +163,11 @@ model Attempt {
 
 model ActivityLog {
   id        String   @id @default(cuid())
-  userId    String?  // null for system operations (cron jobs)
-  action    String   // e.g., "USER_CREATE", "ROLE_CHANGE", "GROUP_UPDATE"
-  entity    String?  // e.g., "User", "Group", "Setting"
+  userId    String?
+  action    String
+  entity    String?
   entityId  String?
-  details   String?  // JSON
+  details   String?
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
@@ -184,11 +182,11 @@ model ActivityLog {
 
 model Notification {
   id        String   @id @default(cuid())
-  type      String   // "RISK_THRESHOLD", "DEADLINE_APPROACHING", "SCHEDULED_REPORT", etc.
-  severity  String   // "critical", "warning", "info"
+  type      String
+  severity  String
   title     String
   message   String?
-  entity    String?  // "student", "group", "task", "system"
+  entity    String?
   entityId  String?
   actionUrl String?
   read      Boolean  @default(false)
@@ -205,7 +203,7 @@ model Notification {
 model SystemSetting {
   id               String   @id @default(cuid())
   key              String   @unique
-  value            String   // JSON value
+  value            String
   updatedAt        DateTime @updatedAt
   updatedByUserId  String?
   updatedBy        User?    @relation("UpdatedSettings", fields: [updatedByUserId], references: [id], onDelete: SetNull)
@@ -216,10 +214,10 @@ model Deadline {
   title       String
   description String?
   dueDate     DateTime
-  type        String   // "EXAM", "TEST", "ASSIGNMENT", "COURSE_END", "REGISTRATION_END"
-  groupId     String?  // null = system-wide
-  taskId      Int?     // related task ID
-  reminderSchedule String?  // JSON array of days before dueDate, e.g. "[7,3,1,0,-1]"
+  type        String
+  groupId     String?
+  taskId      Int?
+  reminderSchedule String?
   createdAt   DateTime @default(now())
   createdBy   String
   creator     User     @relation("CreatedDeadlines", fields: [createdBy], references: [id], onDelete: Cascade)
@@ -236,7 +234,7 @@ model Reminder {
   id         String   @id @default(cuid())
   deadlineId String
   userId     String
-  offsetDays Int      @default(0)  // Days before dueDate (negative = overdue)
+  offsetDays Int      @default(0)
   sent       Boolean  @default(false)
   sentAt     DateTime?
   read       Boolean  @default(false)

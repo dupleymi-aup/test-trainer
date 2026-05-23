@@ -248,7 +248,7 @@ describe("GET /api/admin/users", () => {
 
       expect(mocks.mockUserFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: { name: { sort: "asc", nulls: "last" } },
+          orderBy: { name: { sort: "asc" } },
         })
       );
     });
