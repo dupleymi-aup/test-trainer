@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -18,15 +17,16 @@ const updateReminderSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requireAuth();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const now = new Date();
     const sevenDaysFromNow = new Date(now);
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
 
     const reminders = await db.reminder.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.userId },
       include: {
         deadline: {
           select: {
@@ -70,8 +70,9 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requireAuth();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentReminders:${ip}`, rateLimits.studentReminders);
@@ -93,7 +94,7 @@ export async function PATCH(req: Request) {
 
     if (action === "mark_read") {
       await db.reminder.updateMany({
-        where: { id: reminderId, userId: session.user.id },
+        where: { id: reminderId, userId: session.userId },
         data: { read: true, readAt: new Date() },
       });
       return NextResponse.json({ success: true });
@@ -101,7 +102,7 @@ export async function PATCH(req: Request) {
 
     if (action === "mark_all_read") {
       await db.reminder.updateMany({
-        where: { userId: session.user.id, read: false },
+        where: { userId: session.userId, read: false },
         data: { read: true, readAt: new Date() },
       });
       return NextResponse.json({ success: true });

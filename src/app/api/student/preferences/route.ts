@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireAuth } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
@@ -40,11 +39,12 @@ function parsePreferences(raw: string | null): NotificationPreferences {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requireAuth();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.userId },
       select: { notificationPreferences: true },
     });
 
@@ -59,8 +59,9 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const guard = await requireAuth();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentPreferences:${ip}`, rateLimits.studentPreferences);
@@ -75,7 +76,7 @@ export async function PATCH(req: Request) {
     }
 
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: session.userId },
       select: { notificationPreferences: true },
     });
 
@@ -87,7 +88,7 @@ export async function PATCH(req: Request) {
     };
 
     await db.user.update({
-      where: { id: session.user.id },
+      where: { id: session.userId },
       data: { notificationPreferences: JSON.stringify(updated) },
     });
 
