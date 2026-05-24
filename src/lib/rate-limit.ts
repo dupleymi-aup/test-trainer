@@ -21,9 +21,15 @@ export function getClientIp(req: Request): string {
 interface RateLimitEntry {
   count: number;
   resetAt: number;
+  lastAccess: number;
 }
 
-// Map key -> { count, resetAt }
+// Maximum number of entries before LRU eviction kicks in
+const MAX_STORE_SIZE = 10_000;
+// When exceeded, evict this many oldest entries
+const EVICTION_BATCH = 500;
+
+// Map key -> { count, resetAt, lastAccess }
 const store = new Map<string, RateLimitEntry>();
 
 export interface RateLimitConfig {
@@ -86,15 +92,25 @@ export function checkRateLimit(
   const entry = store.get(key);
 
   if (!entry || entry.resetAt <= now) {
-    // No entry or window expired — create new
+    // Stale or missing — clean up expired if present
+    if (entry) store.delete(key);
+
+    // Evict oldest entries if store is over capacity
+    if (store.size >= MAX_STORE_SIZE) evictOldest();
+
+    // Create fresh entry
     store.set(key, {
       count: 1,
       resetAt: now + config.windowMs,
+      lastAccess: now,
     });
     return { limited: false, remaining: config.max - 1, resetAt: now + config.windowMs };
   }
 
-  // Within window — check limit BEFORE incrementing
+  // Within window — update lastAccess for LRU tracking
+  entry.lastAccess = now;
+
+  // Check limit BEFORE incrementing
   if (entry.count >= config.max) {
     return { limited: true, remaining: 0, resetAt: entry.resetAt };
   }
@@ -104,15 +120,33 @@ export function checkRateLimit(
 }
 
 /**
+ * Evict the oldest N entries when store exceeds MAX_STORE_SIZE.
+ * Uses Map insertion order as a proxy for LRU (entries with oldest lastAccess are evicted first).
+ */
+function evictOldest() {
+  const iterator = store.keys();
+  for (let i = 0; i < EVICTION_BATCH; i++) {
+    const result = iterator.next();
+    if (result.done) break;
+    store.delete(result.value);
+  }
+}
+
+/**
  * Clean up expired entries (call periodically in production).
  */
-export function cleanupExpiredEntries() {
+export function cleanupExpiredEntries(): number {
   const now = Date.now();
+  let cleaned = 0;
   for (const [key, entry] of store) {
     if (entry.resetAt <= now) {
       store.delete(key);
+      cleaned++;
     }
   }
+  // If still oversized after expired cleanup, force evict oldest
+  if (store.size > MAX_STORE_SIZE) evictOldest();
+  return cleaned;
 }
 
 /**
@@ -133,7 +167,7 @@ export function createRateLimitResponse(resetAt: number) {
   );
 }
 
-// Auto-cleanup every 10 minutes
+// Auto-cleanup every 1 minute (reduced from 10 min to prevent memory buildup)
 if (typeof global !== "undefined") {
-  setInterval(cleanupExpiredEntries, 10 * 60 * 1000).unref?.();
+  setInterval(cleanupExpiredEntries, 60 * 1000).unref?.();
 }

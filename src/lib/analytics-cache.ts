@@ -1,7 +1,11 @@
 interface CacheEntry {
   data: unknown;
   expires: number;
+  createdAt: number;
 }
+
+// Maximum cache entries before oldest are evicted
+const MAX_CACHE_SIZE = 1000;
 
 const cache = new Map<string, CacheEntry>();
 
@@ -40,7 +44,15 @@ export function getCache<T>(key: string): T | null {
 }
 
 export function setCache(key: string, data: unknown, ttlMs: number = DEFAULT_TTL.medium): void {
-  cache.set(key, { data, expires: Date.now() + ttlMs });
+  if (ttlMs <= 0) return; // Reject invalid TTLs
+
+  // Evict oldest entry if at capacity
+  if (!cache.has(key) && cache.size >= MAX_CACHE_SIZE) {
+    const firstKey = cache.keys().next();
+    if (!firstKey.done) cache.delete(firstKey.value);
+  }
+
+  cache.set(key, { data, expires: Date.now() + ttlMs, createdAt: Date.now() });
 }
 
 export function invalidateCache(pattern: string): number {
@@ -70,4 +82,14 @@ export function getCacheStats(): { size: number; keys: string[] } {
   return { size: cache.size, keys: [...cache.keys()] };
 }
 
-export { DEFAULT_TTL };
+// Periodic cleanup every 2 minutes
+if (typeof global !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of cache.entries()) {
+      if (now > entry.expires) cache.delete(key);
+    }
+  }, 2 * 60 * 1000).unref?.();
+}
+
+export { DEFAULT_TTL, MAX_CACHE_SIZE };
