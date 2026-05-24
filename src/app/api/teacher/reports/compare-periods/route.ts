@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
@@ -230,7 +231,7 @@ export async function GET(req: Request) {
       comparison,
     });
   } catch (error) {
-    console.error("Compare periods error:", error);
+    logger.error("Failed to compare periods", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Failed to compare periods" },
       { status: 500 }

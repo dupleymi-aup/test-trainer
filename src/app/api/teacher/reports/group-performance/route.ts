@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
@@ -115,7 +116,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ groups });
   } catch (error) {
-    console.error("Group performance error:", error);
+    logger.error("Failed to generate group performance report", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Failed to generate group performance report" },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: Request,
@@ -275,7 +276,7 @@ export async function GET(
       recommendations,
     });
   } catch (error) {
-    console.error("Report card error:", error);
+    logger.error("Failed to generate report card", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Failed to generate report card" },
       { status: 500 }

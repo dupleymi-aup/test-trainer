@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
@@ -163,7 +164,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ atRiskStudents });
   } catch (error) {
-    console.error("At-risk report error:", error);
+    logger.error("Failed to generate at-risk report", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Failed to generate at-risk report" },
       { status: 500 }

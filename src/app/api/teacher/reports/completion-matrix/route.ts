@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
@@ -105,7 +106,7 @@ export async function GET(req: Request) {
       matrix,
     });
   } catch (error) {
-    console.error("Completion matrix error:", error);
+    logger.error("Failed to generate completion matrix", error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: "Failed to generate completion matrix" },
       { status: 500 }
