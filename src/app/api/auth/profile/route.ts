@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const profileUpdateSchema = z.object({
   name: z.string().max(100).optional().nullable(),
@@ -63,7 +64,7 @@ export async function PUT(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: parsed.error.message },
+        { error: "Неверные данные", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

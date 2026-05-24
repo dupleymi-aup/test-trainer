@@ -5,6 +5,7 @@ import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/rate-limit";
+import { formatZodError } from "@/lib/api-error-handler";
 
 export async function GET(req: Request) {
   try {
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = createUserSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const { name, email, phone, password, role, university, group } = parsed.data;

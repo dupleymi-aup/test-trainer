@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const loginSchema = z.object({
   login: z.string().min(1, "Email или телефон обязательны"),
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: parsed.error.message },
+        { error: "Неверные данные", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

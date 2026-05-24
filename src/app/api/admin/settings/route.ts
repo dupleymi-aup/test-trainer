@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const validSettingKeys = [
   "maxLoginAttempts",
@@ -86,7 +87,7 @@ export async function PATCH(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

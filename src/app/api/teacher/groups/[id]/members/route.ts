@@ -3,6 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 export async function GET(
   _req: Request,
@@ -74,7 +75,7 @@ export async function POST(
     }
     const parsed = addMemberSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const existing = await db.userGroup.findUnique({

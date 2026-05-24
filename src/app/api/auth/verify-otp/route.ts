@@ -4,6 +4,7 @@ import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const verifyOtpSchema = z.object({
   phone: z.string().min(1, "Телефон обязателен").max(20, "Номер телефона слишком длинный"),
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Укажите телефон и код", details: parsed.error.message },
+        { error: "Укажите телефон и код", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

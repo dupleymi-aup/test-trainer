@@ -6,6 +6,7 @@ import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: parsed.error.message },
+        { error: "Неверные данные", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

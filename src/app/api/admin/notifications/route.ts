@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const createNotificationSchema = z.object({
   type: z.string().max(100),
@@ -79,7 +80,7 @@ export async function PATCH(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

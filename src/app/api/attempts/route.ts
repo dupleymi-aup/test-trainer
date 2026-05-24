@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const createAttemptSchema = z.object({
   taskId: z.string().min(1),
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = createAttemptSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const { taskId, testCases, score, ecCoverage, bvCoverage, correctness, coveredEcIds, coveredBvDescriptions, timeSpent } = parsed.data;

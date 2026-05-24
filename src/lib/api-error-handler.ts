@@ -1,5 +1,26 @@
 import { NextResponse } from "next/server";
 import { logger } from "./logger";
+import type { ZodError } from "zod";
+
+/**
+ * Formats a Zod v4 error into a human-readable string.
+ * Zod v4 changed error.message to a JSON string and moved
+ * structured data to error.issues, so this helper iterates
+ * over issues and joins their messages with field paths.
+ */
+export function formatZodError(error: ZodError): string {
+  const issues = error.issues ?? [];
+  if (issues.length === 0) {
+    return "Validation failed";
+  }
+  return issues
+    .map((issue) => {
+      const field = issue.path?.join(".");
+      return field ? `${field}: ${issue.message}` : issue.message;
+    })
+    .filter(Boolean)
+    .join("; ");
+}
 
 /**
  * Wraps an API route handler with try/catch error handling.

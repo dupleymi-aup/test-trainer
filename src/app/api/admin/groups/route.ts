@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = createGroupSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const group = await db.group.create({

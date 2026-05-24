@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 export async function GET(
   _req: Request,
@@ -70,7 +71,7 @@ export async function POST(
     }
     const parsed = assignTasksSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const validTaskIds = new Set(tasks.map((t) => t.id));
@@ -148,7 +149,7 @@ export async function DELETE(
       }
       const parsed = assignTasksSchema.safeParse(body);
       if (!parsed.success) {
-        return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+        return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
       }
 
       await db.groupTask.deleteMany({

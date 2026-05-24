@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Текущий пароль обязателен"),
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: parsed.error.message },
+        { error: "Неверные данные", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

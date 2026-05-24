@@ -4,6 +4,7 @@ import { invalidateCache, clearCache, getCacheStats } from "@/lib/analytics-cach
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const invalidateCacheSchema = z.object({
   pattern: z.string().max(200).regex(/^[a-zA-Z0-9\-_.*:]*$/).optional(),
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

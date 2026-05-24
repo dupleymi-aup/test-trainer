@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const exportReportSchema = z.object({
   reportType: z.enum([
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
   const parsed = exportReportSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Invalid data", details: parsed.error.message },
+      { error: "Invalid data", details: formatZodError(parsed.error) },
       { status: 400 }
     );
   }

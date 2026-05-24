@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const deadlineSchema = z.object({
   title: z.string().min(1, "Название обязательно"),
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = deadlineSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds, reminderSchedule } = parsed.data;
@@ -150,7 +151,7 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const parsed = deadlineSchema.partial().safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const updateData: Record<string, unknown> = { ...parsed.data };

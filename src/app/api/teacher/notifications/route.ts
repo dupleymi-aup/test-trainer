@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const notificationSchema = z.object({
   type: z.string().max(50).regex(/^[A-Z_]+$/, "Type must be uppercase letters and underscores only"),
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -110,7 +111,7 @@ export async function PATCH(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

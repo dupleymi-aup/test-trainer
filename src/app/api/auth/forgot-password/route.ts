@@ -6,6 +6,7 @@ import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Неверный формат email").max(255).optional(),
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: parsed.error.message },
+        { error: "Неверные данные", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

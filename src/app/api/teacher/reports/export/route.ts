@@ -3,6 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const exportSchema = z.object({
   groupId: z.string().optional(),
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
     const parsed = exportSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: parsed.error.message },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }

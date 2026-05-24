@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { formatZodError } from "@/lib/api-error-handler";
 
 const changeRoleSchema = z.object({
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
@@ -28,7 +29,7 @@ export async function PATCH(
     const body = await req.json();
     const parsed = changeRoleSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid role", details: parsed.error.message }, { status: 400 });
+      return NextResponse.json({ error: "Invalid role", details: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const user = await db.user.findUnique({ where: { id } });
