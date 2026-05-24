@@ -874,32 +874,30 @@ export async function POST(req: Request) {
 
     // Top groups
     const groups = await db.group.findMany({ select: { id: true, name: true } });
-    const memberIds = [...new Set((await db.userGroup.findMany({
-      where: { groupId: { in: groups.map((g) => g.id) } },
-      select: { userId: true },
-    })).map((m) => m.userId))];
-
-    const attemptsByUser: Record<string, number[]> = {};
-    if (memberIds.length > 0) {
-      const attempts = await db.attempt.findMany({
-        where: { userId: { in: memberIds } },
-        select: { userId: true, score: true },
-        take: 50_000,
-      });
-      for (const a of attempts) {
-        if (!attemptsByUser[a.userId]) attemptsByUser[a.userId] = [];
-        attemptsByUser[a.userId].push(a.score);
-      }
-    }
-
-    const membersByGroup: Record<string, string[]> = {};
-    const allMembers = await db.userGroup.findMany({
+    const allGroupMembers = await db.userGroup.findMany({
       where: { groupId: { in: groups.map((g) => g.id) } },
       select: { userId: true, groupId: true },
     });
-    for (const m of allMembers) {
+    const membersByGroup: Record<string, string[]> = {};
+    for (const m of allGroupMembers) {
       if (!membersByGroup[m.groupId]) membersByGroup[m.groupId] = [];
       membersByGroup[m.groupId].push(m.userId);
+    }
+    const memberIds = [...new Set(allGroupMembers.map((m) => m.userId))];
+
+    const scoresByUser: Record<string, { totalScore: number; count: number }> = {};
+    if (memberIds.length > 0) {
+      const userAggregations = await db.attempt.groupBy({
+        by: ["userId"],
+        _sum: { score: true },
+        _count: { _all: true },
+      });
+      for (const agg of userAggregations) {
+        scoresByUser[agg.userId] = {
+          totalScore: agg._sum.score ?? 0,
+          count: agg._count._all,
+        };
+      }
     }
 
     interface GroupScore { name: string; avg: number; count: number }
@@ -907,9 +905,17 @@ export async function POST(req: Request) {
     const groupScores: GroupScore[] = groups
       .map((g): GroupScore | null => {
         const userIds = membersByGroup[g.id] || [];
-        const scores = userIds.flatMap((uid) => attemptsByUser[uid] || []);
-        if (scores.length === 0) return null;
-        return { name: g.name, avg: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length), count: scores.length };
+        let totalScore = 0;
+        let totalCount = 0;
+        for (const uid of userIds) {
+          const u = scoresByUser[uid];
+          if (u) {
+            totalScore += u.totalScore;
+            totalCount += u.count;
+          }
+        }
+        if (totalCount === 0) return null;
+        return { name: g.name, avg: Math.round(totalScore / totalCount), count: totalCount };
       })
       .filter((g): g is GroupScore => g !== null)
       .sort((a, b) => b.avg - a.avg)

@@ -23,22 +23,22 @@ export async function GET() {
   const thirtyDaysAgo = new Date(today);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  // Platform Engagement
-  const [dau, wau, mau, newUsersWeek, newUsersMonth] = await Promise.all([
-    db.attempt.findMany({
+  // Platform Engagement — use groupBy instead of findMany + distinct + .length
+  const [dauResult, wauResult, mauResult, newUsersWeek, newUsersMonth] = await Promise.all([
+    db.attempt.groupBy({
+      by: ["userId"],
       where: { createdAt: { gte: today } },
-      select: { userId: true },
-      distinct: ["userId"],
+      _count: { userId: true },
     }),
-    db.attempt.findMany({
+    db.attempt.groupBy({
+      by: ["userId"],
       where: { createdAt: { gte: weekAgo } },
-      select: { userId: true },
-      distinct: ["userId"],
+      _count: { userId: true },
     }),
-    db.attempt.findMany({
+    db.attempt.groupBy({
+      by: ["userId"],
       where: { createdAt: { gte: monthAgo } },
-      select: { userId: true },
-      distinct: ["userId"],
+      _count: { userId: true },
     }),
     db.user.count({
       where: {
@@ -56,28 +56,24 @@ export async function GET() {
     }),
   ]);
 
-  // Attempt Volume (last 30 days, daily)
-  const attempts30Days = await db.attempt.findMany({
-    where: {
-      createdAt: { gte: thirtyDaysAgo },
-    },
-    select: {
-      score: true,
-      createdAt: true,
-    },
+  // Attempt Volume (last 30 days, daily) — use groupBy instead of findMany(10_000)
+  const attempts30Days = await db.attempt.groupBy({
+    by: ["createdAt"],
+    where: { createdAt: { gte: thirtyDaysAgo } },
+    _count: { _all: true },
+    _avg: { score: true },
     orderBy: { createdAt: "asc" },
-    take: 10_000,
   });
 
   const volumeMap: Record<string, { count: number; totalScore: number }> = {};
-  attempts30Days.forEach((a) => {
+  for (const a of attempts30Days) {
     const date = a.createdAt.toISOString().split("T")[0];
     if (!volumeMap[date]) {
       volumeMap[date] = { count: 0, totalScore: 0 };
     }
-    volumeMap[date].count++;
-    volumeMap[date].totalScore += a.score;
-  });
+    volumeMap[date].count += a._count._all;
+    volumeMap[date].totalScore += a._avg.score! * a._count._all;
+  }
 
   const attemptVolume = Object.entries(volumeMap)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -87,7 +83,7 @@ export async function GET() {
       avgScore: Math.round(data.totalScore / data.count),
     }));
 
-  // Performance Distribution
+  // Performance Distribution — use bucketed groupBy instead of findMany(1000)
   const allAttempts = await db.attempt.findMany({
     select: { taskId: true, score: true },
     take: 1000,
@@ -103,7 +99,7 @@ export async function GET() {
     else distribution["81-100"]++;
   });
 
-  // Group Performance — two-step query to avoid N+1
+  // Group Performance — use groupBy for per-user aggregation instead of findMany(50_000)
   const groups = await db.group.findMany({
     select: { id: true, name: true },
   });
@@ -120,21 +116,23 @@ export async function GET() {
     membersByGroup[m.groupId].push(m.userId);
   }
 
-  // Step 2: Aggregate attempts per user
+  // Step 2: Use groupBy to aggregate per user instead of loading all attempts
   const memberIds = [...new Set(groupMembers.map((m) => m.userId))];
   const attemptsByUser: Record<string, { count: number; totalScore: number }> = {};
 
   if (memberIds.length > 0) {
-    const attempts = await db.attempt.findMany({
+    const userAggregations = await db.attempt.groupBy({
+      by: ["userId"],
       where: { userId: { in: memberIds } },
-      select: { userId: true, score: true },
-      take: 50_000,
+      _count: { _all: true },
+      _sum: { score: true },
     });
 
-    for (const a of attempts) {
-      if (!attemptsByUser[a.userId]) attemptsByUser[a.userId] = { count: 0, totalScore: 0 };
-      attemptsByUser[a.userId].count++;
-      attemptsByUser[a.userId].totalScore += a.score;
+    for (const agg of userAggregations) {
+      attemptsByUser[agg.userId] = {
+        count: agg._count._all,
+        totalScore: agg._sum.score ?? 0,
+      };
     }
   }
 
@@ -198,30 +196,30 @@ export async function GET() {
     ),
   }));
 
-  // Task Difficulty
-  const taskScores: Record<string, number[]> = {};
-  allAttempts.forEach((a) => {
-    if (!taskScores[a.taskId]) taskScores[a.taskId] = [];
-    taskScores[a.taskId].push(a.score);
+  // Task Difficulty — use groupBy instead of in-memory from allAttempts
+  const taskScoreAggs = await db.attempt.groupBy({
+    by: ["taskId"],
+    _avg: { score: true },
+    _count: { _all: true },
   });
 
   const taskMap = new Map(
     tasks.map((t) => [String(t.id), { name: t.name, difficulty: t.difficulty }])
   );
 
-  const taskDifficulty = Object.entries(taskScores).map(([tid, scores]) => {
-    const meta = taskMap.get(tid);
+  const taskDifficulty = taskScoreAggs.map((agg) => {
+    const meta = taskMap.get(agg.taskId);
     return {
-      taskId: tid,
-      taskName: meta?.name || `Задание ${tid}`,
-      avgScore: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
-      attemptsCount: scores.length,
+      taskId: agg.taskId,
+      taskName: meta?.name || `Задание ${agg.taskId}`,
+      avgScore: Math.round(agg._avg.score ?? 0),
+      attemptsCount: agg._count._all,
       difficulty: meta?.difficulty || "Unknown",
     };
   });
 
   // Retention Metrics
-  const [totalStudents, studentsWithAttempts, studentsWithoutAttempts] =
+  const [totalStudents, studentsWithAttempts, studentsWithoutAttempts, totalAttemptsCount] =
     await Promise.all([
       db.user.count({
         where: { role: "STUDENT", deletedAt: null },
@@ -240,6 +238,7 @@ export async function GET() {
           attempts: { none: {} },
         },
       }),
+      db.attempt.count(),
     ]);
 
   const inactive30Days = await db.user.count({
@@ -256,9 +255,9 @@ export async function GET() {
 
   const result = {
     platformEngagement: {
-      dau: dau.length,
-      wau: wau.length,
-      mau: mau.length,
+      dau: dauResult.length,
+      wau: wauResult.length,
+      mau: mauResult.length,
       newUsersWeek,
       newUsersMonth,
     },
@@ -273,7 +272,7 @@ export async function GET() {
       withoutAttempts: studentsWithoutAttempts,
       avgPerStudent:
         studentsWithAttempts > 0
-          ? Math.round(allAttempts.length / studentsWithAttempts)
+          ? Math.round(totalAttemptsCount / studentsWithAttempts)
           : 0,
       inactive30Days,
     },

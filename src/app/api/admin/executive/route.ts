@@ -112,20 +112,21 @@ export async function GET() {
 
     topRiskStudents.sort((a, b) => b.riskScore - a.riskScore);
 
-    // Attempts trend (last 30 days) — for composed chart
-    const recentAttempts = await db.attempt.findMany({
+    // Attempts trend (last 30 days) — use groupBy instead of findMany(10_000)
+    const recentAttempts = await db.attempt.groupBy({
+      by: ["createdAt"],
       where: { createdAt: { gte: thirtyDaysAgo } },
-      select: { score: true, createdAt: true },
+      _count: { _all: true },
+      _avg: { score: true },
       orderBy: { createdAt: "asc" },
-      take: 10_000,
     });
 
     const volumeMap: Record<string, { count: number; totalScore: number }> = {};
     for (const a of recentAttempts) {
       const date = a.createdAt.toISOString().split("T")[0];
       if (!volumeMap[date]) volumeMap[date] = { count: 0, totalScore: 0 };
-      volumeMap[date].count++;
-      volumeMap[date].totalScore += a.score;
+      volumeMap[date].count += a._count._all;
+      volumeMap[date].totalScore += a._avg.score! * a._count._all;
     }
 
     const activityTrend = Object.entries(volumeMap)
@@ -136,7 +137,7 @@ export async function GET() {
         avgScore: Math.round(data.totalScore / data.count),
       }));
 
-    // Top groups by avg score
+    // Top groups by avg score — use groupBy instead of findMany(50_000)
     const groups = await db.group.findMany({ select: { id: true, name: true } });
     const groupMembers = await db.userGroup.findMany({
       where: { groupId: { in: groups.map((g) => g.id) } },
@@ -149,16 +150,19 @@ export async function GET() {
     }
 
     const memberIds = [...new Set(groupMembers.map((m) => m.userId))];
-    const attemptsByUser: Record<string, number[]> = {};
+    const scoresByUser: Record<string, { totalScore: number; count: number }> = {};
     if (memberIds.length > 0) {
-      const attempts = await db.attempt.findMany({
+      const userAggregations = await db.attempt.groupBy({
+        by: ["userId"],
         where: { userId: { in: memberIds } },
-        select: { userId: true, score: true },
-        take: 50_000,
+        _sum: { score: true },
+        _count: { _all: true },
       });
-      for (const a of attempts) {
-        if (!attemptsByUser[a.userId]) attemptsByUser[a.userId] = [];
-        attemptsByUser[a.userId].push(a.score);
+      for (const agg of userAggregations) {
+        scoresByUser[agg.userId] = {
+          totalScore: agg._sum.score ?? 0,
+          count: agg._count._all,
+        };
       }
     }
 
@@ -168,12 +172,20 @@ export async function GET() {
       .map((g): GroupPerf | null => {
         const userIds = membersByGroup[g.id] || [];
         if (userIds.length === 0) return null;
-        const allScores = userIds.flatMap((uid) => attemptsByUser[uid] || []);
-        if (allScores.length === 0) return null;
+        let totalScore = 0;
+        let totalCount = 0;
+        for (const uid of userIds) {
+          const u = scoresByUser[uid];
+          if (u) {
+            totalScore += u.totalScore;
+            totalCount += u.count;
+          }
+        }
+        if (totalCount === 0) return null;
         return {
           groupId: g.id,
           name: g.name,
-          avgScore: Math.round(allScores.reduce((s, v) => s + v, 0) / allScores.length),
+          avgScore: Math.round(totalScore / totalCount),
           studentCount: userIds.length,
         };
       })
