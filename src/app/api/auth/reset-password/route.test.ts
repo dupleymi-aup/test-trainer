@@ -10,6 +10,7 @@ const { mocks } = vi.hoisted(() => ({
     mockVerificationTokenFindUnique: vi.fn(),
     mockVerificationTokenDelete: vi.fn(),
     mockUserUpdate: vi.fn(),
+    $transaction: vi.fn().mockResolvedValue([{}, {}]),
     bcryptHash: vi.fn().mockResolvedValue("$2a$12$hashednewpassword"),
     loggerError: vi.fn(),
     rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 3600000 },
@@ -25,6 +26,7 @@ vi.mock("@/lib/db", () => ({
     user: {
       update: mocks.mockUserUpdate,
     },
+    $transaction: mocks.$transaction,
   },
 }));
 
@@ -44,6 +46,7 @@ vi.mock("@/lib/rate-limit", () => {
   const m = mocks;
   return {
     checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
+    getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
     rateLimits: {
       resetPassword: { max: 5, windowMs: 15 * 60 * 1000 },
     },
@@ -361,7 +364,7 @@ describe("POST /api/auth/reset-password", () => {
 
     it("returns 500 when user update fails", async () => {
       mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
-      mocks.mockUserUpdate.mockRejectedValueOnce(new Error("Update failed"));
+      mocks.$transaction.mockRejectedValueOnce(new Error("Update failed"));
 
       const req = makeRequest(validResetPayload);
       const res = await POST(req);

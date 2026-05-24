@@ -62,6 +62,7 @@ vi.mock("@/lib/rate-limit", () => {
   const m = mocks;
   return {
     checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
+    getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
     rateLimits: {
       forgotPassword: { max: 3, windowMs: 60 * 60 * 1000 },
     },

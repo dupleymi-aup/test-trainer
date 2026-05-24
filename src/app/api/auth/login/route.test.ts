@@ -38,6 +38,7 @@ vi.mock("@/lib/rate-limit", () => {
   const m = mocks;
   return {
     checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
+    getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
     rateLimits: {
       login: { max: 5, windowMs: 15 * 60 * 1000 },
     },

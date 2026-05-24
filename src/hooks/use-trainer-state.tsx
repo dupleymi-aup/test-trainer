@@ -217,8 +217,8 @@ export function useTrainerState() {
   // Test case operations
   const handleAddTestCase = useCallback(
     (inputs: string[], expected: string, category: TestCaseCategory, comment: string) => {
-      const inputKey = inputs.join("||");
-      const isDuplicate = testCases.some((tc) => tc.inputs.join("||") === inputKey);
+      const inputKey = JSON.stringify(inputs);
+      const isDuplicate = testCases.some((tc) => JSON.stringify(tc.inputs) === inputKey);
 
       if (isDuplicate) {
         toast.warning("Такие входные данные уже есть в списке тест-кейсов");
@@ -366,6 +366,7 @@ export function useTrainerState() {
     if (trimmed === "true" || trimmed === "да" || trimmed === "верно") return true;
     if (trimmed === "false" || trimmed === "нет" || trimmed === "неверно") return false;
     if (trimmed === "null") return null;
+    if (trimmed === "undefined") return undefined;
     const num = Number(trimmed);
     if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
     try {
@@ -742,11 +743,12 @@ export function useTrainerState() {
   }, []);
 
   const handleRandomTask = useCallback(() => {
-    const uncompleted = tasks.filter((t) => !savedProgress[t.id]);
-    const pool = uncompleted.length > 0 ? uncompleted : tasks;
-    const randomTask = pool[Math.floor(Math.random() * pool.length)];
+    const pool = filteredTasks.length > 0 ? filteredTasks : tasks;
+    const uncompleted = pool.filter((t) => !savedProgress[t.id]);
+    const randomPool = uncompleted.length > 0 ? uncompleted : pool;
+    const randomTask = randomPool[Math.floor(Math.random() * randomPool.length)];
     handleSelectTask(randomTask);
-  }, [savedProgress, handleSelectTask]);
+  }, [savedProgress, handleSelectTask, filteredTasks]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -823,9 +825,10 @@ export function useTrainerState() {
         const target = e.target as HTMLElement;
         if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
         const num = parseInt(e.key);
-        if (num >= 1 && num <= tasks.length) {
+        const available = filteredTasks.length > 0 ? filteredTasks : tasks;
+        if (num >= 1 && num <= available.length) {
           e.preventDefault();
-          const task = tasks.find((t) => t.id === num);
+          const task = available.find((t) => t.id === num);
           if (task) {
             handleSelectTask(task);
           }
