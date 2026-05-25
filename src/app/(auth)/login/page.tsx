@@ -56,7 +56,11 @@ function LoginFormContent() {
       });
 
       if (result?.error) {
-        toast.error("Неверный email/телефон или пароль");
+        if (result.error === "rate_limited") {
+          toast.error("Слишком много попыток. Попробуйте позже");
+        } else {
+          toast.error("Неверный email/телефон или пароль");
+        }
       } else if (result?.ok) {
         toast.success("Вход выполнен");
         router.push(callbackUrl);

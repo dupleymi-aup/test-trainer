@@ -45,7 +45,9 @@ export const authOptions: NextAuthOptions = {
 
         const login = credentials.login.trim();
 
-        if (isLoginRateLimited(login)) return null;
+        if (isLoginRateLimited(login)) {
+          throw new Error("rate_limited");
+        }
 
         const isPhone = /^\+?\d{10,15}$/.test(login.replace(/[\s()-]/g, ""));
 
@@ -53,11 +55,17 @@ export const authOptions: NextAuthOptions = {
           where: isPhone ? { phone: login } : { email: login.toLowerCase() },
         });
 
-        if (!user || !user.hashedPassword) return null;
-        if (!user.isActive) return null; // Block inactive users
+        if (!user || !user.hashedPassword) {
+          return null;
+        }
+        if (!user.isActive) {
+          return null; // Block inactive users
+        }
 
         const isValid = await bcrypt.compare(credentials.password, user.hashedPassword);
-        if (!isValid) return null;
+        if (!isValid) {
+          return null;
+        }
 
         return {
           id: user.id,
