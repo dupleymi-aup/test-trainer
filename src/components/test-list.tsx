@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import React from "react";
+import { useState, useMemo, useEffect, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -435,7 +434,7 @@ function SortableRow({
   );
 }
 
-export const TestList = React.memo(function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSubmit, onShowHint, onFillAllEc, onFillAllBv, onReorder, onBulkRemove, onClearAll }: TestListProps) {
+export const TestList = memo(function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSubmit, onShowHint, onFillAllEc, onFillAllBv, onReorder, onBulkRemove, onClearAll }: TestListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editInputs, setEditInputs] = useState<string[]>([]);
   const [editExpectedOutput, setEditExpectedOutput] = useState("");

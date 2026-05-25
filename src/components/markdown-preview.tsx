@@ -1,5 +1,3 @@
-import React from "react";
-
 function parseInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*|`([^`]+?)`|\*(.+?)\*)/g;

@@ -56,6 +56,20 @@ interface TaskParam {
   description: string;
 }
 
+interface CustomTask {
+  id?: string | number;
+  name?: string;
+  signature?: string;
+  description?: string;
+  difficulty?: Difficulty;
+  topics?: string[];
+  equivalenceClasses?: unknown[];
+  boundaryValues?: unknown[];
+  solution?: string;
+  params?: TaskParam[];
+  [key: string]: unknown;
+}
+
 type Difficulty = "Легко" | "Средне" | "Сложно";
 
 const STORAGE_KEY = "teacher-custom-tasks";
@@ -69,7 +83,7 @@ function loadCustomTasks() {
   }
 }
 
-function saveCustomTasks(tasks: any[]) {
+function saveCustomTasks(tasks: CustomTask[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
   } catch {
@@ -105,7 +119,7 @@ export default function TaskConstructorPage() {
   const [commonMistakes, setCommonMistakes] = useState<string[]>([]);
   const [mistakeInput, setMistakeInput] = useState("");
 
-  const [savedTasks, setSavedTasks] = useState<any[]>(() => loadCustomTasks());
+  const [savedTasks, setSavedTasks] = useState<CustomTask[]>(() => loadCustomTasks());
 
   const addParam = () => {
     if (!paramName.trim()) return;
@@ -207,7 +221,7 @@ export default function TaskConstructorPage() {
     toast.success(`Задание «${task.name}» сохранено!`);
   };
 
-  const deleteTask = (id: number) => {
+  const deleteTask = (id: string | number) => {
     const updated = savedTasks.filter((t) => t.id !== id);
     setSavedTasks(updated);
     saveCustomTasks(updated);
@@ -656,7 +670,7 @@ export default function TaskConstructorPage() {
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => deleteTask(task.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => task.id != null && deleteTask(task.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>

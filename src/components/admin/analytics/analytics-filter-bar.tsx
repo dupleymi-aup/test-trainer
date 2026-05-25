@@ -68,7 +68,7 @@ export function AnalyticsFilterBar({
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
         })
-        .then((d: any) => {
+        .then((d: { universityPerformance?: Array<{ university: string }> }) => {
           if (d.universityPerformance) {
             const unis = (d.universityPerformance as Array<{ university: string }>).map(
               (u) => u.university

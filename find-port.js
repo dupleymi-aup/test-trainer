@@ -1,4 +1,4 @@
-const net = require('net');
+import net from 'net';
 
 function findAvailablePort(startPort, maxAttempts) {
   return new Promise((resolve, reject) => {

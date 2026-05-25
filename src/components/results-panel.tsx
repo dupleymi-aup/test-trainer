@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { memo, Fragment, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -37,7 +37,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
 import type { TestCase } from "@/lib/evaluator";
@@ -172,7 +171,7 @@ function formatTime(ms: number): string {
   return `${sec}с`;
 }
 
-export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases = [], onReset, bestScore, elapsedTime }: ResultsPanelProps) {
+export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [], onReset, bestScore, elapsedTime }: ResultsPanelProps) {
   const [copied, setCopied] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
@@ -656,7 +655,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                 {result.results.map((r, idx) => {
                   const isExpanded = expandedRow === r.testCase.id;
                   return (
-                    <React.Fragment key={r.testCase.id}>
+                    <Fragment key={r.testCase.id}>
                       <TableRow
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => setExpandedRow(isExpanded ? null : r.testCase.id)}
@@ -810,7 +809,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
                           </TableCell>
                         </TableRow>
                       )}
-                    </React.Fragment>
+                    </Fragment>
                   );
                 })}
               </TableBody>

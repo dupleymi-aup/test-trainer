@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +54,7 @@ const difficultyBorderColors: Record<string, string> = {
   Сложно: "border-l-rose-500",
 };
 
-export const TaskCard = React.memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, onClick }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, onClick }: TaskCardProps) {
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card

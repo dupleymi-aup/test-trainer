@@ -1,5 +1,9 @@
-const { execSync } = require('child_process')
-const path = require('path')
+import { execSync } from 'child_process'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const SCRIPTS_DIR = path.resolve(__dirname, 'scripts')
 
@@ -13,7 +17,7 @@ const detectOutput = execSync(`node ${path.join(SCRIPTS_DIR, 'find-db.js')}`, {
 let dbConfig
 try {
   dbConfig = JSON.parse(detectOutput)
-} catch (e) {
+} catch {
   console.error('Failed to parse database detection output:', detectOutput)
   process.exit(1)
 }
