@@ -16,7 +16,7 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "@typescript-eslint/prefer-as-const": "error",
     
     // React rules
-    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/exhaustive-deps": "warn",
     "react-hooks/purity": "off",
     "react-hooks/refs": "off",
     "react-hooks/set-state-in-effect": "off",

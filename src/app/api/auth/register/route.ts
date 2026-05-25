@@ -43,9 +43,12 @@ export async function POST(req: Request) {
 
     const emailLower = email.toLowerCase().trim();
 
+    const orConditions: Array<{ email?: string; phone?: string }> = [{ email: emailLower }];
+    if (phone) orConditions.push({ phone: phone.trim() });
+
     const existingUser = await db.user.findFirst({
       where: {
-        OR: [{ email: emailLower }, phone ? { phone: phone.trim() } : {}].filter(Boolean),
+        OR: orConditions,
       },
     });
 
