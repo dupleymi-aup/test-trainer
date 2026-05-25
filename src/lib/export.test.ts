@@ -42,7 +42,7 @@ describe("generateExportJSON", () => {
   it("generates valid JSON with correct structure", () => {
     vi.mocked(storage.loadAttemptHistory).mockReturnValue([]);
     vi.mocked(storage.loadProgress).mockReturnValue({});
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue([]);
 
     const result = generateExportJSON();
@@ -65,10 +65,19 @@ describe("generateExportJSON", () => {
     ];
     vi.mocked(storage.loadAttemptHistory).mockReturnValue(attempts);
     vi.mocked(storage.loadProgress).mockReturnValue({
-      "1": { score: 90, testCases: [{}, {}, {}] },
-      "2": { score: 100, testCases: [{}, {}, {}, {}] },
+      "1": { score: 90, testCases: [
+        { id: "tc1", inputs: ["5"], expectedOutput: "120", category: "Нормальное значение", comment: "" },
+        { id: "tc2", inputs: ["0"], expectedOutput: "1", category: "Нормальное значение", comment: "" },
+        { id: "tc3", inputs: ["-1"], expectedOutput: "Ошибка", category: "Нормальное значение", comment: "" },
+      ]},
+      "2": { score: 100, testCases: [
+        { id: "tc1", inputs: ["4"], expectedOutput: "true", category: "Нормальное значение", comment: "" },
+        { id: "tc2", inputs: ["2"], expectedOutput: "true", category: "Нормальное значение", comment: "" },
+        { id: "tc3", inputs: ["1"], expectedOutput: "false", category: "Нормальное значение", comment: "" },
+        { id: "tc4", inputs: ["0"], expectedOutput: "false", category: "Нормальное значение", comment: "" },
+      ]},
     });
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 3, longestStreak: 5 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 3, longestStreak: 5, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue(["first_attempt", "perfect_score"]);
 
     const result = JSON.parse(generateExportJSON());
@@ -84,7 +93,7 @@ describe("generateExportJSON", () => {
   it("handles empty data gracefully", () => {
     vi.mocked(storage.loadAttemptHistory).mockReturnValue([]);
     vi.mocked(storage.loadProgress).mockReturnValue({});
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue([]);
 
     const result = JSON.parse(generateExportJSON());
@@ -98,7 +107,7 @@ describe("generateExportCSV", () => {
   it("includes BOM for UTF-8 encoding", () => {
     vi.mocked(storage.loadAttemptHistory).mockReturnValue([]);
     vi.mocked(storage.loadProgress).mockReturnValue({});
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue([]);
 
     const result = generateExportCSV();
@@ -108,7 +117,7 @@ describe("generateExportCSV", () => {
   it("includes summary section headers", () => {
     vi.mocked(storage.loadAttemptHistory).mockReturnValue([]);
     vi.mocked(storage.loadProgress).mockReturnValue({});
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 2, longestStreak: 4 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 2, longestStreak: 4, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue(["first_attempt"]);
 
     const result = generateExportCSV();
@@ -121,9 +130,12 @@ describe("generateExportCSV", () => {
   it("escapes values containing commas", () => {
     vi.mocked(storage.loadAttemptHistory).mockReturnValue([]);
     vi.mocked(storage.loadProgress).mockReturnValue({
-      "1": { score: 85, testCases: [{}, {}] },
+      "1": { score: 85, testCases: [
+        { id: "tc1", inputs: ["test@example.com"], expectedOutput: "valid", category: "Нормальное значение", comment: "" },
+        { id: "tc2", inputs: ["invalid"], expectedOutput: "invalid", category: "Нормальное значение", comment: "" },
+      ]},
     });
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue([]);
 
     const result = generateExportCSV();
@@ -134,7 +146,7 @@ describe("generateExportCSV", () => {
   it("includes achievements section with locked/unlocked status", () => {
     vi.mocked(storage.loadAttemptHistory).mockReturnValue([]);
     vi.mocked(storage.loadProgress).mockReturnValue({});
-    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0 });
+    vi.mocked(storage.loadStreak).mockReturnValue({ currentStreak: 0, longestStreak: 0, lastActiveDate: "2025-01-15" });
     vi.mocked(achievementsModule.loadUnlockedAchievements).mockReturnValue(["first_attempt"]);
 
     const result = generateExportCSV();

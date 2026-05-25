@@ -50,7 +50,7 @@ describe("csrf", () => {
     it("generates different tokens on successive calls", () => {
       // Override mock to return random-ish bytes each call
       let counter = 0;
-      vi.mocked(globalThis.crypto.getRandomValues).mockImplementation(
+      (globalThis.crypto.getRandomValues as ReturnType<typeof vi.fn>).mockImplementation(
         (arr: Uint8Array) => {
           for (let i = 0; i < arr.length; i++) {
             arr[i] = (counter + i) % 256;

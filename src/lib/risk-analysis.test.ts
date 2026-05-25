@@ -280,16 +280,16 @@ describe("computeAnomalyFlags", () => {
 
   it("detects time anomaly", () => {
     const result = computeAnomalyFlags("1", "Test", "G1", [
-      { score: 70, timeSpent: 600, testId: 1, taskId: "1", createdAt: day(2) },
-      { score: 60, timeSpent: 1800, testId: 1, taskId: "1", createdAt: day(1) },
+      { score: 70, timeSpent: 600, testId: 1, createdAt: day(2) },
+      { score: 60, timeSpent: 1800, testId: 1, createdAt: day(1) },
     ], { 1: 500 });
     expect(result.some((a) => a.anomalyType === "time_anomaly")).toBe(true);
   });
 
   it("does not detect time anomaly when within threshold", () => {
     const result = computeAnomalyFlags("1", "Test", "G1", [
-      { score: 70, timeSpent: 600, testId: 1, taskId: "1", createdAt: day(2) },
-      { score: 60, timeSpent: 800, testId: 1, taskId: "1", createdAt: day(1) },
+      { score: 70, timeSpent: 600, testId: 1, createdAt: day(2) },
+      { score: 60, timeSpent: 800, testId: 1, createdAt: day(1) },
     ], { 1: 500 });
     expect(result.some((a) => a.anomalyType === "time_anomaly")).toBe(false);
   });

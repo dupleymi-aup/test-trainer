@@ -36,6 +36,8 @@
     "prisma/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
     "vitest.config.ts",
     ".next/types/**/*.ts"
   ],
