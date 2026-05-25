@@ -80,7 +80,7 @@ export function useTrainerState() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [evaluationResult, setEvaluationResult] = useState<EvaluationResult | null>(null);
-  const [savedProgress, setSavedProgress] = useState<Record<number, TaskProgress>>(() => {
+  const [savedProgress, setSavedProgress] = useState<Record<string, TaskProgress>>(() => {
     if (typeof window !== "undefined") {
       return loadProgress();
     }
@@ -611,7 +611,7 @@ export function useTrainerState() {
 
     // Count score improvements (current score > previous best on same task)
     const scoreImprovements = history.filter((h) => {
-      const prev = progress[h.taskId];
+      const prev = progress[String(h.taskId)];
       return prev && h.score > prev.score;
     }).length;
 

@@ -50,10 +50,10 @@ export function saveProgress(
 ): void {
   try {
     const progress = loadProgress();
-    const existing = progress[taskId];
+    const existing = progress[String(taskId)];
     // Сохраняем только если результат лучше
     if (!existing || score >= existing.score) {
-      progress[taskId] = { score, testCases };
+      progress[String(taskId)] = { score, testCases };
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
     }
   } catch {
@@ -64,7 +64,7 @@ export function saveProgress(
 /**
  * Загружает все сохранённые результаты
  */
-export function loadProgress(): Record<number, TaskProgress> {
+export function loadProgress(): Record<string, TaskProgress> {
   try {
     const raw = localStorage.getItem(PROGRESS_KEY);
     if (!raw) return {};

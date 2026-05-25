@@ -82,14 +82,14 @@ describe("storage", () => {
       const cases = [makeTestCase("1"), makeTestCase("2")];
       saveProgress(1, 80, cases);
       const progress = loadProgress();
-      expect(progress[1]).toEqual({ score: 80, testCases: cases });
+      expect(progress["1"]).toEqual({ score: 80, testCases: cases });
     });
 
     it("only overwrites when new score is >= existing", () => {
       saveProgress(1, 80, [makeTestCase("1")]);
       saveProgress(1, 60, [makeTestCase("2")]); // worse - ignored
       const progress = loadProgress();
-      expect(progress[1].score).toBe(80);
+      expect(progress["1"].score).toBe(80);
     });
 
     it("overwrites when new score is equal", () => {
@@ -97,15 +97,15 @@ describe("storage", () => {
       const newCases = [makeTestCase("2")];
       saveProgress(1, 80, newCases); // same score - overwrites
       const progress = loadProgress();
-      expect(progress[1].score).toBe(80);
-      expect(progress[1].testCases).toEqual(newCases);
+      expect(progress["1"].score).toBe(80);
+      expect(progress["1"].testCases).toEqual(newCases);
     });
 
     it("overwrites when new score is better", () => {
       saveProgress(1, 50, [makeTestCase("1")]);
       saveProgress(1, 90, [makeTestCase("2")]);
       const progress = loadProgress();
-      expect(progress[1].score).toBe(90);
+      expect(progress["1"].score).toBe(90);
     });
 
     it("returns empty object when no progress saved", () => {
