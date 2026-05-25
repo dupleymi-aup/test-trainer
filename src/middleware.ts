@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
 
   if (isApiRoute && !isPreAuthRoute && token && stateChangingMethods.includes(method)) {
     const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
-    const headerToken = request.headers.get(CSRF_HEADER_NAME);
+    const headerToken = request.headers.get(CSRF_HEADER_NAME) ?? undefined;
     if (!verifyCSRFToken(cookieToken, headerToken)) {
       return NextResponse.json({ error: "CSRF token missing or invalid" }, { status: 403 });
     }

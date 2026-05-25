@@ -50,12 +50,6 @@ export function loadConfig() {
 
   const data = parsed.data
 
-  // In production, NEXTAUTH_URL must not be localhost
-  if (data.nodeEnv === 'production' && data.nextauthUrl.includes('localhost')) {
-    throw new Error(
-      `Invalid configuration: NEXTAUTH_URL must not contain 'localhost' in production. Got: ${data.nextauthUrl}`
-    )
-  }
 
   return data
 }

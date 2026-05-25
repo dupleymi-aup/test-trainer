@@ -40,7 +40,8 @@ export interface Task {
 }
 
 // Helper to auto-generate code display string from a function
-function getCode<T extends (...args: unknown[]) => unknown>(fn: T): string {
+// eslint-disable-next-line @typescript-eslint/ban-types
+function getCode(fn: Function): string {
   const source = fn.toString();
   // If it's an arrow function wrapper like "(args) => factorial(args[0])", extract the inner call
   const arrowMatch = source.match(/\)\s*=>\s*(\w+)\(/);

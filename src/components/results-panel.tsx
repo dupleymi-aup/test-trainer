@@ -176,12 +176,11 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
   const [copied, setCopied] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  if (!result) return null;
-
-  const grade = getGrade(result.overallScore);
+  const grade = result ? getGrade(result.overallScore) : null;
 
   // Compare with best previous attempt
   const comparison = useMemo(() => {
+    if (!result) return null;
     const history = getTaskHistory(result.task.id);
     if (history.length <= 1) return null;
     const bestPrev = history
@@ -214,6 +213,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
 
   // Diagnostic summary: group test results by category
   const diagnosticSummary = useMemo(() => {
+    if (!result) return { lines: [] as string[], categories: [] as string[] };
     const byCategory: Record<string, { correct: number; total: number; failedDescriptions: string[] }> = {};
     result.results.forEach((r) => {
       const cat = r.testCase.category;
@@ -245,6 +245,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
   }, [result]);
 
   const strategyWarnings = useMemo(() => {
+    if (!result) return [];
     const warnings: { icon: React.ReactNode; title: string; details: string; color: string }[] = [];
 
     const categoryCounts: Record<string, number> = {};
@@ -388,10 +389,10 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="text-4xl mb-2"
             >
-              {grade.emoji}
+              {grade!.emoji}
             </motion.div>
-            <h2 className={`text-2xl font-bold ${grade.color}`}>
-              {grade.text}
+            <h2 className={`text-2xl font-bold ${grade!.color}`}>
+              {grade!.text}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Задание: {result.task.name}

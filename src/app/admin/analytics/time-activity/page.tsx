@@ -58,7 +58,7 @@ interface TimeActivityData {
   summary: Summary;
 }
 
-function HeatmapCell({ cell }: { cell: HeatmapCell }) {
+function HeatmapCellComponent({ cell }: { cell: HeatmapCell }) {
   const maxCount = Math.max(cell.count, 1);
   const intensity = Math.min(cell.count / Math.max(maxCount * 0.3, 1), 1);
 
@@ -253,7 +253,7 @@ export default function TimeActivityPage() {
                     </div>
                     {row.map((cell, day) => (
                       <div key={day} className="flex-1 min-w-[48px]">
-                        <HeatmapCell cell={cell} />
+                        <HeatmapCellComponent cell={cell} />
                       </div>
                     ))}
                   </div>

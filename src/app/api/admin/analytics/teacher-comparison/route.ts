@@ -84,15 +84,15 @@ export async function GET(request: Request) {
       let totalStudents = 0;
       let activeStudentsCount = 0;
       let totalAttempts = 0;
-      let allScores: number[] = [];
-      let allEc: number[] = [];
-      let allBv: number[] = [];
+      const allScores: number[] = [];
+      const allEc: number[] = [];
+      const allBv: number[] = [];
       let improvingStudents = 0;
       let decliningStudents = 0;
       const groups: TeacherMetrics["groups"] = [];
 
       for (const g of t.createdGroups) {
-        let groupScores: number[] = [];
+        const groupScores: number[] = [];
         let groupActive = 0;
         const groupStudentCount = g.members.length;
 

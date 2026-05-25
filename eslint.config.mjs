@@ -41,7 +41,7 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-fallthrough": "error",
     "no-mixed-spaces-and-tabs": "error",
     "no-redeclare": "error",
-    "no-undef": "error",
+    "no-undef": "off", // TypeScript handles this; React 19 new JSX transform doesn't require React import
     "no-unreachable": "error",
     "no-useless-escape": "warn",
   },
