@@ -51,6 +51,7 @@ async function sendViaTwilio({ phone, message }: SendSMSOptions): Promise<SMSPro
     // Lazy dynamic import to avoid crashing when twilio is not installed
     // Install with: npm install twilio
     // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // @ts-expect-error twilio is an optional dependency
     const twilio = (await import("twilio")).default;
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,

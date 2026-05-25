@@ -828,7 +828,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {warnings.map((w, i) => (
+              {strategyWarnings.map((w, i) => (
                 <div
                   key={i}
                   className={`flex items-start gap-2 p-2.5 rounded-lg ${
@@ -863,7 +863,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
               if (!ec) return null;
               const example = ec.exampleValues[0];
               return (
-                <div key={id} className="flex items-start justify-between gap-2 p-2 rounded bg-white/60 dark:bg-zinc-900/30">
+                <div key={id} className="flex items-start justify-between gap-2 p-2 rounded bg-muted/30 dark:bg-zinc-900/30">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
                       Добавьте тест для {ec.name}
@@ -882,7 +882,7 @@ export const ResultsPanel = React.memo(function ResultsPanel({ result, testCases
               const bv = result.task.boundaryValues.find((b) => b.description === desc);
               if (!bv) return null;
               return (
-                <div key={desc} className="flex items-start justify-between gap-2 p-2 rounded bg-white/60 dark:bg-zinc-900/30">
+                <div key={desc} className="flex items-start justify-between gap-2 p-2 rounded bg-muted/30 dark:bg-zinc-900/30">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
                       Протестируйте граничное значение

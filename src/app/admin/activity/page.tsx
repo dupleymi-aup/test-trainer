@@ -54,7 +54,7 @@ const roleLabels: Record<string, string> = {
 export default function AdminActivityPage() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 1 });
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState("");
   const [search, setSearch] = useState("");
   const [userId, setUserId] = useState("");

@@ -554,7 +554,7 @@ export function useTrainerState() {
     });
 
     saveAttempt({
-      taskId: String(selectedTask.id),
+      taskId: selectedTask.id,
       score: result.overallScore,
       ecCoverage: result.ecCoverage,
       bvCoverage: result.boundaryCoverage,
