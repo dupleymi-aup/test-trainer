@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: __dirname,
   reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,

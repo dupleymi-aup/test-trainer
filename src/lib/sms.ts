@@ -48,10 +48,7 @@ function checkRateLimit(phone: string): { allowed: boolean; retryAfter?: number 
 
 async function sendViaTwilio({ phone, message }: SendSMSOptions): Promise<SMSProviderResult> {
   try {
-    // Lazy dynamic import to avoid crashing when twilio is not installed
-    // Install with: npm install twilio
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    // @ts-expect-error twilio is an optional dependency
+    // Lazy dynamic import for optional SMS provider
     const twilio = (await import("twilio")).default;
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,
