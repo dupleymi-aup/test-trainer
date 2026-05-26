@@ -130,8 +130,8 @@ function UncoveredChecklist({ task, evaluationResult }: { task: Task | null; eva
 
     const uncoveredEcs = evaluationResult.uncoveredEcIds
       .map((id) => task.equivalenceClasses.find((ec) => ec.id === id))
-      .filter(Boolean)
-      .map((ec) => ({ id: ec!.id, name: ec!.name, description: ec!.description }));
+      .filter((ec): ec is NonNullable<ReturnType<typeof task.equivalenceClasses.find>> => ec !== undefined)
+      .map((ec) => ({ id: ec.id, name: ec.name, description: ec.description }));
 
     const uncoveredBvs = task.boundaryValues
       .filter((bv) => evaluationResult.uncoveredBvDescriptions.includes(bv.description))

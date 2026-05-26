@@ -9,13 +9,13 @@ import { secureCompare } from "@/lib/crypto";
 export async function POST(req: Request) {
   try {
     // Support both admin session (manual trigger) and cron secret (automated)
-    let userId: string | undefined;
+    let userId: string | null = null;
 
     // Try cron secret first using constant-time comparison to prevent timing attacks
     const authHeader = req.headers.get("authorization");
     if (authHeader?.startsWith("Bearer ") && process.env.CRON_SECRET) {
       if (secureCompare(authHeader.slice(7), process.env.CRON_SECRET)) {
-        userId = undefined; // system operation, no real user
+        userId = null; // system operation, no real user
       }
     }
 

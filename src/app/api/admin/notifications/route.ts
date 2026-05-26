@@ -76,7 +76,10 @@ export async function PATCH(req: NextRequest) {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = markReadSchema.safeParse(body);
 
     if (!parsed.success) {

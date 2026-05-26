@@ -21,7 +21,10 @@ export async function POST(req: NextRequest) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = invalidateCacheSchema.safeParse(body);
 
     if (!parsed.success) {

@@ -42,8 +42,8 @@ export function loadConfig() {
   if (!parsed.success) {
     const errors = parsed.error.flatten().fieldErrors
     const messages = Object.entries(errors)
-      .filter(([, v]) => v?.length)
-      .map(([k, v]) => `  - ${k}: ${v!.join(', ')}`)
+      .filter((entry): entry is [string, string[]] => entry[1] && entry[1].length > 0)
+      .map(([k, v]) => `  - ${k}: ${v.join(', ')}`)
       .join('\n')
     throw new Error(`Invalid configuration:\n${messages}`)
   }
