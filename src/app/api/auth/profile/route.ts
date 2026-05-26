@@ -59,7 +59,10 @@ export async function PUT(req: Request) {
       return createRateLimitResponse(rateResult.resetAt);
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = profileUpdateSchema.safeParse(body);
 
     if (!parsed.success) {

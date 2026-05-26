@@ -41,7 +41,10 @@ export async function POST(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = createGroupSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });

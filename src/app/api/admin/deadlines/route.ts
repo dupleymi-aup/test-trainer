@@ -62,7 +62,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = deadlineSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
@@ -148,7 +151,10 @@ export async function PATCH(req: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = deadlineSchema.partial().safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });

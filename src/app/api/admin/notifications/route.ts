@@ -116,7 +116,10 @@ export async function POST(req: NextRequest) {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = createNotificationSchema.safeParse(body);
 
     if (!parsed.success) {
