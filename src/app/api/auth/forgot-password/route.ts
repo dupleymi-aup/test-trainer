@@ -41,38 +41,43 @@ export async function POST(req: Request) {
       const emailLower = email.toLowerCase().trim();
       const user = await db.user.findUnique({ where: { email: emailLower } });
 
-      // Always return the same response regardless of whether user exists
-      // to prevent email/phone enumeration via timing attack
-      if (!user) {
-        return NextResponse.json({
-          message: "Если аккаунт существует, инструкция отправлена на email",
-          method: "email",
-        });
-      }
-
+      // Always perform the same work (token gen + DB write) regardless of
+      // whether the user exists, preventing timing-based email enumeration.
       const token = generateSecureToken();
 
-      await db.verificationToken.create({
-        data: {
-          identifier: `password-reset:${user.id}`,
-          token,
-          expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-        },
-      });
-
-      const emailData = generatePasswordResetEmail(token, baseUrl);
-      try {
-        await sendEmail({ to: emailLower, ...emailData });
-      } catch (emailError) {
-        // Delete the token since email failed
-        await db.verificationToken.deleteMany({
-          where: { identifier: `password-reset:${user.id}`, token },
+      if (user) {
+        await db.verificationToken.create({
+          data: {
+            identifier: `password-reset:${user.id}`,
+            token,
+            expires: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+          },
         });
-        logger.error("Forgot-password email failed", emailError instanceof Error ? emailError : undefined);
-        return NextResponse.json(
-          { error: "Не удалось отправить письмо. Попробуйте позже или используйте телефон" },
-          { status: 503 }
-        );
+
+        const emailData = generatePasswordResetEmail(token, baseUrl);
+        try {
+          await sendEmail({ to: emailLower, ...emailData });
+        } catch (emailError) {
+          await db.verificationToken.deleteMany({
+            where: { identifier: `password-reset:${user.id}`, token },
+          });
+          logger.error("Forgot-password email failed", emailError instanceof Error ? emailError : undefined);
+          return NextResponse.json(
+            { error: "Не удалось отправить письмо. Попробуйте позже или используйте телефон" },
+            { status: 503 }
+          );
+        }
+      } else {
+        // Store a dummy token so the DB write still happens, matching the
+        // timing of the real-user path. Use a unique identifier to avoid
+        // collisions with real tokens.
+        await db.verificationToken.create({
+          data: {
+            identifier: `password-reset:dummy-${Date.now()}-${token}`,
+            token,
+            expires: new Date(Date.now() + 60 * 60 * 1000),
+          },
+        });
       }
 
       return NextResponse.json({
@@ -85,36 +90,41 @@ export async function POST(req: Request) {
       const trimmedPhone = phone.trim();
       const user = await db.user.findUnique({ where: { phone: trimmedPhone } });
 
-      // Always return the same response regardless of whether user exists
-      if (!user) {
-        return NextResponse.json({
-          message: "Если аккаунт существует, код отправлен по SMS",
-          method: "phone",
-        });
-      }
-
+      // Always perform the same work (OTP gen + DB write) regardless of
+      // whether the user exists, preventing timing-based phone enumeration.
       const code = generateOTPCode();
 
-      await db.verificationCode.create({
-        data: {
-          code,
-          phone: trimmedPhone,
-          expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
-        },
-      });
-
-      const smsMessage = generatePasswordResetSMS(code);
-      const smsResult = await sendSMS({ phone: trimmedPhone, message: smsMessage });
-      if (!smsResult.success) {
-        // Delete the OTP code since SMS failed
-        await db.verificationCode.deleteMany({
-          where: { phone: trimmedPhone, code },
+      if (user) {
+        await db.verificationCode.create({
+          data: {
+            code,
+            phone: trimmedPhone,
+            expires: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+          },
         });
-        logger.error("SMS send failed", { error: smsResult.error });
-        return NextResponse.json(
-          { error: "Не удалось отправить SMS. Попробуйте позже или используйте email" },
-          { status: 503 }
-        );
+
+        const smsMessage = generatePasswordResetSMS(code);
+        const smsResult = await sendSMS({ phone: trimmedPhone, message: smsMessage });
+        if (!smsResult.success) {
+          await db.verificationCode.deleteMany({
+            where: { phone: trimmedPhone, code },
+          });
+          logger.error("SMS send failed", { error: smsResult.error });
+          return NextResponse.json(
+            { error: "Не удалось отправить SMS. Попробуйте позже или используйте email" },
+            { status: 503 }
+          );
+        }
+      } else {
+        // Store a dummy OTP so the DB write still happens, matching the
+        // timing of the real-user path. Use a unique phone suffix.
+        await db.verificationCode.create({
+          data: {
+            code,
+            phone: `dummy-${Date.now()}-${trimmedPhone}`,
+            expires: new Date(Date.now() + 15 * 60 * 1000),
+          },
+        });
       }
 
       return NextResponse.json({

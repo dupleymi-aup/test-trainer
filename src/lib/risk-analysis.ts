@@ -368,5 +368,7 @@ export function predictNextScore(
   return { predicted: Math.round(predicted), trend, confidence };
 }
 
-export const { label: _, recommendation: __, ...riskLabels } = riskFactorLabels;
+export const riskLabels: Record<string, string> = Object.fromEntries(
+  Object.entries(riskFactorLabels).map(([k, v]) => [k, v.label])
+);
 export { riskFactorLabels };

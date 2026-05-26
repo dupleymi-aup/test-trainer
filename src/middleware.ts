@@ -24,17 +24,22 @@ export async function middleware(request: NextRequest) {
   const method = request.method;
 
   // Issue CSRF token for authenticated page requests (not API)
+  // Only generate a new token if one doesn't already exist, so concurrent
+  // tabs and in-flight requests don't get their tokens invalidated.
+  let csrfResponse: NextResponse | null = null;
   if (token && !pathname.startsWith("/api/")) {
-    const csrfToken = generateCSRFToken();
-    const response = NextResponse.next();
-    response.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
-      httpOnly: false, // Must be readable by JS to send in header
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 2, // 2 hours
-      path: "/",
-    });
-    return response;
+    const existingCsrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
+    if (!existingCsrfToken) {
+      const csrfToken = generateCSRFToken();
+      csrfResponse = NextResponse.next();
+      csrfResponse.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
+        httpOnly: false, // Must be readable by JS to send in header
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 2, // 2 hours
+        path: "/",
+      });
+    }
   }
 
   // CSRF check for state-changing methods on authenticated API routes
@@ -112,6 +117,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
+  if (csrfResponse) return csrfResponse;
   return NextResponse.next();
 }
 
@@ -125,7 +131,7 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public assets
      */
-    "/((?!api/auth/login|api/auth/register|api/auth/forgot-password|api/auth/reset-password|api/auth/verify-otp|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/((?!api/auth/login|api/auth/register|api/auth/forgot-password|api/auth/reset-password|api/auth/verify-otp|api/auth/session|api/auth/csrf-token|api/auth/signout|api/auth/callback|api/auth/providers|api/auth/_next|_next/static|_next/image|favicon.ico|.*\\..*).*)",
     "/api/admin/:path*",
     "/api/teacher/:path*",
     "/api/student/:path*",

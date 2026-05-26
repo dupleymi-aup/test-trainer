@@ -10,6 +10,8 @@ const { mocks } = vi.hoisted(() => ({
     mockUserFindUnique: vi.fn(),
     mockVerificationTokenCreate: vi.fn(),
     mockVerificationTokenDeleteMany: vi.fn(),
+    mockVerificationCodeCreate: vi.fn(),
+    mockVerificationCodeDeleteMany: vi.fn(),
     sendEmail: vi.fn().mockResolvedValue(undefined),
     sendSMS: vi.fn().mockResolvedValue({ success: true }),
     generatePasswordResetEmail: vi.fn().mockReturnValue({ subject: "Reset", html: "<html>" }),
@@ -31,8 +33,8 @@ vi.mock("@/lib/db", () => ({
       deleteMany: mocks.mockVerificationTokenDeleteMany,
     },
     verificationCode: {
-      create: vi.fn().mockResolvedValue({ id: "vc-123" }),
-      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      create: mocks.mockVerificationCodeCreate,
+      deleteMany: mocks.mockVerificationCodeDeleteMany,
     },
   },
 }));
@@ -118,6 +120,8 @@ describe("POST /api/auth/forgot-password", () => {
     mocks.mockUserFindUnique.mockResolvedValue(null);
     mocks.sendEmail.mockResolvedValue(undefined);
     mocks.sendSMS.mockResolvedValue({ success: true });
+    mocks.mockVerificationCodeCreate.mockResolvedValue({ id: "vc-123" });
+    mocks.mockVerificationCodeDeleteMany.mockResolvedValue({ count: 0 });
   });
 
   // =========================================================================
@@ -165,7 +169,7 @@ describe("POST /api/auth/forgot-password", () => {
   // =========================================================================
 
   describe("unknown email — security: don't leak existence", () => {
-    it("returns 200 with same message even when email does not exist", async () => {
+    it("returns 200 with same message and creates a dummy token to prevent timing attacks", async () => {
       mocks.mockUserFindUnique.mockResolvedValue(null);
 
       const req = makeRequest({ email: "nonexistent@example.com" });
@@ -175,8 +179,11 @@ describe("POST /api/auth/forgot-password", () => {
       expect(res.status).toBe(200);
       expect(json.message).toBe("Если аккаунт существует, инструкция отправлена на email");
       expect(json.method).toBe("email");
-      // Should NOT create a token for non-existent user
-      expect(mocks.mockVerificationTokenCreate).not.toHaveBeenCalled();
+      // A dummy token IS created so the DB write matches the real-user path timing,
+      // preventing attackers from inferring email existence via response time.
+      expect(mocks.mockVerificationTokenCreate).toHaveBeenCalledTimes(1);
+      const createCall = mocks.mockVerificationTokenCreate.mock.calls[0][0];
+      expect(createCall.data.identifier).toMatch(/^password-reset:dummy-/);
       expect(mocks.sendEmail).not.toHaveBeenCalled();
     });
   });
@@ -219,7 +226,7 @@ describe("POST /api/auth/forgot-password", () => {
   // =========================================================================
 
   describe("unknown phone — security: don't leak existence", () => {
-    it("returns 200 with same message even when phone does not exist", async () => {
+    it("returns 200 with same message and creates a dummy OTP to prevent timing attacks", async () => {
       mocks.mockUserFindUnique.mockResolvedValue(null);
 
       const req = makeRequest({ phone: "+79999999999" });
@@ -229,6 +236,11 @@ describe("POST /api/auth/forgot-password", () => {
       expect(res.status).toBe(200);
       expect(json.message).toBe("Если аккаунт существует, код отправлен по SMS");
       expect(json.method).toBe("phone");
+      // A dummy OTP IS created so the DB write matches the real-user path timing.
+      expect(mocks.mockVerificationCodeCreate).toHaveBeenCalledTimes(1);
+      const createCall = mocks.mockVerificationCodeCreate.mock.calls[0][0];
+      expect(createCall.data.phone).toMatch(/^dummy-/);
+      expect(mocks.sendSMS).not.toHaveBeenCalled();
     });
   });
 

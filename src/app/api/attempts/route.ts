@@ -94,7 +94,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("taskId");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "50"), 200));
 
     const attempts = await db.attempt.findMany({
       where: {
