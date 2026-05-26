@@ -16,8 +16,11 @@ const PUBLIC_SRC = "public";
 const PUBLIC_DST = path.join(STANDALONE, "public");
 
 // Run Next.js build
+// Use npx for cross-platform compatibility (Windows doesn't have 'next' in PATH)
 console.log("[build] Running next build...");
-execSync("next build", { stdio: "inherit" });
+const nextBin = path.join("node_modules", ".bin", "next");
+const nextCmd = process.platform === "win32" ? `${nextBin}.cmd` : nextBin;
+execSync(`${fs.existsSync(nextCmd) ? nextCmd : "npx next"} build`, { stdio: "inherit" });
 
 // Verify standalone output exists
 if (!fs.existsSync(STANDALONE)) {
