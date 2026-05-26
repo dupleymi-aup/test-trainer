@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       db.verificationToken.delete({ where: { token } }),
     ]);
 
-    return NextResponse.json({ message: "Email подтверждён" });
+    return NextResponse.json({ message: "Email подтверждён" }, { status: 200 });
   } catch (error) {
     logger.error("Verify email error", error instanceof Error ? error : undefined);
     return NextResponse.json(

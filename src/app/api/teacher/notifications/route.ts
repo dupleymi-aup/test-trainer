@@ -138,7 +138,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     logger.error("Failed to update notification", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });

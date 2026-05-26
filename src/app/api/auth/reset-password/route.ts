@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       db.verificationToken.delete({ where: { token } }),
     ]);
 
-    return NextResponse.json({ message: "Пароль успешно изменён" });
+    return NextResponse.json({ message: "Пароль успешно изменён" }, { status: 200 });
   } catch (error) {
     logger.error("Reset password error", error instanceof Error ? error : undefined);
     return NextResponse.json(

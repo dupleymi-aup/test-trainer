@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       data: { hashedPassword },
     });
 
-    return NextResponse.json({ message: "Пароль успешно изменён" });
+    return NextResponse.json({ message: "Пароль успешно изменён" }, { status: 200 });
   } catch (error) {
     logger.error("Change password error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при смене пароля" }, { status: 500 });

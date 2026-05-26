@@ -87,6 +87,16 @@ export function ExamMode() {
   const [examCategory, setExamCategory] = useState<string>("Нормальное значение");
   const [isCalculating, setIsCalculating] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerConfetti = useCallback(() => {
+    if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+    setShowConfetti(true);
+    confettiTimeoutRef.current = setTimeout(() => {
+      setShowConfetti(false);
+      confettiTimeoutRef.current = null;
+    }, 3500);
+  }, []);
   const [practiceMode, setPracticeMode] = useState(false);
   const [lastPracticeResult, setLastPracticeResult] = useState<EvaluationResult | null>(null);
   const [showCode, setShowCode] = useState(false);
@@ -170,8 +180,7 @@ export function ExamMode() {
       ? Math.round(results.reduce((s, r) => s + r.overallScore, 0) / results.length)
       : 0;
     if (newAvg >= 90) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3500);
+      triggerConfetti();
     }
     isFinishingRef.current = false;
   }, []);
@@ -378,8 +387,7 @@ export function ExamMode() {
         ? Math.round(newAvg.reduce((s, r) => s + r.overallScore, 0) / newAvg.length)
         : 0;
       if (newAvgScore >= 90) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3500);
+        triggerConfetti();
       }
     }
   }, [examTasks, currentTaskIndex, examTestCases, examResults]);
@@ -398,8 +406,7 @@ export function ExamMode() {
         ? Math.round(examResults.reduce((s, r) => s + r.overallScore, 0) / examResults.length)
         : 0;
       if (newAvg >= 90) {
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3500);
+        triggerConfetti();
       }
     }
   }, [currentTaskIndex, examTasks, examResults]);

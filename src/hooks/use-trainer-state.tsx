@@ -87,6 +87,16 @@ export function useTrainerState() {
     return {};
   });
   const [showConfetti, setShowConfetti] = useState(false);
+  const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerConfetti = useCallback(() => {
+    if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+    setShowConfetti(true);
+    confettiTimeoutRef.current = setTimeout(() => {
+      setShowConfetti(false);
+      confettiTimeoutRef.current = null;
+    }, 3500);
+  }, []);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [attemptHistory, setAttemptHistory] = useState<AttemptRecord[]>(() => loadAttemptHistory());
   const [streak, setStreak] = useState(() => loadStreak());
@@ -656,8 +666,7 @@ export function useTrainerState() {
     toast.success(`Проверка завершена! Оценка: ${result.overallScore}%`);
 
     if (result.overallScore >= 90) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3500);
+      triggerConfetti();
     }
   }, [selectedTask, testCases, elapsedTime]);
 

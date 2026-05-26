@@ -122,7 +122,7 @@ export default function AdminGroupsPage() {
         counts[g.id] = 0;
       }
     });
-    Promise.all(promises).then(() => setTaskCount(counts));
+    Promise.all(promises).then(() => setTaskCount(counts)).catch(() => setTaskCount(counts));
   }, [groups]);
 
   const handleCreate = async () => {

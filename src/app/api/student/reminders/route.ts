@@ -98,7 +98,7 @@ export async function PATCH(req: Request) {
         where: { id: reminderId, userId: session.userId },
         data: { read: true, readAt: new Date() },
       });
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true }, { status: 200 });
     }
 
     if (action === "mark_all_read") {
@@ -106,7 +106,7 @@ export async function PATCH(req: Request) {
         where: { userId: session.userId, read: false },
         data: { read: true, readAt: new Date() },
       });
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true }, { status: 200 });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
