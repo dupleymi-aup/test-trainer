@@ -7,20 +7,20 @@ import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from
 import { formatZodError } from "@/lib/api-error-handler";
 
 const createAttemptSchema = z.object({
-  taskId: z.string().min(1),
+  taskId: z.string().min(1, "Task ID обязателен").max(100, "Task ID слишком длинный"),
   testCases: z.array(z.object({
-    id: z.string(),
+    id: z.string().max(100, "ID тест-кейса слишком длинный"),
     inputs: z.array(z.unknown()),
-    expectedOutput: z.string(),
-    category: z.string(),
-    comment: z.string().optional(),
+    expectedOutput: z.string().max(5000, "Ожидаемый вывод слишком длинный"),
+    category: z.string().max(100, "Категория слишком длинная"),
+    comment: z.string().max(500, "Комментарий слишком длинный").optional(),
   })),
   score: z.number().int().min(0).max(100),
   ecCoverage: z.number().int().min(0).max(100),
   bvCoverage: z.number().int().min(0).max(100),
   correctness: z.number().int().min(0).max(100),
-  coveredEcIds: z.array(z.string()),
-  coveredBvDescriptions: z.array(z.string()),
+  coveredEcIds: z.array(z.string().max(200)),
+  coveredBvDescriptions: z.array(z.string().max(500)),
   timeSpent: z.number().int().min(0),
 });
 

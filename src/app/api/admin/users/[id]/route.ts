@@ -53,13 +53,13 @@ export async function GET(
 }
 
 const updateUserSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  avatar: z.string().optional().nullable(),
-  bio: z.string().optional().nullable(),
-  university: z.string().optional().nullable(),
-  group: z.string().optional().nullable(),
+  name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
+  email: z.string().email("Неверный формат email").max(255, "Email слишком длинный").optional().nullable(),
+  phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
+  avatar: z.string().max(500, "URL аватара слишком длинный").optional().nullable(),
+  bio: z.string().max(1000, "Биография слишком длинная").optional().nullable(),
+  university: z.string().max(200, "Название университета слишком длинное").optional().nullable(),
+  group: z.string().max(100, "Название группы слишком длинное").optional().nullable(),
 });
 
 export async function PATCH(

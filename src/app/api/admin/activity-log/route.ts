@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
     const userId = searchParams.get("userId");
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ActivityLogWhereInput = {};
     if (action) where.action = action;
     if (userId) where.userId = userId;
 

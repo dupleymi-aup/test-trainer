@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get("type") || undefined;
     const unreadOnly = searchParams.get("unreadOnly") === "true";
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.NotificationWhereInput = {};
     if (severity) where.severity = severity;
     if (type) where.type = type;
     if (unreadOnly) where.read = false;

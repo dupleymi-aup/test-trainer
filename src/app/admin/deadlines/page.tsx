@@ -187,7 +187,7 @@ export default function AdminDeadlinesPage() {
     form.reset({
       title: dl.title,
       description: dl.description || "",
-      dueDate: dl.dueDate.slice(0, 16),
+      dueDate: dl.dueDate?.slice(0, 16) || "",
       type: dl.type as DeadlineForm["type"],
       groupId: dl.groupId || "",
       taskId: dl.taskId?.toString() || "",

@@ -7,8 +7,8 @@ import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
 
 const loginSchema = z.object({
-  login: z.string().min(1, "Email или телефон обязательны"),
-  password: z.string().min(1, "Пароль обязателен"),
+  login: z.string().min(1, "Email или телефон обязательны").max(255, "Email или телефон слишком длинные"),
+  password: z.string().min(1, "Пароль обязателен").max(128, "Пароль слишком длинный"),
 });
 
 export async function POST(req: Request) {
