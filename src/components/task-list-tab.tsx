@@ -20,8 +20,8 @@ const pageVariants = {
 interface TaskListTabProps {
   filteredTasks: Task[];
   selectedTask: Task | null;
-  savedProgress: Record<number, TaskProgress>;
-  taskBestCoverage: Record<number, { bestEc: number; bestBv: number }>;
+  savedProgress: Record<string, TaskProgress>;
+  taskBestCoverage: Record<string, { bestEc: number; bestBv: number }>;
   searchQuery: string;
   difficultyFilter: DifficultyFilter;
   sortMode: SortMode;
@@ -142,9 +142,9 @@ export function TaskListTab({
               key={task.id}
               task={task}
               isSelected={selectedTask?.id === task.id}
-              bestScore={savedProgress[task.id]?.score}
-              bestEcCoverage={taskBestCoverage[task.id]?.bestEc}
-              bestBvCoverage={taskBestCoverage[task.id]?.bestBv}
+              bestScore={savedProgress[String(task.id)]?.score}
+              bestEcCoverage={taskBestCoverage[String(task.id)]?.bestEc}
+              bestBvCoverage={taskBestCoverage[String(task.id)]?.bestBv}
               attemptCount={attemptCount}
               onClick={() => onSelectTask(task)}
             />

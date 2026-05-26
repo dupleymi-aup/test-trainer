@@ -64,7 +64,7 @@ export interface TrainerState {
   selectedTask: Task | null;
   testCases: TestCase[];
   evaluationResult: EvaluationResult | null;
-  savedProgress: Record<number, TaskProgress>;
+  savedProgress: Record<string, TaskProgress>;
   showConfetti: boolean;
   showShortcuts: boolean;
   attemptHistory: AttemptRecord[];
@@ -161,9 +161,9 @@ export function useTrainerState() {
   }, [savedProgress]);
 
   const taskBestCoverage = useMemo(() => {
-    const map: Record<number, { bestEc: number; bestBv: number }> = {};
+    const map: Record<string, { bestEc: number; bestBv: number }> = {};
     for (const task of tasks) {
-      map[task.id] = getTaskBestCoverage(task.id);
+      map[String(task.id)] = getTaskBestCoverage(task.id);
     }
     return map;
   }, [attemptHistory]);
@@ -761,7 +761,7 @@ export function useTrainerState() {
 
   const handleRandomTask = useCallback(() => {
     const pool = filteredTasks.length > 0 ? filteredTasks : tasks;
-    const uncompleted = pool.filter((t) => !savedProgress[t.id]);
+    const uncompleted = pool.filter((t) => !savedProgress[String(t.id)]);
     const randomPool = uncompleted.length > 0 ? uncompleted : pool;
     const randomTask = randomPool[Math.floor(Math.random() * randomPool.length)];
     handleSelectTask(randomTask);

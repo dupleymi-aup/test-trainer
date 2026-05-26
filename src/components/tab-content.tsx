@@ -38,8 +38,8 @@ interface TabContentProps {
   testCases: TestCase[];
   evaluationResult: EvaluationResult | null;
   attemptHistory: AttemptRecord[];
-  savedProgress: Record<number, TaskProgress>;
-  taskBestCoverage: Record<number, { bestEc: number; bestBv: number }>;
+  savedProgress: Record<string, TaskProgress>;
+  taskBestCoverage: Record<string, { bestEc: number; bestBv: number }>;
   elapsedTime: number;
   searchQuery: string;
   difficultyFilter: DifficultyFilter;
@@ -222,7 +222,7 @@ export function TabContent({
                 result={evaluationResult}
                 testCases={testCases}
                 onReset={onReset}
-                bestScore={savedProgress[evaluationResult.task.id]?.score}
+                bestScore={savedProgress[String(evaluationResult.task.id)]?.score}
                 elapsedTime={elapsedTime}
               />
             </div>

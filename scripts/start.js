@@ -57,7 +57,7 @@ if (dbType !== "mongodb") {
   }
 }
 
-const server = spawn("bun", [serverPath], {
+const server = spawn("node", [serverPath], {
   stdio: ["inherit", "pipe", "pipe"],
   env: process.env,
 })

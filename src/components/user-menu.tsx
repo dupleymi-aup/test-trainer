@@ -34,9 +34,14 @@ export function UserMenu() {
 
   if (!session?.user) {
     return (
-      <Button asChild variant="default" size="sm">
-        <Link href="/login">Войти</Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-auto text-muted-foreground border-dashed">
+          Демо
+        </Badge>
+        <Button asChild variant="default" size="sm">
+          <Link href="/login">Войти</Link>
+        </Button>
+      </div>
     );
   }
 
