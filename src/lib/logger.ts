@@ -44,7 +44,7 @@ function extractErrorContext(error: unknown): Record<string, unknown> {
 export const logger = {
   info(message: string, context?: Record<string, unknown>) {
     if (process.env.LOG_LEVEL === "silent") return;
-    console.log(formatLog("info", message, context));
+    console.info(formatLog("info", message, context));
   },
 
   warn(message: string, context?: Record<string, unknown>) {
