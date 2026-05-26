@@ -24,9 +24,14 @@ export async function GET(req: Request) {
   }
 
   try {
+    const MS_PER_DAY = 86400000;
+    const RISK_THRESHOLD = 2; // Flag students with 2+ risk factors
+    const LOW_SCORE_THRESHOLD = 50;
+    const MIN_ATTEMPTS_FOR_ACTIVE = 3;
+
     const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * MS_PER_DAY);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * MS_PER_DAY);
 
     // Gather summary data
     const [totalStudents, totalTeachers, totalGroups, totalAttempts, activeStudents30d] =
@@ -70,13 +75,13 @@ export async function GET(req: Request) {
       const scores = attempts.map((a) => a.score);
       const bestScore = Math.max(...scores);
       const lastAttempt = attempts[attempts.length - 1];
-      const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000);
+      const fourteenDaysAgo = new Date(now.getTime() - 14 * MS_PER_DAY);
 
       let riskScore = 0;
-      if (bestScore < 50) riskScore++;
+      if (bestScore < LOW_SCORE_THRESHOLD) riskScore++;
       if (lastAttempt && lastAttempt.createdAt < fourteenDaysAgo) riskScore++;
-      if (attempts.length < 3 && s.createdAt < sevenDaysAgo) riskScore++;
-      if (riskScore >= 4) highRiskCount++;
+      if (attempts.length < MIN_ATTEMPTS_FOR_ACTIVE && s.createdAt < sevenDaysAgo) riskScore++;
+      if (riskScore >= RISK_THRESHOLD) highRiskCount++;
     }
 
     // Get admin emails

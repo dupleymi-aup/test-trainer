@@ -14,7 +14,11 @@ export async function GET(req: Request) {
     const search = searchParams.get("search");
 
     // Require groupId to prevent teachers from accessing all students on the platform
-    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if (!groupId) {
+      return NextResponse.json({ error: "groupId is required" }, { status: 400 });
+    }
+
+    const groupCheck = await requireTeacherGroup(groupId, session);
     if ("response" in groupCheck) return groupCheck.response;
 
     const where: Record<string, unknown> = {

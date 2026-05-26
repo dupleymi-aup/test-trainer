@@ -25,11 +25,13 @@ export default function TeacherDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       fetch("/api/teacher/students").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
       fetch("/api/teacher/analytics").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    ]).then(([studentsData, analytics]) => {
-      setStudents(studentsData.students);
+    ]).then(([studentsResult, analyticsResult]) => {
+      if (studentsResult.status === "fulfilled") {
+        setStudents(studentsResult.value.students);
+      }
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);

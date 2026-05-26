@@ -4,10 +4,10 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 export async function GET() {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-
   try {
+    const guard = await requireAdmin();
+    if ("response" in guard) return guard.response;
+
     // Run queries to check DB health — all tables
     const [userCount, attemptCount, groupCount, groupTaskCount, activityLogCount, settingsCount, verificationCodeCount] = await Promise.all([
       db.user.count(),
