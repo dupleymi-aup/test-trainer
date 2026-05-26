@@ -35,7 +35,7 @@ function extractErrorContext(error: unknown): Record<string, unknown> {
     return {
       name: error.name,
       message: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: error.stack,
     };
   }
   return { error: String(error) };

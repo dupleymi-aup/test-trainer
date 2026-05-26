@@ -15,14 +15,15 @@ const exportSchema = z.object({
 /**
  * Sanitize a value to prevent CSV injection attacks.
  * Excel/Calc can execute formulas if a cell starts with =, +, -, @.
- * Also checks trimmed value to catch whitespace-prefixed attacks while keeping data readable.
+ * Escapes double quotes per RFC 4180 and wraps values to neutralize formulas.
  */
 function sanitizeCSVValue(value: string): string {
-  const trimmed = value.trimStart();
+  const escaped = value.replace(/"/g, '""');
+  const trimmed = escaped.trimStart();
   if (trimmed.startsWith("=") || trimmed.startsWith("+") || trimmed.startsWith("-") || trimmed.startsWith("@")) {
-    return "\t" + value;
+    return "'" + escaped;
   }
-  return value;
+  return escaped;
 }
 
 export async function POST(req: Request) {

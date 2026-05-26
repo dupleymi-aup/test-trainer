@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
+import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
@@ -22,14 +23,14 @@ export async function GET(req: Request) {
   const sortDir = (searchParams.get("sortDir") || "desc") as "asc" | "desc";
   const skip = (page - 1) * limit;
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.UserWhereInput = {};
 
   if (!showDeleted) {
-    where.deletedAt = null; // Exclude soft-deleted users by default
+    where.deletedAt = null;
   }
 
   if (role && role !== "ALL") {
-    where.role = role;
+    where.role = role as Role;
   }
 
   if (search) {
@@ -41,12 +42,11 @@ export async function GET(req: Request) {
   }
 
   // Build sort order
-  const orderBy: Record<string, unknown> = {};
+  const orderBy: Prisma.UserOrderByWithRelationInput = {};
   if (sortBy === "attempts") {
     orderBy.attempts = { _count: sortDir };
   } else if (sortBy === "name") {
-    // Note: nulls: "last" is SQL-specific; MongoDB sorts nulls first by default
-    orderBy.name = { sort: sortDir };
+    orderBy.name = { sort: sortDir, nulls: "last" };
   } else {
     orderBy.createdAt = sortDir;
   }
@@ -95,13 +95,13 @@ export async function GET(req: Request) {
 }
 
 const createUserSchema = z.object({
-  name: z.string().min(1).optional(),
-  email: z.string().email().optional().nullable(),
-  phone: z.string().optional().nullable(),
-  password: z.string().min(8),
+  name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
+  email: z.string().email("Неверный формат email").max(255, "Email слишком длинный").optional().nullable(),
+  phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
+  password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
-  university: z.string().optional().nullable(),
-  group: z.string().optional().nullable(),
+  university: z.string().max(200, "Название университета слишком длинное").optional().nullable(),
+  group: z.string().max(100, "Название группы слишком длинное").optional().nullable(),
 });
 
 export async function POST(req: Request) {

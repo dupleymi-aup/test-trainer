@@ -139,9 +139,9 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.isActive = token.isActive as boolean;
+        session.user.id = token.id ?? "";
+        session.user.role = token.role ?? "STUDENT";
+        session.user.isActive = token.isActive ?? true;
       }
       return session;
     },

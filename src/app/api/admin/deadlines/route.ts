@@ -7,15 +7,15 @@ import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from
 import { formatZodError } from "@/lib/api-error-handler";
 
 const deadlineSchema = z.object({
-  title: z.string().min(1, "Название обязательно"),
-  description: z.string().optional().nullable(),
+  title: z.string().min(1, "Название обязательно").max(200, "Название слишком длинное"),
+  description: z.string().max(2000, "Описание слишком длинное").optional().nullable(),
   dueDate: z.string().datetime({ message: "Неверный формат даты" }),
   type: z.enum(["EXAM", "TEST", "ASSIGNMENT", "COURSE_END", "REGISTRATION_END"]),
   groupId: z.string().nullable().optional(),
   taskId: z.number().nullable().optional(),
   targetUsers: z.enum(["ALL_STUDENTS", "GROUP_MEMBERS", "SPECIFIC"]).default("ALL_STUDENTS"),
-  specificUserIds: z.array(z.string()).optional(),
-  reminderSchedule: z.array(z.number()).optional(),
+  specificUserIds: z.array(z.string()).max(1000).optional(),
+  reminderSchedule: z.array(z.number()).max(20).optional(),
 });
 
 export async function GET(req: Request) {
