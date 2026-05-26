@@ -91,7 +91,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="w-full max-h-[calc(100vh-4rem)] overflow-y-auto">
+    <div className="flex items-center justify-center w-full min-h-[calc(100vh-4rem)] py-8">
       <Card className="w-full max-w-md">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
