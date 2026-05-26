@@ -120,7 +120,7 @@ export default function AdminAnalyticsHubPage() {
 
   useEffect(() => {
     fetch("/api/admin/analytics")
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);

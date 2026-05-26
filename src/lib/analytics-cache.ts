@@ -57,9 +57,9 @@ export function setCache(key: string, data: unknown, ttlMs: number = DEFAULT_TTL
 
 export function invalidateCache(pattern: string): number {
   let count = 0;
-  const regex = new RegExp(
-    "^" + pattern.replace(/\*/g, ".*") + "$"
-  );
+  // Escape all regex metacharacters first, then convert * to wildcard
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+  const regex = new RegExp("^" + escaped + "$");
   for (const key of cache.keys()) {
     if (regex.test(key)) {
       cache.delete(key);

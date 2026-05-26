@@ -56,7 +56,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
 }
 
 export function generatePasswordResetEmail(token: string, baseUrl: string): { subject: string; html: string; text: string } {
-  const url = `${baseUrl}/reset-password?token=${token}`;
+  const url = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
   return {
     subject: "Восстановление пароля — Тренажёр тестирования",
     html: `
@@ -70,7 +70,7 @@ export function generatePasswordResetEmail(token: string, baseUrl: string): { su
 }
 
 export function generateVerificationEmail(token: string, baseUrl: string): { subject: string; html: string; text: string } {
-  const url = `${baseUrl}/verify-email?token=${token}`;
+  const url = `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
   return {
     subject: "Подтверждение email — Тренажёр тестирования",
     html: `

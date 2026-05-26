@@ -39,6 +39,19 @@ vi.mock("@/lib/rate-limit", () => {
   return {
     checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
     getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
+    createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
+      const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+      return new Response(
+        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(retryAfter),
+          },
+        }
+      );
+    }),
     rateLimits: {
       login: { max: 5, windowMs: 15 * 60 * 1000 },
     },

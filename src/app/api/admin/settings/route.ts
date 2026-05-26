@@ -27,23 +27,21 @@ export async function GET() {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    // Seed default settings if none exist
-    const existingCount = await db.systemSetting.count();
-    if (existingCount === 0) {
-      const defaults = [
-        { key: "maxLoginAttempts", value: "5" },
-        { key: "sessionDuration", value: "86400" },
-        { key: "allowRegistration", value: "true" },
-        { key: "passwordMinLength", value: "8" },
-        { key: "dataRetentionDays", value: "365" },
-        { key: "emailNotifications", value: "true" },
-        { key: "smsNotifications", value: "false" },
-        { key: "rateLimitWindow", value: "900" },
-      ];
-      await db.systemSetting.createMany({
-        data: defaults.map((d) => ({ key: d.key, value: d.value })),
-      });
-    }
+    // Seed default settings if none exist (idempotent with skipDuplicates)
+    const defaults = [
+      { key: "maxLoginAttempts", value: "5" },
+      { key: "sessionDuration", value: "86400" },
+      { key: "allowRegistration", value: "true" },
+      { key: "passwordMinLength", value: "8" },
+      { key: "dataRetentionDays", value: "365" },
+      { key: "emailNotifications", value: "true" },
+      { key: "smsNotifications", value: "false" },
+      { key: "rateLimitWindow", value: "900" },
+    ];
+    await db.systemSetting.createMany({
+      data: defaults.map((d) => ({ key: d.key, value: d.value })),
+      skipDuplicates: true,
+    });
 
     const settings = await db.systemSetting.findMany({
       orderBy: { key: "asc" },

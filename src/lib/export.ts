@@ -79,9 +79,14 @@ export function generateExportCSV(): string {
   const BOM = "\uFEFF";
   const lines: string[] = [];
 
-  // Escape a value for safe CSV output — wraps in quotes if it contains commas, quotes, or newlines
+  // Escape a value for safe CSV output — wraps in quotes if it contains commas, quotes, or newlines.
+  // Also guards against formula injection by prefixing values starting with =, +, -, @ with a quote.
   const escape = (v: string) => {
     const s = String(v);
+    if (/^[=+\-@]/.test(s)) {
+      const escaped = s.replace(/"/g, '""');
+      return `"'${escaped}"`;
+    }
     if (s.includes(",") || s.includes('"') || s.includes("\n")) {
       return `"${s.replace(/"/g, '""')}"`;
     }
