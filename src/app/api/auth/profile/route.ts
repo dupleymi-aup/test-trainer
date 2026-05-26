@@ -41,7 +41,7 @@ export async function GET() {
       return NextResponse.json({ error: "Пользователь не найден" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     logger.error("Get profile error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при получении профиля" }, { status: 500 });
@@ -109,7 +109,7 @@ export async function PUT(req: Request) {
       },
     });
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     logger.error("Update profile error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при обновлении профиля" }, { status: 500 });

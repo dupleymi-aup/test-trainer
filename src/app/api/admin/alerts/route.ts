@@ -364,7 +364,7 @@ export async function GET() {
     categories: [...new Set(alerts.map((a) => a.category))],
   };
 
-  return NextResponse.json({ alerts, summary });
+  return NextResponse.json({ alerts, summary }, { status: 200 });
   } catch (error) {
     logger.error("alerts-route failed", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

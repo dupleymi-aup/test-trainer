@@ -23,7 +23,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ groups });
+    return NextResponse.json({ groups }, { status: 200 });
   } catch (error) {
     logger.error("Failed to fetch groups", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch groups" }, { status: 500 });

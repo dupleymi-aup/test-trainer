@@ -356,7 +356,7 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
     }
   };
 
-  if (!result) {
+  if (!result || !grade) {
     return (
       <Card>
         <CardContent className="py-16 text-center">
@@ -388,10 +388,10 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="text-4xl mb-2"
             >
-              {grade!.emoji}
+              {grade.emoji}
             </motion.div>
-            <h2 className={`text-2xl font-bold ${grade!.color}`}>
-              {grade!.text}
+            <h2 className={`text-2xl font-bold ${grade.color}`}>
+              {grade.text}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Задание: {result.task.name}

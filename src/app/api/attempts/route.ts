@@ -115,7 +115,7 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json({ attempts });
+    return NextResponse.json({ attempts }, { status: 200 });
   } catch (error) {
     logger.error("Failed to fetch attempts", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

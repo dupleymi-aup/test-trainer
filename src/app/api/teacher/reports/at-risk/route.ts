@@ -13,7 +13,11 @@ export async function GET(req: Request) {
     const groupId = searchParams.get("groupId");
 
     // Require groupId to prevent teachers from accessing all students on the platform
-    const groupCheck = await requireTeacherGroup(groupId!, session);
+    if (!groupId) {
+      return NextResponse.json({ error: "groupId is required" }, { status: 400 });
+    }
+
+    const groupCheck = await requireTeacherGroup(groupId, session);
     if ("response" in groupCheck) return groupCheck.response;
 
     // Get students in this group only

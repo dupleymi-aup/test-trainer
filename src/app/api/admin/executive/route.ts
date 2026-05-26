@@ -126,7 +126,7 @@ export async function GET() {
       const date = a.createdAt.toISOString().split("T")[0];
       if (!volumeMap[date]) volumeMap[date] = { count: 0, totalScore: 0 };
       volumeMap[date].count += a._count._all;
-      volumeMap[date].totalScore += a._avg.score! * a._count._all;
+      volumeMap[date].totalScore += (a._avg.score ?? 0) * a._count._all;
     }
 
     const activityTrend = Object.entries(volumeMap)

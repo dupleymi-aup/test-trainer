@@ -681,8 +681,8 @@ export function evaluateTestCases(
     if (isCorrect) {
       const coveredEcNames = coveredClasses
         .map((id) => task.equivalenceClasses.find((ec) => ec.id === id))
-        .filter(Boolean)
-        .map((ec) => ec!.name);
+        .filter((ec): ec is NonNullable<ReturnType<typeof task.equivalenceClasses.find>> => ec !== undefined)
+        .map((ec) => ec.name);
 
       const coveredBvNames = coveredBoundaries;
 

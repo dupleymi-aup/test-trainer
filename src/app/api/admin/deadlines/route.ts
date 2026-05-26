@@ -43,7 +43,7 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json({ deadlines });
+    return NextResponse.json({ deadlines }, { status: 200 });
   } catch (error) {
     logger.error("Failed to fetch deadlines", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch deadlines" }, { status: 500 });
