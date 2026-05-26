@@ -22,10 +22,12 @@ export default function TeacherReportsPage() {
   const [loadingGroups, setLoadingGroups] = useState(true);
 
   useEffect(() => {
-    fetch("/api/teacher/groups")
+    const controller = new AbortController();
+    fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { setGroups(d.groups || []); setLoadingGroups(false); })
-      .catch(() => setLoadingGroups(false));
+      .then((d) => { if (!controller.signal.aborted) { setGroups(d.groups || []); setLoadingGroups(false); } })
+      .catch(() => { if (!controller.signal.aborted) setLoadingGroups(false); });
+    return () => controller.abort();
   }, []);
 
   const handleExport = async () => {

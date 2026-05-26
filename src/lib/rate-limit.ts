@@ -107,8 +107,10 @@ export function checkRateLimit(
     return { limited: false, remaining: config.max - 1, resetAt: now + config.windowMs };
   }
 
-  // Within window — update lastAccess for LRU tracking
+  // Within window — update lastAccess and promote to end of Map for true LRU ordering
   entry.lastAccess = now;
+  store.delete(key);
+  store.set(key, entry);
 
   // Check limit BEFORE incrementing
   if (entry.count >= config.max) {
@@ -121,7 +123,7 @@ export function checkRateLimit(
 
 /**
  * Evict the oldest N entries when store exceeds MAX_STORE_SIZE.
- * Uses Map insertion order as a proxy for LRU (entries with oldest lastAccess are evicted first).
+ * Map iteration order reflects true LRU because entries are re-inserted on each access.
  */
 function evictOldest() {
   const iterator = store.keys();

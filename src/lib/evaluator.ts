@@ -48,7 +48,8 @@ export interface EvaluationResult {
 }
 
 function normalizeValue(val: unknown): string {
-  if (val === undefined || val === null) return String(val);
+  if (val === null) return "null";
+  if (val === undefined) return "undefined";
   if (typeof val === "object") return JSON.stringify(val);
   return String(val);
 }
@@ -428,7 +429,6 @@ function findCoveredEquivalenceClasses(
         const res = fnResult as { valid: boolean; errors: string[] };
         const errors = res.errors;
         const inputStr = String(inputs[0]);
-        const digits = inputStr.replace(/\D/g, "");
 
         if (ec.id === "ec1" && res.valid && inputStr.startsWith("+7")) covered.push(ec.id);
         if (ec.id === "ec2" && res.valid && (inputStr.startsWith("8") || inputStr.startsWith("+"))) covered.push(ec.id);
@@ -443,7 +443,6 @@ function findCoveredEquivalenceClasses(
     if (taskId === 12) {
       // calculateBMI
       if (fnError) {
-        const inputStr = String(inputs[0]);
         if (ec.id === "ec9" && fnError) covered.push(ec.id);
         if (ec.id === "ec5" && fnError && Number(inputs[0]) < 20) covered.push(ec.id);
         if (ec.id === "ec6" && fnError && Number(inputs[0]) > 300) covered.push(ec.id);

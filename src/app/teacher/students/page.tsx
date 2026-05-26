@@ -27,10 +27,12 @@ export default function TeacherStudentsPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("/api/teacher/students")
+    const controller = new AbortController();
+    fetch("/api/teacher/students", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data) => { setStudents(data.students); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((data) => { if (!controller.signal.aborted) { setStudents(data.students); setLoading(false); } })
+      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;

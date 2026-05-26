@@ -41,13 +41,17 @@ export default function GroupPerformancePage() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/teacher/reports/group-performance")
+    const controller = new AbortController();
+    fetch("/api/teacher/reports/group-performance", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
-        setGroups(data.groups || []);
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setGroups(data.groups || []);
+          setLoading(false);
+        }
       })
-      .catch(() => setLoading(false));
+      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   const toggleGroup = (groupName: string) => {

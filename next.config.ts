@@ -7,9 +7,6 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: __dirname,
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days

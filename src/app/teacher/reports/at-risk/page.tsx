@@ -66,13 +66,17 @@ export default function AtRiskStudentsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/teacher/reports/at-risk")
+    const controller = new AbortController();
+    fetch("/api/teacher/reports/at-risk", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
-        setStudents(data.atRiskStudents || []);
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setStudents(data.atRiskStudents || []);
+          setLoading(false);
+        }
       })
-      .catch(() => setLoading(false));
+      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading)

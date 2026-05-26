@@ -246,11 +246,13 @@ describe("GET /api/admin/users", () => {
       const req = makeGetRequest({ sortBy: "name", sortDir: "asc" });
       await GET(req);
 
-      expect(mocks.mockUserFindMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          orderBy: { name: { sort: "asc" } },
-        })
-      );
+      expect(mocks.mockUserFindMany).toHaveBeenCalledWith({
+        where: { deletedAt: null },
+        select: expect.any(Object),
+        orderBy: { name: { sort: "asc", nulls: "last" } },
+        skip: 0,
+        take: 20,
+      });
     });
 
     it("sorts by attempts count when sortBy=attempts", async () => {

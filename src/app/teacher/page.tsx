@@ -25,15 +25,17 @@ export default function TeacherDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     Promise.allSettled([
-      fetch("/api/teacher/students").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-      fetch("/api/teacher/analytics").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch("/api/teacher/students", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch("/api/teacher/analytics", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
     ]).then(([studentsResult, analyticsResult]) => {
-      if (studentsResult.status === "fulfilled") {
+      if (studentsResult.status === "fulfilled" && !controller.signal.aborted) {
         setStudents(studentsResult.value.students);
       }
-      setLoading(false);
-    }).catch(() => setLoading(false));
+      if (!controller.signal.aborted) setLoading(false);
+    }).catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) return <TeacherLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></TeacherLayout>;

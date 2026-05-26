@@ -399,7 +399,7 @@ export function useTrainerState() {
 
       const { result: fnResult, error: fnError } = runReferenceFunction(selectedTask.id, parsedInputs);
 
-      let expectedOutput = fnError
+      const expectedOutput = fnError
         ? `Ошибка: ${fnError}`
         : typeof fnResult === "object"
           ? JSON.stringify(fnResult)
@@ -514,7 +514,7 @@ export function useTrainerState() {
       const parsedInputs = inputValues.map(parseInputForRef);
       const { result: fnResult, error: fnError } = runReferenceFunction(selectedTask.id, parsedInputs);
 
-      let expectedOutput = fnError
+      const expectedOutput = fnError
         ? `Ошибка: ${fnError}`
         : typeof fnResult === "object"
           ? JSON.stringify(fnResult)
@@ -628,6 +628,13 @@ export function useTrainerState() {
     // Count distinct active days
     const activeDays = new Set(history.map((h) => new Date(h.timestamp).toDateString())).size;
 
+    // Count distinct tasks where exception/invalid type tests were submitted
+    const exceptionTestTasks = new Set(
+      history
+        .filter((h) => h.categoryDistribution && h.categoryDistribution["Исключение"] > 0)
+        .map((h) => h.taskId)
+    ).size;
+
     const context = {
       completedTasks: Object.keys(progress).length,
       totalTasks: tasks.length,
@@ -650,6 +657,7 @@ export function useTrainerState() {
       daysActive: activeDays,
       marathonCompleted: getMarathonsCompleted(),
       bestMarathonScore: getBestMarathonAvgScore(),
+      exceptionTestTasks,
     };
 
     const newlyUnlocked = checkAndUnlockAchievements(context);

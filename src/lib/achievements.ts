@@ -26,6 +26,7 @@ export interface AchievementContext {
   daysActive?: number; // number of distinct days with activity
   marathonCompleted?: number; // number of marathons completed (all tasks finished)
   bestMarathonScore?: number; // best average score in a completed marathon
+  exceptionTestTasks?: number; // count of distinct tasks where exception/invalid type tests were submitted
 }
 
 const ACHIEVEMENTS_KEY = "test-trainer-achievements";
@@ -160,7 +161,8 @@ export const achievements: Achievement[] = [
     name: "Интуитивный тестировщик",
     description: "Добавьте тест-кейсы для исключений и недопустимых типов в 3 заданиях",
     icon: "🔮",
-    condition: (ctx) => Object.values(ctx.bestScores).filter((s) => s >= 50).length >= 3,
+    condition: (ctx) => (ctx.exceptionTestTasks ?? 0) >= 3,
+    progressFn: (ctx) => Math.min((ctx.exceptionTestTasks ?? 0) / 3, 1),
   },
   {
     id: "comeback",

@@ -17,10 +17,12 @@ export default function TeacherAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/teacher/analytics")
+    const controller = new AbortController();
+    fetch("/api/teacher/analytics", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
+      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;

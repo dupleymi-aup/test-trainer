@@ -93,15 +93,15 @@ export default function StudentReportCardPage({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     params.then(({ id }) => {
-      fetch(`/api/teacher/reports/student/${id}/report-card`)
+      if (controller.signal.aborted) return;
+      fetch(`/api/teacher/reports/student/${id}/report-card`, { signal: controller.signal })
         .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-        .then((d) => {
-          setData(d);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
+        .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
+        .catch(() => { if (!controller.signal.aborted) setLoading(false); });
     });
+    return () => controller.abort();
   }, [params]);
 
   const handlePrint = () => {

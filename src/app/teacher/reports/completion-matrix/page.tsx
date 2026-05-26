@@ -53,12 +53,14 @@ export default function CompletionMatrixPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/teacher/groups")
+    const controller = new AbortController();
+    fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => setGroups(d.groups || []))
+      .then((d) => { if (!controller.signal.aborted) setGroups(d.groups || []); })
       .catch((err) => {
-        console.warn("Failed to fetch groups:", err);
+        if (!controller.signal.aborted) console.warn("Failed to fetch groups:", err);
       });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -67,14 +69,13 @@ export default function CompletionMatrixPage() {
       return;
     }
 
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`/api/teacher/reports/completion-matrix?groupId=${selectedGroup}`)
+    fetch(`/api/teacher/reports/completion-matrix?groupId=${selectedGroup}`, { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
+      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [selectedGroup]);
 
   const getScoreBadge = (cell: MatrixCell | undefined) => {
