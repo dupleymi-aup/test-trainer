@@ -130,11 +130,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public assets
+     * - public assets (files with extensions like .js, .css, .png, etc.)
      *
      * All API routes are included — CSRF exemptions are handled in the middleware body
      * via the preAuthRoutes list. This ensures new API routes are CSRF-protected by default.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/((?!_next/static|_next/image|_next/data|favicon\\.ico|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$).*)",
   ],
 };
