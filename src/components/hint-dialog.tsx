@@ -20,6 +20,7 @@ interface HintInfo {
   suggestedInput: string;
   exampleValues: string[];
   taskId: number;
+  whyImportant?: string;
 }
 
 export function HintDialog({
@@ -119,6 +120,14 @@ export function HintDialog({
               <p className="text-sm font-medium">{hint.ecName}</p>
               <p className="text-xs text-muted-foreground mt-1">{hint.ecDescription}</p>
             </div>
+            {hint.whyImportant && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1 flex items-center gap-1">
+                  <Lightbulb className="h-3.5 w-3.5" /> Почему это важно?
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-400">{hint.whyImportant}</p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground text-center">
               Попробуйте создать тест-кейс, который проверяет этот класс эквивалентности
             </p>

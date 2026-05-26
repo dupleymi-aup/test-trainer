@@ -11,6 +11,7 @@ export interface EquivalenceClass {
   name: string;
   description: string;
   exampleValues: unknown[];
+  whyImportant?: string;
 }
 
 export interface BoundaryValue {
@@ -360,30 +361,35 @@ export const tasks: Task[] = [
         name: "EC1: n = 0",
         description: "Граничное значение — факториал 0 равен 1",
         exampleValues: [0],
+        whyImportant: "Самый частый off-by-one баг: студенты начинают цикл с 1, забывая что 0! = 1 по определению",
       },
       {
         id: "ec2",
         name: "EC2: 1 ≤ n ≤ 20",
         description: "Нормальные значения",
         exampleValues: [1, 5, 10, 20],
+        whyImportant: "Основной рабочий диапазон — проверяет корректность основной логики вычисления",
       },
       {
         id: "ec3",
         name: "EC3: n < 0",
         description: "Недопустимые — ошибка",
         exampleValues: [-1, -5],
+        whyImportant: "Факториал не определён для отрицательных — функция должна явно выбросить ошибку, а не вернуть некорректный результат",
       },
       {
         id: "ec4",
         name: "EC4: n > 20",
         description: "Переполнение",
         exampleValues: [21, 100],
+        whyImportant: "21! = 5,109,094,217,170,944,000 — превышает Number.MAX_SAFE_INTEGER. Без проверки — тихое переполнение",
       },
       {
         id: "ec5",
         name: "EC5: n — не число",
         description: "Недопустимый тип",
         exampleValues: [1.5, "abc", null],
+        whyImportant: "JavaScript автоматически конвертирует типы — без явной проверки функция может вернуть NaN вместо ошибки",
       },
     ],
     boundaryValues: [
@@ -419,36 +425,42 @@ export const tasks: Task[] = [
         name: "EC1: n ≤ 1",
         description: "Недопустимые — не являются простыми",
         exampleValues: [0, 1, -3],
+        whyImportant: "1 — самый частый edge case: по определению простое число > 1, но многие забывают это проверить",
       },
       {
         id: "ec2",
         name: "EC2: n = 2",
         description: "Единственное чётное простое число",
         exampleValues: [2],
+        whyImportant: "Если алгоритм пропускает проверку чётных, он неверно определит 2 как составное",
       },
       {
         id: "ec3",
         name: "EC3: Простое нечётное",
         description: "Нечётные простые числа",
         exampleValues: [3, 5, 7, 11, 13],
+        whyImportant: "Основной positive case — проверяет что алгоритм правильно находит простые числа",
       },
       {
         id: "ec4",
         name: "EC4: Составное число",
         description: "Числа, которые не являются простыми",
         exampleValues: [4, 6, 8, 9, 10],
+        whyImportant: "Negative case: 9 = 3×3 — частый баг когда проверяют только делимость на 2",
       },
       {
         id: "ec5",
         name: "EC5: Большое число",
         description: "Проверка на больших значениях",
         exampleValues: [997, 1000, 7919],
+        whyImportant: "7919 — наибольшее простое < 8000. Проверяет эффективность алгоритма (O(√n) vs O(n))",
       },
       {
         id: "ec6",
         name: "EC6: n — не число",
         description: "Недопустимый тип",
         exampleValues: [1.5, "abc", null],
+        whyImportant: "Без проверки типа цикл for(i=2; i<=n) с n='abc' может зациклиться или вернуть некорректный результат",
       },
     ],
     boundaryValues: [

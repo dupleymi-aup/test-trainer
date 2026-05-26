@@ -30,6 +30,7 @@ interface TaskListTabProps {
   onSortModeChange: (s: SortMode) => void;
   onSelectTask: (task: Task) => void;
   onRandomTask: () => void;
+  onStudyTheory?: () => void;
 }
 
 export function TaskListTab({
@@ -45,6 +46,7 @@ export function TaskListTab({
   onSortModeChange,
   onSelectTask,
   onRandomTask,
+  onStudyTheory,
 }: TaskListTabProps) {
   return (
     <motion.div
@@ -147,6 +149,7 @@ export function TaskListTab({
               bestBvCoverage={taskBestCoverage[String(task.id)]?.bestBv}
               attemptCount={attemptCount}
               onClick={() => onSelectTask(task)}
+              onStudyTheory={onStudyTheory}
             />
             );
           })}

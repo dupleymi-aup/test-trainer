@@ -626,6 +626,18 @@ export function ExamMode() {
   // TIPS SCREEN
   if (examState === "tips") {
     const taskNames = selectedTasks.map((id) => tasks.find((t) => t.id === id)?.name).filter(Boolean).join(", ");
+    
+    // Collect task-specific tips from commonMistakes
+    const taskSpecificTips = selectedTasks
+      .map((id) => tasks.find((t) => t.id === id))
+      .filter(Boolean)
+      .filter((t): t is (typeof tasks)[number] => !!t)
+      .map((task) => ({
+        taskName: task.name,
+        tips: task.commonMistakes || [],
+      }))
+      .filter((t) => t.tips.length > 0);
+
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto space-y-4">
         <Card className="border-amber-200 dark:border-amber-800">
@@ -678,6 +690,33 @@ export function ExamMode() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Task-specific tips from commonMistakes */}
+        {taskSpecificTips.length > 0 && (
+          <Card className="border-rose-200 dark:border-rose-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                Чего избегать в этих заданиях
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {taskSpecificTips.map(({ taskName, tips }) => (
+                <div key={taskName} className="space-y-1.5">
+                  <p className="text-xs font-medium text-foreground">{taskName}:</p>
+                  <ul className="space-y-1">
+                    {tips.map((tip, i) => (
+                      <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                        <span className="text-rose-500 dark:text-rose-400 mt-0.5 shrink-0">{i + 1}.</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setExamState("setup")} className="flex-1">

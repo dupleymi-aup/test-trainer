@@ -63,6 +63,7 @@ interface TabContentProps {
   onClearAll: () => void;
   onBackToTasks: () => void;
   onRandomTask: () => void;
+  onStudyTheory?: () => void;
 }
 
 export function TabContent({
@@ -97,6 +98,7 @@ export function TabContent({
   onClearAll,
   onBackToTasks,
   onRandomTask,
+  onStudyTheory,
 }: TabContentProps) {
   const achievementContext = useMemo<AchievementContext>(() => ({
     completedTasks: Object.keys(savedProgress).length,
@@ -179,6 +181,7 @@ export function TabContent({
             onSortModeChange={onSortModeChange}
             onSelectTask={onSelectTask}
             onRandomTask={onRandomTask}
+            onStudyTheory={onStudyTheory}
           />
         )}
 

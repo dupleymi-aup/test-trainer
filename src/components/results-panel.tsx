@@ -30,6 +30,7 @@ import {
   AlertTriangle,
   Info,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import {
   Tooltip,
@@ -318,6 +319,24 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
     return warnings;
   }, [result]);
 
+  // Common mistakes feedback: show task's commonMistakes when score is low
+  const commonMistakesFeedback = useMemo(() => {
+    if (!result || !result.task.commonMistakes) return [];
+    if (result.overallScore >= 75) return [];
+    // Show all common mistakes, highlighting those related to uncovered ECs
+    const uncoveredEcNames = result.task.equivalenceClasses
+      .filter((ec) => !result.coveredEcIds.includes(ec.id))
+      .map((ec) => ec.name.toLowerCase());
+
+    return result.task.commonMistakes.map((mistake) => {
+      const isRelevant = uncoveredEcNames.some((ecName) =>
+        mistake.toLowerCase().includes(ecName.split(":")[0]) ||
+        mistake.toLowerCase().includes(ecName.replace("ec", ""))
+      );
+      return { text: mistake, isRelevant };
+    });
+  }, [result]);
+
   const handleExportCsv = () => {
     if (!result) return;
     const lines: string[] = [];
@@ -472,6 +491,43 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
               >
                 {line}
               </p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Common mistakes feedback */}
+      {commonMistakesFeedback.length > 0 && (
+        <Card className="border-amber-200 dark:border-amber-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              Типичные ошибки — обратите внимание
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Ваш результат ниже 75%. Проверьте, не допустили ли вы одну из типичных ошибок для этой задачи:
+            </p>
+            {commonMistakesFeedback.map((mistake, i) => (
+              <div
+                key={i}
+                className={`text-xs p-2.5 rounded-lg border ${
+                  mistake.isRelevant
+                    ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300"
+                    : "bg-muted/30 border-border/50 text-muted-foreground"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-500 dark:text-amber-400 mt-0.5 shrink-0">{i + 1}.</span>
+                  <span>{mistake.text}</span>
+                </div>
+                {mistake.isRelevant && (
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1 ml-5 font-medium">
+                    Вероятно, это ваша текущая проблема
+                  </p>
+                )}
+              </div>
             ))}
           </CardContent>
         </Card>

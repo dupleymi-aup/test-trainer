@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/lib/tasks";
-import { Trophy, CheckCircle2, Circle } from "lucide-react";
+import { Trophy, CheckCircle2, Circle, BookOpen } from "lucide-react";
 import {
   FunctionSquare,
   Hash,
@@ -46,6 +46,7 @@ interface TaskCardProps {
   bestBvCoverage?: number;
   attemptCount?: number;
   onClick: () => void;
+  onStudyTheory?: () => void;
 }
 
 const difficultyBorderColors: Record<string, string> = {
@@ -54,7 +55,7 @@ const difficultyBorderColors: Record<string, string> = {
   Сложно: "border-l-rose-500",
 };
 
-export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, onClick }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, onClick, onStudyTheory }: TaskCardProps) {
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
@@ -157,6 +158,19 @@ export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, be
               </Badge>
             ))}
           </div>
+
+          {onStudyTheory && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStudyTheory();
+              }}
+              className="mt-2 flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+            >
+              <BookOpen className="h-3 w-3" />
+              <span>Изучить теорию по этим темам</span>
+            </button>
+          )}
         </CardContent>
       </Card>
     </motion.div>

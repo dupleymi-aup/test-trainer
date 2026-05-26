@@ -143,6 +143,7 @@ export default function Home() {
           onBulkRemove={state.handleBulkRemove}
           onClearAll={state.handleClearAll}
           onBackToTasks={state.handleBackToTasks}
+          onStudyTheory={() => state.setActiveTab("theory")}
         />
       </main>
 

@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import type { Task } from "@/lib/tasks";
 import { markTheorySectionViewed, loadTheorySectionsViewed } from "@/lib/storage";
 import { TheoryQuiz } from "@/components/theory-quiz";
+import { WorkedExampleViewer } from "@/components/worked-example";
 import {
   BookOpen,
   Layers,
@@ -24,6 +25,9 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Search,
+  TestTube,
+  Target,
 } from "lucide-react";
 
 const fadeIn = {
@@ -110,8 +114,12 @@ export function TheoryPanel({ task }: { task?: Task }) {
     }
     if (topics.some((t) => t.includes("логическ") || t.includes("decision") || t.includes("condition"))) sections.push("decision-tables");
     if (topics.some((t) => t.includes("состоя") || t.includes("transition") || t.includes("переход"))) sections.push("state-transition");
-    if (topics.some((t) => t.includes("формат") || t.includes("валид") || t.includes("проверк"))) sections.push("error-guessing");
+    if (topics.some((t) => t.includes("формат") || t.includes("валид") || t.includes("проверк"))) {
+      sections.push("error-guessing");
+      sections.push("exploratory");
+    }
     if (topics.some((t) => t.includes("рекурс") || t.includes("recursion"))) sections.push("testing-strategy");
+    if (topics.some((t) => t.includes("комбинатор") || t.includes("многофактор"))) sections.push("test-design");
     // Always include categories and tips as defaults
     if (sections.length < 2) sections.push("categories", "tips");
     return [...new Set(sections)];
@@ -135,7 +143,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
   }, []);
 
   const theoryProgress = useMemo(() => {
-    const totalSections = 11;
+    const totalSections = 14;
     return { viewed: viewedSections.size, total: totalSections };
   }, [viewedSections]);
 
@@ -275,7 +283,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
       subtitle: "Лучшие практики тестирования",
       openBorder: "border-teal-300 bg-teal-50/50 dark:border-teal-800 dark:bg-teal-950/20",
       content: (
-        <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+        <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
           <ul className="space-y-2">
             <li className="flex items-start gap-2">
               <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">1.</span>
@@ -297,7 +305,41 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">5.</span>
               <span><strong>Используйте осмысленные комментарии</strong> — записывайте, почему выбран конкретный тест-кейс</span>
             </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">6.</span>
+              <span><strong>Начинайте с «happy path»</strong> — сначала протестируйте основной сценарий, потом крайние случаи</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">7.</span>
+              <span><strong>Один тест — одна цель</strong> — не проверяйте несколько независимых условий в одном тест-кейсе</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">8.</span>
+              <span><strong>Документируйте ожидаемый результат</strong> — ожидаемый результат должен быть понятен без запуска кода</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">9.</span>
+              <span><strong>Думайте как пользователь</strong> — какие данные введёт реальный пользователь, а не только «правильные»</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0">10.</span>
+              <span><strong>После формальных методов добавьте Error Guessing</strong> — проверьте пробелы, эмодзи, очень длинные строки</span>
+            </li>
           </ul>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
+            <p className="font-medium text-emerald-800 dark:text-emerald-300 text-xs mb-1 flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> Пример из практики
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Баг в продакшене:</strong> форма регистрации принимала email «test@.com» как валидный.
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Причина:</strong> не была проверена граничная длина домена (минимум 2 символа до точки).
+            </p>
+            <p className="text-xs">
+              <strong>Урок:</strong> всегда проверяйте все части составных данных, а не только формат целиком.
+            </p>
+          </div>
         </div>
       ),
     },
@@ -617,7 +659,34 @@ export function TheoryPanel({ task }: { task?: Task }) {
             <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
               <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">❌ Тестирование только одного нарушения</p>
               <p className="text-xs">Проверяйте комбинированные нарушения в функциях с множественными проверками.</p>
+              <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1"><span className="text-rose-600">Пример:</span> validatePassword("abc") нарушает 4 правила сразу</p>
             </div>
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+              <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">❌ Проверка только «happy path»</p>
+              <p className="text-xs">Тестирование только позитивных сценариев пропускает 50% покрытия — обработку ошибок.</p>
+              <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1"><span className="text-rose-600">Пропуск:</span> parseNumber("123") ✓ но нет parseNumber("abc")</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+              <p className="font-medium text-red-800 dark:text-red-300 text-xs mb-1">❌ Игнорирование типов данных</p>
+              <p className="text-xs">Функция может принимать null, undefined, строку вместо числа — это отдельные классы.</p>
+              <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded px-1.5 py-1"><span className="text-rose-600">Пропуск:</span> calculateBMI(70, 1.75) ✓ но нет calculateBMI(null, 1.75)</p>
+            </div>
+          </div>
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border-l-4 border-yellow-500">
+            <p className="font-medium text-yellow-800 dark:text-yellow-300 text-xs mb-1 flex items-center gap-1">
+              <AlertTriangle className="h-3.5 w-3.5" /> Реальный кейс
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Проблема:</strong> система блокировала аккаунты пользователей после 3 неверных попыток входа, 
+              но счётчик не сбрасывался после успешного входа.
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Причина:</strong> тестировщики проверяли сценарий «3 неправильных пароля», но не проверили 
+              «2 неправильных → 1 правильный → 2 неправильных».
+            </p>
+            <p className="text-xs">
+              <strong>Урок:</strong> тестируйте не только отдельные переходы, но и их комбинации и сброс состояний.
+            </p>
           </div>
         </div>
       ),
@@ -668,6 +737,178 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <div className="flex items-start gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" /><span>Ожидаемые результаты совпадают</span></div>
               <div className="flex items-start gap-2"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" /><span>Добавлены 1–2 error guessing теста</span></div>
             </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "exploratory",
+      icon: <Search className="h-4 w-4" />,
+      iconBg: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400",
+      title: "Исследовательское тестирование",
+      subtitle: "Одновременное обучение, дизайн и выполнение тестов",
+      openBorder: "border-sky-300 bg-sky-50/50 dark:border-sky-800 dark:bg-sky-950/20",
+      content: (
+        <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          <p>
+            <strong>Исследовательское тестирование (Exploratory Testing)</strong> — это подход,
+            при котором тестировщик одновременно изучает систему, проектирует тесты и выполняет их.
+            В отличие от скриптового тестирования, здесь нет заранее написанных тест-кейсов.
+          </p>
+          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider">Ключевые принципы</p>
+            <ul className="space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="text-sky-500 mt-0.5 shrink-0">●</span>
+                <span><strong>Одновременность</strong> — изучение, дизайн и выполнение происходят параллельно</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-sky-500 mt-0.5 shrink-0">●</span>
+                <span><strong>Сессии</strong> — тестирование проводится в ограниченных по времени сессиях (60–90 мин)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-sky-500 mt-0.5 shrink-0">●</span>
+                <span><strong>Хартия (charter)</strong> — каждая сессия имеет цель: «Исследовать валидацию email»</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-sky-500 mt-0.5 shrink-0">●</span>
+                <span><strong>Заметки</strong> — фиксируйте находки, идеи и вопросы во время сессии</span>
+              </li>
+            </ul>
+          </div>
+          <div className="bg-sky-50 dark:bg-sky-900/20 rounded-lg p-3">
+            <p className="font-medium text-sky-800 dark:text-sky-300 text-xs mb-1 flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> Пример сессии
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Хартия:</strong> «Исследовать обработку невалидных email в форме регистрации»
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Время:</strong> 45 минут
+            </p>
+            <p className="text-xs mb-1">
+              <strong>Находки:</strong> email "test@.com" принят как валидный; email с 255 символами вызвал timeout
+            </p>
+            <p className="text-xs">
+              <strong>Результат:</strong> 2 бага, 3 идеи для дополнительных тест-кейсов
+            </p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-2">Когда использовать</p>
+            <ul className="space-y-1 text-xs">
+              <li>• Когда нет спецификации или она неполная</li>
+              <li>• Для быстрого исследования новой функциональности</li>
+              <li>• Как дополнение к формальным методам (после EC/BV)</li>
+              <li>• Для поиска неочевидных багов и edge cases</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "tdd",
+      icon: <TestTube className="h-4 w-4" />,
+      iconBg: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400",
+      title: "Основы TDD",
+      subtitle: "Разработка через тестирование: Red → Green → Refactor",
+      openBorder: "border-pink-300 bg-pink-50/50 dark:border-pink-800 dark:bg-pink-950/20",
+      content: (
+        <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          <p>
+            <strong>Test-Driven Development (TDD)</strong> — это метод разработки, при котором
+            тесты пишутся ДО реализации. Цикл TDD: сначала напишите failing тест, затем реализуйте
+            минимум для прохождения, затем улучшите код.
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center border-2 border-red-200 dark:border-red-800">
+              <p className="font-bold text-red-800 dark:text-red-300 text-sm mb-1">🔴 RED</p>
+              <p className="text-xs">Напишите тест для функции, которой ещё нет. Тест падает.</p>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3 text-center border-2 border-emerald-200 dark:border-emerald-800">
+              <p className="font-bold text-emerald-800 dark:text-emerald-300 text-sm mb-1">🟢 GREEN</p>
+              <p className="text-xs">Реализуйте минимум кода, чтобы тест прошёл. Не оптимально — лишь бы работало.</p>
+            </div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center border-2 border-blue-200 dark:border-blue-800">
+              <p className="font-bold text-blue-800 dark:text-blue-300 text-sm mb-1">🔵 REFACTOR</p>
+              <p className="text-xs">Улучшите код: уберите дубли, оптимизируйте. Тесты всё ещё проходят — вы уверены.</p>
+            </div>
+          </div>
+          <div className="bg-pink-50 dark:bg-pink-900/20 rounded-lg p-3">
+            <p className="font-medium text-pink-800 dark:text-pink-300 text-xs mb-1 flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> Пример цикла для factorial
+            </p>
+            <p className="text-xs mb-1">
+              <strong>RED:</strong> тест: factorial(5) === 120. Функции нет — тест падает.
+            </p>
+            <p className="text-xs mb-1">
+              <strong>GREEN:</strong> реализация: <code className="font-mono bg-muted px-1 rounded">function factorial(n) {"{ return n <= 1 ? 1 : n * factorial(n - 1); }"}</code>
+            </p>
+            <p className="text-xs">
+              <strong>REFACTOR:</strong> добавить проверку n &lt; 0 → throw Error. Тесты всё ещё зелёные.
+            </p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-2">Преимущества TDD</p>
+            <ul className="space-y-1 text-xs">
+              <li>• Код покрыт тестами с самого начала</li>
+              <li>• Тесты помогают думать над дизайном API</li>
+              <li>• Уверенность при рефакторинге</li>
+              <li>• Тесты как документация: что должна делать функция</li>
+              <li>• Меньше багов в продакшене</li>
+            </ul>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "test-design",
+      icon: <Target className="h-4 w-4" />,
+      iconBg: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-400",
+      title: "Техники тест-дизайна",
+      subtitle: "Комбинация методов для максимального покрытия",
+      openBorder: "border-fuchsia-300 bg-fuchsia-50/50 dark:border-fuchsia-800 dark:bg-fuchsia-950/20",
+      content: (
+        <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          <p>
+            <strong>Техники тест-дизайна</strong> — это набор методов для создания эффективных тест-кейсов.
+            Каждая техника покрывает определённый аспект, и вместе они дают максимальное покрытие.
+          </p>
+          <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider">Матрица техник</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px] border-collapse">
+                <thead>
+                  <tr className="bg-fuchsia-100 dark:bg-fuchsia-900/40">
+                    <th className="border border-fuchsia-300 dark:border-fuchsia-700 px-1.5 py-1 text-left">Техника</th>
+                    <th className="border border-fuchsia-300 dark:border-fuchsia-700 px-1.5 py-1 text-left">Что покрывает</th>
+                    <th className="border border-fuchsia-300 dark:border-fuchsia-700 px-1.5 py-1 text-left">Когда применять</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 font-medium">Классы эквивалентности</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Все группы входов</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Всегда, базовый метод</td></tr>
+                  <tr><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 font-medium">Граничные значения</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Края диапазонов</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Есть числовые диапазоны</td></tr>
+                  <tr><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 font-medium">Таблица решений</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Комбинации условий</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Сложная бизнес-логика</td></tr>
+                  <tr><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 font-medium">Диаграммы состояний</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Переходы состояний</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Есть память/состояние</td></tr>
+                  <tr><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 font-medium">Попарное</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Пары параметров</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">3+ параметров</td></tr>
+                  <tr><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5 font-medium">Error Guessing</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">Edge cases</td><td className="border border-fuchsia-200 dark:border-fuchsia-800 px-1.5 py-0.5">После формальных методов</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="bg-fuchsia-50 dark:bg-fuchsia-900/20 rounded-lg p-3">
+            <p className="font-medium text-fuchsia-800 dark:text-fuchsia-300 text-xs mb-1 flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> Стратегия для комплексной функции
+            </p>
+            <p className="text-xs mb-1">
+              Для функции <code className="font-mono bg-muted px-1 rounded">validateUser(input)</code> с полями email, пароль, возраст, роль:
+            </p>
+            <ol className="text-xs space-y-1 list-decimal list-inside">
+              <li>EC для каждого поля (валидный/невалидный email, длина пароля и т.д.)</li>
+              <li>BV для возраста (min=13, max=120)</li>
+              <li>Decision Table для комбинаций: валидный email + короткий пароль + underage</li>
+              <li>Pairwise для роли (user/admin) × статуса (active/banned) × верификации (yes/no)</li>
+              <li>Error Guessing: SQL-инъекции, XSS, эмодзи в имени</li>
+            </ol>
           </div>
         </div>
       ),
@@ -746,6 +987,9 @@ export function TheoryPanel({ task }: { task?: Task }) {
           />
         ))}
       </div>
+
+      {/* Worked example for current task */}
+      {task && <WorkedExampleViewer taskId={task.id} />}
 
       {/* Quiz module */}
       <TheoryQuiz />

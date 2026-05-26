@@ -456,6 +456,7 @@ export function useTrainerState() {
         suggestedInput,
         exampleValues: ec.exampleValues.map((v) => Array.isArray(v) ? v.join(", ") : String(v)),
         taskId: String(selectedTask.id),
+        whyImportant: ec.whyImportant,
       },
     }));
   }, [selectedTask, testCases]);
