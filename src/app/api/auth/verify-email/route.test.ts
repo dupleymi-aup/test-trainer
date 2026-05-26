@@ -23,6 +23,10 @@ vi.mock("@/lib/db", () => ({
     user: {
       update: mocks.mockUserUpdate,
     },
+    $transaction: vi.fn().mockImplementation(async (operations: unknown[]) => {
+      // Execute each mock operation sequentially
+      return Promise.all(operations);
+    }),
   },
 }));
 

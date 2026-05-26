@@ -114,13 +114,35 @@ export async function POST(req: Request) {
           : 0;
 
       // Parse testCases and covered data from JSON strings
-      const parsedAttempts = attempts.map((a) => ({
-        ...a,
-        testCases: JSON.parse(a.testCases),
-        coveredEcIds: JSON.parse(a.coveredEcIds),
-        coveredBvDescriptions: JSON.parse(a.coveredBvDescriptions),
-        createdAt: a.createdAt.toISOString(),
-      }));
+      const parsedAttempts = attempts.map((a) => {
+        let testCases: unknown[] = [];
+        let coveredEcIds: string[] = [];
+        let coveredBvDescriptions: string[] = [];
+
+        try {
+          testCases = JSON.parse(a.testCases);
+        } catch {
+          logger.warn("Failed to parse testCases for attempt", { attemptId: a.id });
+        }
+        try {
+          coveredEcIds = JSON.parse(a.coveredEcIds);
+        } catch {
+          logger.warn("Failed to parse coveredEcIds for attempt", { attemptId: a.id });
+        }
+        try {
+          coveredBvDescriptions = JSON.parse(a.coveredBvDescriptions);
+        } catch {
+          logger.warn("Failed to parse coveredBvDescriptions for attempt", { attemptId: a.id });
+        }
+
+        return {
+          ...a,
+          testCases,
+          coveredEcIds,
+          coveredBvDescriptions,
+          createdAt: a.createdAt.toISOString(),
+        };
+      });
 
       return {
         id: student.id,

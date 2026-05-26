@@ -106,6 +106,8 @@ export async function PATCH(req: Request) {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 
+    const { session } = guard;
+
     const body = await req.json();
     const parsed = updateNotificationSchema.safeParse(body);
 
@@ -116,10 +118,26 @@ export async function PATCH(req: Request) {
       );
     }
 
-    const { notificationId: _notificationId, read: _read } = parsed.data;
+    const { notificationId, read } = parsed.data;
 
-    // Mark as read (in this case, we just log it)
-    // Since ActivityLog doesn't have a read field, we just return success
+    if (!read) {
+      return NextResponse.json({ error: "Only mark-as-read is supported" }, { status: 400 });
+    }
+
+    // Mark as read by deleting the notification (read = dismissed)
+    // Verify ownership so teachers can only dismiss their own notifications
+    const deleted = await db.activityLog.deleteMany({
+      where: {
+        id: notificationId,
+        userId: session.userId,
+        action: { startsWith: "ALERT_" },
+      },
+    });
+
+    if (deleted.count === 0) {
+      return NextResponse.json({ error: "Notification not found" }, { status: 404 });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Failed to update notification", error instanceof Error ? error : undefined);

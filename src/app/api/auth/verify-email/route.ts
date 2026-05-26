@@ -45,13 +45,14 @@ export async function POST(req: Request) {
     const identifierParts = verificationToken.identifier.split(":");
     const userId = identifierParts[identifierParts.length - 1];
 
-    await db.user.update({
-      where: { id: userId },
-      data: { emailVerified: new Date() },
-    });
-
-    // Delete used token
-    await db.verificationToken.delete({ where: { token } });
+    // Perform both operations in a transaction to prevent race conditions
+    await db.$transaction([
+      db.user.update({
+        where: { id: userId },
+        data: { emailVerified: new Date() },
+      }),
+      db.verificationToken.delete({ where: { token } }),
+    ]);
 
     return NextResponse.json({ message: "Email подтверждён" });
   } catch (error) {

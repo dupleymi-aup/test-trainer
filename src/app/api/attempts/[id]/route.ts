@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/admin-guard";
+import { requireAuth, getTeacherGroupIds } from "@/lib/admin-guard";
 import { logger } from "@/lib/logger";
 
 export async function GET(
@@ -15,6 +15,7 @@ export async function GET(
 
     const attempt = await db.attempt.findUnique({
       where: { id },
+      include: { user: { select: { id: true } } },
     });
 
     if (!attempt) {
@@ -23,8 +24,21 @@ export async function GET(
 
     // Users can only view their own attempts
     if (attempt.userId !== auth.session.userId) {
-      // Check if admin or teacher
-      if (auth.session.role !== "ADMIN" && auth.session.role !== "TEACHER") {
+      if (auth.session.role === "ADMIN") {
+        // Admins can view any attempt
+      } else if (auth.session.role === "TEACHER") {
+        // Teachers can only view attempts from students in their own groups
+        const teacherGroupIds = await getTeacherGroupIds(auth.session.userId, auth.session.role);
+        const studentInTeacherGroup = await db.userGroup.findFirst({
+          where: {
+            userId: attempt.userId,
+            groupId: { in: teacherGroupIds },
+          },
+        });
+        if (!studentInTeacherGroup) {
+          return NextResponse.json({ error: "Forbidden: student is not in your group" }, { status: 403 });
+        }
+      } else {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
     }
