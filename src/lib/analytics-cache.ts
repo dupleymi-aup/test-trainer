@@ -82,14 +82,17 @@ export function getCacheStats(): { size: number; keys: string[] } {
   return { size: cache.size, keys: [...cache.keys()] };
 }
 
-// Periodic cleanup every 2 minutes
+// Periodic cleanup every 2 minutes — singleton guard to prevent HMR leaks
 if (typeof global !== "undefined") {
-  setInterval(() => {
+  const cacheCleanupSymbol = Symbol.for("analytics-cache-cleanup-interval");
+  const existingInterval = (global as Record<symbol, unknown>)[cacheCleanupSymbol] as ReturnType<typeof setInterval> | undefined;
+  if (existingInterval) clearInterval(existingInterval);
+  (global as Record<symbol, unknown>)[cacheCleanupSymbol] = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of cache.entries()) {
       if (now > entry.expires) cache.delete(key);
     }
-  }, 2 * 60 * 1000).unref?.();
+  }, 2 * 60 * 1000);
 }
 
 export { DEFAULT_TTL, MAX_CACHE_SIZE };

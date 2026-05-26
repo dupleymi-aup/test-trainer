@@ -42,8 +42,9 @@ export async function checkSQLiteConnection(): Promise<boolean> {
 }
 
 export async function detectDbType(): Promise<DbType> {
-  if (process.env.DB_TYPE) {
-    return process.env.DB_TYPE as DbType
+  // Use config which validates DB_TYPE via Zod — no unsafe cast needed
+  if (config.dbType) {
+    return config.dbType;
   }
 
   const pgAvailable = await checkPostgresConnection()

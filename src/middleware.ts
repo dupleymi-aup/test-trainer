@@ -52,6 +52,8 @@ export async function middleware(request: NextRequest) {
     "/api/auth/forgot-password",
     "/api/auth/reset-password",
     "/api/auth/verify-otp",
+    "/api/auth/session",
+    "/api/auth/csrf-token",
   ];
   const isPreAuthRoute = preAuthRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
@@ -125,21 +127,14 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for:
-     * - pre-auth API routes (login, register, forgot-password, reset-password, verify-otp)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public assets
+     *
+     * All API routes are included — CSRF exemptions are handled in the middleware body
+     * via the preAuthRoutes list. This ensures new API routes are CSRF-protected by default.
      */
-    "/((?!api/auth/login|api/auth/register|api/auth/forgot-password|api/auth/reset-password|api/auth/verify-otp|api/auth/session|api/auth/csrf-token|api/auth/signout|api/auth/callback|api/auth/providers|api/auth/_next|_next/static|_next/image|favicon.ico|.*\\..*).*)",
-    "/api/admin/:path*",
-    "/api/teacher/:path*",
-    "/api/student/:path*",
-    "/api/attempts/:path*",
-    "/api/tasks/:path*",
-    "/api/auth/change-password",
-    "/api/auth/profile",
-    "/api/auth/resend-verification",
-    "/api/auth/verify-email",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 };

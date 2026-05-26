@@ -167,7 +167,10 @@ export function createRateLimitResponse(resetAt: number) {
   );
 }
 
-// Auto-cleanup every 1 minute (reduced from 10 min to prevent memory buildup)
+// Auto-cleanup every 1 minute — singleton guard to prevent HMR leaks
 if (typeof global !== "undefined") {
-  setInterval(cleanupExpiredEntries, 60 * 1000).unref?.();
+  const rateLimitCleanupSymbol = Symbol.for("rate-limit-cleanup-interval");
+  const existingInterval = (global as Record<symbol, unknown>)[rateLimitCleanupSymbol] as ReturnType<typeof setInterval> | undefined;
+  if (existingInterval) clearInterval(existingInterval);
+  (global as Record<symbol, unknown>)[rateLimitCleanupSymbol] = setInterval(cleanupExpiredEntries, 60 * 1000);
 }
