@@ -95,24 +95,37 @@ export async function PUT(req: Request) {
       }
     }
 
-    const user = await db.user.update({
-      where: { id: auth.session.userId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        avatar: true,
-        bio: true,
-        university: true,
-        group: true,
-        createdAt: true,
-      },
-    });
+    try {
+      const user = await db.user.update({
+        where: { id: auth.session.userId },
+        data: updateData,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          avatar: true,
+          bio: true,
+          university: true,
+          group: true,
+          createdAt: true,
+        },
+      });
 
-    return NextResponse.json({ user }, { status: 200 });
+      return NextResponse.json({ user }, { status: 200 });
+    } catch (updateError) {
+      if (
+        updateError instanceof Error &&
+        updateError.message.includes("P2002")
+      ) {
+        return NextResponse.json(
+          { error: "Этот номер телефона уже используется другим пользователем" },
+          { status: 409 }
+        );
+      }
+      throw updateError;
+    }
   } catch (error) {
     logger.error("Update profile error", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Ошибка при обновлении профиля" }, { status: 500 });

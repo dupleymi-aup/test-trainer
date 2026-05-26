@@ -16,11 +16,15 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const role = searchParams.get("role");
   const search = searchParams.get("search");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") || "20")));
   const showDeleted = searchParams.get("showDeleted") === "true";
-  const sortBy = searchParams.get("sortBy") || "createdAt";
-  const sortDir = (searchParams.get("sortDir") || "desc") as "asc" | "desc";
+  const allowedSortBy = ["createdAt", "name", "attempts"] as const;
+  const rawSortBy = searchParams.get("sortBy") || "createdAt";
+  const sortBy: (typeof allowedSortBy)[number] = allowedSortBy.includes(rawSortBy as (typeof allowedSortBy)[number])
+    ? (rawSortBy as (typeof allowedSortBy)[number])
+    : "createdAt";
+  const sortDir: "asc" | "desc" = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
   const skip = (page - 1) * limit;
 
   const where: Prisma.UserWhereInput = {};
@@ -144,26 +148,37 @@ export async function POST(req: Request) {
     const bcrypt = await import("bcryptjs");
     const hashedPassword = await bcrypt.default.hash(password, 12);
 
-    const user = await db.user.create({
-      data: {
-        name,
-        email: email?.toLowerCase() ?? null,
-        phone,
-        hashedPassword,
-        role,
-        university,
-        group,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
-    });
+    let user;
+    try {
+      user = await db.user.create({
+        data: {
+          name,
+          email: email?.toLowerCase() ?? null,
+          phone,
+          hashedPassword,
+          role,
+          university,
+          group,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+        },
+      });
+    } catch (createError) {
+      if (
+        createError instanceof Error &&
+        createError.message.includes("P2002")
+      ) {
+        return NextResponse.json({ error: "User with this email or phone already exists" }, { status: 409 });
+      }
+      throw createError;
+    }
 
     // Log activity
     await db.activityLog.create({

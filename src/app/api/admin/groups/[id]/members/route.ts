@@ -63,13 +63,23 @@ export async function POST(
       return NextResponse.json({ error: "User is already a member of this group" }, { status: 409 });
     }
 
-    await db.userGroup.create({
-      data: {
-        userId: parsed.data.userId,
-        groupId: id,
-        assignedByUserId: session.userId,
-      },
-    });
+    try {
+      await db.userGroup.create({
+        data: {
+          userId: parsed.data.userId,
+          groupId: id,
+          assignedByUserId: session.userId,
+        },
+      });
+    } catch (createError) {
+      if (
+        createError instanceof Error &&
+        createError.message.includes("P2002")
+      ) {
+        return NextResponse.json({ error: "User is already a member of this group" }, { status: 409 });
+      }
+      throw createError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

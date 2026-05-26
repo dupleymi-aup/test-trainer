@@ -71,23 +71,37 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const user = await db.user.create({
-      data: {
-        name: name?.trim() || null,
-        email: emailLower,
-        phone: phone?.trim() || null,
-        hashedPassword,
-        role,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        createdAt: true,
-      },
-    });
+    let user;
+    try {
+      user = await db.user.create({
+        data: {
+          name: name?.trim() || null,
+          email: emailLower,
+          phone: phone?.trim() || null,
+          hashedPassword,
+          role,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          createdAt: true,
+        },
+      });
+    } catch (createError) {
+      if (
+        createError instanceof Error &&
+        createError.message.includes("P2002")
+      ) {
+        return NextResponse.json(
+          { error: "Пользователь с таким email или телефоном уже существует" },
+          { status: 409 }
+        );
+      }
+      throw createError;
+    }
 
     // Send verification email
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";

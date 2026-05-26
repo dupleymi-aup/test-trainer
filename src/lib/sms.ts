@@ -29,6 +29,36 @@ interface SMSProviderResult {
 // Rate limiting: track last OTP send per phone (in-memory, use Redis in production)
 const otpSendLog = new Map<string, number>();
 const OTP_COOLDOWN_MS = 60_000; // 1 minute between OTPs
+const OTP_MAX_AGE_MS = 15 * 60_000; // 15 minutes — OTP expiry
+const OTP_CLEANUP_INTERVAL_MS = 5 * 60_000; // 5 minutes between cleanups
+
+// Periodic cleanup of stale entries to prevent unbounded growth
+let cleanupTimer: ReturnType<typeof setInterval> | null = null;
+
+function startOtpCleanup() {
+  if (cleanupTimer) return;
+  cleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [phone, ts] of otpSendLog.entries()) {
+      if (now - ts > OTP_MAX_AGE_MS) {
+        otpSendLog.delete(phone);
+      }
+    }
+    if (otpSendLog.size === 0 && cleanupTimer) {
+      clearInterval(cleanupTimer);
+      cleanupTimer = null;
+    }
+  }, OTP_CLEANUP_INTERVAL_MS);
+  cleanupTimer.unref?.(); // Don't prevent Node.js from exiting
+}
+
+function purgeOtpSendLog() {
+  otpSendLog.clear();
+  if (cleanupTimer) {
+    clearInterval(cleanupTimer);
+    cleanupTimer = null;
+  }
+}
 
 function validatePhone(phone: string): boolean {
   // Accept international format: +79991234567, 89991234567, etc.
@@ -150,6 +180,7 @@ export async function sendOTP(phone: string): Promise<{
 
   if (result.success) {
     otpSendLog.set(phone, Date.now());
+    startOtpCleanup();
     return { success: true, code };
   }
 
