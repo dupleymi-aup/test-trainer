@@ -20,10 +20,15 @@ export async function requireAuth(): Promise<
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, role: true, isActive: true },
-  });
+  let user;
+  try {
+    user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, role: true, isActive: true },
+    });
+  } catch (error) {
+    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
+  }
 
   if (!user) {
     return { response: NextResponse.json({ error: "User not found" }, { status: 404 }) };
@@ -50,10 +55,15 @@ export async function requireAdmin(): Promise<
   }
 
   // Fetch fresh role from DB (never trust client-side role)
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, role: true, isActive: true },
-  });
+  let user;
+  try {
+    user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, role: true, isActive: true },
+    });
+  } catch (error) {
+    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
+  }
 
   if (!user || user.role !== "ADMIN") {
     return { response: NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 }) };
@@ -79,10 +89,15 @@ export async function requireTeacherOrAdmin(): Promise<
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, role: true, isActive: true },
-  });
+  let user;
+  try {
+    user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, role: true, isActive: true },
+    });
+  } catch (error) {
+    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
+  }
 
   if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
     return { response: NextResponse.json({ error: "Forbidden: teacher or admin access required" }, { status: 403 }) };

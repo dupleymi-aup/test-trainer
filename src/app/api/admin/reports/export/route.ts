@@ -940,9 +940,8 @@ export async function POST(req: Request) {
   }
 
   // Default: JSON export for all analytics
-  const baseUrl = req.headers.get("host")
-    ? `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host")}`
-    : "http://localhost:3000";
+  // Use trusted localhost URL instead of user-controllable headers to prevent SSRF
+  const baseUrl = process.env.INTERNAL_BASE_URL || "http://localhost:3000";
 
   let analytics;
   try {
@@ -953,7 +952,7 @@ export async function POST(req: Request) {
     analytics = await res.json();
   } catch (error) {
     logger.error("Failed to fetch comprehensive analytics for export", error instanceof Error ? error : undefined);
-    analytics = { error: "Could not generate analytics report. Try again later." };
+    return NextResponse.json({ error: "Could not generate analytics report. Try again later." }, { status: 502 });
   }
 
   return NextResponse.json(analytics, {
