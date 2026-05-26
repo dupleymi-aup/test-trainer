@@ -51,12 +51,17 @@ export async function GET(
       take: 100,
     });
 
-    // Parse testCases from JSON for each attempt
+    // Parse testCases from JSON for each attempt — handle corrupted data gracefully
+    const safeParse = (json: string, fallback: unknown[] = []) => {
+      try { return JSON.parse(json); }
+      catch { return fallback; }
+    };
+
     const parsedAttempts = attempts.map((a) => ({
       ...a,
-      testCases: JSON.parse(a.testCases),
-      coveredEcIds: JSON.parse(a.coveredEcIds),
-      coveredBvDescriptions: JSON.parse(a.coveredBvDescriptions),
+      testCases: safeParse(a.testCases, []),
+      coveredEcIds: safeParse(a.coveredEcIds, []),
+      coveredBvDescriptions: safeParse(a.coveredBvDescriptions, []),
     }));
 
     // Compute stats

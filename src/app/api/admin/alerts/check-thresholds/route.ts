@@ -22,12 +22,16 @@ export async function POST() {
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Get thresholds from SystemSetting or use defaults
+    // Get thresholds from SystemSetting or use defaults — handle corrupted JSON gracefully
     const settings = await db.systemSetting.findMany({
       where: { key: { in: ["risk_student_threshold", "inactive_group_threshold", "avg_score_drop_threshold"] } },
     });
+    const safeParse = (json: string) => {
+      try { return JSON.parse(json); }
+      catch { return json; }
+    };
     const settingsMap: Record<string, unknown> = {};
-    for (const s of settings) settingsMap[s.key] = JSON.parse(s.value);
+    for (const s of settings) settingsMap[s.key] = safeParse(s.value);
 
     const riskThreshold = Number(settingsMap["risk_student_threshold"] ?? 5);
     const inactiveGroupThreshold = Number(settingsMap["inactive_group_threshold"] ?? 2);

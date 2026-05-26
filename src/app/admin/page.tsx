@@ -95,14 +95,15 @@ export default function AdminDashboardPage() {
   const [riskData, setRiskData] = useState<RiskData | null>(null);
   const [notifData, setNotifData] = useState<NotifData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/stats").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch("/api/admin/stats").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); return null; }),
       fetch("/api/admin/analytics/predictions").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch(() => null),
       fetch("/api/teacher/notifications").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch(() => null),
     ]).then(([statsData, riskResp, notifResp]) => {
-      setStats(statsData);
+      if (statsData) setStats(statsData);
       if (riskResp?.riskOverview) setRiskData(riskResp.riskOverview);
       if (notifResp?.notifications !== undefined) setNotifData(notifResp);
       setLoading(false);
@@ -110,6 +111,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center text-sm text-destructive">Ошибка загрузки статистики: {error}</div></AdminLayout>;
   if (!stats) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-destructive" /><span className="ml-3 text-sm text-destructive">Ошибка загрузки</span></div></AdminLayout>;
 
   const statCards = [

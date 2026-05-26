@@ -40,6 +40,15 @@ export async function GET(req: NextRequest) {
       where: whereClause as object,
       take: 50_000,
       orderBy: { createdAt: "asc" },
+      select: {
+        taskId: true,
+        score: true,
+        ecCoverage: true,
+        bvCoverage: true,
+        timeSpent: true,
+        createdAt: true,
+        coveredEcIds: true,
+      },
     });
 
     // Group by topic
