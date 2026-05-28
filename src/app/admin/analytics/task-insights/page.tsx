@@ -18,6 +18,7 @@ import {
   PolarRadiusAxis,
   Radar,
   ComposedChart,
+  Bar,
   Line,
   Legend,
 } from "recharts";

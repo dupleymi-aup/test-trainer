@@ -26,7 +26,7 @@ export async function requireAuth(): Promise<
       where: { id: session.user.id },
       select: { id: true, role: true, isActive: true },
     });
-  } catch (error) {
+  } catch (_error) {
     return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
   }
 
@@ -61,7 +61,7 @@ export async function requireAdmin(): Promise<
       where: { id: session.user.id },
       select: { id: true, role: true, isActive: true },
     });
-  } catch (error) {
+  } catch (_error) {
     return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
   }
 
@@ -95,7 +95,7 @@ export async function requireTeacherOrAdmin(): Promise<
       where: { id: session.user.id },
       select: { id: true, role: true, isActive: true },
     });
-  } catch (error) {
+  } catch (_error) {
     return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
   }
 

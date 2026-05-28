@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { logger } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -81,7 +82,7 @@ export default function ComparePeriodsPage() {
       })
       .then((d) => setGroups(d.groups || []))
       .catch((err) => {
-        console.warn("Failed to fetch groups (non-critical):", err);
+        logger.warn("Failed to fetch groups (non-critical)", { error: err instanceof Error ? err.message : String(err) });
       });
   }, []);
 

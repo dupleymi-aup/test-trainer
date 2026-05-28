@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Filter, X } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface AnalyticsFiltersProps {
   onFilterChange: (filters: {
@@ -36,7 +37,7 @@ export function AnalyticsFilters({ onFilterChange }: AnalyticsFiltersProps) {
       })
       .then((data) => setGroups(data.groups || []))
       .catch((err) => {
-        console.warn("Failed to fetch groups:", err);
+        logger.warn("Failed to fetch teacher groups", { error: err instanceof Error ? err.message : String(err) });
       });
   }, []);
 

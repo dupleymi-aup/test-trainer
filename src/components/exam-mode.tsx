@@ -184,7 +184,7 @@ export function ExamMode() {
       triggerConfetti();
     }
     isFinishingRef.current = false;
-  }, []);
+  }, [triggerConfetti]);
 
   useEffect(() => {
     finishExamRef.current = finishExam;
@@ -391,7 +391,7 @@ export function ExamMode() {
         triggerConfetti();
       }
     }
-  }, [examTasks, currentTaskIndex, examTestCases, examResults]);
+  }, [examTasks, currentTaskIndex, examTestCases, examResults, practiceMode, triggerConfetti]);
 
   const handleNextAfterPractice = useCallback(() => {
     setLastPracticeResult(null);
@@ -410,7 +410,7 @@ export function ExamMode() {
         triggerConfetti();
       }
     }
-  }, [currentTaskIndex, examTasks, examResults]);
+  }, [currentTaskIndex, examTasks, examResults, triggerConfetti]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { logger } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -88,7 +89,7 @@ function saveCustomTasks(tasks: CustomTask[]) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
   } catch (e) {
     if (e instanceof DOMException && e.name === "QuotaExceededError") {
-      console.warn("LocalStorage quota exceeded, cannot save custom tasks");
+      logger.warn("LocalStorage quota exceeded, cannot save custom tasks");
     }
   }
 }

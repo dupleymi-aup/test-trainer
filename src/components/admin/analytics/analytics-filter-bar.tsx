@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Filter, X } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export interface FilterState {
   dateFrom: string;
@@ -54,7 +55,7 @@ export function AnalyticsFilterBar({
           return r.json();
         })
         .then((d) => setGroups(d.groups || []))
-        .catch((err) => console.warn("Failed to fetch groups:", err));
+        .catch((err) => logger.warn("Failed to fetch admin groups", { error: err instanceof Error ? err.message : String(err) }));
     }
   }, [showGroupFilter]);
 
@@ -73,7 +74,7 @@ export function AnalyticsFilterBar({
             setUniversities([...new Set(unis)].filter(Boolean) as string[]);
           }
         })
-        .catch((err) => console.warn("Failed to fetch university performance:", err));
+        .catch((err) => logger.warn("Failed to fetch university performance", { error: err instanceof Error ? err.message : String(err) }));
     }
   }, [showUniversityFilter]);
 

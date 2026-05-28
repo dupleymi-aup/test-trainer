@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { logger } from "@/lib/logger";
 
 interface Notification {
   id: string;
@@ -36,7 +37,7 @@ export function NotificationsBell() {
         setUnreadCount(data.unreadCount || 0);
       })
       .catch((err) => {
-        console.warn("Failed to fetch notifications:", err);
+        logger.warn("Failed to fetch teacher notifications", { error: err instanceof Error ? err.message : String(err) });
       });
   }, []);
 

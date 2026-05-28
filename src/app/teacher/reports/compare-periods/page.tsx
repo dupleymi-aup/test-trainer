@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -74,7 +75,7 @@ export default function ComparePeriodsPage() {
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) setGroups(d.groups || []); })
       .catch((err) => {
-        if (!controller.signal.aborted) console.warn("Failed to fetch groups:", err);
+        if (!controller.signal.aborted) logger.warn("Failed to fetch groups", { error: err instanceof Error ? err.message : String(err) });
       });
     return () => controller.abort();
   }, []);

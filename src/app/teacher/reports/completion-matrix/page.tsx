@@ -4,6 +4,7 @@ import { TeacherLayout } from "@/components/teacher/teacher-layout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { logger } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -58,7 +59,7 @@ export default function CompletionMatrixPage() {
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) setGroups(d.groups || []); })
       .catch((err) => {
-        if (!controller.signal.aborted) console.warn("Failed to fetch groups:", err);
+        if (!controller.signal.aborted) logger.warn("Failed to fetch groups", { error: err instanceof Error ? err.message : String(err) });
       });
     return () => controller.abort();
   }, []);
