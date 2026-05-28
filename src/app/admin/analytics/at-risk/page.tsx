@@ -56,9 +56,11 @@ export default function AdminAtRiskPage() {
   const [search, setSearch] = useState("");
   const [riskLevel, setRiskLevel] = useState("");
   const [university, setUniversity] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStudents = () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({
       page: String(pagination.page),
       limit: String(pagination.limit),
@@ -77,7 +79,7 @@ export default function AdminAtRiskPage() {
         setPagination(data.pagination || pagination);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   };
 
   useEffect(() => { fetchStudents(); }, [pagination.page, riskLevel, university]);
@@ -89,6 +91,7 @@ export default function AdminAtRiskPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {error && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>)}
         <div className="flex justify-between items-center">
           <h1 className="text-xl font-bold">Студенты группы риска</h1>
           <Badge variant="destructive">{pagination.total} студентов</Badge>

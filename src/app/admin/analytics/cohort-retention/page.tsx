@@ -74,6 +74,7 @@ export default function AdminCohortRetentionPage() {
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalCohorts, setTotalCohorts] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/analytics/cohort-retention")
@@ -89,10 +90,12 @@ export default function AdminCohortRetentionPage() {
         setTotalCohorts(data.totalCohorts || 0);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
 
   // Prepare retention curve data
   const retentionCurves = cohortChartData.map((c) => ({

@@ -71,6 +71,7 @@ const difficultyColors: Record<string, string> = {
 export default function SkillMasteryPage() {
   const [data, setData] = useState<SkillMasteryData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Partial<FilterState>>({});
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null);
 
@@ -79,6 +80,7 @@ export default function SkillMasteryPage() {
     if (f.groupId) params.set("groupId", f.groupId);
     if (f.university) params.set("university", f.university);
 
+    setError(null);
     setLoading(true);
     fetch(`/api/admin/analytics/skill-mastery?${params}`)
       .then(async (r) => {
@@ -86,7 +88,7 @@ export default function SkillMasteryPage() {
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   };
 
   useEffect(() => {
@@ -94,6 +96,7 @@ export default function SkillMasteryPage() {
   }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
 
   const { summary } = data;

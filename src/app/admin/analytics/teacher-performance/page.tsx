@@ -34,6 +34,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 
 interface TeacherData {
   teachers: Array<{
@@ -72,6 +73,7 @@ interface TeacherData {
 export default function TeacherPerformancePage() {
   const [data, setData] = useState<TeacherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedTeachers, setExpandedTeachers] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterState | null>(null);
@@ -81,13 +83,14 @@ export default function TeacherPerformancePage() {
     if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
     if (filters?.dateTo) params.set("dateTo", filters.dateTo);
     const qs = params.toString();
+    setError(null);
     fetch(`/api/admin/analytics/teacher-performance${qs ? `?${qs}` : ""}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [filters]);
 
   const toggleTeacher = (id: string) => {
@@ -103,11 +106,9 @@ export default function TeacherPerformancePage() {
   };
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const scoreBadge = (score: number) => (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>{score}%</Badge>
-  );
 
   const trendIcon = (trend: string) => {
     if (trend === "improving") return <TrendingUp className="h-4 w-4 text-green-600 inline" />;
@@ -125,7 +126,7 @@ export default function TeacherPerformancePage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Аналитика по преподавателям</h2>
+          <h1 className="text-xl font-bold">Аналитика по преподавателям</h1>
           <Link href="/admin/analytics" className="text-sm text-muted-foreground hover:text-foreground">
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
@@ -203,7 +204,7 @@ export default function TeacherPerformancePage() {
                       <TableCell className="font-medium">{t.name}</TableCell>
                       <TableCell className="text-right">{t.groupsCount}</TableCell>
                       <TableCell className="text-right">{t.studentsCount}</TableCell>
-                      <TableCell className="text-right">{t.studentsCount > 0 ? scoreBadge(t.avgStudentScore) : "—"}</TableCell>
+                      <TableCell className="text-right">{t.studentsCount > 0 ? <ScoreBadge score={t.avgStudentScore} /> : "—"}</TableCell>
                       <TableCell className="text-right">
                         {t.studentsCount > 0 ? (
                           <div className="flex items-center gap-2 justify-end">
@@ -230,7 +231,7 @@ export default function TeacherPerformancePage() {
                                     <span className="text-muted-foreground">{s.name}</span>
                                     <div className="flex items-center gap-3">
                                       <span className="text-xs">{s.attemptsCount} попыток</span>
-                                      {scoreBadge(s.avgScore)}
+                                      <ScoreBadge score={s.avgScore} />
                                       {trendIcon(s.trend)}
                                     </div>
                                   </div>

@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 
 interface TaskInsightsData {
   taskInsights: Array<{
@@ -65,6 +66,7 @@ export default function TaskInsightsPage() {
   const [data, setData] = useState<TaskInsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -78,15 +80,13 @@ export default function TaskInsightsPage() {
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const scoreBadge = (score: number) => (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>{score}%</Badge>
-  );
 
   const difficultyBarData = data.taskInsights.map((t) => ({
     name: t.taskName.length > 15 ? t.taskName.slice(0, 15) + "..." : t.taskName,
@@ -169,7 +169,7 @@ export default function TaskInsightsPage() {
                       <TableCell className="text-right">
                         <Badge variant="destructive">{t.failRate}%</Badge>
                       </TableCell>
-                      <TableCell className="text-right">{scoreBadge(t.avgScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={t.avgScore} /></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

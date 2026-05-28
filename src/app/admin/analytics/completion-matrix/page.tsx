@@ -50,6 +50,7 @@ export default function AdminCompletionMatrixPage() {
   const [selectedGroup, setSelectedGroup] = useState("");
   const [data, setData] = useState<MatrixData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/groups")
@@ -66,13 +67,14 @@ export default function AdminCompletionMatrixPage() {
   useEffect(() => {
     if (!selectedGroup) { setData(null); return; }
     setLoading(true);
+    setError(null);
     fetch(`/api/admin/analytics/completion-matrix?groupId=${selectedGroup}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [selectedGroup]);
 
   const getCellContent = (cell: MatrixCell | undefined) => {
@@ -105,6 +107,8 @@ export default function AdminCompletionMatrixPage() {
         </Card>
 
         {loading && <div className="p-8 text-center">Загрузка...</div>}
+
+        {error && !loading && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>)}
 
         {!loading && data && data.students.length > 0 && (
           <Card>

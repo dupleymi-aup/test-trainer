@@ -16,12 +16,9 @@ import { Filter, X } from "lucide-react";
 export interface FilterState {
   dateFrom: string;
   dateTo: string;
-  startDate: string;
-  endDate: string;
   groupId: string;
   university: string;
   riskLevel: string;
-  studentId: string;
 }
 
 interface AnalyticsFilterBarProps {
@@ -81,7 +78,7 @@ export function AnalyticsFilterBar({
   }, [showUniversityFilter]);
 
   const handleApply = () => {
-    onFilterChange({ dateFrom, dateTo, startDate: "", endDate: "", groupId, university, riskLevel: showRiskFilter ? riskLevel : "", studentId: "" });
+    onFilterChange({ dateFrom, dateTo, groupId, university, riskLevel: showRiskFilter ? riskLevel : "" });
   };
 
   const handleReset = () => {
@@ -90,7 +87,7 @@ export function AnalyticsFilterBar({
     setGroupId("");
     setUniversity("");
     setRiskLevel("");
-    onFilterChange({ dateFrom: "", dateTo: "", startDate: "", endDate: "", groupId: "", university: "", riskLevel: "", studentId: "" });
+    onFilterChange({ dateFrom: "", dateTo: "", groupId: "", university: "", riskLevel: "" });
   };
 
   const hasActiveFilters = dateFrom || dateTo || groupId || university || (showRiskFilter && riskLevel);

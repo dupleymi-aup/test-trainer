@@ -49,6 +49,7 @@ interface TimeTrendsData {
 export default function TimeTrendsPage() {
   const [data, setData] = useState<TimeTrendsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [filters, setFilters] = useState<FilterState | null>(null);
 
@@ -58,16 +59,18 @@ export default function TimeTrendsPage() {
     if (filters?.dateTo) params.set("dateTo", filters.dateTo);
     if (filters?.groupId) params.set("groupId", filters.groupId);
     const qs = params.toString();
+    setError(null);
     fetch(`/api/admin/analytics/time-trends${qs ? `?${qs}` : ""}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
   const dayNames = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];

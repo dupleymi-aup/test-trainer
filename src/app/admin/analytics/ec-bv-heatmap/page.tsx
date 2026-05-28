@@ -63,6 +63,7 @@ export default function AdminEcBvHeatmapPage() {
   const [byTaskBv, setByTaskBv] = useState<Record<string, BvData[]>>({});
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/analytics/ec-bv-heatmap")
@@ -78,10 +79,12 @@ export default function AdminEcBvHeatmapPage() {
         setSummary(data.summary);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
 
   return (
     <AdminLayout>

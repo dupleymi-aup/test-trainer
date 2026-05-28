@@ -33,6 +33,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 
 const riskFactorConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   low_performer: { label: "Низкая успеваемость", color: "bg-rose-100 text-rose-800 border-rose-200", icon: <TrendingDown className="h-3 w-3" /> },
@@ -69,6 +70,7 @@ export default function PredictionsPage() {
   const [data, setData] = useState<PredictionsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -83,15 +85,13 @@ export default function PredictionsPage() {
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const scoreBadge = (score: number) => (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>{score}%</Badge>
-  );
 
   const riskChartData = [
     { factor: "Низкая успеваемость", count: data.atRiskStudents.filter((s) => s.riskFactors.includes("low_performer")).length },
@@ -175,7 +175,7 @@ export default function PredictionsPage() {
                   <TableRow key={s.student.id}>
                     <TableCell className="font-medium">{s.student.name}</TableCell>
                     <TableCell className="text-xs">{s.student.group || "—"}</TableCell>
-                    <TableCell className="text-right">{scoreBadge(s.stats.avgScore)}</TableCell>
+                    <TableCell className="text-right"><ScoreBadge score={s.stats.avgScore} /></TableCell>
                     <TableCell className="text-right">{s.stats.attemptsCount}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -218,7 +218,7 @@ export default function PredictionsPage() {
                     <TableRow key={t.taskId}>
                       <TableCell className="font-medium">{t.taskName}</TableCell>
                       <TableCell className="text-right"><Badge variant="destructive">{t.failRate}%</Badge></TableCell>
-                      <TableCell className="text-right">{scoreBadge(t.avgScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={t.avgScore} /></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -237,7 +237,7 @@ export default function PredictionsPage() {
                   {data.systemInsights.weakTopics.map((t) => (
                     <TableRow key={t.topic}>
                       <TableCell className="font-medium">{t.topic}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(t.avgScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={t.avgScore} /></TableCell>
                     </TableRow>
                   ))}
                   {data.systemInsights.weakTopics.length === 0 && (

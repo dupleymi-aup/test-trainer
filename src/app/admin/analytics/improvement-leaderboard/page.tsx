@@ -18,6 +18,7 @@ interface ImprovementData {
 export default function ImprovementLeaderboardPage() {
   const [data, setData] = useState<ImprovementData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/analytics/improvement-leaderboard")
@@ -25,10 +26,11 @@ export default function ImprovementLeaderboardPage() {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       }).then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
 
   const improving = data.studentImprovement.filter((s) => s.scoreDelta > 0).length;

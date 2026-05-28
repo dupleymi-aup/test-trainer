@@ -83,6 +83,7 @@ export default function RecommendationsPage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Partial<FilterState>>({});
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = (f: Partial<FilterState>) => {
     const params = new URLSearchParams();
@@ -92,13 +93,14 @@ export default function RecommendationsPage() {
     params.set("limit", "100");
 
     setLoading(true);
+    setError(null);
     fetch(`/api/admin/analytics/recommendations?${params}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   };
 
   useEffect(() => {
@@ -106,6 +108,7 @@ export default function RecommendationsPage() {
   }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
 
   const { summary } = data;

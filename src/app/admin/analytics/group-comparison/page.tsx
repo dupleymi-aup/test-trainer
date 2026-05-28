@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, ChevronUp, GitCompare } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
+import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
@@ -40,12 +41,6 @@ interface SignificanceData {
 interface ComparisonData {
   groups: GroupData[];
   statisticalSignificance: SignificanceData[];
-}
-
-function TrendBadge({ trend }: { trend: string }) {
-  const colors = { improving: "bg-emerald-100 text-emerald-700", declining: "bg-rose-100 text-rose-700", stable: "bg-gray-100 text-gray-700" };
-  const labels = { improving: "Рост", declining: "Снижение", stable: "Стабильно" };
-  return <Badge className={colors[trend as keyof typeof colors]}>{labels[trend as keyof typeof labels]}</Badge>;
 }
 
 function ScoreCell({ value, isBest }: { value: number; isBest: boolean }) {
@@ -185,7 +180,7 @@ export default function GroupComparisonPage() {
                           <td className="p-2 text-right">{Math.round(g.metrics.avgTime / 60)}м</td>
                           <td className="p-2 text-right">{g.metrics.attemptCount}</td>
                           <td className="p-2 text-right">{g.metrics.studentCount}</td>
-                          <td className="p-2 text-right"><TrendBadge trend={g.trend} /></td>
+                          <td className="p-2 text-right"><TrendIndicator trend={g.trend} compact /></td>
                           {isExpanded && (
                             <tr>
                               <td colSpan={9} className="p-0">

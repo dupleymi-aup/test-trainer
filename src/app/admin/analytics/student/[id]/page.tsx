@@ -13,6 +13,7 @@ import {
   Clock, Zap, BarChart3, Users,
 } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 
 // Print styles
 const printStyles = `
@@ -53,19 +54,13 @@ function TrendIcon({ trend }: { trend: string }) {
   return <Minus className="h-4 w-4 text-gray-400" />;
 }
 
-function scoreBadge(score: number) {
-  return (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>
-      {score}%
-    </Badge>
-  );
-}
 
 export default function AdminStudentReportPage() {
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<StudentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -75,10 +70,11 @@ export default function AdminStudentReportPage() {
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [id]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Студент не найден или нет данных</div></AdminLayout>;
 
   const { student, stats, scoresOverTime, taskPerformance, weakAreas, strongAreas, groupPercentile, groupRanking, timeAnalysis, recommendations, attempts } = data;
@@ -115,8 +111,8 @@ export default function AdminStudentReportPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Лучший балл</div><div className="text-2xl font-bold">{scoreBadge(stats.bestScore)}</div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Средний балл</div><div className="text-2xl font-bold">{scoreBadge(stats.avgScore)}</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Лучший балл</div><div className="text-2xl font-bold"><ScoreBadge score={stats.bestScore} /></div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Средний балл</div><div className="text-2xl font-bold"><ScoreBadge score={stats.avgScore} /></div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><BarChart3 className="h-3 w-3" /> Попыток</div><div className="text-2xl font-bold">{stats.totalAttempts}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> Ср. время</div><div className="text-2xl font-bold">{formatTime(stats.avgTimeSpent)}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> Перцентиль</div><div className="text-2xl font-bold">{groupPercentile}%</div></CardContent></Card>
@@ -166,7 +162,7 @@ export default function AdminStudentReportPage() {
                   {taskPerformance.map((tp) => (
                     <TableRow key={tp.taskId}>
                       <TableCell className="font-medium">{tp.taskName}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(tp.bestScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={tp.bestScore} /></TableCell>
                       <TableCell className="text-right">{tp.attemptsCount}</TableCell>
                       <TableCell className="text-right"><TrendIcon trend={tp.trend} /></TableCell>
                       <TableCell className="text-right text-sm">{formatTime(tp.avgTimeSpent)}</TableCell>
@@ -297,7 +293,7 @@ export default function AdminStudentReportPage() {
                       <TableRow key={a.id}>
                         <TableCell className="text-sm">{new Date(a.createdAt).toLocaleDateString("ru-RU")}</TableCell>
                         <TableCell className="font-medium text-sm">{taskName}</TableCell>
-                        <TableCell className="text-right">{scoreBadge(a.score)}</TableCell>
+                        <TableCell className="text-right"><ScoreBadge score={a.score} /></TableCell>
                         <TableCell className="text-right text-sm">{a.ecCoverage}%</TableCell>
                         <TableCell className="text-right text-sm">{a.bvCoverage}%</TableCell>
                         <TableCell className="text-right text-sm">{a.correctness}%</TableCell>

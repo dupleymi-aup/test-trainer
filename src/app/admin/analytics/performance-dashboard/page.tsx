@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
+import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 
 interface PerformanceDashboardData {
   students: Array<{
@@ -30,12 +31,6 @@ function RiskBadge({ level }: { level: string }) {
   const colors = { high: "bg-rose-100 text-rose-700", medium: "bg-amber-100 text-amber-700", low: "bg-emerald-100 text-emerald-700" };
   const labels = { high: "Высокий", medium: "Средний", low: "Низкий" };
   return <Badge className={colors[level as keyof typeof colors]}>{labels[level as keyof typeof labels]}</Badge>;
-}
-
-function TrendBadge({ trend }: { trend: string }) {
-  const colors = { improving: "bg-emerald-100 text-emerald-700", declining: "bg-rose-100 text-rose-700", stable: "bg-gray-100 text-gray-700" };
-  const labels = { improving: "Рост", declining: "Снижение", stable: "Стабильно" };
-  return <Badge className={colors[trend as keyof typeof colors]}>{labels[trend as keyof typeof labels]}</Badge>;
 }
 
 export default function PerformanceDashboardPage() {
@@ -172,7 +167,7 @@ export default function PerformanceDashboardPage() {
                           <td className="p-2 text-right">{s.metrics.avgBv}%</td>
                           <td className="p-2 text-right">{s.metrics.totalAttempts}</td>
                           <td className="p-2 text-right">{s.metrics.attemptsLast7Days}</td>
-                          <td className="p-2 text-right"><TrendBadge trend={s.metrics.trend} /></td>
+                          <td className="p-2 text-right"><TrendIndicator trend={s.metrics.trend} compact /></td>
                           <td className="p-2 text-right"><RiskBadge level={s.metrics.riskLevel} /></td>
                         </tr>
                       ))}

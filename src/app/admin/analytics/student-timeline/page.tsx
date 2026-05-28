@@ -69,12 +69,7 @@ export default function StudentTimelinePage() {
         </div>
 
         <AnalyticsFilterBar
-          onFilterChange={(filters) => {
-            if (filters.studentId) {
-              setSelectedStudent(filters.studentId);
-              fetchTimeline(filters.studentId);
-            }
-          }}
+          onFilterChange={() => {}}
         />
 
         {loading && <div className="text-center py-8">Загрузка...</div>}

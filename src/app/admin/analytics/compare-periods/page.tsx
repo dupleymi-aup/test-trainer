@@ -70,6 +70,7 @@ export default function ComparePeriodsPage() {
   const [period2End, setPeriod2End] = useState("");
   const [data, setData] = useState<ComparisonData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/groups")
@@ -94,6 +95,7 @@ export default function ComparePeriodsPage() {
     if (!period1Start || !period1End || !period2Start || !period2End) return;
 
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ period1Start, period1End, period2Start, period2End });
     if (groupId) params.set("groupId", groupId);
     if (university) params.set("university", university);
@@ -104,7 +106,7 @@ export default function ComparePeriodsPage() {
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   };
 
   const ChangeIndicator = ({ value, isPoints = false }: { value: number; isPoints?: boolean }) => {
@@ -175,6 +177,8 @@ export default function ComparePeriodsPage() {
         </Card>
 
         {loading && <div className="p-8 text-center">Загрузка...</div>}
+
+        {error && !loading && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>)}
 
         {data && data.comparison && (
           <>

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,19 +49,12 @@ function difficultyBadge(difficulty: string) {
   return <Badge className={`${colors[difficulty] || "bg-gray-100 text-gray-800"} border-0`}>{difficulty}</Badge>;
 }
 
-function scoreBadge(score: number) {
-  return (
-    <Badge variant={score >= 75 ? "default" : score >= 50 ? "secondary" : "destructive"}>
-      {score}%
-    </Badge>
-  );
-}
-
 export default function AdminGroupAnalyticsPage() {
   const params = useParams();
   const id = params.id as string;
   const [data, setData] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -70,10 +64,11 @@ export default function AdminGroupAnalyticsPage() {
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   }, [id]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Группа не найдена</div></AdminLayout>;
 
   const { group, members, taskCompletionMatrix, performanceDistribution, taskComparison, activityTimeline, summary } = data;
@@ -106,7 +101,7 @@ export default function AdminGroupAnalyticsPage() {
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> Всего</div><div className="text-2xl font-bold">{summary.totalMembers}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Активных</div><div className="text-2xl font-bold text-emerald-600">{summary.activeMembers}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Activity className="h-3 w-3" /> Попыток</div><div className="text-2xl font-bold">{summary.totalAttempts}</div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. балл</div><div className="text-2xl font-bold">{scoreBadge(summary.avgGroupScore)}</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. балл</div><div className="text-2xl font-bold"><ScoreBadge score={summary.avgGroupScore} /></div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. EC</div><div className="text-2xl font-bold">{summary.avgEc}%</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. BV</div><div className="text-2xl font-bold">{summary.avgBv}%</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><FileText className="h-3 w-3" /> Назначено</div><div className="text-2xl font-bold">{summary.tasksAssigned}</div></CardContent></Card>
@@ -138,8 +133,8 @@ export default function AdminGroupAnalyticsPage() {
                       <div className="text-xs text-muted-foreground">{m.email}</div>
                     </TableCell>
                     <TableCell className="text-sm">{m.university || "—"}</TableCell>
-                    <TableCell className="text-right">{scoreBadge(m.stats.bestScore)}</TableCell>
-                    <TableCell className="text-right">{scoreBadge(m.stats.avgScore)}</TableCell>
+                    <TableCell className="text-right"><ScoreBadge score={m.stats.bestScore} /></TableCell>
+                    <TableCell className="text-right"><ScoreBadge score={m.stats.avgScore} /></TableCell>
                     <TableCell className="text-right text-sm">{m.stats.attemptsCount}</TableCell>
                     <TableCell className="text-right"><TrendIcon trend={m.stats.trend} /></TableCell>
                     <TableCell className="text-right">
@@ -181,8 +176,8 @@ export default function AdminGroupAnalyticsPage() {
                       <TableCell className="font-medium sticky left-0 bg-white dark:bg-gray-950 z-10">{tc.taskName}</TableCell>
                       <TableCell>{difficultyBadge(tc.difficulty)}</TableCell>
                       <TableCell className="text-right text-sm">{tc.completedCount}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(tc.avgScore)}</TableCell>
-                      <TableCell className="text-right">{scoreBadge(tc.bestScore)}</TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={tc.avgScore} /></TableCell>
+                      <TableCell className="text-right"><ScoreBadge score={tc.bestScore} /></TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Progress value={tc.completionRate} className="h-2 w-16" />

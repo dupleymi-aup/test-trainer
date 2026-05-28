@@ -71,6 +71,7 @@ export default function AdminTopicHeatmapPage() {
   const [topicSummary, setTopicSummary] = useState<TopicSummary[]>([]);
   const [groupNames, setGroupNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [_filters, setFilters] = useState<Partial<FilterState>>({});
 
   const fetchData = (f: Partial<FilterState>) => {
@@ -79,6 +80,7 @@ export default function AdminTopicHeatmapPage() {
     if (f.startDate) params.set("startDate", f.startDate);
     if (f.endDate) params.set("endDate", f.endDate);
 
+    setError(null);
     fetch(`/api/admin/analytics/topic-heatmap?${params}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -91,7 +93,7 @@ export default function AdminTopicHeatmapPage() {
         setGroupNames(data.groupNames || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
   };
 
   useEffect(() => {
@@ -99,6 +101,7 @@ export default function AdminTopicHeatmapPage() {
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
 
   return (
     <AdminLayout>

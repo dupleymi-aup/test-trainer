@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
+import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import { AnalyticsFilterBar, type FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -40,12 +41,6 @@ interface TopicBreakdownData {
   topics: TopicData[];
   subtopics: Record<string, SubtopicData[]>;
   timePerTopic: Record<string, TimePerTopicData[]>;
-}
-
-function TrendBadge({ trend }: { trend: string }) {
-  const colors = { improving: "bg-emerald-100 text-emerald-700", declining: "bg-rose-100 text-rose-700", stable: "bg-gray-100 text-gray-700" };
-  const labels = { improving: "Рост", declining: "Снижение", stable: "Стабильно" };
-  return <Badge className={colors[trend as keyof typeof colors]}>{labels[trend as keyof typeof labels]}</Badge>;
 }
 
 export default function TopicBreakdownPage() {
@@ -146,7 +141,7 @@ export default function TopicBreakdownPage() {
                           <td className="p-2 text-right">{t.avgBvCoverage}%</td>
                           <td className="p-2 text-right">{Math.round(t.avgTimeSpent / 60)}м</td>
                           <td className="p-2 text-right">{t.attemptsCount}</td>
-                          <td className="p-2 text-right"><TrendBadge trend={t.trend} /></td>
+                          <td className="p-2 text-right"><TrendIndicator trend={t.trend} compact /></td>
                           {isExpanded && subtopics.length > 0 && (
                             <tr className="col-span-8">
                               <td colSpan={8} className="p-0">

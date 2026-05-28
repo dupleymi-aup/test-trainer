@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
+import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -24,12 +25,6 @@ interface StudentComparisonData {
 }
 
 type StudentData = StudentComparisonData["students"][number];
-
-function TrendBadge({ trend }: { trend: string }) {
-  const colors = { improving: "bg-emerald-100 text-emerald-700", declining: "bg-rose-100 text-rose-700", stable: "bg-gray-100 text-gray-700" };
-  const labels = { improving: "Рост", declining: "Снижение", stable: "Стабильно" };
-  return <Badge className={colors[trend as keyof typeof colors]}>{labels[trend as keyof typeof labels]}</Badge>;
-}
 
 export default function StudentComparisonPage() {
   const [data, setData] = useState<StudentComparisonData | null>(null);
@@ -143,7 +138,7 @@ export default function StudentComparisonPage() {
                       { label: "Корректность", fn: (s: StudentData) => <span>{s.metrics.avgCorrectness}%</span> },
                       { label: "Ср. время", fn: (s: StudentData) => <span>{formatTime(s.metrics.avgTime)}</span> },
                       { label: "Попытки", fn: (s: StudentData) => <span>{s.metrics.totalAttempts}</span> },
-                      { label: "Тренд", fn: (s: StudentData) => <TrendBadge trend={s.metrics.trend} /> },
+                      { label: "Тренд", fn: (s: StudentData) => <TrendIndicator trend={s.metrics.trend} compact /> },
                     ].map((row) => (
                       <tr key={row.label} className="border-b">
                         <td className="p-2 font-medium">{row.label}</td>
