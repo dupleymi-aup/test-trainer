@@ -10,7 +10,19 @@ const { mocks } = vi.hoisted(() => ({
     mockVerificationTokenFindUnique: vi.fn(),
     mockVerificationTokenDelete: vi.fn(),
     mockUserUpdate: vi.fn(),
-    $transaction: vi.fn().mockResolvedValue([{}, {}]),
+    $transaction: vi.fn().mockImplementation(async (callback) => {
+      // For callback-based transactions, call the callback with a tx client
+      const txClient = {
+        verificationToken: {
+          findUnique: mocks.mockVerificationTokenFindUnique,
+          delete: mocks.mockVerificationTokenDelete,
+        },
+        user: {
+          update: mocks.mockUserUpdate,
+        },
+      };
+      return callback(txClient);
+    }),
     bcryptHash: vi.fn().mockResolvedValue("$2a$12$hashednewpassword"),
     loggerError: vi.fn(),
     rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 3600000 },
@@ -222,7 +234,7 @@ describe("POST /api/auth/reset-password", () => {
 
   describe("missing fields", () => {
     it("rejects missing token with 400", async () => {
-      const { token, ...payload } = validResetPayload;
+      const { token: _token, ...payload } = validResetPayload;
       const req = makeRequest(payload);
       const res = await POST(req);
       const json = await res.json();
@@ -241,7 +253,7 @@ describe("POST /api/auth/reset-password", () => {
     });
 
     it("rejects missing newPassword with 400", async () => {
-      const { newPassword, ...payload } = validResetPayload;
+      const { newPassword: _newPassword, ...payload } = validResetPayload;
       const req = makeRequest(payload);
       const res = await POST(req);
       const json = await res.json();
