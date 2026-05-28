@@ -4,6 +4,7 @@
  */
 
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "./csrf";
+import { API_TIMEOUT_MS } from "./time-constants";
 
 export class APIError extends Error {
   constructor(
@@ -14,6 +15,14 @@ export class APIError extends Error {
     super(message);
     this.name = "APIError";
   }
+}
+
+export interface ApiFetchJsonOptions {
+  init?: RequestInit;
+  /** Called when the request fails with an APIError or network error */
+  onError?: (error: APIError) => void;
+  /** Request timeout in milliseconds (default: API_TIMEOUT_MS) */
+  timeoutMs?: number;
 }
 
 /**
@@ -45,15 +54,49 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
 
 /**
  * Typed JSON fetch that throws APIError on non-OK responses.
+ * Supports optional onError callback and request timeout.
  */
-export async function apiFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await apiFetch(url, init);
+export async function apiFetchJson<T>(url: string, options?: ApiFetchJsonOptions): Promise<T> {
+  const { init, onError, timeoutMs = API_TIMEOUT_MS } = options || {};
 
-  if (!res.ok) {
-    throw await parseApiError(res);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await apiFetch(url, { ...init, signal: controller.signal });
+
+    if (!res.ok) {
+      throw await parseApiError(res);
+    }
+
+    return res.json() as Promise<T>;
+  } catch (err) {
+    const apiError = err instanceof APIError
+      ? err
+      : err instanceof DOMException && err.name === "AbortError"
+        ? new APIError("Request timed out", 408)
+        : new APIError("Network error", 0, err);
+
+    onError?.(apiError);
+    throw apiError;
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  return res.json() as Promise<T>;
+/**
+ * Safe JSON fetch that returns data or null on error, with optional onError callback.
+ * Useful for non-critical data fetching where you don't want to handle try/catch.
+ */
+export async function apiFetchJsonSafe<T>(
+  url: string,
+  options?: ApiFetchJsonOptions
+): Promise<T | null> {
+  try {
+    return await apiFetchJson<T>(url, options);
+  } catch {
+    return null;
+  }
 }
 
 /**

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
+import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
@@ -104,7 +105,7 @@ export async function POST(req: Request) {
     }
 
     // Send verification email
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || DEFAULT_APP_URL;
     const verificationToken = generateSecureToken();
 
     await db.verificationToken.create({

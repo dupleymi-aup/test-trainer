@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { sendEmail, generatePasswordResetEmail } from "@/lib/email";
 import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
+import { DEFAULT_APP_URL } from "@/lib/constants";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
 
     const { email, phone } = parsed.data;
 
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || DEFAULT_APP_URL;
 
     if (email) {
       const emailLower = email.toLowerCase().trim();

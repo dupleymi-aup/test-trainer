@@ -209,7 +209,8 @@ export function loadUnlockedAchievements(): string[] {
   try {
     const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch {
+  } catch (e) {
+    console.warn("Failed to load achievements from localStorage:", e);
     return [];
   }
 }
@@ -217,8 +218,8 @@ export function loadUnlockedAchievements(): string[] {
 export function saveUnlockedAchievements(ids: string[]): void {
   try {
     localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(ids));
-  } catch {
-    // ignore
+  } catch (e) {
+    console.warn("Failed to save achievements to localStorage:", e);
   }
 }
 

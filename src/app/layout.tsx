@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/auth-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { DEFAULT_APP_URL } from "@/lib/constants";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL),
   title: "Тренажёр тестирования — Генератор тест-кейсов",
   description: "Интерактивный тренажёр для изучения методов тестирования программного обеспечения: классы эквивалентности, граничные значения и генерация тест-кейсов.",
   keywords: ["тестирование", "тест-кейсы", "эквивалентные классы", "граничные значения", "программное обеспечение"],

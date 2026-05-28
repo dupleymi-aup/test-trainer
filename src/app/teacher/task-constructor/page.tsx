@@ -86,8 +86,10 @@ function loadCustomTasks() {
 function saveCustomTasks(tasks: CustomTask[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  } catch {
-    // ignore
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "QuotaExceededError") {
+      console.warn("LocalStorage quota exceeded, cannot save custom tasks");
+    }
   }
 }
 
@@ -348,7 +350,11 @@ export default function TaskConstructorPage() {
                       {topics.map((t) => (
                         <Badge key={t} variant="secondary" className="text-xs">
                           {t}
-                          <button onClick={() => removeTopic(t)} className="ml-1.5 hover:text-destructive">
+                          <button
+                            onClick={() => removeTopic(t)}
+                            aria-label={`Удалить тему "${t}"`}
+                            className="ml-1.5 hover:text-destructive"
+                          >
                             ×
                           </button>
                         </Badge>
@@ -415,7 +421,11 @@ export default function TaskConstructorPage() {
                           <TableCell><Badge variant="outline" className="text-xs">{p.type}</Badge></TableCell>
                           <TableCell className="text-sm text-muted-foreground">{p.description}</TableCell>
                           <TableCell>
-                            <button onClick={() => removeParam(i)} className="text-muted-foreground hover:text-destructive">
+                            <button
+                              onClick={() => removeParam(i)}
+                              aria-label={`Удалить параметр ${params[i]?.name}`}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </TableCell>
@@ -482,7 +492,11 @@ export default function TaskConstructorPage() {
                           <TableCell className="text-sm text-muted-foreground">{ec.description}</TableCell>
                           <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{ec.exampleValues}</code></TableCell>
                           <TableCell>
-                            <button onClick={() => removeEc(i)} className="text-muted-foreground hover:text-destructive">
+                            <button
+                              onClick={() => removeEc(i)}
+                              aria-label={`Удалить класс эквивалентности ${ecs[i]?.name}`}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </TableCell>
@@ -541,7 +555,11 @@ export default function TaskConstructorPage() {
                           <TableCell><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{bv.value}</code></TableCell>
                           <TableCell className="text-sm text-muted-foreground">{bv.description}</TableCell>
                           <TableCell>
-                            <button onClick={() => removeBv(i)} className="text-muted-foreground hover:text-destructive">
+                            <button
+                              onClick={() => removeBv(i)}
+                              aria-label={`Удалить граничное значение ${bvs[i]?.value}`}
+                              className="text-muted-foreground hover:text-destructive"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </TableCell>
@@ -604,7 +622,11 @@ export default function TaskConstructorPage() {
                       {commonMistakes.map((m, i) => (
                         <div key={i} className="flex items-start justify-between gap-2 p-2 rounded bg-muted/50 text-sm">
                           <span>{m}</span>
-                          <button onClick={() => removeMistake(i)} className="text-muted-foreground hover:text-destructive shrink-0">
+                          <button
+                            onClick={() => removeMistake(i)}
+                            aria-label={`Удалить типичную ошибку: ${commonMistakes[i]}`}
+                            className="text-muted-foreground hover:text-destructive shrink-0"
+                          >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>

@@ -1,5 +1,8 @@
 import type { TestCaseCategory } from "./tasks";
 
+/** Default app URL used as fallback when NEXTAUTH_URL is not set */
+export const DEFAULT_APP_URL = "http://localhost:3000";
+
 export const categories: TestCaseCategory[] = [
   "Нормальное значение",
   "Граничное значение",

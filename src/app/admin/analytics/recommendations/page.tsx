@@ -279,7 +279,12 @@ export default function RecommendationsPage() {
                       role="button"
                       tabIndex={0}
                       aria-label={`Показать детали студента ${s.name}`}
-                      onKeyDown={(e) => e.key === "Enter" && setExpandedStudent(expandedStudent === s.studentId ? null : s.studentId)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setExpandedStudent(expandedStudent === s.studentId ? null : s.studentId);
+                        }
+                      }}
                     >
                       <TableCell>
                         {expandedStudent === s.studentId

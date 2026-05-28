@@ -270,7 +270,12 @@ export default function SkillMasteryPage() {
                           role="button"
                           tabIndex={0}
                           aria-label={`Показать детали навыка ЕС ${s.ecName}`}
-                          onKeyDown={(e) => e.key === "Enter" && setExpandedSkill(expandedSkill === s.ecId ? null : s.ecId)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setExpandedSkill(expandedSkill === s.ecName ? null : s.ecId);
+                            }
+                          }}
                         >
                           <TableCell>
                             {expandedSkill === s.ecId
@@ -359,7 +364,12 @@ export default function SkillMasteryPage() {
                           role="button"
                           tabIndex={0}
                           aria-label={`Показать детали навыка ВВ ${s.bvDescription}`}
-                          onKeyDown={(e) => e.key === "Enter" && setExpandedSkill(expandedSkill === s.bvDescription ? null : s.bvDescription)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setExpandedSkill(expandedSkill === s.bvDescription ? null : s.bvDescription);
+                            }
+                          }}
                         >
                           <TableCell>
                             {expandedSkill === s.bvDescription

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
 
@@ -941,7 +942,7 @@ export async function POST(req: Request) {
 
   // Default: JSON export for all analytics
   // Use trusted localhost URL instead of user-controllable headers to prevent SSRF
-  const baseUrl = process.env.INTERNAL_BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.INTERNAL_BASE_URL || DEFAULT_APP_URL;
 
   let analytics;
   try {

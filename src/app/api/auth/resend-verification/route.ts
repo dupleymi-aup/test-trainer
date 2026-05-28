@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/admin-guard";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
+import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || DEFAULT_APP_URL;
     const verificationToken = generateSecureToken();
 
     // Delete old token if exists

@@ -5,6 +5,8 @@
  * sending emails, and updating database state.
  */
 
+import { DEFAULT_APP_URL } from "@/lib/constants";
+
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
@@ -140,7 +142,7 @@ export async function sendDeadlineReminders(): Promise<DispatchResult> {
   const allDeadlines = [...deadlines, ...overdueDeadlines];
 
   const result: DispatchResult = { sentCount: 0, failedCount: 0, errors: [] };
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || DEFAULT_APP_URL;
 
   for (const deadline of allDeadlines) {
     const schedule = parseReminderSchedule(deadline.reminderSchedule);

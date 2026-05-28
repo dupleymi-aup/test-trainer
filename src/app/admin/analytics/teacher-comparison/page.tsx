@@ -164,7 +164,12 @@ export default function TeacherComparisonPage() {
                       role="button"
                       tabIndex={0}
                       aria-label={`Показать детали преподавателя ${t.name}`}
-                      onKeyDown={(e) => e.key === "Enter" && setExpandedTeacher(expandedTeacher === t.teacherId ? null : t.teacherId)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setExpandedTeacher(expandedTeacher === t.teacherId ? null : t.teacherId);
+                        }
+                      }}
                     >
                       <TableCell>
                         {expandedTeacher === t.teacherId
