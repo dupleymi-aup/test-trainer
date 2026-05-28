@@ -31,7 +31,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { tasks } from "@/lib/tasks";
 import type { AttemptRecord, StreakData } from "@/lib/storage";
-import { getTaskHistory, loadStreak, loadAttemptHistory } from "@/lib/storage";
+import { loadStreak, loadAttemptHistory } from "@/lib/storage";
 import { downloadJSON, downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 
@@ -110,47 +110,38 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
     for (const ts of taskStats) {
       if (ts.bestScore === 0) continue; // skip tasks not yet attempted
       const topics = ts.task.topics.map(t => t.toLowerCase());
-      let assigned = false;
 
       if (topics.some(t => t.includes("класс") && !t.includes("комбинатор"))) {
         topicMap["Классы экв."].tasks.push(ts.task.id);
         topicMap["Классы экв."].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("гранич") && !t.includes("комбинатор"))) {
         topicMap["Граничные знач."].tasks.push(ts.task.id);
         topicMap["Граничные знач."].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("комбинатор") || t.includes("многофактор"))) {
         topicMap["Комбинаторное"].tasks.push(ts.task.id);
         topicMap["Комбинаторное"].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("таблиц") || t.includes("решен"))) {
         topicMap["Таблица решений"].tasks.push(ts.task.id);
         topicMap["Таблица решений"].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("состоя") || t.includes("переход"))) {
         topicMap["Переходы состояний"].tasks.push(ts.task.id);
         topicMap["Переходы состояний"].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("попарн") || t.includes("pairwise"))) {
         topicMap["Попарное"].tasks.push(ts.task.id);
         topicMap["Попарное"].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("формат") || t.includes("проверк") || t.includes("валид"))) {
         topicMap["Валидация"].tasks.push(ts.task.id);
         topicMap["Валидация"].scores.push(ts.bestScore);
-        assigned = true;
       }
       if (topics.some(t => t.includes("рекурс"))) {
         topicMap["Рекурсия"].tasks.push(ts.task.id);
         topicMap["Рекурсия"].scores.push(ts.bestScore);
-        assigned = true;
       }
     }
 

@@ -706,7 +706,7 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {result.results.map((r, idx) => {
+                {result.results.map((r, _idx) => {
                   const isExpanded = expandedRow === r.testCase.id;
                   return (
                     <Fragment key={r.testCase.id}>
