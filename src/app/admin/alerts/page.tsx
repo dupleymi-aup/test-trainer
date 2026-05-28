@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertTriangle, AlertCircle, Info, ArrowRight, RefreshCw, Filter,
-  TrendingDown, Clock, UserX, Users, BookOpen, GraduationCap, Target, CalendarClock,
+  TrendingDown, Clock, UserX, Users, BookOpen, GraduationCap, CalendarClock,
 } from "lucide-react";
 
 interface SystemAlert {

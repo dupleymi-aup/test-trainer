@@ -25,7 +25,6 @@ import {
   Minus,
   Clock,
   UserX,
-  ArrowRight,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -43,7 +42,7 @@ interface RiskStudent {
 
 interface Pagination { page: number; limit: number; total: number; totalPages: number; }
 
-const riskFactorConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+const _riskFactorConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   low_performer: { label: "Низкий балл", icon: <AlertTriangle className="h-3 w-3" />, color: "bg-rose-100 text-rose-800" },
   declining: { label: "Снижение", icon: <TrendingDown className="h-3 w-3" />, color: "bg-amber-100 text-amber-800" },
   inactive: { label: "Неактивен", icon: <Clock className="h-3 w-3" />, color: "bg-blue-100 text-blue-800" },

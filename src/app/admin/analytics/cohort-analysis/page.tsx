@@ -24,11 +24,9 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  Legend,
 } from "recharts";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import {
-  Users,
   TrendingUp,
   Target,
   Activity,

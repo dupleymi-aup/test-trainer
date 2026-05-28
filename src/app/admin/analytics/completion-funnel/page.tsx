@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -29,13 +28,10 @@ import {
 } from "recharts";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import {
-  Filter,
-  TrendingDown,
   Users,
   Target,
   AlertTriangle,
   CheckCircle2,
-  ArrowRight,
 } from "lucide-react";
 
 interface FunnelStep {
@@ -78,7 +74,6 @@ const funnelColors = [
 export default function CompletionFunnelPage() {
   const [data, setData] = useState<FunnelData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showBottlenecks, setShowBottlenecks] = useState(true);
 
   useEffect(() => {
     fetch("/api/admin/analytics/completion-funnel")

@@ -2,7 +2,7 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -16,7 +16,6 @@ import {
   LineChart,
   Line,
   Legend,
-  Cell,
 } from "recharts";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import { Clock, Sun, Moon, Sunset, Sunrise, TrendingUp, Calendar, Timer } from "lucide-react";

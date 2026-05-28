@@ -261,7 +261,7 @@ function getDateDaysAgo(days: number): string {
 }
 
 // Module-level lock to prevent concurrent streak writes (race condition guard)
-let streakSaveLock: Promise<void> | null = null;
+let streakSaveLock: Promise<StreakData> | null = null;
 
 /**
  * Save streak data. Call this after each successful attempt.
@@ -273,7 +273,7 @@ export async function saveStreak(): Promise<StreakData> {
     await streakSaveLock;
   }
 
-  streakSaveLock = (async () => {
+  const promise = (async () => {
     try {
       const streak = loadStreak();
       const today = getTodayDate();
@@ -302,7 +302,8 @@ export async function saveStreak(): Promise<StreakData> {
     }
   })();
 
-  return streakSaveLock;
+  streakSaveLock = promise;
+  return promise;
 }
 
 /**

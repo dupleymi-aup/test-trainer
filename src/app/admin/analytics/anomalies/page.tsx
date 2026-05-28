@@ -2,9 +2,8 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertTriangle, AlertCircle, Info, RefreshCw } from "lucide-react";
@@ -49,7 +48,6 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 export default function AnomaliesPage() {
-  const router = useRouter();
   const [data, setData] = useState<AnomalyData | null>(null);
   const [loading, setLoading] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>("all");

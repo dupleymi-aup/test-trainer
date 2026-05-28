@@ -102,7 +102,7 @@ export default function PerformanceDashboardPage() {
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-amber-600">Средний риск</div><div className="text-2xl font-bold text-amber-600">{data.summary.mediumRisk}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-rose-600">Высокий риск</div><div className="text-2xl font-bold text-rose-600">{data.summary.highRisk}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-blue-600">Активные (7д)</div><div className="text-2xl font-bold text-blue-600">{data.summary.activeLast7Days}</div></CardContent></Card>
-              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-gray-600">Неактивные</div><div className="text-2xl font-bold text-gray-600">{data.summary.inactive}</div></CardContent></Card>
+              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground dark:text-zinc-400">Неактивные</div><div className="text-2xl font-bold dark:text-zinc-300">{data.summary.inactive}</div></CardContent></Card>
             </div>
 
             {/* Filters */}
