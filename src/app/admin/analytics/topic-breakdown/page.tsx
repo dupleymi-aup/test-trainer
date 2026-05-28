@@ -129,7 +129,7 @@ export default function TopicBreakdownPage() {
                       return (
                         <tr key={t.topic}>
                           <td className="p-2">
-                            <button onClick={() => toggleTopic(t.topic)} className="p-1 hover:bg-muted rounded">
+                            <button onClick={() => toggleTopic(t.topic)} aria-label={`Показать детали темы ${t.topic}`} className="p-1 hover:bg-muted rounded">
                               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             </button>
                           </td>

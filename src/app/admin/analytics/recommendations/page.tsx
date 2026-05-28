@@ -276,6 +276,10 @@ export default function RecommendationsPage() {
                       key={s.studentId}
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => setExpandedStudent(expandedStudent === s.studentId ? null : s.studentId)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Показать детали студента ${s.name}`}
+                      onKeyDown={(e) => e.key === "Enter" && setExpandedStudent(expandedStudent === s.studentId ? null : s.studentId)}
                     >
                       <TableCell>
                         {expandedStudent === s.studentId

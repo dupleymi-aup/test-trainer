@@ -169,7 +169,7 @@ export default function GroupComparisonPage() {
                       return (
                         <tr key={g.groupId} className="border-b hover:bg-muted/50">
                           <td className="p-2">
-                            <button onClick={() => toggleGroup(g.groupId)} className="p-1 hover:bg-muted rounded">
+                            <button onClick={() => toggleGroup(g.groupId)} aria-label={`Показать детали группы ${g.groupName || g.groupId}`} className="p-1 hover:bg-muted rounded">
                               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                             </button>
                           </td>

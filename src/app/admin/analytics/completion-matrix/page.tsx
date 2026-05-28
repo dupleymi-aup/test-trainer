@@ -59,8 +59,8 @@ export default function AdminCompletionMatrixPage() {
         return r.json();
       })
       .then((d) => setGroups(d.groups || []))
-      .catch(() => {
-        // Non-critical: groups filter is optional
+      .catch((err) => {
+        console.warn("Failed to fetch groups (non-critical):", err);
       });
   }, []);
 

@@ -20,8 +20,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TrendingUp, TrendingDown, Minus, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { PeriodSelector } from "@/components/admin/analytics/period-selector";
+import { ChangeIndicator } from "@/components/admin/analytics/change-indicator";
 
 interface ComparisonData {
   period1: { start: string; end: string };
@@ -79,8 +80,8 @@ export default function ComparePeriodsPage() {
         return r.json();
       })
       .then((d) => setGroups(d.groups || []))
-      .catch(() => {
-        // Non-critical: groups filter is optional
+      .catch((err) => {
+        console.warn("Failed to fetch groups (non-critical):", err);
       });
   }, []);
 
@@ -107,26 +108,6 @@ export default function ComparePeriodsPage() {
       })
       .then((d) => { setData(d); setLoading(false); })
       .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-  };
-
-  const ChangeIndicator = ({ value, isPoints = false }: { value: number; isPoints?: boolean }) => {
-    if (value > 0)
-      return (
-        <span className="text-emerald-600 flex items-center gap-1">
-          <TrendingUp className="h-3 w-3" /> +{value}{isPoints ? " пп" : "%"}
-        </span>
-      );
-    if (value < 0)
-      return (
-        <span className="text-rose-600 flex items-center gap-1">
-          <TrendingDown className="h-3 w-3" /> {value}{isPoints ? " пп" : "%"}
-        </span>
-      );
-    return (
-      <span className="text-muted-foreground flex items-center gap-1">
-        <Minus className="h-3 w-3" /> 0{isPoints ? " пп" : "%"}
-      </span>
-    );
   };
 
   return (

@@ -99,7 +99,7 @@ export default function TaskDetailPage() {
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <button onClick={() => toggleTask(t.taskId)} className="p-1 hover:bg-muted rounded">
+                          <button onClick={() => toggleTask(t.taskId)} aria-label={`Показать детали задачи ${t.taskName || t.taskId}`} className="p-1 hover:bg-muted rounded">
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </button>
                           <div>

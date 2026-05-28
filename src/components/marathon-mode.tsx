@@ -246,15 +246,13 @@ export function MarathonMode({
     );
   }
 
-  // Finish screen
-  if (state.finished) {
-    const totalScoreVal = state.taskResults.reduce((s, r) => s + r.bestScore, 0);
-    const avgScore = state.taskResults.length > 0 ? Math.round(totalScoreVal / state.taskResults.length) : 0;
-    const totalTimeSec = state.taskResults.reduce((s, r) => s + r.timeSpentSec, 0);
-
-    // Save marathon record once
-    if (!marathonSavedRef.current) {
+  // Save marathon record once when finished
+  useEffect(() => {
+    if (state.finished && !marathonSavedRef.current) {
       marathonSavedRef.current = true;
+      const totalScoreVal = state.taskResults.reduce((s, r) => s + r.bestScore, 0);
+      const avgScore = state.taskResults.length > 0 ? Math.round(totalScoreVal / state.taskResults.length) : 0;
+      const totalTimeSec = state.taskResults.reduce((s, r) => s + r.timeSpentSec, 0);
       saveMarathonRecord({
         timestamp: Date.now(),
         totalTasks: tasks.length,
@@ -263,6 +261,13 @@ export function MarathonMode({
         totalTimeSec,
       });
     }
+  }, [state.finished, state.taskResults, tasks.length]);
+
+  // Finish screen
+  if (state.finished) {
+    const totalScoreVal = state.taskResults.reduce((s, r) => s + r.bestScore, 0);
+    const avgScore = state.taskResults.length > 0 ? Math.round(totalScoreVal / state.taskResults.length) : 0;
+    const totalTimeSec = state.taskResults.reduce((s, r) => s + r.timeSpentSec, 0);
 
     const sorted = [...state.taskResults].sort((a, b) => b.bestScore - a.bestScore);
     const best = sorted[0];

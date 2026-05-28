@@ -161,6 +161,10 @@ export default function TeacherComparisonPage() {
                       key={t.teacherId}
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => setExpandedTeacher(expandedTeacher === t.teacherId ? null : t.teacherId)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Показать детали преподавателя ${t.name}`}
+                      onKeyDown={(e) => e.key === "Enter" && setExpandedTeacher(expandedTeacher === t.teacherId ? null : t.teacherId)}
                     >
                       <TableCell>
                         {expandedTeacher === t.teacherId

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Check, AlertTriangle, TrendingDown, Clock, UserX } from "lucide-react";
+import { formatRelativeDate } from "@/lib/format-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -69,19 +70,6 @@ export function NotificationsBell() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffHours < 1) return "Только что";
-    if (diffHours < 24) return `${diffHours}ч назад`;
-    if (diffDays < 7) return `${diffDays}д назад`;
-    return date.toLocaleDateString("ru-RU");
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -134,7 +122,7 @@ export function NotificationsBell() {
                     {notification.message}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {formatDate(notification.createdAt)}
+                    {formatRelativeDate(notification.createdAt)}
                   </p>
                 </div>
               </DropdownMenuItem>
