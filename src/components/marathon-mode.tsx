@@ -264,7 +264,7 @@ export function MarathonMode({
 
   // Finish screen
   if (state.finished) {
-    const totalScoreVal = state.taskResults.reduce((s, r) => s + r.bestScore, 0);
+    const _totalScoreVal = state.taskResults.reduce((s, r) => s + r.bestScore, 0);
 
     const sorted = [...state.taskResults].sort((a, b) => b.bestScore - a.bestScore);
     const best = sorted[0];
