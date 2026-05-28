@@ -13,6 +13,7 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
   const checks = [
     { label: "Минимум 8 символов", passed: password.length >= 8 },
     { label: "Заглавная буква", passed: /[A-ZА-ЯЁ]/.test(password) },
+    { label: "Строчная буква", passed: /[a-zа-яё]/.test(password) },
     { label: "Цифра", passed: /\d/.test(password) },
     { label: "Спецсимвол", passed: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
   ];
@@ -29,7 +30,7 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
   if (passedCount === 2) {
     return { score: 2, label: "Средний", color: "text-orange-500", checks };
   }
-  if (passedCount === 3) {
+  if (passedCount === 3 || passedCount === 4) {
     return { score: 3, label: "Хороший", color: "text-yellow-500", checks };
   }
   return { score: 4, label: "Надёжный", color: "text-emerald-500", checks };

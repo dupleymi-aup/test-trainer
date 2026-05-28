@@ -195,15 +195,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        // Fetch fresh role and isActive from DB on every login
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true, isActive: true },
-        });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.isActive = dbUser.isActive;
-        }
+        // Use role and isActive from authorize() result - no need for extra DB query
+        token.role = user.role ?? "STUDENT";
+        token.isActive = user.isActive ?? true;
       }
       return token;
     },
