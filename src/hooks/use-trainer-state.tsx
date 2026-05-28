@@ -548,7 +548,7 @@ export function useTrainerState() {
   }, [selectedTask, testCases, pushUndoSnapshot, parseInputForRef]);
 
   // Submit evaluation
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!selectedTask || testCases.length === 0) return;
 
     const result = evaluateTestCases(selectedTask, testCases);
@@ -599,7 +599,7 @@ export function useTrainerState() {
       timeSpent: timeSpentSeconds,
     });
 
-    const updatedStreak = saveStreak();
+    const updatedStreak = await saveStreak();
     setStreak(updatedStreak);
 
     // Check achievements

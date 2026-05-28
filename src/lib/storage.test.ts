@@ -372,41 +372,41 @@ describe("storage", () => {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
-    it("starts a new streak when no prior data", () => {
-      const result = saveStreak();
+    it("starts a new streak when no prior data", async () => {
+      const result = await saveStreak();
       expect(result.currentStreak).toBe(1);
       expect(result.lastActiveDate).toBe(getTodayStr());
     });
 
-    it("continues streak when last active yesterday", () => {
+    it("continues streak when last active yesterday", async () => {
       store["test-trainer-streak"] = JSON.stringify({
         currentStreak: 3,
         longestStreak: 3,
         lastActiveDate: getYesterdayStr(),
       });
-      const result = saveStreak();
+      const result = await saveStreak();
       expect(result.currentStreak).toBe(4);
       expect(result.longestStreak).toBe(4);
     });
 
-    it("resets streak when gap > 1 day", () => {
+    it("resets streak when gap > 1 day", async () => {
       store["test-trainer-streak"] = JSON.stringify({
         currentStreak: 5,
         longestStreak: 5,
         lastActiveDate: "2020-01-01",
       });
-      const result = saveStreak();
+      const result = await saveStreak();
       expect(result.currentStreak).toBe(1);
       expect(result.longestStreak).toBe(5); // preserves longest
     });
 
-    it("does not increase streak when already active today", () => {
+    it("does not increase streak when already active today", async () => {
       store["test-trainer-streak"] = JSON.stringify({
         currentStreak: 2,
         longestStreak: 2,
         lastActiveDate: getTodayStr(),
       });
-      const result = saveStreak();
+      const result = await saveStreak();
       expect(result.currentStreak).toBe(2);
     });
 
@@ -440,11 +440,11 @@ describe("storage", () => {
       });
     });
 
-    it("handles localStorage errors gracefully", () => {
+    it("handles localStorage errors gracefully", async () => {
       vi.spyOn(mockLocalStorage, "setItem").mockImplementation(() => {
         throw new Error("fail");
       });
-      expect(() => saveStreak()).not.toThrow();
+      await expect(saveStreak()).resolves.not.toThrow();
     });
   });
 

@@ -267,34 +267,49 @@ function isYesterday(dateStr: string): boolean {
   return dateStr === getDateDaysAgo(1);
 }
 
+// Module-level lock to prevent concurrent streak writes (race condition guard)
+let streakSaveLock: Promise<void> | null = null;
+
 /**
  * Save streak data. Call this after each successful attempt.
+ * Uses a lock to prevent race conditions from rapid concurrent submissions.
  */
-export function saveStreak(): StreakData {
-  try {
-    const streak = loadStreak();
-    const today = getTodayDate();
-
-    if (streak.lastActiveDate === today) {
-      // Already active today, no change
-      return streak;
-    }
-
-    if (streak.lastActiveDate === getDateDaysAgo(1)) {
-      // Yesterday was active — continue streak
-      streak.currentStreak += 1;
-    } else if (streak.lastActiveDate !== today) {
-      // Streak broken (unless today is already recorded)
-      streak.currentStreak = 1;
-    }
-
-    streak.lastActiveDate = today;
-    streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
-    localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
-    return streak;
-  } catch {
-    return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
+export async function saveStreak(): Promise<StreakData> {
+  // If a save is in progress, wait for it to complete first
+  if (streakSaveLock) {
+    await streakSaveLock;
   }
+
+  streakSaveLock = (async () => {
+    try {
+      const streak = loadStreak();
+      const today = getTodayDate();
+
+      if (streak.lastActiveDate === today) {
+        // Already active today, no change
+        return streak;
+      }
+
+      if (streak.lastActiveDate === getDateDaysAgo(1)) {
+        // Yesterday was active — continue streak
+        streak.currentStreak += 1;
+      } else if (streak.lastActiveDate !== today) {
+        // Streak broken (unless today is already recorded)
+        streak.currentStreak = 1;
+      }
+
+      streak.lastActiveDate = today;
+      streak.longestStreak = Math.max(streak.longestStreak, streak.currentStreak);
+      localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+      return streak;
+    } catch {
+      return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
+    } finally {
+      streakSaveLock = null;
+    }
+  })();
+
+  return streakSaveLock;
 }
 
 /**
