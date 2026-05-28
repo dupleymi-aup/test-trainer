@@ -3,12 +3,9 @@
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 import { TrendingUp, Trophy } from "lucide-react";
 
@@ -41,7 +38,7 @@ export default function ImprovementLeaderboardPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Лидеры улучшений</h2>
+        <h1 className="text-xl font-bold">Лидеры улучшений</h1>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Всего студентов</div><div className="text-2xl font-bold">{data.studentImprovement.length}</div></CardContent></Card>

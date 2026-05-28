@@ -2,7 +2,7 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,23 +23,25 @@ interface TimelineData {
 }
 
 export default function StudentTimelinePage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedStudent = searchParams.get("studentId");
 
   const [data, setData] = useState<TimelineData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(preselectedStudent || "");
+  const [error, setError] = useState<string | null>(null);
+  const [, setSelectedStudent] = useState(preselectedStudent || "");
 
   const fetchTimeline = async (studentId: string) => {
     if (!studentId) return;
     setLoading(true);
+    setError(null);
     try {
       const r = await fetch(`/api/admin/analytics/student-timeline?studentId=${studentId}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       setData(d);
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
       setLoading(false);
@@ -62,7 +64,7 @@ export default function StudentTimelinePage() {
           <Link href="/admin/analytics">
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
-          <h2 className="text-xl font-bold">Траектория студента</h2>
+          <h1 className="text-xl font-bold">Траектория студента</h1>
           <PrintButton label="Печать" />
         </div>
 
@@ -76,6 +78,10 @@ export default function StudentTimelinePage() {
         />
 
         {loading && <div className="text-center py-8">Загрузка...</div>}
+
+        {error && !loading && (
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+        )}
 
         {!loading && !data && (
           <Card>

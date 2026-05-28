@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   AreaChart,
   Area,
@@ -29,10 +28,8 @@ import {
 import {
   ArrowRight,
   TrendingUp,
-  TrendingDown,
   Clock,
   Calendar,
-  BarChart3,
 } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
@@ -89,7 +86,7 @@ export default function TimeTrendsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Временные тренды</h2>
+          <h1 className="text-xl font-bold">Временные тренды</h1>
           <Link href="/admin/analytics" className="text-sm text-muted-foreground hover:text-foreground">
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>

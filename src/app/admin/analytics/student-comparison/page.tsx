@@ -61,12 +61,6 @@ export default function StudentComparisonPage() {
     return m > 0 ? `${m}м` : `${seconds}с`;
   };
 
-  // Radar chart data
-  const radarData = data?.students.map((s) => ({
-    metric: "Балл",
-    [s.student.name]: s.metrics.avgScore,
-  })) || [];
-
   const fullRadarData = [
     { metric: "Ср. балл", ...Object.fromEntries(data?.students.map((s) => [s.student.name, s.metrics.avgScore]) || []) },
     { metric: "Лучший", ...Object.fromEntries(data?.students.map((s) => [s.student.name, s.metrics.bestScore]) || []) },
@@ -94,7 +88,7 @@ export default function StudentComparisonPage() {
           <Link href="/admin/analytics">
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
-          <h2 className="text-xl font-bold">Сравнение студентов</h2>
+          <h1 className="text-xl font-bold">Сравнение студентов</h1>
           <PrintButton label="Печать" />
         </div>
 

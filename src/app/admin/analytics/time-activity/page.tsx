@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { Clock, TrendingUp, Sun, Moon, Sunrise, Sunset, Activity } from "lucide-react";
 
@@ -147,7 +147,7 @@ export default function TimeActivityPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Анализ активности по времени</h2>
+        <h1 className="text-xl font-bold">Анализ активности по времени</h1>
 
         {/* Filters */}
         <Card>

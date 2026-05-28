@@ -36,7 +36,7 @@ export default function LearningPathPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Путь обучения</h2>
+        <h1 className="text-xl font-bold">Путь обучения</h1>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Студентов с ≥3 попытками</div><div className="text-2xl font-bold">{data.totalStudents}</div></CardContent></Card>

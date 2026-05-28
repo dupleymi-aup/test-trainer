@@ -45,7 +45,7 @@ export default function EcbvGapsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Анализ покрытия EC/BV</h2>
+        <h1 className="text-xl font-bold">Анализ покрытия EC/BV</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Worst ECs */}

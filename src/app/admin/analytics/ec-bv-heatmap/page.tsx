@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, Target, Crosshair, BarChart3 } from "lucide-react";
+import { AlertTriangle, Target, Crosshair } from "lucide-react";
 
 interface EcData {
   ecId: string;
@@ -50,7 +50,7 @@ function MissRateBar({ value }: { value: number }) {
   const color = value >= 60 ? "bg-red-500" : value >= 40 ? "bg-orange-500" : value >= 20 ? "bg-yellow-500" : "bg-green-500";
   return (
     <div className="flex items-center gap-2">
-      <Progress value={value} className="h-2 flex-1" />
+      <Progress value={value} className={`h-2 flex-1 [&>div]:${color}`} />
       <span className="text-xs font-bold w-10 text-right">{value}%</span>
     </div>
   );
@@ -87,7 +87,7 @@ export default function AdminEcBvHeatmapPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-bold">Тепловая карта покрытия EC/BV</h2>
+          <h1 className="text-xl font-bold">Тепловая карта покрытия EC/BV</h1>
           <p className="text-sm text-muted-foreground">
             Какие классы эквивалентности и граничные значения чаще всего пропускают студенты
           </p>

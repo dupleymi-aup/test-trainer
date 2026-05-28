@@ -103,7 +103,7 @@ export default function SkillMasteryPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Освоение навыков (EC/BV)</h2>
+        <h1 className="text-xl font-bold">Освоение навыков (EC/BV)</h1>
 
         {/* Filters */}
         <Card>

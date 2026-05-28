@@ -50,17 +50,20 @@ function SeverityBadge({ severity }: { severity: string }) {
 export default function AnomaliesPage() {
   const [data, setData] = useState<AnomalyData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
   const fetchData = async (params: Partial<FilterState> = {}) => {
     setLoading(true);
+    setError(null);
     const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
     const qs = new URLSearchParams(entries).toString();
     try {
       const r = await fetch(`/api/admin/analytics/anomalies${qs ? `?${qs}` : ""}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setData(await r.json());
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
       setLoading(false);
@@ -88,6 +91,10 @@ export default function AnomaliesPage() {
         </div>
 
         <AnalyticsFilterBar onFilterChange={(filters) => fetchData(filters)} />
+
+        {error && !loading && (
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+        )}
 
         {loading && <div className="text-center py-8">Загрузка...</div>}
 

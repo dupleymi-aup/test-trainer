@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   BarChart,
   Bar,
@@ -111,7 +110,7 @@ export default function PredictionsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Прогнозы и рекомендации</h2>
+          <h1 className="text-xl font-bold">Прогнозы и рекомендации</h1>
           <Link href="/admin/analytics" className="text-sm text-muted-foreground hover:text-foreground">
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
@@ -172,7 +171,7 @@ export default function PredictionsPage() {
                 <TableRow><TableHead>Студент</TableHead><TableHead>Группа</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Попытки</TableHead><TableHead>Факторы риска</TableHead><TableHead>Риск ухода</TableHead></TableRow>
               </TableHeader>
               <TableBody>
-                {data.atRiskStudents.map((s, i) => (
+                {data.atRiskStudents.map((s, _i) => (
                   <TableRow key={s.student.id}>
                     <TableCell className="font-medium">{s.student.name}</TableCell>
                     <TableCell className="text-xs">{s.student.group || "—"}</TableCell>

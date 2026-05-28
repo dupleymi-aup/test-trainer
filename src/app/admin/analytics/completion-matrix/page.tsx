@@ -88,7 +88,7 @@ export default function AdminCompletionMatrixPage() {
   return (
     <AdminLayout>
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Матрица выполнения заданий</h2>
+        <h1 className="text-xl font-bold">Матрица выполнения заданий</h1>
 
         <Card>
           <CardHeader className="pb-3">

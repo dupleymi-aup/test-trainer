@@ -2,15 +2,15 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, TrendingUp, TrendingDown, Minus, Award, AlertCircle,
-  Clock, Zap, BarChart3, Users, Printer,
+  Clock, Zap, BarChart3, Users,
 } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 
@@ -63,7 +63,6 @@ function scoreBadge(score: number) {
 
 export default function AdminStudentReportPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
   const [data, setData] = useState<StudentData | null>(null);
   const [loading, setLoading] = useState(true);

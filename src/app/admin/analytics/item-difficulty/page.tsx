@@ -4,7 +4,6 @@ import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -28,11 +27,9 @@ import {
   Cell,
 } from "recharts";
 import { PrintButton } from "@/components/admin/analytics/print-button";
-import { AnalyticsFilterBar } from "@/components/admin/analytics/analytics-filter-bar";
 import {
   FileText,
   TrendingUp,
-  Clock,
   AlertTriangle,
   CheckCircle2,
   XCircle,

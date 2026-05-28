@@ -11,9 +11,9 @@ import {
 import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { ChevronDown, ChevronRight, Award, Users, TrendingUp, Activity } from "lucide-react";
+import { ChevronDown, ChevronRight, Users, Activity } from "lucide-react";
 
 interface TeacherData {
   teacherId: string;
@@ -46,12 +46,6 @@ interface ComparisonData {
   platformAvg: { avgScore: number; activeRate: number; effectivenessScore: number };
   totalTeachers: number;
 }
-
-const rankColors: Record<number, string> = {
-  1: "text-yellow-600",
-  2: "text-gray-500",
-  3: "text-amber-700",
-};
 
 const rankIcons: Record<number, string> = {
   1: "\u{1F947}",
@@ -87,7 +81,7 @@ export default function TeacherComparisonPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Сравнение эффективности преподавателей</h2>
+        <h1 className="text-xl font-bold">Сравнение эффективности преподавателей</h1>
 
         {/* Platform averages */}
         <div className="grid grid-cols-3 gap-3">

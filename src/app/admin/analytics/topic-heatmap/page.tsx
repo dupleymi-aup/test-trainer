@@ -71,7 +71,7 @@ export default function AdminTopicHeatmapPage() {
   const [topicSummary, setTopicSummary] = useState<TopicSummary[]>([]);
   const [groupNames, setGroupNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Partial<FilterState>>({});
+  const [_filters, setFilters] = useState<Partial<FilterState>>({});
 
   const fetchData = (f: Partial<FilterState>) => {
     setFilters(f);
@@ -104,7 +104,7 @@ export default function AdminTopicHeatmapPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-bold">Тепловая карта тем</h2>
+          <h1 className="text-xl font-bold">Тепловая карта тем</h1>
           <p className="text-sm text-muted-foreground">
             Успеваемость по темам тестирования в разрезе групп
           </p>

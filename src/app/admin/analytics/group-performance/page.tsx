@@ -3,7 +3,6 @@
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -66,7 +65,7 @@ export default function AdminGroupPerformancePage() {
   return (
     <AdminLayout>
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Успеваемость групп</h2>
+        <h1 className="text-xl font-bold">Успеваемость групп</h1>
 
         {groups.length === 0 && (
           <Card><CardContent className="p-8 text-center text-muted-foreground">Нет данных о студентах</CardContent></Card>

@@ -4,7 +4,6 @@ import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -115,7 +114,7 @@ export default function RecommendationsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Автоматические рекомендации</h2>
+          <h1 className="text-xl font-bold">Автоматические рекомендации</h1>
         </div>
 
         {/* Filters */}

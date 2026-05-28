@@ -81,7 +81,7 @@ export default function ComprehensiveAnalyticsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Комплексная аналитика</h2>
+          <h1 className="text-xl font-bold">Комплексная аналитика</h1>
           <Link href="/admin/analytics" className="text-sm text-muted-foreground hover:text-foreground">
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>

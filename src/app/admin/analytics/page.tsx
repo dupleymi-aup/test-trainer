@@ -16,7 +16,6 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  Legend,
 } from "recharts";
 import {
   Table,
@@ -131,7 +130,7 @@ export default function AdminAnalyticsHubPage() {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <h2 className="text-xl font-bold">Аналитика платформы</h2>
+        <h1 className="text-xl font-bold">Аналитика платформы</h1>
 
         {/* Report Cards */}
         <div>

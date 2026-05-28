@@ -2,12 +2,11 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 
 interface PerformanceDashboardData {
@@ -42,6 +41,7 @@ function TrendBadge({ trend }: { trend: string }) {
 export default function PerformanceDashboardPage() {
   const [data, setData] = useState<PerformanceDashboardData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("avgScore");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -50,6 +50,7 @@ export default function PerformanceDashboardPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ page: String(page), limit: "50", sortBy, sortOrder });
     if (search) params.set("search", search);
     if (filterRisk) params.set("riskLevel", filterRisk);
@@ -57,7 +58,8 @@ export default function PerformanceDashboardPage() {
       const r = await fetch(`/api/admin/analytics/performance-dashboard?${params.toString()}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setData(await r.json());
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
       setLoading(false);
@@ -82,11 +84,15 @@ export default function PerformanceDashboardPage() {
           <Link href="/admin/analytics">
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
-          <h2 className="text-xl font-bold">Успеваемость студентов</h2>
+          <h1 className="text-xl font-bold">Успеваемость студентов</h1>
           <PrintButton label="Печать" />
         </div>
 
         {loading && <div className="text-center py-8">Загрузка...</div>}
+
+        {error && !loading && (
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+        )}
 
         {!loading && !data && (
           <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>

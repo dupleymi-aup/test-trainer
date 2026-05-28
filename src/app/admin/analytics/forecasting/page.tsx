@@ -2,7 +2,6 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,7 @@ import { ArrowLeft, TrendingUp, TrendingDown, Minus, LineChart as LineChartIcon 
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import { AnalyticsFilterBar, type FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ReferenceLine,
+  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from "recharts";
 
 interface ForecastEntry {
@@ -47,17 +46,20 @@ function ConfidenceBadge({ level }: { level: string }) {
 export default function ForecastingPage() {
   const [data, setData] = useState<ForecastData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filterConfidence, setFilterConfidence] = useState<string>("all");
 
   const fetchData = async (params: Partial<FilterState> = {}) => {
     setLoading(true);
+    setError(null);
     const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
     const qs = new URLSearchParams(entries).toString();
     try {
       const r = await fetch(`/api/admin/analytics/forecasting${qs ? `?${qs}` : ""}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setData(await r.json());
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
       setLoading(false);
@@ -92,6 +94,10 @@ export default function ForecastingPage() {
         </div>
 
         <AnalyticsFilterBar onFilterChange={(filters) => fetchData(filters)} />
+
+        {error && !loading && (
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+        )}
 
         {loading && <div className="text-center py-8">Загрузка...</div>}
 

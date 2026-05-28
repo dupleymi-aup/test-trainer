@@ -42,13 +42,6 @@ interface RiskStudent {
 
 interface Pagination { page: number; limit: number; total: number; totalPages: number; }
 
-const _riskFactorConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  low_performer: { label: "Низкий балл", icon: <AlertTriangle className="h-3 w-3" />, color: "bg-rose-100 text-rose-800" },
-  declining: { label: "Снижение", icon: <TrendingDown className="h-3 w-3" />, color: "bg-amber-100 text-amber-800" },
-  inactive: { label: "Неактивен", icon: <Clock className="h-3 w-3" />, color: "bg-blue-100 text-blue-800" },
-  low_engagement: { label: "Мало попыток", icon: <UserX className="h-3 w-3" />, color: "bg-purple-100 text-purple-800" },
-};
-
 const riskLevelConfig: Record<string, { label: string; variant: "destructive" | "default" | "secondary" | "outline" }> = {
   high: { label: "Высокий", variant: "destructive" },
   medium: { label: "Средний", variant: "default" },
@@ -97,7 +90,7 @@ export default function AdminAtRiskPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Студенты группы риска</h2>
+          <h1 className="text-xl font-bold">Студенты группы риска</h1>
           <Badge variant="destructive">{pagination.total} студентов</Badge>
         </div>
 

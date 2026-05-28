@@ -2,10 +2,9 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -72,7 +71,6 @@ export default function GroupTaskMatrixPage() {
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
-  const groups = [...new Set(data.matrix.map((m) => m.groupId))];
   const filteredMatrix = data.matrix.filter((m) => {
     const groupMatch = selectedGroup === "all" || m.groupId === selectedGroup;
     const searchMatch = !search || m.taskName.toLowerCase().includes(search.toLowerCase()) || m.groupName.toLowerCase().includes(search.toLowerCase());
@@ -187,7 +185,7 @@ export default function GroupTaskMatrixPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMatrix.map((m, i) => (
+                  {filteredMatrix.map((m, _i) => (
                     <TableRow key={`${m.groupId}-${m.taskId}`}>
                       <TableCell className="font-medium">{m.groupName}</TableCell>
                       <TableCell className="max-w-[200px]">

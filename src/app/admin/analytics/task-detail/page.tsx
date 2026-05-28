@@ -2,7 +2,6 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from "recharts";
 
@@ -33,16 +32,19 @@ interface TaskDetail {
 export default function TaskDetailPage() {
   const [data, setData] = useState<TaskDetail[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
 
   const fetchData = async (taskId?: string) => {
     setLoading(true);
+    setError(null);
     const qs = taskId ? `?taskId=${taskId}` : "";
     try {
       const r = await fetch(`/api/admin/analytics/task-detail${qs}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setData(await r.json());
-    } catch {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
       setLoading(false);
@@ -71,11 +73,15 @@ export default function TaskDetailPage() {
           <Link href="/admin/analytics">
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
-          <h2 className="text-xl font-bold">Детальный анализ задач</h2>
+          <h1 className="text-xl font-bold">Детальный анализ задач</h1>
           <PrintButton label="Печать" />
         </div>
 
         {loading && <div className="text-center py-8">Загрузка...</div>}
+
+        {error && !loading && (
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+        )}
 
         {!loading && !data && (
           <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>

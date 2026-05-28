@@ -108,7 +108,7 @@ export default function AdminCohortRetentionPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-bold">Когортный анализ удержания</h2>
+          <h1 className="text-xl font-bold">Когортный анализ удержения</h1>
           <p className="text-sm text-muted-foreground">
             Как студенты остаются активными с течением времени по когортам регистрации
           </p>

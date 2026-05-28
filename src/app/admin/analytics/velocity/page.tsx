@@ -42,7 +42,7 @@ export default function VelocityPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h2 className="text-xl font-bold">Скорость обучения</h2>
+        <h1 className="text-xl font-bold">Скорость обучения</h1>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Студентов</div><div className="text-2xl font-bold">{data.studentVelocity.length}</div></CardContent></Card>

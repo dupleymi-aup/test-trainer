@@ -7,8 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -31,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowRight, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, XCircle } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface TaskInsightsData {
@@ -110,7 +108,7 @@ export default function TaskInsightsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Анализ задач</h2>
+          <h1 className="text-xl font-bold">Анализ задач</h1>
           <Link href="/admin/analytics" className="text-sm text-muted-foreground hover:text-foreground">
             Все отчёты <ArrowRight className="inline h-3 w-3 ml-1" />
           </Link>
