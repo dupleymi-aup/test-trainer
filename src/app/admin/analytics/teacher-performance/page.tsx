@@ -4,7 +4,6 @@ import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   BarChart,
@@ -46,7 +45,7 @@ interface TeacherData {
     avgStudentScore: number;
     avgAttemptsPerStudent: number;
     activeStudentsRate: number;
-    trend: string;
+    trend: "improving" | "declining" | "stable" | "none";
     totalAttempts: number;
     groups: Array<{
       id: string;

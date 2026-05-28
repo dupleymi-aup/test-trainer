@@ -23,8 +23,6 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
-  Clock,
-  UserX,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -37,7 +35,7 @@ interface RiskStudent {
   university: string;
   stats: { bestScore: number; avgScore: number; attemptsCount: number; lastAttemptDate: string | null };
   riskLevel: "high" | "medium" | "low" | "none";
-  trend: "improving" | "declining" | "stable";
+  trend: "improving" | "declining" | "stable" | "none";
 }
 
 interface Pagination { page: number; limit: number; total: number; totalPages: number; }
@@ -171,6 +169,7 @@ export default function AdminAtRiskPage() {
                           {s.trend === "improving" && <TrendingUp className="h-4 w-4 text-green-600 inline" />}
                           {s.trend === "declining" && <TrendingDown className="h-4 w-4 text-rose-600 inline" />}
                           {s.trend === "stable" && <Minus className="h-4 w-4 text-muted-foreground inline" />}
+                          {s.trend === "none" && <Minus className="h-4 w-4 text-muted-foreground inline" />}
                         </TableCell>
                         <TableCell className="text-right">
                           <Badge variant={s.stats.bestScore >= 75 ? "default" : s.stats.bestScore >= 50 ? "secondary" : "destructive"}>

@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Download, FileSpreadsheet, FileJson, BarChart3, Target,
+  Download, FileJson, BarChart3, Target,
   GraduationCap, AlertTriangle, Users, FileText, Activity,
   Loader2, Clock, Calendar, FolderKanban,
 } from "lucide-react";
@@ -259,7 +259,7 @@ export default function AdminExportPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       fetchHistory(1);
-    } catch (e) {
+    } catch (_e) {
       toast.error("Ошибка при экспорте");
     } finally {
       setExporting(null);

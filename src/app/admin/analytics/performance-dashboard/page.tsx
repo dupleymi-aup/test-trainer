@@ -20,7 +20,7 @@ interface PerformanceDashboardData {
     metrics: {
       avgScore: number; bestScore: number; avgEc: number; avgBv: number;
       totalAttempts: number; attemptsLast7Days: number; lastAttemptDate: string | null;
-      trend: string; riskLevel: string; riskScore: number;
+      trend: "improving" | "stable" | "declining" | "none"; riskLevel: string; riskScore: number;
     };
   }>;
   summary: { totalStudents: number; avgScore: number; highRisk: number; mediumRisk: number; lowRisk: number; activeLast7Days: number; inactive: number };
@@ -61,7 +61,7 @@ export default function PerformanceDashboardPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [page, sortBy, sortOrder]);
+  useEffect(() => { fetchData(); }, [page, sortBy, sortOrder, filterRisk]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
