@@ -77,8 +77,8 @@ export default function AdminTopicHeatmapPage() {
   const fetchData = (f: Partial<FilterState>) => {
     setFilters(f);
     const params = new URLSearchParams();
-    if (f.startDate) params.set("startDate", f.startDate);
-    if (f.endDate) params.set("endDate", f.endDate);
+    if (f.dateFrom) params.set("startDate", f.dateFrom);
+    if (f.dateTo) params.set("endDate", f.dateTo);
 
     setError(null);
     fetch(`/api/admin/analytics/topic-heatmap?${params}`)

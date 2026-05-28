@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, Award, Target } from "lucide-react";
+import { ArrowLeft, Star, Award } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import { AnalyticsFilterBar } from "@/components/admin/analytics/analytics-filter-bar";
 import {
@@ -29,7 +29,6 @@ export default function StudentTimelinePage() {
   const [data, setData] = useState<TimelineData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [, setSelectedStudent] = useState(preselectedStudent || "");
 
   const fetchTimeline = async (studentId: string) => {
     if (!studentId) return;

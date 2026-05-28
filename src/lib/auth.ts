@@ -196,8 +196,9 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         // Use role and isActive from authorize() result - no need for extra DB query
-        token.role = user.role ?? "STUDENT";
-        token.isActive = user.isActive ?? true;
+        const u = user as typeof user & { role?: string; isActive?: boolean };
+        token.role = u.role ?? "STUDENT";
+        token.isActive = u.isActive ?? true;
       }
       return token;
     },

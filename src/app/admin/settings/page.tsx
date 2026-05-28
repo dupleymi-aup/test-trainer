@@ -2,12 +2,13 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
+import { apiFetch } from "@/lib/api-client";
 
 interface Setting {
   key: string;
@@ -53,13 +54,15 @@ export default function AdminSettingsPage() {
   useEffect(() => { fetchSettings(); }, []);
 
   const updateSetting = async (key: string, value: unknown) => {
-    const res = await fetch("/api/admin/settings", {
+    const res = await apiFetch("/api/admin/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key, value }),
     });
     if (res.ok) {
       toast.success("Настройка сохранена");
+    } else {
+      toast.error(`Ошибка сохранения: HTTP ${res.status}`);
     }
   };
 
@@ -70,8 +73,13 @@ export default function AdminSettingsPage() {
   const handleBlur = (key: string, originalValue: unknown) => {
     const newVal = localValues[key];
     if (newVal !== originalValue) {
-      updateSetting(key, typeof originalValue === "number" ? parseInt(String(newVal)) : newVal);
-      fetchSettings();
+      const parsed = typeof originalValue === "number" ? parseInt(String(newVal), 10) : newVal;
+      if (typeof parsed === "number" && Number.isNaN(parsed)) {
+        toast.error("Некорректное числовое значение");
+        setLocalValues((prev) => ({ ...prev, [key]: originalValue }));
+        return;
+      }
+      updateSetting(key, parsed);
     }
   };
 
@@ -118,7 +126,6 @@ export default function AdminSettingsPage() {
                           onCheckedChange={(v) => {
                             handleLocalChange(setting.key, v);
                             updateSetting(setting.key, v);
-                            fetchSettings();
                           }}
                         />
                       ) : (

@@ -17,7 +17,7 @@ import {
 interface StudentComparisonData {
   students: Array<{
     student: { id: string; name: string; group: string; university: string; registeredAt: string };
-    metrics: { avgScore: number; bestScore: number; avgEc: number; avgBv: number; avgCorrectness: number; avgTime: number; totalAttempts: number; trend: string };
+    metrics: { avgScore: number; bestScore: number; avgEc: number; avgBv: number; avgCorrectness: number; avgTime: number; totalAttempts: number; trend: "improving" | "stable" | "declining" | "none" };
     trajectory: Array<{ attempt: number; score: number; date: string }>;
     taskBreakdown: Array<{ taskId: string; bestScore: number; avgScore: number; attempts: number }>;
   }>;

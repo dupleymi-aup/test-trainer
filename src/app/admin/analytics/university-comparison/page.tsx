@@ -16,11 +16,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
   Legend,
 } from "recharts";
 import {
@@ -31,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TrendingUp, TrendingDown, Minus, ArrowRight, GraduationCap } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowRight, GraduationCap } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 
 interface UniversityData {
@@ -73,7 +68,7 @@ export default function UniversityComparisonPage() {
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const universities = data.universities;
+  const _universities = data.universities;
 
   const barData = data.universities.slice(0, 10).map((u) => ({
     name: u.university.length > 20 ? u.university.slice(0, 20) + "..." : u.university,
@@ -82,7 +77,7 @@ export default function UniversityComparisonPage() {
     avgBv: u.avgBv,
   }));
 
-  const radarData = data.universities.slice(0, 3).map((u, i) => ({
+  const _radarData = data.universities.slice(0, 3).map((u, i) => ({
     topic: `Университет ${i + 1}`,
     score: u.avgScore,
     ec: u.avgEc,

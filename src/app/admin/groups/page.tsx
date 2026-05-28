@@ -272,7 +272,11 @@ export default function AdminGroupsPage() {
   const toggleGroupSelect = (id: string) => {
     setSelectedGroups((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -328,7 +332,11 @@ export default function AdminGroupsPage() {
   const toggleBulkStudent = (id: string) => {
     setBulkSelectedStudents((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
