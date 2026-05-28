@@ -2,11 +2,9 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -32,11 +30,9 @@ import {
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import {
   GraduationCap,
-  Users,
   TrendingUp,
   Target,
   Award,
-  ArrowRight,
 } from "lucide-react";
 
 interface TeacherData {
