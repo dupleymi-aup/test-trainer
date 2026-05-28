@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -150,7 +150,7 @@ export default function AdminUsersPage() {
     },
   });
 
-  const fetchUsers = () => {
+  const fetchUsers = useCallback(() => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (roleFilter !== "ALL") params.set("role", roleFilter);
@@ -172,7 +172,7 @@ export default function AdminUsersPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  };
+  }, [search, roleFilter, page, limit, showDeleted, sortBy, sortDir]);
 
   // Debounced search — auto-fetch when search text changes
   useEffect(() => {
@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [page, showDeleted, sortBy, sortDir]);
+  }, [page, showDeleted, sortBy, sortDir, fetchUsers]);
 
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {
     const res = await apiFetch(`/api/admin/users/${id}/toggle-active`, { method: "PATCH" });

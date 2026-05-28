@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +56,7 @@ export default function AdminAtRiskPage() {
   const [university, setUniversity] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStudents = () => {
+  const fetchStudents = useCallback(() => {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({
@@ -78,9 +78,9 @@ export default function AdminAtRiskPage() {
         setLoading(false);
       })
       .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-  };
+  }, [pagination.page, pagination.limit, search, riskLevel, university]);
 
-  useEffect(() => { fetchStudents(); }, [pagination.page, riskLevel, university]);
+  useEffect(() => { fetchStudents(); }, [pagination.page, riskLevel, university, fetchStudents]);
 
   const handleSearch = () => { fetchStudents(); };
 

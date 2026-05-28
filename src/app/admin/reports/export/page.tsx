@@ -381,7 +381,10 @@ export default function AdminExportPage() {
               <>
                 <div className="divide-y">
                   {exportHistory.map((log) => {
-                    const details = (() => { try { return JSON.parse(log.details); } catch { return {}; } })();
+                    const details = (() => {
+                      try { return JSON.parse(log.details); }
+                      catch (e) { console.warn('Failed to parse export log details:', log.details); return {}; }
+                    })();
                     const reportName = reportLabels[details.reportType] || details.reportType || log.entity;
                     const format = (details.format || "csv").toUpperCase();
                     const dateRange = details.startDate && details.endDate

@@ -46,8 +46,8 @@ export async function connectMongo() {
     try {
       await client.db().command({ ping: 1 })
       return db
-    } catch {
-      // Connection is dead, will recreate below
+    } catch (err) {
+      logger.warn('MongoDB ping failed, reconnecting', { err: err instanceof Error ? err.message : String(err) })
     }
   }
   if (!config.mongodbUri) {
@@ -72,8 +72,8 @@ export async function disconnectMongo(): Promise<void> {
     try {
       await client.close()
       logger.info('MongoDB disconnected')
-    } catch {
-      // Already closed or error, ignore
+    } catch (err) {
+      logger.warn('MongoDB close error', { err: err instanceof Error ? err.message : String(err) })
     }
   }
   client = undefined
@@ -109,6 +109,8 @@ export async function checkMongoConnection(uri?: string): Promise<boolean> {
   } catch {
     return false
   } finally {
-    await testClient.close().catch(() => {})
+    await testClient.close().catch((err) => {
+      logger.warn('MongoDB test client close error', { err: err instanceof Error ? err.message : String(err) })
+    })
   }
 }

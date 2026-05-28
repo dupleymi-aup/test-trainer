@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,7 +95,7 @@ export default function AdminDeadlinesPage() {
     },
   });
 
-  const fetchDeadlines = () => {
+  const fetchDeadlines = useCallback(() => {
     const params = new URLSearchParams();
     if (showPast) params.set("showPast", "true");
 
@@ -106,9 +106,9 @@ export default function AdminDeadlinesPage() {
       })
       .then((d) => { setDeadlines(d.deadlines || []); setLoading(false); })
       .catch(() => setLoading(false));
-  };
+  }, [showPast]);
 
-  const fetchGroups = () => {
+  const fetchGroups = useCallback(() => {
     fetch("/api/admin/groups")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -118,9 +118,9 @@ export default function AdminDeadlinesPage() {
       .catch(() => {
         // Non-critical: groups filter is optional
       });
-  };
+  }, []);
 
-  useEffect(() => { fetchDeadlines(); fetchGroups(); }, [showPast]);
+  useEffect(() => { fetchDeadlines(); fetchGroups(); }, [showPast, fetchDeadlines, fetchGroups]);
 
   const handleSubmit = async (data: DeadlineForm) => {
     setIsSubmitting(true);

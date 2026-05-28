@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +43,7 @@ export default function PerformanceDashboardPage() {
   const [search, setSearch] = useState("");
   const [filterRisk, setFilterRisk] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams({ page: String(page), limit: "50", sortBy, sortOrder });
@@ -59,9 +59,9 @@ export default function PerformanceDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, sortBy, sortOrder, filterRisk]);
 
-  useEffect(() => { fetchData(); }, [page, sortBy, sortOrder, filterRisk]);
+  useEffect(() => { fetchData(); }, [page, sortBy, sortOrder, filterRisk, fetchData]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {

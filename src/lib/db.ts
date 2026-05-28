@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { config } from './config'
+import { logger } from './logger'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -23,7 +24,8 @@ export async function checkConnection(): Promise<boolean> {
   try {
     await db.$queryRaw`SELECT 1`
     return true
-  } catch {
+  } catch (err) {
+    logger.warn(`Prisma connection check failed: ${err instanceof Error ? err.message : String(err)}`)
     return false
   }
 }
