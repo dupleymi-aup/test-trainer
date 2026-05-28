@@ -248,23 +248,16 @@ export function loadTaskNote(taskId: number): string {
  */
 function getTodayDate(): string {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
 }
 
 /**
- * Helper: get date string for N days ago
+ * Helper: get date string for N days ago (UTC)
  */
 function getDateDaysAgo(days: number): string {
   const d = new Date();
-  d.setDate(d.getDate() - days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-/**
- * Check if a given YYYY-MM-DD date was yesterday
- */
-function isYesterday(dateStr: string): boolean {
-  return dateStr === getDateDaysAgo(1);
+  d.setUTCDate(d.getUTCDate() - days);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
 // Module-level lock to prevent concurrent streak writes (race condition guard)
