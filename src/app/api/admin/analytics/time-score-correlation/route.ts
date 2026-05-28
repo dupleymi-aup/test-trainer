@@ -141,7 +141,7 @@ export async function GET() {
 
     // Rushers vs Perfectionists vs Normal
     const timeThreshold = q50.timeSpent; // median time
-    const scoreThreshold = q50.score; // median score - reuse sorted
+    const _scoreThreshold = q50.score; // median score - reuse sorted
 
     // Actually compute median score properly
     const sortedScores = [...scores].sort((a, b) => a - b);

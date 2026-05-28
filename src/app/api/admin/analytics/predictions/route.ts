@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { computeStudentRisk, computeStudentStats, riskLabels } from "@/lib/risk-analysis";
+import { computeStudentRisk, computeStudentStats } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
 

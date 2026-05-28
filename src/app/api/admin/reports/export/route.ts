@@ -322,7 +322,6 @@ export async function POST(req: Request) {
         return { taskId: a.taskId, taskName: meta?.name || `Задание ${a.taskId}`, score: a.score, timeSpent: Math.round(a.timeSpent / 60) };
       });
     } else if (reportType === "completion-funnel") {
-      const students = await db.user.findMany({ where: { role: "STUDENT", deletedAt: null }, select: { id: true } });
       const attempts = await db.attempt.findMany({ select: { taskId: true, userId: true, score: true } });
       const studentsByTask: Record<string, number> = {};
       for (const a of attempts) {

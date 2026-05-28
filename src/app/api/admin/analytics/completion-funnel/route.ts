@@ -97,7 +97,6 @@ export async function GET() {
 
       // Avg attempts to pass
       const passedStudents = new Set<string>();
-      const attemptCounts: number[] = [];
       for (const [userId, taskScores] of Object.entries(bestScoreByStudentTask)) {
         if (taskScores[taskId] !== undefined) {
           if (taskScores[taskId] >= PASS_THRESHOLD) passedStudents.add(userId);

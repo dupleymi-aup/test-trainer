@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { computeStudentRisk, AttemptData, batchComputeStudentRisk } from "@/lib/risk-analysis";
+import { AttemptData, batchComputeStudentRisk } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
 
@@ -15,7 +15,7 @@ export async function GET() {
     if (cached) return NextResponse.json(cached);
 
     const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+    const _sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
 
     // KPIs via count() — no full table scans

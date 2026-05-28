@@ -174,7 +174,6 @@ export async function GET(
   // Percentile by task
   const percentileByTask = taskPerformance.map((tp) => {
     const allForTask = attempts.filter((a) => a.taskId === tp.taskId);
-    const platformBest = allForTask.reduce((max, a) => Math.max(max, a.score), 0);
     const platformAvg = Math.round(allForTask.reduce((s, a) => s + a.score, 0) / allForTask.length);
     return { taskId: tp.taskId, taskName: tp.taskName, studentBest: tp.bestScore, groupAvg: platformAvg };
   });

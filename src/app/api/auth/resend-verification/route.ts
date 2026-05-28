@@ -7,7 +7,7 @@ import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   try {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;

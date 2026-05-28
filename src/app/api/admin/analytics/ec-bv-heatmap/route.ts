@@ -5,7 +5,7 @@ import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;

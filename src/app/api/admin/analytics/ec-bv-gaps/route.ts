@@ -21,12 +21,6 @@ export async function GET() {
 
   const taskMap = new Map(tasks.map((t) => [String(t.id), t]));
 
-  // Per-task EC/BV tracking
-  interface EcStat { ecId: string; ecName: string; covered: number; total: number }
-  interface BvStat { bvDesc: string; covered: number; total: number }
-
-  const taskGaps: Record<string, { taskName: string; ecStats: EcStat[]; bvStats: BvStat[] }> = {};
-
   // Track which ECs/BVs we've seen per task
   const taskEcMap: Record<string, Map<string, { covered: number; total: number; name: string }>> = {};
   const taskBvMap: Record<string, Map<string, { covered: number; total: number }>> = {};

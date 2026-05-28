@@ -30,7 +30,7 @@ interface TeacherMetrics {
   }>;
 }
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;

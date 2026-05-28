@@ -43,18 +43,8 @@ export async function GET() {
       tasks.map((t) => [String(t.id), { name: t.name, difficulty: t.difficulty }])
     );
 
-    // Parse EC/BV data
-    const ecMissRate: Record<string, { total: number; missed: number; taskIds: Set<string> }> = {};
-    const bvMissRate: Record<string, { total: number; missed: number; taskIds: Set<string> }> = {};
-
     // Per-task EC/BV analysis
     const taskECAnalysis: Record<string, { ecIds: string[]; bvDescs: string[]; scores: number[] }> = {};
-
-    // Global counters
-    let totalEC = 0;
-    let totalMissedEC = 0;
-    let totalBV = 0;
-    let totalMissedBV = 0;
 
     for (const a of allAttempts) {
       // Parse covered EC IDs
@@ -75,7 +65,7 @@ export async function GET() {
         const ecMissedPct = 100 - a.ecCoverage;
         const bvMissedPct = 100 - a.bvCoverage;
 
-        // Track per-EC-class miss patterns (using taskId+index as proxy)
+        // Track which ECs appear in low-score attempts
         if (coveredEcIds.length > 0) {
           for (let i = 0; i < coveredEcIds.length; i++) {
             // We can't know total ECs per task from this data alone,
@@ -85,14 +75,9 @@ export async function GET() {
 
         // Track tasks with low EC/BV coverage
         if (!taskECAnalysis[a.taskId]) {
-          taskECAnalysis[a.taskId] = { ecIds: [], bvDescs: [], scores: [] };
+          taskECAnalysis[a.taskId] = { ecIds: coveredEcIds, bvDescs: coveredBvDescs, scores: [] };
         }
         taskECAnalysis[a.taskId].scores.push(a.score);
-
-        totalEC++;
-        totalMissedEC += ecMissedPct / 100;
-        totalBV++;
-        totalMissedBV += bvMissedPct / 100;
       }
     }
 

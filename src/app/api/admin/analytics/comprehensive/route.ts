@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
@@ -146,11 +145,8 @@ export async function GET(request: Request) {
       activationRate: data.total > 0 ? Math.round((data.withAttempts / data.total) * 100) : 0,
     }));
 
-  // Performance by university
+  // Performance by university — fetch university data and aggregate attempts
   const universityMap: Record<string, { scores: number[]; ecs: number[]; bvs: number[]; attempts: number; students: Set<string> }> = {};
-  allAttempts.forEach((a) => {
-    // We need user.university - fetch it separately
-  });
 
   const usersWithUniversity = await db.user.findMany({
     where: { role: "STUDENT", deletedAt: null, university: { not: "" } },

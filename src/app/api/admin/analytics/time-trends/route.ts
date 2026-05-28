@@ -143,7 +143,6 @@ export async function GET(request: Request) {
     }> = [];
 
     for (const [cohort, data] of Object.entries(cohortMap)) {
-      const cohortStart = new Date(cohort + "-01T00:00:00Z");
       const studentIds = new Set(data.students);
 
       // Track attempts for this cohort

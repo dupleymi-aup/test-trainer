@@ -5,7 +5,7 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
 import { logger } from "@/lib/logger";
 
 const DAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+const _HOUR_LABELS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
 export async function GET(request: Request) {
   try {

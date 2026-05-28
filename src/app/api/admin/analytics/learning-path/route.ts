@@ -32,7 +32,7 @@ export async function GET() {
     const sequences: string[][] = [];
     const taskScores: Record<string, number[]> = {};
 
-    for (const [userId, userAttempts] of Object.entries(studentAttempts)) {
+    for (const [_userId, userAttempts] of Object.entries(studentAttempts)) {
       if (userAttempts.length < 3) continue;
 
       // Unique task sequence (first attempt per task)

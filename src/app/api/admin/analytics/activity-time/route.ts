@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
@@ -32,10 +31,6 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
       take: 50_000,
     });
-
-    const taskMap = new Map(
-      tasks.map((t) => [String(t.id), { name: t.name, difficulty: t.difficulty }])
-    );
 
     // Day-of-week × hour heatmap
     const heatmap: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
