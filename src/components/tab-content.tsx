@@ -10,6 +10,7 @@ import {
   BookOpen,
   TrendingUp,
   Timer,
+  ClipboardList,
 } from "lucide-react";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import type { Task as TaskType, Difficulty, TestCaseCategory } from "@/lib/tasks";
@@ -22,6 +23,7 @@ import { TheoryPanel } from "@/components/theory-panel";
 import { StatisticsPanel } from "@/components/statistics-panel";
 import { ExamMode } from "@/components/exam-mode";
 import { AchievementsPanel } from "@/components/achievements-panel";
+import { TheoryQuiz } from "@/components/theory-quiz";
 import type { AchievementContext } from "@/lib/achievements";
 import { tasks } from "@/lib/tasks";
 
@@ -164,6 +166,14 @@ export function TabContent({
           <span className="hidden sm:inline">Теория</span>
           <span className="sm:hidden">Т</span>
         </TabsTrigger>
+        <TabsTrigger
+          value="quiz"
+          className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
+        >
+          <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Опросник</span>
+          <span className="sm:hidden">Опр</span>
+        </TabsTrigger>
       </TabsList>
 
       <AnimatePresence mode="wait">
@@ -220,7 +230,7 @@ export function TabContent({
                 Подробная оценка ваших тест-кейсов с покрытием и рекомендациями.
               </p>
             </div>
-            <div className="max-w-4xl mx-auto">
+            <div className="w-full">
               <ResultsPanel
                 result={evaluationResult}
                 testCases={testCases}
@@ -247,8 +257,29 @@ export function TabContent({
                 Изучите основные методы тестирования «чёрного ящика» перед выполнением заданий.
               </p>
             </div>
-            <div className="max-w-3xl mx-auto">
+            <div className="w-full">
               <TheoryPanel task={selectedTask ?? undefined} />
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === "quiz" && (
+          <motion.div
+            key="quiz"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+          >
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold mb-1">Опросник для самопроверки</h2>
+              <p className="text-sm text-muted-foreground">
+                Проверьте свои знания методов тестирования с помощью 40 вопросов.
+              </p>
+            </div>
+            <div className="w-full">
+              <TheoryQuiz />
             </div>
           </motion.div>
         )}
@@ -268,7 +299,7 @@ export function TabContent({
                 Обзор результатов и полученные достижения.
               </p>
             </div>
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="w-full space-y-6">
               <StatisticsPanel attempts={attemptHistory} />
               <AchievementsPanel context={achievementContext} />
             </div>

@@ -55,7 +55,7 @@ async function syncAttemptToServer(payload: {
   }
 }
 
-export type TabValue = "tasks" | "trainer" | "results" | "statistics" | "exam" | "theory";
+export type TabValue = "tasks" | "trainer" | "results" | "statistics" | "exam" | "theory" | "quiz";
 export type SortMode = "По номеру" | "По имени" | "По сложности";
 export type DifficultyFilter = "Все" | Difficulty;
 

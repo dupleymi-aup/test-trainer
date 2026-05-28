@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import type { Task } from "@/lib/tasks";
 import { markTheorySectionViewed, loadTheorySectionsViewed } from "@/lib/storage";
-import { TheoryQuiz } from "@/components/theory-quiz";
 import { WorkedExampleViewer } from "@/components/worked-example";
 import {
   BookOpen,
@@ -975,7 +974,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
       </Card>
 
       {/* Theory sections grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {sections.map((section) => (
           <TheorySectionCard
             key={section.id}
@@ -990,9 +989,6 @@ export function TheoryPanel({ task }: { task?: Task }) {
 
       {/* Worked example for current task */}
       {task && <WorkedExampleViewer taskId={task.id} />}
-
-      {/* Quiz module */}
-      <TheoryQuiz />
     </motion.div>
   );
 }
