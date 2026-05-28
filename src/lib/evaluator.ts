@@ -4,6 +4,11 @@ import {
   runReferenceFunction,
 } from "./tasks";
 
+/** Weights for the overall score formula */
+const EC_COVERAGE_WEIGHT = 0.4;
+const BOUNDARY_COVERAGE_WEIGHT = 0.3;
+const CORRECTNESS_WEIGHT = 0.3;
+
 export interface TestCase {
   id: string;
   inputs: string[];
@@ -748,7 +753,7 @@ export function evaluateTestCases(
 
   // Weighted average: EC 40%, Boundary 30%, Correctness 30%
   const overallScore =
-    ecCoverage * 0.4 + boundaryCoverage * 0.3 + correctnessScore * 0.3;
+    ecCoverage * EC_COVERAGE_WEIGHT + boundaryCoverage * BOUNDARY_COVERAGE_WEIGHT + correctnessScore * CORRECTNESS_WEIGHT;
 
   // Determine uncovered items
   const coveredEcIds = Array.from(allCoveredEcs);
