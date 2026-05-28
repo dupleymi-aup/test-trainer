@@ -1,5 +1,7 @@
 "use client";
 
+import { logger } from "./logger";
+
 export interface Achievement {
   id: string;
   name: string;
@@ -210,7 +212,7 @@ export function loadUnlockedAchievements(): string[] {
     const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (e) {
-    console.warn("Failed to load achievements from localStorage:", e);
+    logger.warn("Failed to load achievements from localStorage", { error: e instanceof Error ? e.message : String(e) });
     return [];
   }
 }
@@ -219,7 +221,7 @@ export function saveUnlockedAchievements(ids: string[]): void {
   try {
     localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(ids));
   } catch (e) {
-    console.warn("Failed to save achievements to localStorage:", e);
+    logger.warn("Failed to save achievements to localStorage", { error: e instanceof Error ? e.message : String(e) });
   }
 }
 

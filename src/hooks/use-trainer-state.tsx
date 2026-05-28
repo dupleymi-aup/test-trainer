@@ -8,6 +8,7 @@ import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { evaluateTestCases } from "@/lib/evaluator";
 import { UndoStack } from "@/lib/undo-stack";
 import { apiFetch } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 import {
   saveProgress,
   loadProgress,
@@ -48,7 +49,7 @@ async function syncAttemptToServer(payload: {
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      console.warn("Failed to sync attempt to server:", res.status);
+      logger.warn("Failed to sync attempt to server", { status: res.status });
     }
   } catch {
     // Silently fail — localStorage is the primary storage
@@ -121,7 +122,7 @@ export function useTrainerState() {
         }
       })
       .catch((err) => {
-        console.warn("Failed to fetch available tasks:", err);
+        logger.warn("Failed to fetch available tasks", { error: err instanceof Error ? err.message : String(err) });
       });
   }, []);
 
@@ -383,7 +384,7 @@ export function useTrainerState() {
       const p = JSON.parse(trimmed);
       if (typeof p === "object") return p;
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("parseInputForRef: JSON.parse failed for:", trimmed);
+      if (process.env.NODE_ENV === "development") logger.debug("parseInputForRef: JSON.parse failed", { input: trimmed });
     }
     return trimmed;
   }, []);

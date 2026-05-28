@@ -283,18 +283,23 @@ function calculateShipping(
   return { shipping, currency: "RUB" };
 }
 
+/**
+ * Handle login action with account lockout after failed attempts.
+ * Uses Unix timestamp (seconds) for lockoutTime to maintain consistency
+ * with time-based lockout duration checks.
+ */
 function handleLoginAction(
   action: string,
   currentAttempts: number,
   lockoutTime: number | null
 ): { status: string; remainingAttempts: number; message: string } {
   const maxAttempts = 3;
-  const lockoutDuration = 300;
+  const lockoutDurationSec = 300; // 5 minutes
   if (typeof action !== "string") throw new Error("action должен быть строкой");
   if (!Number.isInteger(currentAttempts) || currentAttempts < 0) throw new Error("currentAttempts должен быть неотрицательным целым");
   if (lockoutTime !== null && (typeof lockoutTime !== "number" || lockoutTime < 0)) throw new Error("lockoutTime должен быть неотрицательным числом или null");
-  const now = 0;
-  const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDuration;
+  const now = Date.now() / 1000; // Unix timestamp in seconds
+  const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDurationSec;
   if (action === "login") {
     if (isLockedOut) {
       return { status: "locked", remainingAttempts: 0, message: "Аккаунт заблокирован. Попробуйте позже." };

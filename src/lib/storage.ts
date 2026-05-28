@@ -7,6 +7,9 @@ const STREAK_KEY = "test-trainer-streak";
 const NOTE_PREFIX = "test-trainer-note-";
 const GLOBAL_NOTES_KEY = "test-trainer-global-notes";
 
+const MAX_HISTORY_ENTRIES = 50;
+const MAX_MARATHON_RECORDS = 20;
+
 /**
  * Сохраняет глобальные заметки
  */
@@ -180,8 +183,8 @@ export function saveAttempt(record: AttemptRecord): void {
   try {
     const history = loadAttemptHistory();
     history.push(record);
-    // Keep last 50 attempts
-    if (history.length > 50) history.splice(0, history.length - 50);
+    // Keep last MAX_HISTORY_ENTRIES attempts
+    if (history.length > MAX_HISTORY_ENTRIES) history.splice(0, history.length - MAX_HISTORY_ENTRIES);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
   } catch {
     // ignore
@@ -266,9 +269,9 @@ let streakSaveLock: Promise<StreakData> | null = null;
  * Uses a lock to prevent race conditions from rapid concurrent submissions.
  */
 export async function saveStreak(): Promise<StreakData> {
-  // If a save is in progress, wait for it to complete first
+  // Mutex: wait for any in-flight save, then queue behind it
   if (streakSaveLock) {
-    await streakSaveLock;
+    return streakSaveLock;
   }
 
   const promise = (async () => {
@@ -277,15 +280,12 @@ export async function saveStreak(): Promise<StreakData> {
       const today = getTodayDate();
 
       if (streak.lastActiveDate === today) {
-        // Already active today, no change
         return streak;
       }
 
       if (streak.lastActiveDate === getDateDaysAgo(1)) {
-        // Yesterday was active — continue streak
         streak.currentStreak += 1;
       } else if (streak.lastActiveDate !== today) {
-        // Streak broken (unless today is already recorded)
         streak.currentStreak = 1;
       }
 
@@ -335,8 +335,8 @@ export function saveMarathonRecord(record: MarathonRecord): void {
   try {
     const records = loadMarathonRecords();
     records.push(record);
-    // Keep last 20 marathon records
-    if (records.length > 20) records.splice(0, records.length - 20);
+    // Keep last MAX_MARATHON_RECORDS marathon records
+    if (records.length > MAX_MARATHON_RECORDS) records.splice(0, records.length - MAX_MARATHON_RECORDS);
     localStorage.setItem(MARATHON_KEY, JSON.stringify(records));
   } catch {
     // ignore
