@@ -61,10 +61,6 @@ export async function GET() {
 
       // For low-scoring attempts (< 60), analyze what was missed
       if (a.score < 60) {
-        // The ecCoverage tells us % covered, so missed = 100 - coverage
-        const ecMissedPct = 100 - a.ecCoverage;
-        const bvMissedPct = 100 - a.bvCoverage;
-
         // Track which ECs appear in low-score attempts
         if (coveredEcIds.length > 0) {
           for (let i = 0; i < coveredEcIds.length; i++) {

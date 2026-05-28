@@ -183,7 +183,7 @@ function ProfileContent() {
         }
       })();
     }
-  }, [status, router]);
+  }, [status, router, profileForm]);
 
   const onProfileSubmit = async (data: ProfileForm) => {
     setSaving(true);
