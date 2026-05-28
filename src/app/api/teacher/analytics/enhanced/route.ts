@@ -181,7 +181,7 @@ export async function GET(req: Request) {
 
   attempts.forEach((a) => {
     try {
-      const testCases = JSON.parse(a.testCases);
+      const testCases = JSON.parse(a.testCases || "[]");
       if (Array.isArray(testCases)) {
         testCases.forEach((tc: StoredTestCase) => {
           if (tc.category && categoryCounts.hasOwnProperty(tc.category)) {

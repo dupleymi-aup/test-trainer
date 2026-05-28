@@ -16,6 +16,7 @@ import {
   GraduationCap, FileText, ChevronRight, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MS_PER_DAY } from "@/lib/time-constants";
 
 interface Reminder {
   id: string;
@@ -78,12 +79,12 @@ function getTimeRemaining(dueDateStr: string) {
   const diffMs = due.getTime() - now.getTime();
 
   if (diffMs < 0) {
-    const daysOverdue = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
+    const daysOverdue = Math.floor(Math.abs(diffMs) / MS_PER_DAY);
     return { text: `Просрочен на ${daysOverdue} дн.`, isOverdue: true, color: "text-rose-600 dark:text-rose-400" };
   }
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const days = Math.floor(diffMs / MS_PER_DAY);
 
   if (hours < 24) return { text: `Осталось ${hours} ч.`, isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
   if (days === 1) return { text: "Остался 1 день", isOverdue: false, color: "text-amber-600 dark:text-amber-400" };

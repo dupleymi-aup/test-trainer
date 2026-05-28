@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
             if (!ecMissRate[ec.id]) ecMissRate[ec.id] = { total: 0, missed: 0 };
             ecMissRate[ec.id].total++;
             try {
-              const covered = JSON.parse(a.coveredEcIds) as string[];
+              const covered = JSON.parse(a.coveredEcIds || "[]") as string[];
               if (!covered.includes(ec.id)) ecMissRate[ec.id].missed++;
             } catch {
               ecMissRate[ec.id].missed++;

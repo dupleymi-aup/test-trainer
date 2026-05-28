@@ -136,7 +136,7 @@ function computeMissRate(attempts: { taskId: string; coveredEcIds: string }[], t
   if (relevant.length === 0) return 100;
   const missed = relevant.filter((a) => {
     try {
-      const covered = JSON.parse(a.coveredEcIds) as string[];
+      const covered = JSON.parse(a.coveredEcIds || "[]") as string[];
       return !covered.includes(ecId);
     } catch {
       return true;

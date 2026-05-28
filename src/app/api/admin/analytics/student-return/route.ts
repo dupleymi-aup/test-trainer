@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { MS_PER_DAY } from "@/lib/time-constants";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 /**
@@ -55,7 +56,7 @@ export async function GET() {
         const prevDate = new Date(attempts[i - 1].createdAt);
         const currDate = new Date(attempts[i].createdAt);
         const gapMs = currDate.getTime() - prevDate.getTime();
-        const gapDays = Math.round(gapMs / (1000 * 60 * 60 * 24));
+        const gapDays = Math.round(gapMs / MS_PER_DAY);
 
         if (gapDays >= GAP_THRESHOLD_DAYS) {
           gaps.push({ beforeIdx: i - 1, afterIdx: i, gapDays });
@@ -80,7 +81,7 @@ export async function GET() {
         const afterUniqueTasks = new Set(afterAttempts.map((a) => a.taskId)).size;
 
         const returnDate = new Date(attempts[gap.afterIdx].createdAt);
-        const daysSinceReturn = Math.round((now.getTime() - returnDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysSinceReturn = Math.round((now.getTime() - returnDate.getTime()) / MS_PER_DAY);
         const currentlyActive = daysSinceReturn <= 14;
 
         // Score change

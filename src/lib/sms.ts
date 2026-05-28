@@ -14,6 +14,7 @@
  */
 
 import { generateSecureOTP } from "@/lib/crypto";
+import { logger } from "@/lib/logger";
 
 interface SendSMSOptions {
   phone: string;
@@ -142,7 +143,7 @@ export async function sendSMS({ phone, message }: SendSMSOptions): Promise<SMSPr
 
   // Development: log to console
   if (process.env.NODE_ENV === "development") {
-    console.log(`[SMS] To: ${phone} | Message: ${message}`);
+    logger.debug(`[SMS] To: ${phone}`);
     return { success: true };
   }
 

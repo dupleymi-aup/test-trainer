@@ -106,7 +106,7 @@ export async function GET(request: Request) {
 
     // Parse testCases for category analysis
     try {
-      const testCases = JSON.parse(a.testCases);
+      const testCases = JSON.parse(a.testCases || "[]");
       if (Array.isArray(testCases)) {
         testCases.forEach((tc: StoredTestCase) => {
           if (tc.category) {

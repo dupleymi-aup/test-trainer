@@ -60,13 +60,13 @@ export async function GET() {
       // Parse covered EC IDs
       let coveredEcIds: string[] = [];
       try {
-        coveredEcIds = JSON.parse(a.coveredEcIds);
+        coveredEcIds = JSON.parse(a.coveredEcIds || "[]");
       } catch { /* ignore parse errors */ }
 
       // Parse covered BV descriptions
       let coveredBvDescs: string[] = [];
       try {
-        coveredBvDescs = JSON.parse(a.coveredBvDescriptions);
+        coveredBvDescs = JSON.parse(a.coveredBvDescriptions || "[]");
       } catch { /* ignore parse errors */ }
 
       // For low-scoring attempts (< 60), analyze what was missed

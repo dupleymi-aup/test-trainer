@@ -120,17 +120,17 @@ export async function POST(req: Request) {
         let coveredBvDescriptions: string[] = [];
 
         try {
-          testCases = JSON.parse(a.testCases);
+          testCases = JSON.parse(a.testCases || "[]");
         } catch {
           logger.warn("Failed to parse testCases for attempt", { attemptId: a.id });
         }
         try {
-          coveredEcIds = JSON.parse(a.coveredEcIds);
+          coveredEcIds = JSON.parse(a.coveredEcIds || "[]");
         } catch {
           logger.warn("Failed to parse coveredEcIds for attempt", { attemptId: a.id });
         }
         try {
-          coveredBvDescriptions = JSON.parse(a.coveredBvDescriptions);
+          coveredBvDescriptions = JSON.parse(a.coveredBvDescriptions || "[]");
         } catch {
           logger.warn("Failed to parse coveredBvDescriptions for attempt", { attemptId: a.id });
         }

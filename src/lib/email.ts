@@ -31,8 +31,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
 
   if (!transporter) {
     if (process.env.NODE_ENV === "development") {
-      console.log(`[EMAIL] To: ${to} | Subject: ${subject}`);
-      console.log(`[EMAIL] HTML: ${html}`);
+      logger.debug(`[EMAIL] To: ${to} | Subject: ${subject}`);
       return true;
     }
     throw new Error(

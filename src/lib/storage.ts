@@ -68,7 +68,7 @@ export function loadProgress(): Record<string, TaskProgress> {
   try {
     const raw = localStorage.getItem(PROGRESS_KEY);
     if (!raw) return {};
-    return JSON.parse(raw);
+    return JSON.parse(raw || "{}");
   } catch {
     return {};
   }
@@ -98,7 +98,7 @@ export function loadCurrentSession(taskId: number): TestCase[] | null {
   try {
     const raw = localStorage.getItem(SESSION_PREFIX + taskId);
     if (!raw) return null;
-    return JSON.parse(raw);
+    return JSON.parse(raw || "[]");
   } catch {
     return null;
   }
@@ -197,7 +197,7 @@ export function loadAttemptHistory(): AttemptRecord[] {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    return JSON.parse(raw || "[]");
   } catch {
     return [];
   }
@@ -313,7 +313,7 @@ export function loadStreak(): StreakData {
   try {
     const raw = localStorage.getItem(STREAK_KEY);
     if (!raw) return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
-    return JSON.parse(raw);
+    return JSON.parse(raw || "{}");
   } catch {
     return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
   }
@@ -352,7 +352,7 @@ export function loadMarathonRecords(): MarathonRecord[] {
   try {
     const raw = localStorage.getItem(MARATHON_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    return JSON.parse(raw || "[]");
   } catch {
     return [];
   }
@@ -396,7 +396,7 @@ export function loadTheorySectionsViewed(): string[] {
   try {
     const raw = localStorage.getItem(THEORY_VIEWED_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    return JSON.parse(raw || "[]");
   } catch {
     return [];
   }

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
 import { logger } from "@/lib/logger";
+import { MS_PER_DAY } from "@/lib/time-constants";
 
 export interface SystemAlert {
   id: string;
@@ -237,7 +238,7 @@ export async function GET() {
   });
 
   for (const d of overdueDeadlines) {
-    const daysOverdue = Math.floor((nowDate.getTime() - d.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysOverdue = Math.floor((nowDate.getTime() - d.dueDate.getTime()) / MS_PER_DAY);
     const groupName = d.group ? ` (группа: ${d.group.name})` : " (системный)";
     const typeLabel = typeLabels[d.type] || d.type;
 

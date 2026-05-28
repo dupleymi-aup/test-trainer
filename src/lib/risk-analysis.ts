@@ -1,3 +1,5 @@
+import { MS_PER_DAY } from "@/lib/time-constants";
+
 export interface AttemptData {
   score: number;
   ecCoverage: number;
@@ -268,7 +270,7 @@ export function computeAnomalyFlags(
   // Returned student: gap > 21 days between attempts
   for (let i = 1; i < attempts.length; i++) {
     const gap = attempts[i].createdAt.getTime() - attempts[i - 1].createdAt.getTime();
-    const gapDays = gap / (1000 * 60 * 60 * 24);
+    const gapDays = gap / MS_PER_DAY;
     if (gapDays > 21) {
       anomalies.push({
         studentId,

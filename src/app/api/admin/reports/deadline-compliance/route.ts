@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
+import { MS_PER_DAY } from "@/lib/time-constants";
 
 export async function GET() {
   try {
@@ -95,7 +96,7 @@ export async function GET() {
         title: d.title,
         type: typeLabels[d.type] || d.type,
         dueDate: d.dueDate.toISOString(),
-        daysOverdue: Math.floor((now.getTime() - d.dueDate.getTime()) / (1000 * 60 * 60 * 24)),
+        daysOverdue: Math.floor((now.getTime() - d.dueDate.getTime()) / MS_PER_DAY),
         groupName: d.group?.name || null,
       })),
     };

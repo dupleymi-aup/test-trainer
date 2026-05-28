@@ -99,11 +99,11 @@ export async function GET(request: Request) {
 
     // Parse covered ECs
     let coveredEcIds: string[] = [];
-    try { coveredEcIds = JSON.parse(a.coveredEcIds); } catch { /* ignore */ }
+    try { coveredEcIds = JSON.parse(a.coveredEcIds || "[]"); } catch { /* ignore */ }
 
     // Parse covered BVs
     let coveredBvDescs: string[] = [];
-    try { coveredBvDescs = JSON.parse(a.coveredBvDescriptions); } catch { /* ignore */ }
+    try { coveredBvDescs = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { /* ignore */ }
 
     // Track each EC for this task
     for (const ec of task.equivalenceClasses) {
