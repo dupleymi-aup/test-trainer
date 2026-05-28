@@ -13,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
@@ -41,7 +40,6 @@ import {
 import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
 import type { TestCase } from "@/lib/evaluator";
-import { categoryColors } from "@/lib/constants";
 import { getTaskHistory } from "@/lib/storage";
 import { CoverageMatrix } from "@/components/coverage-matrix";
 

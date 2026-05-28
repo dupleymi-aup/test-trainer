@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { User, LogOut, Settings, BarChart3, Shield, GraduationCap } from "lucide-react";
+import { User, LogOut, BarChart3, Shield, GraduationCap } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";

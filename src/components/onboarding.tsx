@@ -44,7 +44,7 @@ const steps = [
 ];
 
 export function Onboarding() {
-  const [forcedOpen, setForcedOpen] = useState(false);
+  const [_forcedOpen, setForcedOpen] = useState(false);
   const [open, setOpen] = useState(() => {
     try {
       return !localStorage.getItem(ONBOARDING_KEY);

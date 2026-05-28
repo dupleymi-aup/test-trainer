@@ -214,16 +214,17 @@ export function ExamMode() {
   useEffect(() => {
     if (examState !== "running") return;
     const interval = setInterval(() => {
-      setTimeRemaining((t) => {
-        if (t <= 1) {
-          finishExamRef.current?.();
-          return 0;
-        }
-        return t - 1;
-      });
+      setTimeRemaining((t) => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, [examState]);
+
+  // Finish exam when time runs out
+  useEffect(() => {
+    if (timeRemaining === 0 && examState === "running") {
+      finishExamRef.current?.();
+    }
+  }, [timeRemaining, examState]);
 
   const toggleTask = (id: number) => {
     setSelectedTasks((prev) =>
@@ -241,23 +242,31 @@ export function ExamMode() {
 
   const beginExam = () => {
     // Shuffle selected tasks using Fisher-Yates
-    const shuffled = selectedTasks
+    const foundTasks = selectedTasks
       .map((id) => tasks.find((t) => t.id === id))
       .filter((t): t is NonNullable<typeof t> => t !== undefined);
-    if (shuffled.length === 0) {
+    
+    // Warn user if some tasks were not found
+    const missingCount = selectedTasks.length - foundTasks.length;
+    if (missingCount > 0) {
+      toast.warning(`Не найдено ${missingCount} из ${selectedTasks.length} выбранных заданий`);
+    }
+    
+    if (foundTasks.length === 0) {
       toast.error("Выбранные задания не найдены");
       return;
     }
-    for (let i = shuffled.length - 1; i > 0; i--) {
+    
+    for (let i = foundTasks.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      [foundTasks[i], foundTasks[j]] = [foundTasks[j], foundTasks[i]];
     }
-    setExamTasks(shuffled);
+    setExamTasks(foundTasks);
     setExamTestCases({});
     setExamResults([]);
     setLastPracticeResult(null);
     setCurrentTaskIndex(0);
-    setExamInputs(shuffled[0].params.map(() => ""));
+    setExamInputs(foundTasks[0].params.map(() => ""));
     setExamExpected("");
     setTimeRemaining(timeLimit * 60);
     setExamState("running");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Check, AlertTriangle, TrendingDown, Clock, UserX } from "lucide-react";
+import { Bell, AlertTriangle, TrendingDown, Clock, UserX } from "lucide-react";
 import { formatRelativeDate } from "@/lib/format-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

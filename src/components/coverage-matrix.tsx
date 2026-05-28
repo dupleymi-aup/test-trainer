@@ -10,14 +10,12 @@ import {
 } from "@/components/ui/tooltip";
 import { CheckCircle2, XCircle, Grid3X3 } from "lucide-react";
 import type { EvaluationResult } from "@/lib/evaluator";
-import type { TestCase } from "@/lib/evaluator";
 
 interface CoverageMatrixProps {
   result: EvaluationResult;
-  testCases: TestCase[];
 }
 
-export function CoverageMatrix({ result, testCases }: CoverageMatrixProps) {
+export function CoverageMatrix({ result }: CoverageMatrixProps) {
   const allCoverageItems = [
     ...result.task.equivalenceClasses.map((ec) => ({
       id: ec.id,
@@ -66,15 +64,6 @@ export function CoverageMatrix({ result, testCases }: CoverageMatrixProps) {
           : 0,
     };
   });
-
-  // Get cell color based on coverage status
-  const getCellColor = (tcId: string, itemId: string) => {
-    const covered = coverageMap.get(tcId);
-    if (covered?.has(itemId)) {
-      return "bg-emerald-500/20 dark:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300";
-    }
-    return "bg-muted/30 text-muted-foreground/40";
-  };
 
   return (
     <Card>

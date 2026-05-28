@@ -29,7 +29,7 @@ export default function TeacherDashboardPage() {
     Promise.allSettled([
       fetch("/api/teacher/students", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
       fetch("/api/teacher/analytics", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    ]).then(([studentsResult, analyticsResult]) => {
+    ]).then(([studentsResult, _analyticsResult]) => {
       if (studentsResult.status === "fulfilled" && !controller.signal.aborted) {
         setStudents(studentsResult.value.students);
       }

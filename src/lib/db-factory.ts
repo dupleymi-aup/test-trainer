@@ -1,35 +1,36 @@
 import { config } from './config'
 import { db as prismaDb } from './db'
 import { db as mongoDb, connectMongo, checkMongoConnection } from './mongodb'
-import net from 'net'
 
 export type DbType = 'sqlite' | 'postgres' | 'mongodb'
 
 export interface DBInfo {
   type: DbType
-  prisma: ReturnType<typeof getPrismaClient> | null
+  prisma: typeof prismaDb | null
   mongo: typeof mongoDb | null
   url: string
 }
 
-function getPrismaClient() {
-  return prismaDb
-}
-
 export async function checkPostgresConnection(host = '127.0.0.1', port = 5432): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = net.createConnection({ host, port }, () => {
-      socket.destroy()
-      resolve(true)
+  try {
+    // Dynamic import to avoid Edge Runtime compatibility issues
+    const net = await import('net')
+    return new Promise((resolve) => {
+      const socket = net.default.createConnection({ host, port }, () => {
+        socket.destroy()
+        resolve(true)
+      })
+      socket.on('error', () => {
+        resolve(false)
+      })
+      socket.setTimeout(2000, () => {
+        socket.destroy()
+        resolve(false)
+      })
     })
-    socket.on('error', () => {
-      resolve(false)
-    })
-    socket.setTimeout(2000, () => {
-      socket.destroy()
-      resolve(false)
-    })
-  })
+  } catch {
+    return false
+  }
 }
 
 export async function checkSQLiteConnection(): Promise<boolean> {
@@ -73,7 +74,7 @@ export async function getDbInfo(): Promise<DBInfo> {
 
   return {
     type,
-    prisma: getPrismaClient(),
+    prisma: prismaDb,
     mongo: null,
     url: config.databaseUrl,
   }

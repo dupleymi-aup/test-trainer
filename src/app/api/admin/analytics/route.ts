@@ -72,7 +72,7 @@ export async function GET() {
       volumeMap[date] = { count: 0, totalScore: 0 };
     }
     volumeMap[date].count += a._count._all;
-    volumeMap[date].totalScore += a._avg.score! * a._count._all;
+    volumeMap[date].totalScore += (a._avg.score ?? 0) * a._count._all;
   }
 
   const attemptVolume = Object.entries(volumeMap)

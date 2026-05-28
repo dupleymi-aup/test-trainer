@@ -49,7 +49,7 @@ export function ComposedChart({
         </h3>
       )}
       <ResponsiveContainer width="100%" height={height}>
-        <RechartsComposedChart>
+        <RechartsComposedChart data={data}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis
             dataKey="label"

@@ -21,7 +21,7 @@ import {
 import { Plus, Calculator, HelpCircle } from "lucide-react";
 import type { Task, TestCaseCategory } from "@/lib/tasks";
 import { runReferenceFunction } from "@/lib/tasks";
-import { categories, categoryColors } from "@/lib/constants";
+import { categories } from "@/lib/constants";
 import { logger } from "@/lib/logger";
 
 interface TestFormProps {

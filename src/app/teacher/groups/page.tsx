@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { apiFetch } from "@/lib/api-client";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -16,7 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Users, Search, Loader2, X } from "lucide-react";
+import { Plus, Users, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Group {
@@ -40,7 +39,6 @@ export default function TeacherGroupsPage() {
   const [availableStudents, setAvailableStudents] = useState<{ id: string; name: string | null; email: string }[]>([]);
   const [addStudentId, setAddStudentId] = useState("");
   const [membersLoading, setMembersLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [addingStudent, setAddingStudent] = useState(false);
 
   const fetchGroups = () => {

@@ -15,6 +15,7 @@ import {
   Loader2, Clock, Calendar, FolderKanban,
 } from "lucide-react";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface Group {
   id: string;
@@ -383,7 +384,7 @@ export default function AdminExportPage() {
                   {exportHistory.map((log) => {
                     const details = (() => {
                       try { return JSON.parse(log.details); }
-                      catch (e) { console.warn('Failed to parse export log details:', log.details); return {}; }
+                      catch (_e) { logger.warn('Failed to parse export log details', { details: log.details }); return {}; }
                     })();
                     const reportName = reportLabels[details.reportType] || details.reportType || log.entity;
                     const format = (details.format || "csv").toUpperCase();

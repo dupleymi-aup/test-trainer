@@ -11,7 +11,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import type { TestCase, EvaluationResult } from "@/lib/evaluator";
+import type { TestCase } from "@/lib/evaluator";
 import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
 
 const pageVariants = {

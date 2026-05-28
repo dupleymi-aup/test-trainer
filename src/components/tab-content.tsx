@@ -13,7 +13,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
-import type { Task as TaskType, Difficulty, TestCaseCategory } from "@/lib/tasks";
+import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
 import type { TaskProgress, AttemptRecord } from "@/lib/storage";
 import type { TabValue, DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
 import { TaskListTab } from "@/components/task-list-tab";

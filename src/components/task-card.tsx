@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/lib/tasks";
-import { Trophy, CheckCircle2, Circle, BookOpen } from "lucide-react";
+import { Trophy, Circle, BookOpen } from "lucide-react";
 import {
   FunctionSquare,
   Hash,

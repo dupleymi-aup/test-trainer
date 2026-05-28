@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TaskCard } from "@/components/task-card";
 import { tasks } from "@/lib/tasks";
 import { getTaskHistory } from "@/lib/storage";
-import type { Task, Difficulty } from "@/lib/tasks";
+import type { Task } from "@/lib/tasks";
 import type { TaskProgress } from "@/lib/storage";
 import type { DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
 
