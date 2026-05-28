@@ -167,7 +167,7 @@ export function MarathonMode({
     setElapsed(0);
   }, []);
 
-  const handleEvaluate = useCallback(() => {
+  const _handleEvaluate = useCallback(() => {
     if (!currentTask || testCases.length === 0) return;
     const result = evaluateTestCases(currentTask, testCases);
     setEvaluationResult(result);
@@ -265,8 +265,6 @@ export function MarathonMode({
   // Finish screen
   if (state.finished) {
     const totalScoreVal = state.taskResults.reduce((s, r) => s + r.bestScore, 0);
-    const avgScore = state.taskResults.length > 0 ? Math.round(totalScoreVal / state.taskResults.length) : 0;
-    const totalTimeSec = state.taskResults.reduce((s, r) => s + r.timeSpentSec, 0);
 
     const sorted = [...state.taskResults].sort((a, b) => b.bestScore - a.bestScore);
     const best = sorted[0];
