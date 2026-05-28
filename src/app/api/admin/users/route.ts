@@ -4,9 +4,11 @@ import { db } from "@/lib/db";
 import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
-import { checkRateLimit, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
-import { getClientIp } from "@/lib/rate-limit";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { formatZodError } from "@/lib/api-error-handler";
+import { parsePositiveInt } from "@/lib/validate";
+
+const RoleSchema = z.nativeEnum(Role);
 
 export async function GET(req: Request) {
   try {
@@ -14,10 +16,11 @@ export async function GET(req: Request) {
     if ("response" in guard) return guard.response;
 
   const { searchParams } = new URL(req.url);
-  const role = searchParams.get("role");
+  const rawRole = searchParams.get("role");
+  const role = rawRole && rawRole !== "ALL" ? RoleSchema.safeParse(rawRole) : undefined;
   const search = searchParams.get("search");
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+  const page = parsePositiveInt(searchParams.get("page"), 1);
+  const limit = Math.min(200, parsePositiveInt(searchParams.get("limit"), 20));
   const showDeleted = searchParams.get("showDeleted") === "true";
   const allowedSortBy = ["createdAt", "name", "attempts"] as const;
   const rawSortBy = searchParams.get("sortBy") || "createdAt";
@@ -33,8 +36,10 @@ export async function GET(req: Request) {
     where.deletedAt = null;
   }
 
-  if (role && role !== "ALL") {
-    where.role = role as Role;
+  if (role?.success) {
+    where.role = role.data;
+  } else if (rawRole && rawRole !== "ALL" && !role?.success) {
+    return NextResponse.json({ error: `Invalid role: ${rawRole}` }, { status: 400 });
   }
 
   if (search) {
