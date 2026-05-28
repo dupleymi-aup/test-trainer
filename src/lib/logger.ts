@@ -11,7 +11,7 @@
  *   logger.info("User created", { userId });
  */
 
-type LogLevel = "info" | "warn" | "error";
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogEntry {
   timestamp: string;
@@ -42,6 +42,11 @@ function extractErrorContext(error: unknown): Record<string, unknown> {
 }
 
 export const logger = {
+  debug(message: string, context?: Record<string, unknown>) {
+    if (process.env.LOG_LEVEL !== "debug") return;
+    console.debug(formatLog("debug", message, context));
+  },
+
   info(message: string, context?: Record<string, unknown>) {
     if (process.env.LOG_LEVEL === "silent") return;
     console.info(formatLog("info", message, context));

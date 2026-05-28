@@ -28,6 +28,7 @@ import { evaluateTestCases } from "@/lib/evaluator";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { toast } from "sonner";
 import { saveAttempt } from "@/lib/storage";
+import { logger } from "@/lib/logger";
 import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
 
@@ -293,7 +294,7 @@ export function ExamMode() {
       const p = JSON.parse(trimmed);
       if (typeof p === "object") return p;
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("parseInputForRef: JSON.parse failed for:", trimmed);
+      if (process.env.NODE_ENV === "development") logger.debug("parseInputForRef: JSON.parse failed", { input: trimmed });
     }
     return trimmed;
   }, []);
@@ -455,7 +456,7 @@ export function ExamMode() {
   // SETUP SCREEN
   if (examState === "setup") {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto space-y-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
         <Card className="border-emerald-200 dark:border-emerald-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -533,7 +534,7 @@ export function ExamMode() {
 
             <div className="space-y-2">
               <p className="text-xs font-medium">Выберите задания:</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {tasks.map((task) => (
                   <button
                     key={task.id}
@@ -639,7 +640,7 @@ export function ExamMode() {
       .filter((t) => t.tips.length > 0);
 
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto space-y-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
         <Card className="border-amber-200 dark:border-amber-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -741,7 +742,7 @@ export function ExamMode() {
     const progressPercent = examTasks.length > 0 ? (completedCount / examTasks.length) * 100 : 0;
 
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto space-y-4">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
         {/* Timer bar */}
         <div className={`p-3 rounded-lg border ${isTimeLow ? "border-rose-300 bg-rose-50 dark:bg-rose-900/20" : "border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20"}`}>
           <div className="flex items-center justify-between mb-2">
@@ -978,7 +979,7 @@ export function ExamMode() {
 
   // RESULTS SCREEN
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto space-y-4">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
       <Confetti active={showConfetti} />
       <Card className="border-emerald-200 dark:border-emerald-800">
         <CardContent className="pt-6 text-center">

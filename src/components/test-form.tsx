@@ -22,6 +22,7 @@ import { Plus, Calculator, HelpCircle } from "lucide-react";
 import type { Task, TestCaseCategory } from "@/lib/tasks";
 import { runReferenceFunction } from "@/lib/tasks";
 import { categories, categoryColors } from "@/lib/constants";
+import { logger } from "@/lib/logger";
 
 interface TestFormProps {
   task: Task;
@@ -54,7 +55,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
     if (trimmed === "null") return null;
     const num = Number(trimmed);
     if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
-    try { const p = JSON.parse(trimmed); if (typeof p === "object") return p; } catch { if (process.env.NODE_ENV === "development") console.warn("parseInputForRef: JSON.parse failed for:", trimmed); }
+    try { const p = JSON.parse(trimmed); if (typeof p === "object") return p; } catch { if (process.env.NODE_ENV === "development") logger.debug("parseInputForRef: JSON.parse failed", { input: trimmed }); }
     return trimmed;
   }, []);
 
