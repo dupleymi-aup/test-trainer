@@ -481,6 +481,241 @@ export const workedExamples: WorkedExample[] = [
       "Комбинаторное тестирование: 5 правил = 32 комбинации, но EC сокращает до ~9 тестов",
     ],
   },
+  {
+    taskId: 16,
+    taskName: "Стоимость доставки",
+    introduction:
+      "calculateShipping(isPremium, orderAmount, region) — идеальная задача для таблицы решений. " +
+      "Три условия (премиум, сумма, регион) создают 2 × 4 × 3 = 24 комбинации, но таблица решений " +
+      "помогает систематически покрыть все сценарии минимальным числом тестов.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Анализ бизнес-логики",
+        action: "Выписываем 3 условия и их пороговые значения",
+        reasoning:
+          "Условия: (1) isPremium: true/false, (2) orderAmount: >=1000, >=2000, >=500, <500, (3) region: local/national/international. Каждое условие влияет на итоговую стоимость.",
+        example: undefined,
+      },
+      {
+        stepNumber: 2,
+        title: "EC1: Премиум + сумма >= 1000 — бесплатно",
+        action: "Тестируем isPremium=true, orderAmount=1000, region=local — ожидаем shipping=0",
+        reasoning:
+          "Премиум-клиенты с заказом от 1000 получают бесплатную доставку независимо от региона. Это самое выгодное условие.",
+        example: {
+          input: "isPremium=true, orderAmount=5000, region=international",
+          expectedOutput: "{ shipping: 0, currency: 'RUB' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 3,
+        title: "EC2: Премиум + сумма < 1000 + local/national",
+        action: "Тестируем isPremium=true, orderAmount=500, region=local — ожидаем shipping=100",
+        reasoning:
+          "Премиум без порога 1000: local=100, national=100. Важно: national тоже 100 для премиум, это отличается от обычных клиентов.",
+        example: {
+          input: "isPremium=true, orderAmount=999, region=national",
+          expectedOutput: "{ shipping: 100, currency: 'RUB' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 4,
+        title: "EC3: Премиум + сумма < 1000 + international",
+        action: "Тестируем isPremium=true, orderAmount=500, region=international — ожидаем shipping=200",
+        reasoning:
+          "International для премиум — отдельный случай: 200 вместо 100. Это исключение внутри исключения.",
+        example: {
+          input: "isPremium=true, orderAmount=500, region=international",
+          expectedOutput: "{ shipping: 200, currency: 'RUB' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 5,
+        title: "EC4: Обычный + сумма >= 2000 — бесплатно",
+        action: "Тестируем isPremium=false, orderAmount=2000, region=international — ожидаем shipping=0",
+        reasoning:
+          "Обычные клиенты с заказом от 2000 получают бесплатную доставку. Порог 2000 — вдвое выше чем для премиум.",
+        example: {
+          input: "isPremium=false, orderAmount=3000, region=international",
+          expectedOutput: "{ shipping: 0, currency: 'RUB' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 6,
+        title: "EC5-7: Обычный + сумма 500–1999 (три региона)",
+        action: "Тестируем local=100, national=200, international=400",
+        reasoning:
+          "Средний тариф: зависит от региона. local=100, national=200, international=400. region=international самый дорогой — в 4 раза дороже local.",
+        example: {
+          input: "isPremium=false, orderAmount=1500, region=international",
+          expectedOutput: "{ shipping: 400, currency: 'RUB' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 7,
+        title: "EC8-10: Обычный + сумма < 500 (три региона)",
+        action: "Тестируем local=200, national=350, international=500",
+        reasoning:
+          "Базовый тариф: самый дорогой для малых сумм. local=200, national=350, international=500. Сравниваем с EC5-7: при сумме >= 500 тариф ниже.",
+        example: {
+          input: "isPremium=false, orderAmount=100, region=national",
+          expectedOutput: "{ shipping: 350, currency: 'RUB' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 8,
+        title: "Граничные значения сумм: 0, 499, 500, 999, 1000, 1999, 2000",
+        action: "Тестируем каждую границу для обычного клиента",
+        reasoning:
+          "Ключевые пороги: 500 (базовый→средний), 1000 (премиум бесплатный), 2000 (обычный бесплатный). Off-by-one на каждом пороге: 499/500, 999/1000, 1999/2000.",
+        example: {
+          input: "isPremium=false, orderAmount=500, region=local",
+          expectedOutput: "{ shipping: 100, currency: 'RUB' }",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 9,
+        title: "Таблица решений — полный обзор",
+        action: "Строим таблицу: 2 статуса × 4 диапазона сумм × 3 региона = 24 строки",
+        reasoning:
+          "Но многие ячейки объединяются: премиум >= 1000 → 0 для всех регионов (3 строки → 1). Таблица решений сокращает 24 комбинации до ~13 тестов.",
+        example: undefined,
+      },
+    ],
+    keyTakeaways: [
+      "Таблица решений — лучший инструмент для многоусловной бизнес-логики",
+      "Пороговые значения (500, 1000, 2000) — критические граничные точки",
+      "Премиум влияет на тариф только при сумме < 1000",
+      "International — самый дорогой регион для всех категорий",
+      "Граничные значения: тестируем X-1, X, X+1 для каждого порога",
+    ],
+  },
+  {
+    taskId: 17,
+    taskName: "Блокировка при входе",
+    introduction:
+      "handleLoginAction — задача на тестирование переходов состояний (state transitions). " +
+      "Аккаунт проходит через состояния: разблокирован → неудачные попытки → заблокирован → разблокирован. " +
+      "Нужно проверить все допустимые и недопустимые переходы.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Анализ диаграммы состояний",
+        action: "Выписываем состояния и допустимые переходы",
+        reasoning:
+          "Состояния: [attempts=0, unlocked] → [attempts=1] → [attempts=2] → [attempts=3, locked] → [wait → unlocked, attempts=0]. Действия: login, success, wait. Каждое действие может привести к разному состоянию.",
+        example: undefined,
+      },
+      {
+        stepNumber: 2,
+        title: "EC1: Успешный вход с первой попытки",
+        action: "Тестируем action=success, attempts=0, lockoutTime=null — ожидаем status=success",
+        reasoning:
+          "Happy path: пользователь входит с первого раза. remainingAttempts=3 (сброс после успеха).",
+        example: {
+          input: "action='success', attempts=0, lockoutTime=null",
+          expectedOutput: "{ status: 'success', remainingAttempts: 3, message: 'Вход выполнен успешно.' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 3,
+        title: "EC3: Первая неудачная попытка",
+        action: "Тестируем action=login, attempts=0, lockoutTime=null — ожидаем status=failed, remaining=2",
+        reasoning:
+          "Первая неудача: attempts 0→1, remainingAttempts = 3-1 = 2. Аккаунт ещё не заблокирован — это ключевое отличие от EC5.",
+        example: {
+          input: "action='login', attempts=0, lockoutTime=null",
+          expectedOutput: "{ status: 'failed', remainingAttempts: 2, message: 'Неверный пароль. Осталось попыток: 2' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 4,
+        title: "EC4: Вторая неудачная попытка",
+        action: "Тестируем action=login, attempts=1, lockoutTime=null — ожидаем status=failed, remaining=1",
+        reasoning:
+          "Вторая неудача: attempts 1→2, remainingAttempts = 3-2 = 1. Последняя попытка перед блокировкой — предупреждение пользователю.",
+        example: {
+          input: "action='login', attempts=1, lockoutTime=null",
+          expectedOutput: "{ status: 'failed', remainingAttempts: 1, message: 'Неверный пароль. Осталось попыток: 1' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 5,
+        title: "EC5: Третья попытка — БЛОКИРОВКА",
+        action: "Тестируем action=login, attempts=2, lockoutTime=null — ожидаем status=locked",
+        reasoning:
+          "Ключевой переход! attempts 2→3, и 3 >= maxAttempts(3) → блокировка. remainingAttempts=0. Это граничное состояние: attempts=2 — последний шанс.",
+        example: {
+          input: "action='login', attempts=2, lockoutTime=null",
+          expectedOutput: "{ status: 'locked', remainingAttempts: 0, message: 'Аккаунт заблокирован после 3 неудачных попыток.' }",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 6,
+        title: "EC6: Попытка входа при блокировке",
+        action: "Тестируем action=login, attempts=3, lockoutTime=0 — ожидаем status=locked",
+        reasoning:
+          "Аккаунт уже заблокирован (lockoutTime=0, now=0, прошло 0 < 300 секунд). Любая попытка входа возвращает locked. Важный negative test.",
+        example: {
+          input: "action='login', attempts=3, lockoutTime=0",
+          expectedOutput: "{ status: 'locked', remainingAttempts: 0, message: 'Аккаунт заблокирован. Попробуйте позже.' }",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 7,
+        title: "EC8: Успешный вход при блокировке — тоже locked",
+        action: "Тестируем action=success, attempts=2, lockoutTime=0 — ожидаем status=locked",
+        reasoning:
+          "Даже правильный пароль не поможет при блокировке! Это counter-intuitive behaviour — частый баг в реальных системах. Проверка isLockedOut идёт ПЕРЕД проверкой пароля.",
+        example: {
+          input: "action='success', attempts=2, lockoutTime=0",
+          expectedOutput: "{ status: 'locked', remainingAttempts: 0, message: 'Аккаунт заблокирован.' }",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 8,
+        title: "EC7: Разблокировка через ожидание",
+        action: "Тестируем action=wait, attempts=3, lockoutTime=0 — ожидаем status=unlocked",
+        reasoning:
+          "После ожидания (wait) блокировка снимается: attempts сбрасываются на 3 (maxAttempts), status=unlocked. Полный цикл: 0→1→2→3(locked)→wait→0.",
+        example: {
+          input: "action='wait', attempts=3, lockoutTime=0",
+          expectedOutput: "{ status: 'unlocked', remainingAttempts: 3, message: 'Блокировка снята. Попытки сброшены.' }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 9,
+        title: "Полный цикл состояний (0-switch coverage)",
+        action: "Проверяем цепочку: login(0→1) → login(1→2) → login(2→3 locked) → wait → login(0→1)",
+        reasoning:
+          "Это 0-switch coverage — проверка каждого перехода по отдельности. Для 1-switch нужно проверивать пары переходов: login→login, login→wait, и т.д.",
+        example: undefined,
+      },
+    ],
+    keyTakeaways: [
+      "3 неудачные попытки → автоматическая блокировка",
+      "Даже правильный пароль не работает при блокировке",
+      "wait — единственный способ разблокировки (сбрасывает attempts)",
+      "Граничное состояние: attempts=2 + login = блокировка (переход 2→3)",
+      "State transitions: рисуем диаграмму состояний для систематического покрытия",
+      "0-switch = каждый переход отдельно, 1-switch = пары переходов",
+    ],
+  },
 ];
 
 export function getWorkedExample(taskId: number): WorkedExample | undefined {
