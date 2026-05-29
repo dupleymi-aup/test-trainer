@@ -660,6 +660,10 @@ export function useTrainerState() {
       marathonCompleted: getMarathonsCompleted(),
       bestMarathonScore: getBestMarathonAvgScore(),
       exceptionTestTasks,
+      workedExamplesViewed: Object.keys(progress).length, // tasks with attempts ≈ worked examples viewed
+      testCaseCategories: new Set(
+        history.flatMap((h) => h.categoryDistribution ? Object.keys(h.categoryDistribution).filter((k) => h.categoryDistribution![k] > 0) : [])
+      ),
     };
 
     const newlyUnlocked = checkAndUnlockAchievements(context);

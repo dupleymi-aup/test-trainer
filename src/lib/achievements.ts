@@ -29,6 +29,8 @@ export interface AchievementContext {
   marathonCompleted?: number; // number of marathons completed (all tasks finished)
   bestMarathonScore?: number; // best average score in a completed marathon
   exceptionTestTasks?: number; // count of distinct tasks where exception/invalid type tests were submitted
+  workedExamplesViewed?: number; // number of worked examples viewed
+  testCaseCategories?: Set<string>; // distinct test case categories used across submissions
 }
 
 const ACHIEVEMENTS_KEY = "test-trainer-achievements";
@@ -136,6 +138,11 @@ export const achievements: Achievement[] = [
     description: "Используйте все 4 категории тест-кейсов в одной проверке",
     icon: "🎨",
     condition: (ctx) => ctx.usedAllCategories === true,
+    progressFn: (ctx) => {
+      if (ctx.usedAllCategories) return 1;
+      const cats = ctx.testCaseCategories ?? new Set();
+      return Math.min(cats.size / 4, 0.75);
+    },
   },
   {
     id: "theory_explorer",
@@ -169,9 +176,10 @@ export const achievements: Achievement[] = [
   {
     id: "comeback",
     name: "Камбэк",
-    description: "После результата <50% получите ≥90% на том же задании",
+    description: "Улучшите свои результаты 2 раза (новый тест лучше предыдущего)",
     icon: "💪",
     condition: (ctx) => (ctx.scoreImprovements ?? 0) >= 2,
+    progressFn: (ctx) => Math.min((ctx.scoreImprovements ?? 0) / 2, 1),
   },
   {
     id: "marathon_finisher",
@@ -204,6 +212,14 @@ export const achievements: Achievement[] = [
     icon: "💎",
     condition: (ctx) => (ctx.examAvgScore ?? 0) >= 95,
     progressFn: (ctx) => Math.min((ctx.examAvgScore ?? 0) / 95, 1),
+  },
+  {
+    id: "example_scholar",
+    name: "Прилежный ученик",
+    description: "Изучите все 17 пошаговых разборов заданий",
+    icon: "📖",
+    condition: (ctx) => (ctx.workedExamplesViewed ?? 0) >= 17,
+    progressFn: (ctx) => Math.min((ctx.workedExamplesViewed ?? 0) / 17, 1),
   },
 ];
 
