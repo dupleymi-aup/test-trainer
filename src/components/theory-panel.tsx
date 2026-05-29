@@ -27,6 +27,7 @@ import {
   TestTube,
   Target,
   Code,
+  Bug,
 } from "lucide-react";
 
 const fadeIn = {
@@ -142,8 +143,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
   }, []);
 
   const theoryProgress = useMemo(() => {
-    const totalSections = 20;
-    return { viewed: viewedSections.size, total: totalSections };
+    return { viewed: viewedSections.size, total: 21 };
   }, [viewedSections]);
 
   const sections: TheorySection[] = [
@@ -188,6 +188,43 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <li>• n &gt; 20 → переполнение</li>
               <li>• n — не целое число → ошибка типа</li>
             </ul>
+          </div>
+          {/* Visual EC partitioning diagram */}
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-2">Разбиение на классы</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-rose-400 shrink-0" />
+                <div className="flex-1 h-6 bg-rose-100 dark:bg-rose-900/30 border border-rose-300 dark:border-rose-700 rounded flex items-center justify-center text-[10px] font-mono text-rose-700 dark:text-rose-300">
+                  n &lt; 0 → Ошибка
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-amber-400 shrink-0" />
+                <div className="flex-1 h-6 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded flex items-center justify-center text-[10px] font-mono text-amber-700 dark:text-amber-300">
+                  n = 0 → 1
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-400 shrink-0" />
+                <div className="flex-1 h-6 bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-700 rounded flex items-center justify-center text-[10px] font-mono text-emerald-700 dark:text-emerald-300">
+                  1 ≤ n ≤ 20 → n!
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-orange-400 shrink-0" />
+                <div className="flex-1 h-6 bg-orange-100 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700 rounded flex items-center justify-center text-[10px] font-mono text-orange-700 dark:text-orange-300">
+                  n &gt; 20 → Переполнение
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-purple-400 shrink-0" />
+                <div className="flex-1 h-6 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded flex items-center justify-center text-[10px] font-mono text-purple-700 dark:text-purple-300">
+                  не int → Ошибка типа
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">Каждый цвет = отдельный класс эквивалентности. Достаточно одного теста из каждого.</p>
           </div>
         </div>
       ),
@@ -239,6 +276,41 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <code className="bg-white dark:bg-muted px-1.5 py-0.5 rounded font-mono border border-emerald-200 dark:border-emerald-800 text-emerald-700">9 (max-1)</code>
               <code className="bg-white dark:bg-muted px-1.5 py-0.5 rounded font-mono border border-emerald-200 dark:border-emerald-800 text-emerald-700">10 (max)</code>
               <code className="bg-white dark:bg-muted px-1.5 py-0.5 rounded font-mono border border-rose-200 dark:border-rose-800 text-rose-700">11 (сверх)</code>
+            </div>
+          </div>
+          {/* Visual number line diagram */}
+          <div className="bg-muted/50 rounded-lg p-3">
+            <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-2">Числовая прямая</p>
+            <div className="flex items-center justify-between px-2 py-3">
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-rose-600 font-mono">0</span>
+                <span className="text-[9px] text-muted-foreground">ниже</span>
+              </div>
+              <div className="flex-1 h-px bg-border mx-1" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-emerald-600 font-mono font-bold">1</span>
+                <span className="text-[9px] text-muted-foreground">min</span>
+              </div>
+              <div className="flex-1 h-px bg-emerald-300 dark:bg-emerald-700 mx-1" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-emerald-600 font-mono">2</span>
+              </div>
+              <div className="flex-[3] h-px bg-emerald-300 dark:bg-emerald-700 mx-1 relative">
+                <div className="absolute inset-x-0 -top-3 text-[9px] text-emerald-600 text-center">допустимый диапазон</div>
+              </div>
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-emerald-600 font-mono">9</span>
+              </div>
+              <div className="flex-1 h-px bg-emerald-300 dark:bg-emerald-700 mx-1" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-emerald-600 font-mono font-bold">10</span>
+                <span className="text-[9px] text-muted-foreground">max</span>
+              </div>
+              <div className="flex-1 h-px bg-border mx-1" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-rose-600 font-mono">11</span>
+                <span className="text-[9px] text-muted-foreground">выше</span>
+              </div>
             </div>
           </div>
         </div>
@@ -377,15 +449,39 @@ export function TheoryPanel({ task }: { task?: Task }) {
               </li>
             </ul>
           </div>
+          {/* Visual state transition diagram */}
           <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-lg p-3">
-            <p className="font-medium text-cyan-800 dark:text-cyan-300 text-xs mb-1 flex items-center gap-1">
-              <Lightbulb className="h-3.5 w-3.5" /> Пример: Банкомат
+            <p className="font-medium text-cyan-800 dark:text-cyan-300 text-xs mb-2 flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> Диаграмма: Блокировка аккаунта
             </p>
-            <p className="text-xs">
-              Состояния: «Карта вставлена», «PIN введён», «Ошибка».
-              Переходы: вставка карты → ввод PIN → правильный/неправильный PIN.
-              Тест-кейсы: все допустимые пути + попытка снять деньги без ввода PIN.
-            </p>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <div className="bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700 rounded-lg px-3 py-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300">
+                  Разблокирован (0 попыток)
+                </div>
+                <span className="text-xs text-muted-foreground">→ login(fail) →</span>
+                <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg px-3 py-1.5 text-xs font-medium text-amber-800 dark:text-amber-300">
+                  1 попытка
+                </div>
+                <span className="text-xs text-muted-foreground">→ login(fail) →</span>
+                <div className="bg-orange-100 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-1.5 text-xs font-medium text-orange-800 dark:text-orange-300">
+                  2 попытки
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap justify-center">
+                <span className="text-xs text-muted-foreground">→ login(fail) →</span>
+                <div className="bg-rose-100 dark:bg-rose-900/40 border border-rose-300 dark:border-rose-700 rounded-lg px-3 py-1.5 text-xs font-medium text-rose-800 dark:text-rose-300">
+                  Блокировка (3 попытки)
+                </div>
+                <span className="text-xs text-muted-foreground">→ wait(300s) →</span>
+                <div className="bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-300 dark:border-emerald-700 rounded-lg px-3 py-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300">
+                  Разблокирован (0 попыток)
+                </div>
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-1">
+                ↺ Успешный вход на любом этапе → сброс на «Разблокирован»
+              </div>
+            </div>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 space-y-2">
             <p className="font-medium text-foreground text-xs uppercase tracking-wider">Покрытие переходов</p>
@@ -1063,6 +1159,60 @@ export function TheoryPanel({ task }: { task?: Task }) {
           </div>
           <p><strong>Правило 80/20:</strong> 20% тестов — позитивные (happy path), 80% — негативные (edge cases, ошибки, невалидные данные).</p>
           <p className="text-muted-foreground">💡 Большинство багов находится в негативных тестах — именно там разработчики забывают про проверки.</p>
+        </div>
+      ),
+    },
+    {
+      id: "bug-patterns",
+      icon: <Bug className="h-4 w-4" />,
+      iconBg: "bg-red-100 dark:bg-red-900",
+      title: "Типичные паттерны багов",
+      subtitle: "Off-by-one, type coercion, floating point и другие",
+      openBorder: "border-l-red-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>🔴 Off-by-one (ошибка на единицу)</strong></p>
+            <p>Самый частый баг в программировании. Возникает при путанице &gt; / &gt;=, &lt; / &lt;=, 0-based vs 1-based индексации.</p>
+            <p className="font-mono bg-background p-1.5 rounded mt-1"><span className="text-rose-600">Баг:</span> if (age &gt; 18) // должно быть &gt;=</p>
+            <p className="font-mono bg-background p-1.5 rounded"><span className="text-emerald-600">Верно:</span> if (age &gt;= 18)</p>
+            <p className="text-muted-foreground mt-1">🎯 Ловится: граничными значениями (17, 18, 19)</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>🟡 Type Coercion (неявное приведение типов)</strong></p>
+            <p>JavaScript автоматически приводит типы: [] == false (true), "5" - 1 = 4 (number). Без явных проверок это приводит к багам.</p>
+            <p className="font-mono bg-background p-1.5 rounded mt-1"><span className="text-rose-600">Баг:</span> if (input) // "" проходит как false</p>
+            <p className="font-mono bg-background p-1.5 rounded"><span className="text-emerald-600">Верно:</span> if (typeof input === "string" &amp;&amp; input.length &gt; 0)</p>
+            <p className="text-muted-foreground mt-1">🎯 Ловится: тестами на недопустимый тип</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>🟠 Floating Point (ошибки округления)</strong></p>
+            <p>0.1 + 0.2 ≠ 0.3 в JavaScript! Дробные числа хранятся в binary floating point, что даёт неточности.</p>
+            <p className="font-mono bg-background p-1.5 rounded mt-1"><span className="text-rose-600">Баг:</span> 0.1 + 0.2 === 0.3 // false!</p>
+            <p className="font-mono bg-background p-1.5 rounded"><span className="text-emerald-600">Верно:</span> Math.round((0.1 + 0.2) * 100) / 100 === 0.3</p>
+            <p className="text-muted-foreground mt-1">🎯 Ловится: тестами на дробные результаты (calculateBMI, applyDiscount)</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>🔵 Null/Undefined Reference</strong></p>
+            <p>Попытка обратиться к свойству null/undefined — самая частая причина runtime ошибок в JavaScript.</p>
+            <p className="font-mono bg-background p-1.5 rounded mt-1"><span className="text-rose-600">Баг:</span> user.profile.name // если profile = null</p>
+            <p className="font-mono bg-background p-1.5 rounded"><span className="text-emerald-600">Верно:</span> user?.profile?.name // optional chaining</p>
+            <p className="text-muted-foreground mt-1">🎯 Ловится: тестами с null, undefined, пустыми объектами</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>🟣 State Not Reset</strong></p>
+            <p>Состояние не сбрасывается после операции. Счётчик попыток не обнуляется после успешного входа — классический баг.</p>
+            <p className="font-mono bg-background p-1.5 rounded mt-1"><span className="text-rose-600">Баг:</span> after successful login: attempts stays at 2</p>
+            <p className="font-mono bg-background p-1.5 rounded"><span className="text-emerald-600">Верно:</span> after success: attempts = 0</p>
+            <p className="text-muted-foreground mt-1">🎯 Ловится: state transition testing (переходы + сброс)</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>⚪ Incomplete Validation</strong></p>
+            <p>Функция проверяет только первое нарушение и возвращает, игнорируя остальные. validatePassword("abc") должен вернуть 4 ошибки, не 1.</p>
+            <p className="font-mono bg-background p-1.5 rounded mt-1"><span className="text-rose-600">Баг:</span> return first error &amp;&amp; exit</p>
+            <p className="font-mono bg-background p-1.5 rounded"><span className="text-emerald-600">Верно:</span> collect all errors &amp;&amp; return array</p>
+            <p className="text-muted-foreground mt-1">🎯 Ловится: комбинаторными тестами с несколькими нарушениями</p>
+          </div>
         </div>
       ),
     },
