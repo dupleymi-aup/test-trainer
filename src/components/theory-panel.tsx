@@ -26,6 +26,7 @@ import {
   Search,
   TestTube,
   Target,
+  Code,
 } from "lucide-react";
 
 const fadeIn = {
@@ -141,7 +142,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
   }, []);
 
   const theoryProgress = useMemo(() => {
-    const totalSections = 14;
+    const totalSections = 20;
     return { viewed: viewedSections.size, total: totalSections };
   }, [viewedSections]);
 
@@ -908,6 +909,160 @@ export function TheoryPanel({ task }: { task?: Task }) {
               <li>Error Guessing: SQL-инъекции, XSS, эмодзи в имени</li>
             </ol>
           </div>
+        </div>
+      ),
+    },
+    {
+      id: "white-box",
+      icon: <Code className="h-4 w-4" />,
+      iconBg: "bg-purple-100 dark:bg-purple-900",
+      title: "White-box тестирование",
+      subtitle: "Покрытие кода: statement, branch, path",
+      openBorder: "border-l-purple-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <p>
+            <strong>White-box</strong> (структурное) тестирование анализирует <em>внутреннюю структуру</em> кода, в отличие от black-box, который проверяет только входы и выходы.
+          </p>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>Statement coverage (покрытие операторов):</strong> Каждый оператор выполнен хотя бы раз.</p>
+            <pre className="text-[11px] bg-background p-2 rounded">if (x > 0) {{ /* A */ }} else {{ /* B */ }}</pre>
+            <p>Тест x=5 покрывает A, но не B. Нужны x=5 И x=-1 для 100% покрытия.</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>Branch coverage (покрытие ветвей):</strong> Каждая ветка (true/false) каждого условия выполнена хотя бы раз.</p>
+            <p>Строже statement: if (a && b) — нужно 4 теста: TT, TF, FT, FF для полного покрытия.</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded">
+            <p><strong>Path coverage (покрытие путей):</strong> Каждый возможный путь через код выполнен. Самый строгий, но часто невозможный из-за экспоненциального числа путей.</p>
+          </div>
+          <p><strong>Формула:</strong> Coverage = (выполненные элементы / всего элементов) × 100%</p>
+          <p className="text-muted-foreground">💡 В тестировании методов: statement coverage легко измерить, branch coverage надёжнее находит баги.</p>
+        </div>
+      ),
+    },
+    {
+      id: "mutation-testing",
+      icon: <TestTube className="h-4 w-4" />,
+      iconBg: "bg-orange-100 dark:bg-orange-900",
+      title: "Мутационное тестирование",
+      subtitle: "Проверка качества тестов через намеренные ошибки",
+      openBorder: "border-l-orange-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <p>
+            <strong>Мутационное тестирование</strong> — это оценка качества тестов путём внесения мелких ошибок (мутаций) в код и проверки, обнаруживают ли их тесты.
+          </p>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>Процесс:</strong></p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Оригинал: <code className="font-mono">return a + b;</code></li>
+              <li>Мутация: <code className="font-mono">return a - b;</code> (изменили оператор)</li>
+              <li>Запускаем тесты: если тест падает → мутация «убита» ✅</li>
+              <li>Если тест проходит → мутация «выжила» ❌ (тест недостаточно строгий)</li>
+            </ol>
+          </div>
+          <p><strong>Mutation Score</strong> = (убитые мутации / всего мутаций) × 100%</p>
+          <p>Цель: >80% mutation score. Если мутации выживают — ваши тесты пропускают баги.</p>
+          <p className="text-muted-foreground">💡 Высокое code coverage ≠ хорошие тесты. Мутационное тестирование показывает реальную способность тестов находить баги.</p>
+        </div>
+      ),
+    },
+    {
+      id: "testing-pyramid",
+      icon: <Layers className="h-4 w-4" />,
+      iconBg: "bg-teal-100 dark:bg-teal-900",
+      title: "Пирамида тестирования",
+      subtitle: "Unit → Integration → E2E: баланс уровней тестирования",
+      openBorder: "border-l-teal-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <p>
+            <strong>Пирамида тестирования</strong> (Mike Cohn) определяет оптимальное соотношение уровней тестов:
+          </p>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>🔵 Unit-тесты (основание, 70%):</strong> Тестируют отдельные функции/методы. Быстрые, дешёвые, точные. <em>Наша платформа — это unit-тестирование функций.</em></p>
+            <p><strong>🟡 Integration-тесты (середина, 20%):</strong> Тестируют взаимодействие между модулями. Медленнее, сложнее в отладке.</p>
+            <p><strong>🔴 E2E-тесты (верхушка, 10%):</strong> Полные сценарии через UI. Самые медленные и хрупкие.</p>
+          </div>
+          <p><strong>Анти-паттерн «Рожок мороженого»:</strong> Слишком много E2E и мало unit — медленно, нестабильно, дорого.</p>
+          <p className="text-muted-foreground">💡 Правило: пишите как можно больше unit-тестов, integration — по необходимости, E2E — только для критических путей.</p>
+        </div>
+      ),
+    },
+    {
+      id: "regression-smoke",
+      icon: <ShieldCheck className="h-4 w-4" />,
+      iconBg: "bg-indigo-100 dark:bg-indigo-900",
+      title: "Регрессионное и smoke-тестирование",
+      subtitle: "Что проверять после изменений и при релизе",
+      openBorder: "border-l-indigo-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <div className="bg-muted/50 p-3 rounded">
+            <p><strong>Smoke-тестирование</strong> — быстрая проверка ключевых функций после сборки. «Работает ли вообще?»</p>
+            <p className="mt-1">Пример: после деплоя — может ли пользователь залогиниться и открыть главную страницу?</p>
+            <p className="text-muted-foreground mt-1">Цель: за 5-15 минут определить, стоит ли начинать полноценное тестирование.</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded">
+            <p><strong>Регрессионное тестирование</strong> — проверка, что изменения не сломали существующий функционал.</p>
+            <p className="mt-1">Пример: после добавления новой фичи — проходят ли все старые тесты?</p>
+            <p className="text-muted-foreground mt-1">Цель: поймать side effects изменений.</p>
+          </div>
+          <p><strong>Key difference:</strong> Smoke = «работает ли новое?», Regression = «не сломалось ли старое?»</p>
+          <p className="text-muted-foreground">💡 Каждый раз после изменения функции запускайте ВСЕ существующие тесты — это регрессия.</p>
+        </div>
+      ),
+    },
+    {
+      id: "risk-based-testing",
+      icon: <AlertTriangle className="h-4 w-4" />,
+      iconBg: "bg-amber-100 dark:bg-amber-900",
+      title: "Риск-ориентированное тестирование",
+      subtitle: "Приоритезация: что тестировать в первую очередь",
+      openBorder: "border-l-amber-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <p>
+            <strong>Риск-ориентированное тестирование</strong> — стратегия, при которой тесты приоритезируются по вероятности бага × severity последствий.
+          </p>
+          <div className="bg-muted/50 p-3 rounded space-y-2">
+            <p><strong>Формула риска:</strong> Risk = Probability × Impact</p>
+            <table className="w-full text-[11px] mt-2">
+              <thead><tr className="border-b"><th>Вероятность</th><th>Высокий Impact</th><th>Средний Impact</th><th>Низкий Impact</th></tr></thead>
+              <tbody>
+                <tr className="border-b"><td>Высокая</td><td className="text-red-600 font-bold">🔴 Критично</td><td className="text-orange-600 font-bold">🟠 Высокий</td><td className="text-yellow-600">🟡 Средний</td></tr>
+                <tr className="border-b"><td>Средняя</td><td className="text-orange-600 font-bold">🟠 Высокий</td><td className="text-yellow-600">🟡 Средний</td><td className="text-green-600">🟢 Низкий</td></tr>
+                <tr><td>Низкая</td><td className="text-yellow-600">🟡 Средний</td><td className="text-green-600">🟢 Низкий</td><td className="text-muted-foreground">⚪ Минимальный</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><strong>Практика:</strong> Сначала тестируйте то, что (1) чаще всего ломается, (2) имеет самые серьёзные последствия при поломке.</p>
+          <p className="text-muted-foreground">💡 В нашей платформе: функции с большим количеством if/else — высокий риск, тестируйте их в первую очередь.</p>
+        </div>
+      ),
+    },
+    {
+      id: "positive-negative-testing",
+      icon: <ArrowLeftRight className="h-4 w-4" />,
+      iconBg: "bg-pink-100 dark:bg-pink-900",
+      title: "Позитивное и негативное тестирование",
+      subtitle: "Happy path vs edge cases — оба нужны",
+      openBorder: "border-l-pink-500",
+      content: (
+        <div className="text-xs space-y-2">
+          <div className="bg-muted/50 p-3 rounded">
+            <p><strong>Позитивное тестирование</strong> — проверка, что система корректно работает с <em>валидными</em> данными.</p>
+            <p className="mt-1">Пример: <code className="font-mono">factorial(5)</code> → 120, <code className="font-mono">validateEmail("user@example.com")</code> → true</p>
+            <p className="text-muted-foreground mt-1">Цель: убедиться, что функция делает то, что должна.</p>
+          </div>
+          <div className="bg-muted/50 p-3 rounded">
+            <p><strong>Негативное тестирование</strong> — проверка, что система корректно обрабатывает <em>невалидные</em> данные.</p>
+            <p className="mt-1">Пример: <code className="font-mono">factorial(-1)</code> → ошибка, <code className="font-mono">validateEmail("no-at-sign")</code> → {`{ valid: false }`}</p>
+            <p className="text-muted-foreground mt-1">Цель: убедиться, что функция не падает и не возвращает мусор.</p>
+          </div>
+          <p><strong>Правило 80/20:</strong> 20% тестов — позитивные (happy path), 80% — негативные (edge cases, ошибки, невалидные данные).</p>
+          <p className="text-muted-foreground">💡 Большинство багов находится в негативных тестах — именно там разработчики забывают про проверки.</p>
         </div>
       ),
     },
