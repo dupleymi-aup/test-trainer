@@ -716,6 +716,476 @@ export const workedExamples: WorkedExample[] = [
       "0-switch = каждый переход отдельно, 1-switch = пары переходов",
     ],
   },
+  {
+    taskId: 3,
+    taskName: "Калькулятор скидки",
+    introduction:
+      "applyDiscount(price, discountPercent) — задача на многофакторное тестирование. " +
+      "Два числовых параметра с независимыми ограничениями создают множество комбинаций на границах.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Анализ функции",
+        action: "Выписываем ограничения: price >= 0, 0 <= discountPercent <= 100, результат округляется",
+        reasoning:
+          "Каждый параметр имеет нижнюю и верхнюю границу. Вместе они создают 4 угловые комбинации. Плюс округление до 2 знаков — источник пограничных багов.",
+        example: undefined,
+      },
+      {
+        stepNumber: 2,
+        title: "EC1: Нормальная цена и скидка",
+        action: "Тестируем price=1000, discountPercent=20 — ожидаем 800",
+        reasoning:
+          "Happy path: 1000 - (1000 * 20/100) = 800. Простая математика, легко проверить вручную.",
+        example: {
+          input: "price=1000, discountPercent=20",
+          expectedOutput: "800",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 3,
+        title: "EC2: Скидка 0% — нет скидки",
+        action: "Тестируем price=500, discountPercent=0 — ожидаем 500",
+        reasoning:
+          "Нулевая скидка = цена без изменений. Граничный случай: discountPercent=0 — нижняя граница.",
+        example: {
+          input: "price=500, discountPercent=0",
+          expectedOutput: "500",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 4,
+        title: "EC3: Скидка 100% — бесплатно",
+        action: "Тестируем price=500, discountPercent=100 — ожидаем 0",
+        reasoning:
+          "100% скидка = товар бесплатно. Верхняя граница discountPercent. Результат должен быть 0, не отрицательный!",
+        example: {
+          input: "price=500, discountPercent=100",
+          expectedOutput: "0",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 5,
+        title: "EC4: Цена = 0",
+        action: "Тестируем price=0, discountPercent=50 — ожидаем 0",
+        reasoning:
+          "Нулевая цена с любой скидкой = 0. Нижняя граница price.",
+        example: {
+          input: "price=0, discountPercent=50",
+          expectedOutput: "0",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 6,
+        title: "EC5: Округление — дробный результат",
+        action: "Тестируем price=999, discountPercent=33 — ожидаем 669.33",
+        reasoning:
+          "999 * (1 - 33/100) = 999 * 0.67 = 669.33. Важно проверить округление до 2 знаков: 669.333... → 669.33.",
+        example: {
+          input: "price=999, discountPercent=33",
+          expectedOutput: "669.33",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 7,
+        title: "EC6: Отрицательная цена — ошибка",
+        action: "Тестируем price=-100, discountPercent=10 — ожидаем ошибку",
+        reasoning:
+          "Цена не может быть отрицательной. Функция должна выбросить ошибку, а не вернуть отрицательный результат.",
+        example: {
+          input: "price=-100, discountPercent=10",
+          expectedOutput: "Ошибка: price должен быть неотрицательным",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 8,
+        title: "EC7: Скидка > 100 или < 0 — ошибка",
+        action: "Тестируем price=100, discountPercent=150 и price=100, discountPercent=-10",
+        reasoning:
+          "Скидка не может быть больше 100% или отрицательной. Два граничных случая: >100 и <0.",
+        example: {
+          input: "price=100, discountPercent=150",
+          expectedOutput: "Ошибка: discountPercent должен быть в диапазоне 0-100",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 9,
+        title: "Комбинации границ: угловые случаи",
+        action: "Проверяем 4 комбинации: (0,0), (0,100), (большая,0), (большая,100)",
+        reasoning:
+          "Многофакторное тестирование:(price=0, disc=0) → 0, (price=0, disc=100) → 0, (price=10000, disc=0) → 10000, (price=10000, disc=100) → 0.",
+        example: undefined,
+      },
+    ],
+    keyTakeaways: [
+      "Два независимых параметра × 2 границы каждый = 4 угловые комбинации",
+      "Округление до 2 знаков — частый источник багов (floating point)",
+      "100% скидка = 0, не отрицательное число",
+      "discountPercent=0 и discountPercent=100 — критические границы",
+    ],
+  },
+  {
+    taskId: 7,
+    taskName: "Палиндром",
+    introduction:
+      "isPalindrome(str) — задача на обработку строк с учётом регистра, пробелов и пунктуации. " +
+      "Основная сложность — правильно нормализовать строку перед проверкой.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Анализ функции",
+        action: "Изучаем: нормализация (lowercase, удаление не-букв/цифр) → сравнение с реверсом",
+        reasoning:
+          "Ключевые шаги: (1) привести к нижнему регистру, (2) удалить всё кроме букв и цифр, (3) сравнить строку с её реверсом.",
+        example: undefined,
+      },
+      {
+        stepNumber: 2,
+        title: "EC1: Простой палиндром",
+        action: "Тестируем «racecar» — ожидаем true",
+        reasoning:
+          "racecar ↔ racecar (реверс совпадает). Классический пример палиндрома, легко верифицировать вручную.",
+        example: {
+          input: "racecar",
+          expectedOutput: "true",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 3,
+        title: "EC2: Палиндром с разным регистром",
+        action: "Тестируем «RaceCar» — ожидаем true",
+        reasoning:
+          "Регистр игнорируется: RaceCar → racecar → реверс racecar. Частый баг: case-sensitive сравнение без нормализации.",
+        example: {
+          input: "RaceCar",
+          expectedOutput: "true",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 4,
+        title: "EC4: Палиндром с пробелами и знаками",
+        action: "Тестируем «A man, a plan, a canal: Panama» — ожидаем true",
+        reasoning:
+          "После удаления не-букв: amanaplanacanalpanama → реверс совпадает. Это классический тест — если функция не удаляет знаки, она вернёт false.",
+        example: {
+          input: "A man, a plan, a canal: Panama",
+          expectedOutput: "true",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 5,
+        title: "EC5: Пустая строка — палиндром",
+        action: "Тестируем «» — ожидаем true",
+        reasoning:
+          "Пустая строка = палиндром по определению (читается одинаково в обе стороны). Частый баг: функция возвращает false или ошибку.",
+        example: {
+          input: "",
+          expectedOutput: "true",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 6,
+        title: "EC6: Один символ",
+        action: "Тестируем «a» и «Я» — ожидаем true",
+        reasoning:
+          "Один символ всегда палиндром — реверс совпадает с оригиналом. Минимальная длина.",
+        example: {
+          input: "a",
+          expectedOutput: "true",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 7,
+        title: "EC3: Не палиндром",
+        action: "Тестируем «hello» — ожидаем false",
+        reasoning:
+          "hello ↔ olleh — не совпадает. Простейший negative case. Также проверяем «ab» (минимальный не-палиндром).",
+        example: {
+          input: "hello",
+          expectedOutput: "false",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 8,
+        title: "EC2: Кириллический палиндром",
+        action: "Тестируем «Анна» и «казак» — ожидаем true",
+        reasoning:
+          "Анна → анна ↔ анна (реверс). Важно: кириллица должна обрабатываться корректно. «казак» ↔ казак — тоже палиндром.",
+        example: {
+          input: "Анна",
+          expectedOutput: "true",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 9,
+        title: "Числовой палиндром",
+        action: "Тестируем «12321» — ожидаем true",
+        reasoning:
+          "Цифры тоже считаются. 12321 ↔ 12321. Частый edge case: «123a321» — с буквой в середине тоже палиндром.",
+        example: {
+          input: "12321",
+          expectedOutput: "true",
+          category: "Нормальное значение",
+        },
+      },
+    ],
+    keyTakeaways: [
+      "Нормализация: lowercase + удалить не-буквы/цифры — обязательные шаги",
+      "Пустая строка и один символ — всегда палиндромы",
+      "Кириллица должна обрабатываться так же как латиница",
+      "Пробелы и пунктуация игнорируются — ключевой источник багов",
+    ],
+  },
+  {
+    taskId: 8,
+    taskName: "Валидация email",
+    introduction:
+      "validateEmail(email) — задача на проверку формата с несколькими независимыми правилами. " +
+      "Каждая часть email (локальная часть, @, домен, TLD) имеет свои требования.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Анализ структуры email",
+        action: "Разбиваем: local@domain.tld — 4 компонента с правилами для каждого",
+        reasoning:
+          "Правила: (1) ровно один @, (2) local: буквы/цифры/точки/дефисы, не пустой, (3) domain: содержит точку, (4) TLD: 2-6 букв.",
+        example: undefined,
+      },
+      {
+        stepNumber: 2,
+        title: "EC1: Валидный email",
+        action: "Тестируем user@example.com — ожидаем valid: true",
+        reasoning:
+          "Happy path: local=user, domain=example, TLD=com (3 буквы). Все правила выполнены.",
+        example: {
+          input: "user@example.com",
+          expectedOutput: "{ valid: true, errors: [] }",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 3,
+        title: "EC2: Нет символа @",
+        action: "Тестируем userexample.com — ожидаем ошибку",
+        reasoning:
+          "Отсутствие @ — фундаментальная ошибка. Без @ нельзя разделить local и domain.",
+        example: {
+          input: "userexample.com",
+          expectedOutput: "Ошибка: Отсутствует символ @",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 4,
+        title: "EC3: Два символа @",
+        action: "Тестируем user@@example.com — ожидаем ошибку",
+        reasoning:
+          "Ровно один @ — требование. user@@example.com имеет два @, indexOf != lastIndex.",
+        example: {
+          input: "user@@example.com",
+          expectedOutput: "Ошибка: Более одного символа @",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 5,
+        title: "EC4: Пустая локальная часть",
+        action: "Тестируем @example.com — ожидаем ошибку",
+        reasoning:
+          "Local часть до @ пустая. @example.com — частый баг при вводе (забыли имя).",
+        example: {
+          input: "@example.com",
+          expectedOutput: "Ошибка: Пустая локальная часть (до @)",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 6,
+        title: "EC5: Спецсимволы в local части",
+        action: "Тестируем user+tag@test.com — ожидаем ошибку",
+        reasoning:
+          "Local часть допускает только буквы, цифры, точки и дефисы. + не допускается (хотя в реальном email допустим).",
+        example: {
+          input: "user+tag@test.com",
+          expectedOutput: "Ошибка: Недопустимые символы в локальной части",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 7,
+        title: "EC7: Домен без точки",
+        action: "Тестируем user@localhost — ожидаем ошибку",
+        reasoning:
+          "Domain должен содержать хотя бы одну точку. user@localhost — валидный internal адрес, но не проходит валидацию.",
+        example: {
+          input: "user@localhost",
+          expectedOutput: "Ошибка: Домен не содержит точку",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 8,
+        title: "EC8-9: TLD границы (1 символ и 7 символов)",
+        action: "Тестируем user@example.c и user@example.abcdefg",
+        reasoning:
+          "TLD 2-6 букв: .c (1) — слишком короткий, .abcdefg (7) — слишком длинный. Граничные: .co (2) OK, .museum (6) OK.",
+        example: {
+          input: "user@example.c",
+          expectedOutput: "Ошибка: Домен верхнего уровня слишком короткий (минимум 2 символа)",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 9,
+        title: "Комбинаторный тест: несколько ошибок",
+        action: "Тестируем @ — ожидаем ошибки local и domain",
+        reasoning:
+          "Один символ @ — пустая local И пустая domain. Функция должна вернуть ОБЕ ошибки, не только первую.",
+        example: {
+          input: "@",
+          expectedOutput: "{ valid: false, errors: [«Пустая локальная часть», «Пустая доменная часть»] }",
+          category: "Комбинаторное",
+        },
+      },
+    ],
+    keyTakeaways: [
+      "Email = 4 компонента (local, @, domain, TLD), каждый со своими правилами",
+      "Ровно один @ — проверяем через indexOf vs lastIndex",
+      "TLD 2-6 букв — .com (3) OK, .museum (6) OK, .с (1) нет",
+      "Функция возвращает ВСЕ ошибки, а не только первую",
+      "local+tag@valid.com может быть реальным email, но не проходит эту валидацию",
+    ],
+  },
+  {
+    taskId: 10,
+    taskName: "Валидация даты",
+    introduction:
+      "isValidDate(day, month, year) — задача с комбинаторной логикой, зависящей от високосных годов " +
+      "и разного количества дней в месяцах. Три параметра создают множество граничных случаев.",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Анализ функции",
+        action: "Изучаем: проверка типов → месяц 1-12 → день 1+ → daysInMonth[] с учётом високосного",
+        reasoning:
+          "daysInMonth = [31, 28/29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]. Каждый месяц имеет свой максимум. Февраль зависит от високосного года.",
+        example: undefined,
+      },
+      {
+        stepNumber: 2,
+        title: "EC1: Валидная дата",
+        action: "Тестируем 15.06.2023 — ожидаем true",
+        reasoning:
+          "15 <= 30 (июнь), месяц 6 валидный, год 2023 обычный. Простой happy path.",
+        example: {
+          input: "day=15, month=6, year=2023",
+          expectedOutput: "true",
+          category: "Нормальное значение",
+        },
+      },
+      {
+        stepNumber: 3,
+        title: "EC2: 29 февраля в високосный год",
+        action: "Тестируем 29.02.2024 — ожидаем true",
+        reasoning:
+          "2024 високосный: 2024 % 4 = 0 и 2024 % 100 != 0. Февраль имеет 29 дней. 29 <= 29 → true.",
+        example: {
+          input: "day=29, month=2, year=2024",
+          expectedOutput: "true",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 4,
+        title: "EC4: 29 февраля НЕ в високосный год",
+        action: "Тестируем 29.02.2023 — ожидаем false",
+        reasoning:
+          "2023 не високосный: февраль имеет 28 дней. 29 > 28 → false. Ключевой тест!",
+        example: {
+          input: "day=29, month=2, year=2023",
+          expectedOutput: "false",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 5,
+        title: "Граничный случай: 1900 год (делится на 100, не на 400)",
+        action: "Тестируем 29.02.1900 — ожидаем false",
+        reasoning:
+          "1900 % 4 = 0, но 1900 % 100 = 0 и 1900 % 400 = 300. НЕ високосный! Это классический баг — правило 100/400.",
+        example: {
+          input: "day=29, month=2, year=1900",
+          expectedOutput: "false",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 6,
+        title: "EC7: 31 апреля — несуществующая дата",
+        action: "Тестируем 31.04.2023 — ожидаем false",
+        reasoning:
+          "Апрель имеет 30 дней. 31 > 30 → false. Частый баг: проверка day <= 31 без учёта месяца.",
+        example: {
+          input: "day=31, month=4, year=2023",
+          expectedOutput: "false",
+          category: "Граничное значение",
+        },
+      },
+      {
+        stepNumber: 7,
+        title: "EC5: Месяц вне диапазона",
+        action: "Тестируем 1.13.2023 и 1.0.2023 — ожидаем false",
+        reasoning:
+          "Месяц должен быть 1-12. 13 и 0 — невалидные. Граничные: месяц=1 OK, месяц=12 OK.",
+        example: {
+          input: "day=1, month=13, year=2023",
+          expectedOutput: "false",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 8,
+        title: "EC6: День < 1",
+        action: "Тестируем 0.1.2023 и -1.1.2023 — ожидаем false",
+        reasoning:
+          "День должен быть >= 1. 0 — невалидный (хотя в некоторых календарях допустим).",
+        example: {
+          input: "day=0, month=1, year=2023",
+          expectedOutput: "false",
+          category: "Исключение",
+        },
+      },
+      {
+        stepNumber: 9,
+        title: "Все месяцы: проверка max дней",
+        action: "Тестируем 31.01 (OK), 30.02 (false), 31.04 (false), 28.02 (OK)",
+        reasoning:
+          "Комбинаторное покрытие: для каждого месяца проверяем максимальный день. 31 день: янв, мар, май, июл, авг, окт, дек. 30 дней: апр, июн, сен, ноя. Февраль: 28/29.",
+        example: undefined,
+      },
+    ],
+    keyTakeaways: [
+      "29 февраля — ключевой тест: зависит от правила високосного года",
+      "1900 — классический баг: делится на 100, но не на 400 — НЕ високосный",
+      "У каждого месяца свой максимум дней — нельзя проверять day <= 31",
+      "Граничные значения: тестируем X-1, X, X+1 для каждого порога дня/месяца",
+      "Комбинаторное покрытие: 12 месяцев × 4-5 значений дня = ~60 тестов, но EC сокращает до ~10",
+    ],
+  },
 ];
 
 export function getWorkedExample(taskId: number): WorkedExample | undefined {
