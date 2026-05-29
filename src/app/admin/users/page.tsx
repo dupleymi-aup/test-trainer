@@ -181,7 +181,7 @@ export default function AdminUsersPage() {
       fetchUsers();
     }, 400);
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, fetchUsers]);
 
   useEffect(() => {
     fetchUsers();

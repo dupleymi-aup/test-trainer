@@ -74,7 +74,7 @@ export default function AdminAtRiskPage() {
       })
       .then((data) => {
         setStudents(data.students || []);
-        setPagination(data.pagination || pagination);
+        if (data.pagination) setPagination(data.pagination);
         setLoading(false);
       })
       .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
