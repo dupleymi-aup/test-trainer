@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const exportReportSchema = z.object({
   reportType: z.enum([
@@ -64,6 +65,12 @@ export async function POST(req: Request) {
   if ("response" in guard) return guard.response;
   const csrf = await requireCSRF(req);
   if ("response" in csrf) return csrf.response;
+
+  const ip = getClientIp(req);
+  const rateLimit = checkRateLimit(`adminExport:${ip}`, rateLimits.adminReportExport);
+  if (rateLimit.limited) {
+    return createRateLimitResponse(rateLimit.resetAt);
+  }
 
   let body: Record<string, unknown>;
   try {

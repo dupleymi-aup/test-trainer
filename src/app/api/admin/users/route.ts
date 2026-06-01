@@ -140,22 +140,24 @@ export async function POST(req: Request) {
 
     const { name, email, phone, password, role, university, group } = parsed.data;
 
-    // Check for existing user
-    const existing = await db.user.findFirst({
-      where: {
-        OR: [
-          email ? { email: email.toLowerCase() } : {},
-          phone ? { phone } : {},
-        ].filter((w) => Object.keys(w).length > 0),
-      },
-    });
+    // Check for existing user — build OR conditions safely
+    const orConditions: Array<{ email?: string; phone?: string }> = [];
+    if (email) orConditions.push({ email: email.toLowerCase().trim() });
+    if (phone) orConditions.push({ phone: phone.trim() });
 
-    if (existing) {
-      return NextResponse.json({ error: "User with this email or phone already exists" }, { status: 409 });
+    const existing = orConditions.length > 0
+      ? await db.user.findFirst({ where: { OR: orConditions } })
+      : null;
+
+    if (email && existing?.email === email.toLowerCase().trim()) {
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 409 });
+    }
+    if (phone && existing?.phone === phone.trim()) {
+      return NextResponse.json({ error: "User with this phone already exists" }, { status: 409 });
     }
 
-    const bcrypt = await import("bcryptjs");
-    const hashedPassword = await bcrypt.default.hash(password, 12);
+    const { hash } = await import("bcryptjs");
+    const hashedPassword = await hash(password, 12);
 
     let user;
     try {

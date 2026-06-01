@@ -76,6 +76,8 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   studentReminders: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Student preferences updates: 10 per 15 minutes */
   studentPreferences: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Admin report exports: 5 per 15 minutes (expensive queries) */
+  adminReportExport: { max: 5, windowMs: 15 * 60 * 1000 },
 };
 
 /**
