@@ -99,11 +99,21 @@ export async function GET(request: Request) {
 
     // Parse covered ECs
     let coveredEcIds: string[] = [];
-    try { coveredEcIds = JSON.parse(a.coveredEcIds || "[]"); } catch { if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON"); coveredEcIds = []; }
+    try {
+      coveredEcIds = JSON.parse(a.coveredEcIds || "[]");
+    } catch {
+      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON");
+      coveredEcIds = [];
+    }
 
     // Parse covered BVs
     let coveredBvDescs: string[] = [];
-    try { coveredBvDescs = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON"); coveredBvDescs = []; }
+    try {
+      coveredBvDescs = JSON.parse(a.coveredBvDescriptions || "[]");
+    } catch {
+      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON");
+      coveredBvDescs = [];
+    }
 
     // Track each EC for this task
     for (const ec of task.equivalenceClasses) {
