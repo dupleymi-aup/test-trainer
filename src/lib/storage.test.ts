@@ -57,7 +57,6 @@ import {
   loadTheorySectionsViewed,
   isTheorySectionViewed,
   clearTheoryProgress,
-  clearMarathonProgress,
 } from "./storage";
 import type { TestCase } from "./evaluator";
 

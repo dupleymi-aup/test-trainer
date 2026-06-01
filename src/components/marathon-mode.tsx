@@ -136,7 +136,7 @@ export function MarathonMode({
         totalTimeSec,
       });
     }
-  }, [state.finished, state.taskResults]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.finished, state.taskResults]);
 
   // Timer
   useEffect(() => {

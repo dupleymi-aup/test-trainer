@@ -2,11 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   evaluateTestCases,
   type TestCase,
-  type StoredTestCase,
-  type TestCaseResult,
-  type EvaluationResult,
 } from "./evaluator";
-import { type Task, type TestCaseCategory, runReferenceFunction } from "./tasks";
+import { type Task, type TestCaseCategory } from "./tasks";
 
 // ---------------------------------------------------------------------------
 // Helper: build a minimal Task fixture for isolated unit tests
@@ -48,7 +45,7 @@ function makeTestCase(
 // Helper: get real tasks from the task library
 // ---------------------------------------------------------------------------
 
-import { tasks, getTaskById } from "./tasks";
+import { getTaskById } from "./tasks";
 
 const factorialTask = getTaskById(1)!;
 const isPrimeTask = getTaskById(2)!;

@@ -210,7 +210,7 @@ function SortableRow({
   editExpectedOutput,
   editCategory,
   editComment,
-  onEditChange,
+  _onEditChange,
   startEditing,
   cancelEditing,
   saveEditing,
@@ -231,7 +231,7 @@ function SortableRow({
   editExpectedOutput: string;
   editCategory: TestCaseCategory;
   editComment: string;
-  onEditChange: (id: string, updates: Partial<{ inputs: string[], expectedOutput: string, category: TestCaseCategory, comment: string }>) => void;
+  _onEditChange: (id: string, updates: Partial<{ inputs: string[], expectedOutput: string, category: TestCaseCategory, comment: string }>) => void;
   startEditing: (tc: TestCase) => void;
   cancelEditing: () => void;
   saveEditing: () => void;
@@ -693,7 +693,7 @@ export const TestList = memo(function TestList({ task, testCases, onRemove, onDu
                       editExpectedOutput={editExpectedOutput}
                       editCategory={editCategory}
                       editComment={editComment}
-                      onEditChange={onEdit}
+                      _onEditChange={onEdit}
                       startEditing={startEditing}
                       cancelEditing={cancelEditing}
                       saveEditing={saveEditing}

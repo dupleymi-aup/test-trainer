@@ -105,7 +105,7 @@ export default function AdminDeadlinesPage() {
         return r.json();
       })
       .then((d) => { setDeadlines(d.deadlines || []); setLoading(false); })
-      .catch((error) => {
+      .catch((_error) => {
         toast.error("Не удалось загрузить дедлайны");
         setLoading(false);
       });

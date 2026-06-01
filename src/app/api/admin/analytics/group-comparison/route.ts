@@ -105,7 +105,7 @@ export async function GET() {
     }
 
     // Remove scores from output
-    const output = groupMetrics.map(({ scores, ...rest }) => rest);
+    const output = groupMetrics.map(({ scores: _scores, ...rest }) => rest);
 
     const result = { groups: output, statisticalSignificance };
     setCache(cacheKey, result, DEFAULT_TTL.medium);
