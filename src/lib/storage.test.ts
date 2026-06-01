@@ -48,6 +48,7 @@ import {
   loadGlobalNotes,
   saveStreak,
   loadStreak,
+  _resetStreakSaveLock,
   saveMarathonRecord,
   loadMarathonRecords,
   getMarathonsCompleted,
@@ -72,8 +73,22 @@ function makeTestCase(id: string, category: string = "equivalence"): TestCase {
 
 describe("storage", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
     Object.keys(store).forEach((k) => delete store[k]);
+    _resetStreakSaveLock();
+    mockLocalStorage.getItem.mockImplementation((key: string) => store[key] ?? null);
+    mockLocalStorage.setItem.mockImplementation((key: string, value: string) => {
+      store[key] = value;
+    });
+    mockLocalStorage.removeItem.mockImplementation((key: string) => {
+      delete store[key];
+    });
+    mockLocalStorage.clear.mockImplementation(() => {
+      Object.keys(store).forEach((k) => delete store[k]);
+    });
+    mockLocalStorage.key.mockImplementation((index: number) => {
+      const keys = Object.keys(store);
+      return keys[index] ?? null;
+    });
   });
 
   // --- saveProgress / loadProgress ---

@@ -245,24 +245,31 @@ export function loadTaskNote(taskId: number): string {
 }
 
 /**
- * Helper: get today's date as YYYY-MM-DD string (UTC)
+ * Helper: get today's date as YYYY-MM-DD string (local time)
  */
 function getTodayDate(): string {
   const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 /**
- * Helper: get date string for N days ago (UTC)
+ * Helper: get date string for N days ago (local time)
  */
 function getDateDaysAgo(days: number): string {
   const d = new Date();
-  d.setUTCDate(d.getUTCDate() - days);
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  d.setDate(d.getDate() - days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 // Module-level lock to prevent concurrent streak writes (race condition guard)
 let streakSaveLock: Promise<StreakData> | null = null;
+
+/**
+ * Reset the streak save lock (for testing purposes only)
+ */
+export function _resetStreakSaveLock(): void {
+  streakSaveLock = null;
+}
 
 /**
  * Save streak data. Call this after each successful attempt.
