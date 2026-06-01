@@ -1540,7 +1540,7 @@ export const workedExamples: WorkedExample[] = [
         title: "EC1: Десятичное число",
         action: "Тестируем «42» и «-17» — ожидаем 42 и -17",
         reasoning:
-          "Happy path: обычный десятичный ввод. parseInt("42", 10) = 42, parseInt("-17", 10) = -17.",
+          "Happy path: обычный десятичный ввод. parseInt(\"42\", 10) = 42, parseInt(\"-17\", 10) = -17.",
         example: {
           input: "42",
           expectedOutput: "42",
@@ -1552,7 +1552,7 @@ export const workedExamples: WorkedExample[] = [
         title: "EC2: Шестнадцатеричное число",
         action: "Тестируем «0xFF» — ожидаем 255",
         reasoning:
-          "0xFF = 15*16 + 15 = 255. Префикс 0x (или 0X) определяет hex-формат. parseInt("0xFF", 16) = 255.",
+          "0xFF = 15*16 + 15 = 255. Префикс 0x (или 0X) определяет hex-формат. parseInt(\"0xFF\", 16) = 255.",
         example: {
           input: "0xFF",
           expectedOutput: "255",
@@ -1588,7 +1588,7 @@ export const workedExamples: WorkedExample[] = [
         title: "EC5: Пустая строка",
         action: "Тестируем «» и «   » — ожидаем NaN",
         reasoning:
-          "Пустая строка и строка из пробелов после trim = "" → NaN. Важно: не 0, а именно NaN!",
+          "Пустая строка и строка из пробелов после trim = \"\" → NaN. Важно: не 0, а именно NaN!",
         example: {
           input: "",
           expectedOutput: "NaN",
@@ -1600,7 +1600,7 @@ export const workedExamples: WorkedExample[] = [
         title: "EC6: Не число",
         action: "Тестируем «abc» — ожидаем NaN",
         reasoning:
-          "parseInt("abc", 10) = NaN. Строка не является числом ни в одном формате.",
+          "parseInt(\"abc\", 10) = NaN. Строка не является числом ни в одном формате.",
         example: {
           input: "abc",
           expectedOutput: "NaN",
@@ -1612,7 +1612,7 @@ export const workedExamples: WorkedExample[] = [
         title: "EC7: Не строковый тип",
         action: "Тестируем 42 и null — ожидаем ошибку",
         reasoning:
-          "typeof 42 === "number" !== "string" → ошибка. Функция требует строку.",
+          "typeof 42 === \"number\" !== \"string\" → ошибка. Функция требует строку.",
         example: {
           input: "42 (number)",
           expectedOutput: "Ошибка: Аргумент должен быть строкой",
@@ -1705,7 +1705,7 @@ export const workedExamples: WorkedExample[] = [
       {
         stepNumber: 7,
         title: "EC6: Разные типы",
-        action: "Тестируем [1, "a", true, { x: 1 }] — ожидаем [1, "a", true, { x: 1 }]",
+        action: "Тестируем [1, \"a\", true, { x: 1 }] — ожидаем [1, \"a\", true, { x: 1 }]",
         reasoning:
           "flatten работает только с массивами. Объекты, строки, числа, булевы — всё сохраняется как есть.",
         example: {

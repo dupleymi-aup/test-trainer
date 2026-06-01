@@ -1022,7 +1022,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
           </p>
           <div className="bg-muted/50 p-3 rounded space-y-2">
             <p><strong>Statement coverage (покрытие операторов):</strong> Каждый оператор выполнен хотя бы раз.</p>
-            <pre className="text-[11px] bg-background p-2 rounded">if (x > 0) {{ /* A */ }} else {{ /* B */ }}</pre>
+            <pre className="text-[11px] bg-background p-2 rounded">if (x {'>'} 0) {{ /* A */ }} else {{ /* B */ }}</pre>
             <p>Тест x=5 покрывает A, но не B. Нужны x=5 И x=-1 для 100% покрытия.</p>
           </div>
           <div className="bg-muted/50 p-3 rounded space-y-2">
@@ -1059,7 +1059,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
             </ol>
           </div>
           <p><strong>Mutation Score</strong> = (убитые мутации / всего мутаций) × 100%</p>
-          <p>Цель: >80% mutation score. Если мутации выживают — ваши тесты пропускают баги.</p>
+          <p>Цель: {'>'}80% mutation score. Если мутации выживают — ваши тесты пропускают баги.</p>
           <p className="text-muted-foreground">💡 Высокое code coverage ≠ хорошие тесты. Мутационное тестирование показывает реальную способность тестов находить баги.</p>
         </div>
       ),
