@@ -51,6 +51,10 @@ vi.mock("@/lib/admin-guard", () => {
   };
 });
 
+vi.mock("@/lib/csrf-middleware", () => ({
+  requireCSRF: vi.fn().mockResolvedValue({ verified: true }),
+}));
+
 // ---------------------------------------------------------------------------
 // Import route handlers AFTER mocks are set up
 // ---------------------------------------------------------------------------
