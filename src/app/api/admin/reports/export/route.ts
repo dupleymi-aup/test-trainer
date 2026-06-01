@@ -43,6 +43,16 @@ function sanitizeCSVValue(value: string): string {
 }
 
 /**
+ * Sanitize a filename for use in Content-Disposition header.
+ * Removes characters that could enable HTTP response splitting
+ * or break the quoted-string: quotes, backslashes, control chars.
+ */
+function sanitizeFilename(name: string): string {
+  const safe = name.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s_-]/g, "").replace(/\s+/g, "-").slice(0, 60);
+  return safe || "unnamed";
+}
+
+/**
  * Log export activity to the activity log.
  */
 async function logExport(userId: string, reportType: string, format: string, details?: Record<string, unknown>) {
@@ -693,7 +703,7 @@ export async function POST(req: Request) {
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",
-        "Content-Disposition": `attachment; filename="admin-report-group-${group.name.replace(/\s+/g, "-")}.csv"`,
+        "Content-Disposition": `attachment; filename="admin-report-group-${sanitizeFilename(group.name)}.csv"`,
       },
     });
   }
