@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,7 @@ export default function AnomaliesPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
 
-  const fetchData = async (params: Partial<FilterState> = {}) => {
+  const fetchData = useCallback(async (params: Partial<FilterState> = {}) => {
     setLoading(true);
     setError(null);
     const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
@@ -68,9 +68,9 @@ export default function AnomaliesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const filteredAnomalies = data?.anomalies.filter((a) =>
     filterSeverity === "all" || a.severity === filterSeverity

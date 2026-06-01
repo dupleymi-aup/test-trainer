@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +49,7 @@ export default function ForecastingPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterConfidence, setFilterConfidence] = useState<string>("all");
 
-  const fetchData = async (params: Partial<FilterState> = {}) => {
+  const fetchData = useCallback(async (params: Partial<FilterState> = {}) => {
     setLoading(true);
     setError(null);
     const entries = Object.entries(params).filter(([, v]) => v) as [string, string][];
@@ -64,9 +64,9 @@ export default function ForecastingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const filteredForecasts = data?.forecasts.filter((f) =>
     filterConfidence === "all" || f.confidenceLevel === filterConfidence

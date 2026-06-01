@@ -1,7 +1,7 @@
 "use client";
 
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,11 +41,11 @@ export default function TeacherGroupsPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [addingStudent, setAddingStudent] = useState(false);
 
-  const fetchGroups = () => {
+  const fetchGroups = useCallback(() => {
     fetch("/api/teacher/groups").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then((d) => { setGroups(d.groups); setLoading(false); }).catch(() => setLoading(false));
-  };
+  }, []);
 
-  useEffect(() => { fetchGroups(); }, []);
+  useEffect(() => { fetchGroups(); }, [fetchGroups]);
 
   const createGroup = async () => {
     if (!name.trim()) return;

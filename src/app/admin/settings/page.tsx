@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,7 @@ export default function AdminSettingsPage() {
   const [localValues, setLocalValues] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
 
-  const fetchSettings = () => {
+  const fetchSettings = useCallback(() => {
     fetch("/api/admin/settings")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -49,9 +49,9 @@ export default function AdminSettingsPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  };
+  }, []);
 
-  useEffect(() => { fetchSettings(); }, []);
+  useEffect(() => { fetchSettings(); }, [fetchSettings]);
 
   const updateSetting = async (key: string, value: unknown) => {
     const res = await apiFetch("/api/admin/settings", {

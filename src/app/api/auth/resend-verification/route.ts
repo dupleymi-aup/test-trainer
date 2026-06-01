@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
-export async function POST(_req: Request) {
+export async function POST(req: Request) {
   try {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const result = checkRateLimit(`resend:${auth.session.userId}`, rateLimits.resendVerification);
     if (result.limited) {

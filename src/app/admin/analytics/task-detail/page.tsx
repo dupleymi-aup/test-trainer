@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +35,7 @@ export default function TaskDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
 
-  const fetchData = async (taskId?: string) => {
+  const fetchData = useCallback(async (taskId?: string) => {
     setLoading(true);
     setError(null);
     const qs = taskId ? `?taskId=${taskId}` : "";
@@ -49,9 +49,9 @@ export default function TaskDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const toggleTask = (id: string) => {
     setExpandedTasks((prev) => {
