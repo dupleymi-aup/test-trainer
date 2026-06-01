@@ -138,7 +138,7 @@ export function computeStudentRisk(
   }
 
   // Dropout risk calculation
-  const riskScore = riskFactors.length + (trend === "declining" ? 1 : 0) + (stats.bestScore < 30 ? 1 : 0);
+  const riskScore = riskFactors.length + (stats.bestScore < 30 ? 1 : 0);
   const dropoutRisk: "high" | "medium" | "low" =
     riskScore >= 4 ? "high" : riskScore >= 2 ? "medium" : "low";
 
