@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -60,6 +61,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -122,6 +124,12 @@ export default function AdminUsersPage() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [csvContent, setCsvContent] = useState("");
+  const [importRole, setImportRole] = useState("STUDENT");
+  const [importPassword, setImportPassword] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; skipped: number } | null>(null);
   const [roleChangeUser, setRoleChangeUser] = useState<User | null>(null);
   const [newRole, setNewRole] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -224,6 +232,37 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleImportCSV = async () => {
+    if (!csvContent.trim()) {
+      toast.error("Вставьте содержимое CSV");
+      return;
+    }
+    setImporting(true);
+    try {
+      const res = await apiFetch("/api/admin/users/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          csv: csvContent.trim(),
+          defaultRole: importRole,
+          defaultPassword: importPassword || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setImportResult({ created: json.created, skipped: json.skipped });
+        toast.success(`Импортировано: ${json.created}, пропущено: ${json.skipped}`);
+        fetchUsers();
+      } else {
+        toast.error(json.error || "Ошибка при импорте");
+      }
+    } catch {
+      toast.error("Ошибка при импорте");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleCreateUser = async (data: CreateUserForm) => {
     setIsSubmitting(true);
     try {
@@ -284,12 +323,19 @@ export default function AdminUsersPage() {
 
   const handleBulkToggleActive = async (activate: boolean) => {
     if (selectedUsers.size === 0) return;
-    const promises = Array.from(selectedUsers).map((id) =>
-      fetch(`/api/admin/users/${id}/toggle-active`, { method: "PATCH" })
-    );
-    const results = await Promise.all(promises);
-    const success = results.filter((r) => r.ok).length;
-    toast.success(`${success} пользователей ${activate ? "активировано" : "деактивировано"}`);
+    let success = 0;
+    let failed = 0;
+    for (const id of selectedUsers) {
+      const res = await apiFetch(`/api/admin/users/${id}/toggle-active`, { method: "PATCH" });
+      if (res.ok) success++;
+      else failed++;
+    }
+    if (success > 0) {
+      toast.success(`${success} пользователей ${activate ? "активировано" : "деактивировано"}`);
+    }
+    if (failed > 0) {
+      toast.error(`Не удалось изменить ${failed} пользователей`);
+    }
     setSelectedUsers(new Set());
     fetchUsers();
   };
@@ -332,6 +378,10 @@ export default function AdminUsersPage() {
               <Button onClick={() => setShowCreateModal(true)} size="sm">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Создать пользователя
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setShowImportModal(true); setImportResult(null); setCsvContent(""); }}>
+                <Upload className="mr-2 h-4 w-4" />
+                Импорт CSV
               </Button>
             </div>
           </div>
@@ -406,6 +456,8 @@ export default function AdminUsersPage() {
                 </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Роль</TableHead>
+                <TableHead className="hidden lg:table-cell">Университет</TableHead>
+                <TableHead className="hidden lg:table-cell">Группа</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead>
                   <button onClick={() => handleSort("attempts")} className="flex items-center font-medium">
@@ -434,6 +486,8 @@ export default function AdminUsersPage() {
                   <TableCell>
                     <Badge className={roleColors[user.role]}>{roleLabels[user.role]}</Badge>
                   </TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm">{user.university || "—"}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm">{user.group || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={user.isActive ? "default" : "secondary"}>
                       {user.isActive ? "Активен" : "Неактивен"}
@@ -529,6 +583,71 @@ export default function AdminUsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* CSV Import Modal */}
+      <Dialog open={showImportModal} onOpenChange={(open) => { setShowImportModal(open); if (!open) { setImportResult(null); setCsvContent(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Импорт пользователей из CSV</DialogTitle>
+            <DialogDescription>
+              Формат: name,email,phone,group,university (первая строка — заголовок)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>CSV содержимое</Label>
+              <Textarea
+                value={csvContent}
+                onChange={(e) => setCsvContent(e.target.value)}
+                placeholder={`name,email,phone,group,university\nИванов Иван,ivan@example.com,+79991234567,ИТ-101,МГУ`}
+                rows={6}
+                className="font-mono text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Роль по умолчанию</Label>
+                <Select value={importRole} onValueChange={setImportRole}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STUDENT">Студент</SelectItem>
+                    <SelectItem value="TEACHER">Преподаватель</SelectItem>
+                    <SelectItem value="ADMIN">Администратор</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Пароль по умолчанию</Label>
+                <Input
+                  value={importPassword}
+                  onChange={(e) => setImportPassword(e.target.value)}
+                  placeholder="changeme123"
+                />
+              </div>
+            </div>
+            {importResult && (
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="text-sm">
+                    <span className="text-emerald-600 font-medium">Создано: {importResult.created}</span>
+                    {" | "}
+                    <span className="text-muted-foreground">Пропущено: {importResult.skipped}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImportModal(false)}>Закрыть</Button>
+            <Button onClick={handleImportCSV} disabled={importing}>
+              {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Импортировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create User Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
