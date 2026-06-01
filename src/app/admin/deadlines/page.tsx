@@ -105,7 +105,10 @@ export default function AdminDeadlinesPage() {
         return r.json();
       })
       .then((d) => { setDeadlines(d.deadlines || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((error) => {
+        toast.error("Не удалось загрузить дедлайны");
+        setLoading(false);
+      });
   }, [showPast]);
 
   const fetchGroups = useCallback(() => {
@@ -116,7 +119,8 @@ export default function AdminDeadlinesPage() {
       })
       .then((d) => setGroups(d.groups || []))
       .catch(() => {
-        // Non-critical: groups filter is optional
+        // Non-critical: groups filter is optional, but log for debugging
+        console.warn("Failed to fetch groups — group filter will be unavailable");
       });
   }, []);
 

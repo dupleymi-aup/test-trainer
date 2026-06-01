@@ -51,8 +51,9 @@ async function syncAttemptToServer(payload: {
     if (!res.ok) {
       logger.warn("Failed to sync attempt to server", { status: res.status });
     }
-  } catch {
-    // Silently fail — localStorage is the primary storage
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.warn("Failed to sync attempt to server", { error: message });
   }
 }
 
