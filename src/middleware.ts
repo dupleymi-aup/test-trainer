@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 import { generateCSRFToken, verifyCSRFToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
 
 // Routes that require authentication
-const protectedRoutes = ["/profile", "/teacher", "/admin"];
+const protectedRoutes = ["/profile", "/teacher", "/admin", "/student"];
 
 // Routes that should redirect to home if already authenticated
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
@@ -107,6 +107,24 @@ export async function middleware(request: NextRequest) {
         return NextResponse.json({ error: "Forbidden: teacher or admin access required" }, { status: 403 });
       }
       return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
+  // Role-based protection for student routes
+  const isStudentRoute = pathname === "/student" || pathname.startsWith("/student/");
+  if (isStudentRoute) {
+    if (!token) {
+      const redirectUrl = new URL("/login", request.url);
+      redirectUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+    if (token.role !== "STUDENT") {
+      if (token.role === "TEACHER") {
+        return NextResponse.redirect(new URL("/teacher", request.url));
+      }
+      if (token.role === "ADMIN") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
     }
   }
 

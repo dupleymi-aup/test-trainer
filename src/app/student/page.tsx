@@ -1,0 +1,360 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Beaker,
+  Bell,
+  BookOpen,
+  Trophy,
+  TrendingUp,
+  Target,
+  Clock,
+  Award,
+  Loader2,
+  ArrowRight,
+  ChevronRight,
+  FileText,
+  BarChart3,
+  Megaphone,
+} from "lucide-react";
+import { loadProgress, loadAttemptHistory, loadStreak } from "@/lib/storage";
+import { tasks } from "@/lib/tasks";
+
+const TOTAL_TASKS = tasks.length;
+const difficultyConfig: Record<string, { label: string; color: string }> = {
+  Легко: { label: "Легко", color: "text-green-600 dark:text-green-400" },
+  Средне: { label: "Средне", color: "text-amber-600 dark:text-amber-400" },
+  Сложно: { label: "Сложно", color: "text-rose-600 dark:text-rose-400" },
+};
+
+export default function StudentDashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [stats, setStats] = useState<{
+    completed: number;
+    bestScore: number;
+    avgScore: number;
+    totalAttempts: number;
+    streak: number;
+    longestStreak: number;
+  } | null>(null);
+  const [announcements, setAnnouncements] = useState<Array<{
+    id: string;
+    title: string;
+    content: string;
+    createdAt: string;
+    group: { name: string } | null;
+    creator: { name: string | null; role: string };
+  }>>([]);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/student");
+      return;
+    }
+    if (status === "authenticated" && session?.user?.role !== "STUDENT") {
+      if (session.user.role === "ADMIN") router.push("/admin/analytics");
+      else if (session.user.role === "TEACHER") router.push("/teacher");
+      return;
+    }
+    if (status === "authenticated") {
+      const progress = loadProgress();
+      const attempts = loadAttemptHistory();
+      const streakData = loadStreak();
+
+      const completedTasks = Object.keys(progress).length;
+      const scores = Object.values(progress).map((p) => p.score);
+      const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
+      const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+      setStats({
+        completed: completedTasks,
+        bestScore,
+        avgScore,
+        totalAttempts: attempts.length,
+        streak: streakData.currentStreak,
+        longestStreak: streakData.longestStreak,
+      });
+
+      // Fetch announcements
+      fetch("/api/student/announcements")
+        .then((r) => r.ok ? r.json() : { announcements: [] })
+        .then((d) => setAnnouncements(d.announcements || []))
+        .catch(() => {});
+    }
+  }, [status, session, router]);
+
+  if (status === "loading" || !stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-600 mx-auto mb-4" />
+          <p className="text-muted-foreground">Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const completionPercent = Math.round((stats.completed / TOTAL_TASKS) * 100);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      {/* Header */}
+      <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 py-4 sm:py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
+                <Beaker className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+                  Привет, {session?.user?.name || "Студент"}!
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Ваша панель обучения
+                </p>
+              </div>
+            </div>
+            <Button asChild variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+              <Link href="/trainer">
+                К тренажёру <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Progress Overview */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Прогресс обучения</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Выполнено
+                </div>
+                <div className="text-2xl font-bold">{stats.completed} / {TOTAL_TASKS}</div>
+                <div className="text-xs text-muted-foreground mt-1">{completionPercent}%</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Trophy className="h-3 w-3 text-amber-600" /> Лучший балл
+                </div>
+                <div className="text-2xl font-bold text-amber-600">{stats.bestScore}%</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-blue-600" /> Средний балл
+                </div>
+                <div className="text-2xl font-bold text-blue-600">{stats.avgScore}%</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4">
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> Попыток
+                </div>
+                <div className="text-2xl font-bold">{stats.totalAttempts}</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Streak & Quick Actions */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Streak Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Award className="h-5 w-5 text-orange-600" />
+                Серия занятий
+              </CardTitle>
+              <CardDescription>Поддерживайте ежедневную серию для лучшего результата</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold text-orange-600">{stats.streak}</div>
+                  <div className="text-sm text-muted-foreground">дней подряд</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold">{stats.longestStreak}</div>
+                  <div className="text-sm text-muted-foreground">лучшая серия</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Быстрые действия</CardTitle>
+              <CardDescription>Перейдите к нужному разделу</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/trainer">
+                  <span className="flex items-center gap-2">
+                    <Beaker className="h-4 w-4" /> Открыть тренажёр
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/reminders">
+                  <span className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" /> Напоминания
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/profile?tab=stats">
+                  <span className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Подробная статистика
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/analytics">
+                  <span className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4" /> Аналитика
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/history">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" /> История заданий
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/trainer#theory">
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" /> Теория
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Task Difficulty Breakdown */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Задачи по сложности</CardTitle>
+            <CardDescription>Ваш прогресс в каждой категории</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(difficultyConfig).map(([difficulty, config]) => {
+                const tasksByDifficulty = tasks.filter((t) => t.difficulty === difficulty);
+                const completedByDifficulty = tasksByDifficulty.filter(
+                  (t) => loadProgress()[String(t.id)]
+                ).length;
+                const percent = tasksByDifficulty.length > 0
+                  ? Math.round((completedByDifficulty / tasksByDifficulty.length) * 100)
+                  : 0;
+
+                return (
+                  <div key={difficulty}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`font-medium ${config.color}`}>{config.label}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {completedByDifficulty} / {tasksByDifficulty.length}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          difficulty === "Легко"
+                            ? "bg-green-600"
+                            : difficulty === "Средне"
+                              ? "bg-amber-600"
+                              : "bg-rose-600"
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Announcements */}
+        {announcements.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Megaphone className="h-5 w-5 text-blue-600" />
+                Объявления
+              </CardTitle>
+              <CardDescription>Важные сообщения от преподавателей</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {announcements.slice(0, 3).map((ann) => (
+                  <div key={ann.id} className="p-4 rounded-lg border bg-card">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium">{ann.title}</h4>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                        {new Date(ann.createdAt).toLocaleDateString("ru-RU")}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{ann.content}</p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                      {ann.group && <span>Группа: {ann.group.name}</span>}
+                      <span>От: {ann.creator.name || "Преподаватель"}</span>
+                    </div>
+                  </div>
+                ))}
+                {announcements.length > 3 && (
+                  <p className="text-sm text-center text-muted-foreground">
+                    Ещё {announcements.length - 3} объявл.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upcoming deadlines reminder */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Bell className="h-5 w-5 text-amber-600" />
+              Напоминания
+            </CardTitle>
+            <CardDescription>Не забудьте о дедлайнах</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/student/reminders">
+                Посмотреть все напоминания <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+}

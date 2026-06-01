@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import { User, LogOut, BarChart3, Shield, GraduationCap } from "lucide-react";
+import { User, LogOut, BarChart3, Shield, GraduationCap, Beaker } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,20 @@ export function UserMenu() {
               </Link>
             </DropdownMenuItem>
           )}
+          {role === "STUDENT" && (
+            <DropdownMenuItem asChild>
+              <Link href="/student" className="cursor-pointer">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Мой кабинет
+              </Link>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem asChild>
+            <Link href="/trainer" className="cursor-pointer">
+              <Beaker className="mr-2 h-4 w-4" />
+              Тренажёр
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/profile" className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />

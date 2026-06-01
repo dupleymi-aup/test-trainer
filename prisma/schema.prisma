@@ -45,6 +45,9 @@ model User {
   reminders        Reminder[]
   notificationPreferences String?  // JSON: {"email": true, "inApp": true}
   updatedSettings SystemSetting[] @relation("UpdatedSettings")
+  createdAnnouncements Announcement[]
+  gradesGiven     Grade[]    @relation("GradesGiven")
+  gradesReceived  Grade[]    @relation("GradesReceived")
 
   @@index([role])
   @@index([deletedAt])
@@ -111,6 +114,7 @@ model Group {
   members         UserGroup[]
   assignedTasks   GroupTask[]
   deadlines       Deadline[]
+  announcements   Announcement[]
 }
 
 model GroupTask {
@@ -138,6 +142,24 @@ model UserGroup {
   @@id([userId, groupId])
   @@index([groupId])
   @@index([userId])
+}
+
+model Grade {
+  id          String   @id @default(cuid())
+  userId      String
+  taskId      String
+  score       Int      // Manual score 0-100
+  comment     String?
+  gradedById  String
+  gradedAt    DateTime @default(now())
+
+  user        User     @relation("GradesReceived", fields: [userId], references: [id], onDelete: Cascade)
+  gradedBy    User     @relation("GradesGiven", fields: [gradedById], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@index([taskId])
+  @@index([gradedById])
 }
 
 model Attempt {
@@ -252,4 +274,22 @@ model Reminder {
   @@index([read])
   @@index([offsetDays])
   @@index([deadlineId, userId])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  groupId     String?  // null = system-wide (admin announcements)
+  createdById String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  group       Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  creator     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([createdById])
+  @@index([createdAt])
+  @@index([expiresAt])
 }

@@ -1,0 +1,160 @@
+import { NextResponse } from "next/server";
+import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
+import { db } from "@/lib/db";
+import { z } from "zod";
+import { logger } from "@/lib/logger";
+
+const gradeSchema = z.object({
+  userId: z.string(),
+  taskId: z.string(),
+  score: z.number().min(0).max(100),
+  comment: z.string().max(500).optional(),
+});
+
+export async function GET(req: Request) {
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    const { searchParams } = new URL(req.url);
+    const groupId = searchParams.get("groupId");
+
+    // Get student IDs from teacher's groups
+    let userIds: string[] = [];
+    if (groupId) {
+      const members = await db.userGroup.findMany({
+        where: { groupId },
+        select: { userId: true },
+      });
+      userIds = members.map((m) => m.userId);
+    } else {
+      const groups = await db.group.findMany({
+        where: { createdByUserId: session.userId },
+        select: { id: true },
+      });
+      const groupIds = groups.map((g) => g.id);
+      const members = await db.userGroup.findMany({
+        where: { groupId: { in: groupIds } },
+        select: { userId: true },
+      });
+      userIds = [...new Set(members.map((m) => m.userId))];
+    }
+
+    if (userIds.length === 0) return NextResponse.json({ grades: [], students: [] });
+
+    // Get all grades for these students
+    const grades = await db.grade.findMany({
+      where: { userId: { in: userIds } },
+      include: {
+        user: { select: { id: true, name: true, email: true, group: true } },
+        gradedBy: { select: { id: true, name: true } },
+      },
+      orderBy: { gradedAt: "desc" },
+    });
+
+    // Get student info
+    const students = await db.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true, email: true, group: true },
+    });
+
+    return NextResponse.json({ grades, students });
+  } catch (error) {
+    logger.error("Failed to fetch grades", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch grades" }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
+
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
+    const parsed = gradeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+    }
+
+    const { userId, taskId, score, comment } = parsed.data;
+
+    const grade = await db.grade.upsert({
+      where: { userId_taskId: { userId, taskId } },
+      create: {
+        userId,
+        taskId,
+        score,
+        comment: comment || null,
+        gradedById: session.userId,
+      },
+      update: {
+        score,
+        comment: comment || null,
+        gradedById: session.userId,
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "GRADE_SET",
+        entity: "Grade",
+        entityId: grade.id,
+        details: JSON.stringify({ userId, taskId, score }),
+      },
+    });
+
+    return NextResponse.json({ grade });
+  } catch (error) {
+    logger.error("Failed to set grade", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to set grade" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
+
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const taskId = searchParams.get("taskId");
+
+    if (!userId || !taskId) {
+      return NextResponse.json({ error: "Missing userId or taskId" }, { status: 400 });
+    }
+
+    await db.grade.delete({
+      where: { userId_taskId: { userId, taskId } },
+    });
+
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "GRADE_DELETE",
+        entity: "Grade",
+        details: JSON.stringify({ userId, taskId }),
+      },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("Failed to delete grade", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to delete grade" }, { status: 500 });
+  }
+}

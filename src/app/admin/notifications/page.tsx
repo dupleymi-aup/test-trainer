@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Bell,
   AlertTriangle,
@@ -14,7 +15,12 @@ import {
   ArrowRight,
   BookOpen,
   CheckCircle,
+  CheckCheck,
+  Trash2,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
+import { apiFetch } from "@/lib/api-client";
 
 interface Notification {
   id: string;
@@ -37,9 +43,10 @@ export default function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchData = () => {
     fetch("/api/admin/notifications")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -51,7 +58,58 @@ export default function AdminNotificationsPage() {
         setLoading(false);
       })
       .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
+
+  const markAllRead = async () => {
+    setUpdating(true);
+    try {
+      const res = await apiFetch("/api/admin/notifications/read", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [] }),
+      });
+      if (res.ok) {
+        toast.success("Все уведомления отмечены как прочитанные");
+        fetchData();
+      } else {
+        toast.error("Ошибка при обновлении");
+      }
+    } catch {
+      toast.error("Ошибка при обновлении");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const markOneRead = async (id: string) => {
+    try {
+      const res = await apiFetch("/api/admin/notifications/read", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      if (res.ok) fetchData();
+    } catch {}
+  };
+
+  const deleteRead = async () => {
+    if (!confirm("Удалить все прочитанные уведомления?")) return;
+    try {
+      const res = await apiFetch("/api/admin/notifications", { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Прочитанные уведомления удалены");
+        fetchData();
+      } else {
+        toast.error("Ошибка при удалении");
+      }
+    } catch {
+      toast.error("Ошибка при удалении");
+    }
+  };
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
@@ -59,23 +117,35 @@ export default function AdminNotificationsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold">Уведомления</h2>
             {unreadCount > 0 && (
               <Badge variant="destructive">{unreadCount} новых</Badge>
             )}
           </div>
-          <Link href="/admin/analytics/predictions" className="text-sm text-muted-foreground hover:text-foreground">
-            Полный анализ рисков <ArrowRight className="inline h-3 w-3 ml-1" />
-          </Link>
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={markAllRead} disabled={updating}>
+                {updating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <CheckCheck className="mr-1 h-3 w-3" />}
+                Прочитать всё
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={deleteRead}>
+              <Trash2 className="mr-1 h-3 w-3" />
+              Удалить прочитанные
+            </Button>
+            <Link href="/admin/analytics/predictions" className="text-sm text-muted-foreground hover:text-foreground flex items-center">
+              Анализ рисков <ArrowRight className="inline h-3 w-3 ml-1" />
+            </Link>
+          </div>
         </div>
 
         {notifications.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <CheckCircle className="h-12 w-12 mx-auto mb-4 text-emerald-600" />
-              <p className="text-muted-foreground">Нет уведомлений за последние 7 дней</p>
+              <p className="text-muted-foreground">Нет уведомлений</p>
             </CardContent>
           </Card>
         ) : (
@@ -97,6 +167,11 @@ export default function AdminNotificationsPage() {
                           {new Date(n.createdAt).toLocaleString("ru-RU")}
                         </p>
                       </div>
+                      {!n.read && (
+                        <Button variant="ghost" size="sm" onClick={() => markOneRead(n.id)}>
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
