@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb, ChevronRight, Plus } from "lucide-react";
 import { runReferenceFunction, type TestCaseCategory } from "@/lib/tasks";
+import { type TestCase } from "@/lib/evaluator";
 import { toast } from "sonner";
 
 interface HintInfo {

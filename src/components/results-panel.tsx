@@ -533,7 +533,7 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
 
       {/* Coverage Matrix */}
       {testCases.length > 0 && (
-        <CoverageMatrix result={result} testCases={testCases} />
+        <CoverageMatrix result={result} />
       )}
 
       {/* Coverage details */}

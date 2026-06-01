@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
@@ -73,6 +74,8 @@ export async function PATCH(req: Request) {
   try {
     const guard = await requireAuth();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
     const { session } = guard;
 
     const ip = getClientIp(req);

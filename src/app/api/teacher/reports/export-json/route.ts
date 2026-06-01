@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
@@ -14,6 +15,8 @@ const exportJsonSchema = z.object({
 export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();
   if ("response" in guard) return guard.response;
+  const csrf = await requireCSRF(req);
+  if ("response" in csrf) return csrf.response;
   const { session } = guard;
 
   try {

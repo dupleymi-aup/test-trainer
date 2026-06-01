@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
@@ -52,6 +53,8 @@ export async function POST(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
     const { session } = guard;
 
     const { id } = await params;
@@ -118,6 +121,8 @@ export async function DELETE(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
     const { session } = guard;
 
     const { id } = await params;

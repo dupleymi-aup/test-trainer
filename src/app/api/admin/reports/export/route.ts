@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
@@ -61,6 +62,8 @@ async function logExport(userId: string, reportType: string, format: string, det
 export async function POST(req: Request) {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
+  const csrf = await requireCSRF(req);
+  if ("response" in csrf) return csrf.response;
 
   let body: Record<string, unknown>;
   try {

@@ -46,6 +46,7 @@ export async function GET(request: Request) {
   const attempts = await db.attempt.findMany({
     where: Object.keys(attemptWhere).length > 0 ? attemptWhere : undefined,
     select: {
+      id: true,
       userId: true,
       taskId: true,
       score: true,

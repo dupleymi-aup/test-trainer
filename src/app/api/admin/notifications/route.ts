@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { logger } from "@/lib/logger";
@@ -75,6 +76,8 @@ export async function PATCH(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const body = await req.json().catch(() => null);
     if (!body) {
@@ -118,6 +121,8 @@ export async function POST(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const body = await req.json().catch(() => null);
     if (!body) {
@@ -161,6 +166,8 @@ export async function DELETE(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const { searchParams } = new URL(req.url);
     const all = searchParams.get("all") === "true";

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
 import { logger } from "@/lib/logger";
@@ -9,10 +10,12 @@ import { logger } from "@/lib/logger";
  * Checks risk thresholds and creates persistent notifications when exceeded.
  * Callable by admin UI or cron job.
  */
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const now = new Date();
     const fourteenDaysAgo = new Date(now);

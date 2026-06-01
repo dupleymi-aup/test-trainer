@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
@@ -10,6 +11,8 @@ export async function PATCH(
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(_req);
+    if ("response" in csrf) return csrf.response;
     const { session } = guard;
 
   const { id } = await params;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
@@ -52,6 +53,8 @@ export async function PUT(req: Request) {
   try {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     // Rate limit profile updates
     const rateResult = checkRateLimit(`profile:${auth.session.userId}`, rateLimits.profileUpdate);
