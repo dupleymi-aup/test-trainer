@@ -151,42 +151,44 @@ export default function AdminUsersPage() {
     },
   });
 
-  const fetchUsers = useCallback(() => {
-    const params = new URLSearchParams();
-    if (search) params.set("search", search);
-    if (roleFilter !== "ALL") params.set("role", roleFilter);
-    params.set("page", String(page));
-    params.set("limit", String(limit));
-    if (showDeleted) params.set("showDeleted", "true");
-    params.set("sortBy", sortBy);
-    params.set("sortDir", sortDir);
+  const fetchUsers = useCallback(
+    (overridePage?: number) => {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (roleFilter !== "ALL") params.set("role", roleFilter);
+      params.set("page", String(overridePage ?? page));
+      params.set("limit", String(limit));
+      if (showDeleted) params.set("showDeleted", "true");
+      params.set("sortBy", sortBy);
+      params.set("sortDir", sortDir);
 
-    fetch(`/api/admin/users?${params}`)
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setUsers(data.users);
-        setTotalPages(data.pagination.totalPages);
-        setTotal(data.pagination.total);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [search, roleFilter, page, limit, showDeleted, sortBy, sortDir]);
+      fetch(`/api/admin/users?${params}`)
+        .then(async (r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then((data) => {
+          setUsers(data.users);
+          setTotalPages(data.pagination.totalPages);
+          setTotal(data.pagination.total);
+          setLoading(false);
+        })
+        .catch(() => {
+          toast.error("Не удалось загрузить список пользователей");
+          setLoading(false);
+        });
+    },
+    [search, roleFilter, page, limit, showDeleted, sortBy, sortDir]
+  );
 
-  // Debounced search — auto-fetch when search text changes
+  // Single effect — fetch when any parameter changes
   useEffect(() => {
+    setLoading(true);
     const timer = setTimeout(() => {
-      setPage(1);
       fetchUsers();
     }, 400);
     return () => clearTimeout(timer);
-  }, [search, fetchUsers]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [page, showDeleted, sortBy, sortDir, fetchUsers]);
+  }, [search, roleFilter, page, showDeleted, sortBy, sortDir, fetchUsers]);
 
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {
     const res = await apiFetch(`/api/admin/users/${id}/toggle-active`, { method: "PATCH" });
@@ -343,7 +345,7 @@ export default function AdminUsersPage() {
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
             </div>
-            <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(1); fetchUsers(); }}>
+            <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(1); }}>
               <SelectTrigger className="w-44">
                 <SelectValue placeholder="Роль" />
               </SelectTrigger>
