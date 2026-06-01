@@ -176,6 +176,7 @@ describe("POST /api/auth/login", () => {
   describe("invalid credentials", () => {
     it("returns 401 when user not found", async () => {
       mocks.mockUserFindFirst.mockResolvedValue(null);
+      mocks.bcryptCompare.mockResolvedValue(false);
 
       const req = makeRequest(validCredentials);
       const res = await POST(req);
@@ -183,6 +184,8 @@ describe("POST /api/auth/login", () => {
 
       expect(res.status).toBe(401);
       expect(json.error).toBe("Неверный email/телефон или пароль");
+      // bcrypt.compare is called with a dummy hash to prevent timing attacks
+      expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
 
     it("returns 401 when password is incorrect", async () => {
@@ -199,6 +202,7 @@ describe("POST /api/auth/login", () => {
 
     it("returns 401 when user has no hashedPassword", async () => {
       mocks.mockUserFindFirst.mockResolvedValue({ ...mockUser, hashedPassword: null });
+      mocks.bcryptCompare.mockResolvedValue(false);
 
       const req = makeRequest(validCredentials);
       const res = await POST(req);
@@ -206,6 +210,8 @@ describe("POST /api/auth/login", () => {
 
       expect(res.status).toBe(401);
       expect(json.error).toBe("Неверный email/телефон или пароль");
+      // bcrypt.compare is called with a dummy hash to prevent timing attacks
+      expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
 
     it("returns 403 when user account is inactive", async () => {
@@ -220,13 +226,15 @@ describe("POST /api/auth/login", () => {
       expect(json.error).toBe("Аккаунт неактивен");
     });
 
-    it("does NOT compare password for inactive users (early return)", async () => {
+    it("compares password even for inactive users (prevents timing attacks)", async () => {
       mocks.mockUserFindFirst.mockResolvedValue({ ...mockUser, isActive: false });
+      mocks.bcryptCompare.mockResolvedValue(true);
 
       const req = makeRequest(validCredentials);
       await POST(req);
 
-      expect(mocks.bcryptCompare).not.toHaveBeenCalled();
+      // Password is compared first; 403 is only returned after valid password + inactive account
+      expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
   });
 

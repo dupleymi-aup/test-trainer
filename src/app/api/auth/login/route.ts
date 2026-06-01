@@ -41,7 +41,15 @@ export async function POST(req: Request) {
       where: isPhone ? { phone: trimmedLogin } : { email: trimmedLogin.toLowerCase() },
     });
 
-    if (!user || !user.hashedPassword) {
+    // Always run bcrypt.compare to prevent timing-based user enumeration.
+    // When user doesn't exist, compare against a dummy hash so the timing
+    // is indistinguishable from a real password check (~300ms at cost=12).
+    const DUMMY_HASH = "$2a$12$eIAqft.XXQMVWE3wR7K0Gu1vN3FzM4LP7RkKx0M5GjH0tN0yqF0W6";
+    const hashToCompare = user?.hashedPassword ?? DUMMY_HASH;
+
+    const isValid = await bcrypt.compare(password, hashToCompare);
+
+    if (!user || !user.hashedPassword || !isValid) {
       return NextResponse.json(
         { error: "Неверный email/телефон или пароль" },
         { status: 401 }
@@ -52,14 +60,6 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Аккаунт неактивен" },
         { status: 403 }
-      );
-    }
-
-    const isValid = await bcrypt.compare(password, user.hashedPassword);
-    if (!isValid) {
-      return NextResponse.json(
-        { error: "Неверный email/телефон или пароль" },
-        { status: 401 }
       );
     }
 
