@@ -44,10 +44,10 @@ export async function GET() {
 
     // Parse covered ECs
     let coveredEcIds: string[] = [];
-    try { coveredEcIds = JSON.parse(a.coveredEcIds || "[]"); } catch { /* skip */ }
+    try { coveredEcIds = JSON.parse(a.coveredEcIds || "[]"); } catch { if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON"); coveredEcIds = []; }
 
     let coveredBvDescriptions: string[] = [];
-    try { coveredBvDescriptions = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { /* skip */ }
+    try { coveredBvDescriptions = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON"); coveredBvDescriptions = []; }
 
     // Increment totals for all ECs/BVs of this task
     for (const ec of task.equivalenceClasses) {

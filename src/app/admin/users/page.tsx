@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiFetch } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -213,7 +214,8 @@ export default function AdminUsersPage() {
         const data = await res.json();
         toast.error(data.error || "Ошибка при изменении роли");
       }
-    } catch {
+    } catch (e) {
+      logger.error("Admin users: role change failed", { error: e instanceof Error ? e.message : String(e) });
       toast.error("Ошибка при изменении роли");
     } finally {
       setIsSubmitting(false);
@@ -237,7 +239,8 @@ export default function AdminUsersPage() {
         const json = await res.json();
         toast.error(json.error || "Ошибка при создании пользователя");
       }
-    } catch {
+    } catch (e) {
+      logger.error("Admin users: user creation failed", { error: e instanceof Error ? e.message : String(e) });
       toast.error("Ошибка при создании пользователя");
     } finally {
       setIsSubmitting(false);
@@ -258,7 +261,8 @@ export default function AdminUsersPage() {
         const data = await res.json();
         toast.error(data.error || "Ошибка при удалении");
       }
-    } catch {
+    } catch (e) {
+      logger.error("Admin users: user deletion failed", { error: e instanceof Error ? e.message : String(e) });
       toast.error("Ошибка при удалении");
     } finally {
       setIsSubmitting(false);

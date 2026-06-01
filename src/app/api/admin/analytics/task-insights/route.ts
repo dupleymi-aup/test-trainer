@@ -115,7 +115,7 @@ export async function GET(request: Request) {
         });
       }
     } catch {
-      // Ignore parse errors
+      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid testCases JSON for attempt", { attemptId: a.id });
     }
 
     // Score bucket

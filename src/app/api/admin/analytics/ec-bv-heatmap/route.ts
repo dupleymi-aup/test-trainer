@@ -55,11 +55,11 @@ export async function GET() {
 
     // Parse covered ECs
     let coveredEc: string[] = [];
-    try { coveredEc = JSON.parse(a.coveredEcIds || "[]"); } catch { /* invalid JSON treated as empty array */ }
+    try { coveredEc = JSON.parse(a.coveredEcIds || "[]"); } catch { if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON"); coveredEc = []; }
 
     // Parse covered BVs
     let coveredBv: string[] = [];
-    try { coveredBv = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { /* invalid JSON treated as empty array */ }
+    try { coveredBv = JSON.parse(a.coveredBvDescriptions || "[]"); } catch { if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON"); coveredBv = []; }
 
     // Track EC coverage
     for (const ecId of ecIds) {

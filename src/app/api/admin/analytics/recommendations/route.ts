@@ -132,13 +132,13 @@ export async function GET(request: Request) {
         const ecIds = JSON.parse(a.coveredEcIds) as string[];
         ecIds.forEach((id) => allCoveredEcs.add(id));
       } catch {
-        // ignore
+        if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON");
       }
       try {
         const bvDescs = JSON.parse(a.coveredBvDescriptions) as string[];
         bvDescs.forEach((d) => allCoveredBvs.add(d));
       } catch {
-        // ignore
+        if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON");
       }
 
       // Topic scores

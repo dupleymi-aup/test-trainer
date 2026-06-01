@@ -51,13 +51,19 @@ export async function GET() {
       let coveredEcIds: string[] = [];
       try {
         coveredEcIds = JSON.parse(a.coveredEcIds || "[]");
-      } catch { /* ignore parse errors */ }
+      } catch {
+        if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON");
+        coveredEcIds = [];
+      }
 
       // Parse covered BV descriptions
       let coveredBvDescs: string[] = [];
       try {
         coveredBvDescs = JSON.parse(a.coveredBvDescriptions || "[]");
-      } catch { /* ignore parse errors */ }
+      } catch {
+        if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON");
+        coveredBvDescs = [];
+      }
 
       // For low-scoring attempts (< 60), analyze what was missed
       if (a.score < 60) {

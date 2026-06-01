@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiFetch } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -358,7 +359,10 @@ export default function AdminGroupsPage() {
               body: JSON.stringify({ taskIds: assignedIds }),
             });
             if (res.ok) success++; else errors++;
-          } catch { errors++; }
+          } catch (e) {
+            logger.error("Bulk task assignment failed for group", { groupId: gid, error: e instanceof Error ? e.message : String(e) });
+            errors++;
+          }
         }
         const counts: Record<string, number> = {};
         groupIds.forEach((gid) => { counts[gid] = assignedIds.length; });
@@ -374,7 +378,10 @@ export default function AdminGroupsPage() {
                 body: JSON.stringify({ userId: sid }),
               });
               success++;
-            } catch { errors++; }
+            } catch (e) {
+              logger.error("Bulk member addition failed", { groupId: gid, userId: sid, error: e instanceof Error ? e.message : String(e) });
+              errors++;
+            }
           }
         }
       } else if (bulkAction === "delete") {
@@ -382,7 +389,10 @@ export default function AdminGroupsPage() {
           try {
             const res = await apiFetch(`/api/admin/groups/${gid}`, { method: "DELETE" });
             if (res.ok) success++; else errors++;
-          } catch { errors++; }
+          } catch (e) {
+            logger.error("Bulk group deletion failed", { groupId: gid, error: e instanceof Error ? e.message : String(e) });
+            errors++;
+          }
         }
         fetchGroups();
       }
