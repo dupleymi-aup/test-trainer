@@ -14,6 +14,7 @@ const registerSchema = z.object({
   email: z.string().email("Неверный формат email").max(255, "Email слишком длинный"),
   phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
   password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+  role: z.enum(["STUDENT", "TEACHER"]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -41,15 +42,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, phone, password } = parsed.data;
+    const { name, email, phone, password, role } = parsed.data;
 
-    // New users always default to STUDENT role — TEACHER role can only be granted by admin
-    const role = "STUDENT";
+    // Default to STUDENT role; allow users to choose STUDENT or TEACHER during registration
+    const userRole = role || "STUDENT";
 
     const emailLower = email.toLowerCase().trim();
+    const normalizedPhone = phone && phone.trim() ? phone.trim() : null;
 
     const orConditions: Array<{ email?: string; phone?: string }> = [{ email: emailLower }];
-    if (phone) orConditions.push({ phone: phone.trim() });
+    if (normalizedPhone) orConditions.push({ phone: normalizedPhone });
 
     const existingUser = await db.user.findFirst({
       where: {
@@ -79,9 +81,9 @@ export async function POST(req: Request) {
         data: {
           name: name?.trim() || null,
           email: emailLower,
-          phone: phone?.trim() || null,
+          phone: normalizedPhone,
           hashedPassword,
-          role,
+          role: userRole,
           isActive: true,
         },
         select: {

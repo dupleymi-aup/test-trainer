@@ -122,7 +122,7 @@ describe("POST /api/auth/register", () => {
       });
     });
 
-    it("defaults role to STUDENT even when not in request", async () => {
+    it("defaults role to STUDENT when not in request", async () => {
       const req = makeRequest(validPayload);
       await POST(req);
 
@@ -130,6 +130,19 @@ describe("POST /api/auth/register", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             role: "STUDENT",
+          }),
+        })
+      );
+    });
+
+    it("accepts TEACHER role from request body", async () => {
+      const req = makeRequest({ ...validPayload, role: "TEACHER" });
+      await POST(req);
+
+      expect(mocks.mockUserCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            role: "TEACHER",
           }),
         })
       );
@@ -187,34 +200,28 @@ describe("POST /api/auth/register", () => {
   });
 
   // =========================================================================
-  // 2. Security — role from request body is ignored
+  // 2. Role handling — users can select STUDENT or TEACHER, but not ADMIN
   // =========================================================================
 
-  describe("security: role cannot be set from request body", () => {
-    it("ignores TEACHER role in request body — defaults to STUDENT", async () => {
+  describe("role handling", () => {
+    it("accepts TEACHER role from request body", async () => {
       const req = makeRequest({ ...validPayload, role: "TEACHER" });
       await POST(req);
 
       expect(mocks.mockUserCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            role: "STUDENT",
+            role: "TEACHER",
           }),
         })
       );
     });
 
-    it("ignores ADMIN role in request body — defaults to STUDENT", async () => {
+    it("rejects ADMIN role in request body — returns 400", async () => {
       const req = makeRequest({ ...validPayload, role: "ADMIN" });
-      await POST(req);
+      const res = await POST(req);
 
-      expect(mocks.mockUserCreate).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            role: "STUDENT",
-          }),
-        })
-      );
+      expect(res.status).toBe(400);
     });
   });
 
