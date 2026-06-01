@@ -15,7 +15,7 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
     { label: "Заглавная буква", passed: /[A-ZА-ЯЁ]/.test(password) },
     { label: "Строчная буква", passed: /[a-zа-яё]/.test(password) },
     { label: "Цифра", passed: /\d/.test(password) },
-    { label: "Спецсимвол", passed: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
+    { label: "Спецсимвол", passed: /[!@#$%^&*()_+\-=\]{};':"\\|,.<>/?]/.test(password) },
   ];
 
   const passedCount = checks.filter((c) => c.passed).length;

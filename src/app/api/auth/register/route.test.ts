@@ -170,7 +170,7 @@ describe("POST /api/auth/register", () => {
     });
 
     it("accepts optional name missing (name is optional)", async () => {
-      const { name, ...payloadWithoutName } = validPayload;
+      const { name: _name, ...payloadWithoutName } = validPayload;
       const req = makeRequest(payloadWithoutName);
       const res = await POST(req);
 
@@ -224,7 +224,7 @@ describe("POST /api/auth/register", () => {
 
   describe("validation errors", () => {
     it("rejects missing email with 400", async () => {
-      const { email, ...payloadWithoutEmail } = validPayload;
+      const { email: _email, ...payloadWithoutEmail } = validPayload;
       const req = makeRequest(payloadWithoutEmail);
       const res = await POST(req);
       const json = await res.json();
@@ -252,7 +252,7 @@ describe("POST /api/auth/register", () => {
     });
 
     it("rejects missing password with 400", async () => {
-      const { password, ...payloadWithoutPassword } = validPayload;
+      const { password: _password, ...payloadWithoutPassword } = validPayload;
       const req = makeRequest(payloadWithoutPassword);
       const res = await POST(req);
       const json = await res.json();

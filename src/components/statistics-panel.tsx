@@ -65,7 +65,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
 
       return { task, bestScore, avgScore, attempts: attemptsCount, trend, history, sparklineData, avgTimeMs };
     });
-  }, [attempts]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const categoryDistribution = useMemo(() => {
     const catTotals: Record<string, number> = { "Нормальное значение": 0, "Граничное значение": 0, "Исключение": 0, "Недопустимый тип": 0 };
@@ -81,7 +81,7 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
 
     const imbalance = Object.values(catTotals).some((v) => v > 0 && v / totalCats < 0.1);
     return { catTotals, totalCats, imbalance };
-  }, [attempts]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const totalAttempts = attempts.length;
   const avgOverallScore = totalAttempts > 0

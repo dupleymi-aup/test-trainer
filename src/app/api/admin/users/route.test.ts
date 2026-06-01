@@ -433,7 +433,7 @@ describe("POST /api/admin/users", () => {
 
   describe("validation errors", () => {
     it("rejects missing password with 400", async () => {
-      const { password, ...payload } = validCreatePayload;
+      const { password: _password, ...payload } = validCreatePayload;
       const req = makePostRequest(payload);
       const res = await POST(req);
       const json = await res.json();
@@ -470,7 +470,7 @@ describe("POST /api/admin/users", () => {
     });
 
     it("accepts optional name (name is optional)", async () => {
-      const { name, ...payload } = validCreatePayload;
+      const { name: _name, ...payload } = validCreatePayload;
       const req = makePostRequest(payload);
       const res = await POST(req);
 

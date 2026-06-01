@@ -46,7 +46,7 @@ function getCode(fn: (...args: never[]) => unknown): string {
   // If it's an arrow function wrapper like "(args) => factorial(args[0])", extract the inner call
   const arrowMatch = source.match(/\)\s*=>\s*(\w+)\(/);
   if (arrowMatch) {
-    const fnName = arrowMatch[1];
+    const _fnName = arrowMatch[1];
     // Try to find the original function and return its source
     const typedFn = fn as { name: string };
     const originalFn = typedFn.name !== "" ? fn : null;
@@ -157,7 +157,7 @@ function validatePassword(
   if (!/[a-zа-яё]/.test(password)) errors.push("Хотя бы одна строчная буква");
   if (!/[0-9]/.test(password)) errors.push("Хотя бы одна цифра");
   if (
-    !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    !/[!@#$%^&*()_+=\]{};':"\\|,.<>?-]/.test(password)
   )
     errors.push("Хотя бы один спецсимвол");
   return { valid: errors.length === 0, errors };
@@ -225,7 +225,7 @@ function validateEmail(email: string): { valid: boolean; errors: string[] } {
   } else {
     const [local, domain] = email.split("@");
     if (!local || local.length === 0) errors.push("Пустая локальная часть (до @)");
-    else if (!/^[a-zA-Z0-9.\-]+$/.test(local)) errors.push("Недопустимые символы в локальной части");
+    else if (!/^[a-zA-Z0-9._-]+$/.test(local)) errors.push("Недопустимые символы в локальной части");
     if (!domain || domain.length === 0) errors.push("Пустая доменная часть (после @)");
     else if (!domain.includes(".")) errors.push("Домен не содержит точку");
     else {
@@ -233,7 +233,7 @@ function validateEmail(email: string): { valid: boolean; errors: string[] } {
       const tld = parts[parts.length - 1];
       if (tld.length < 2) errors.push("Домен верхнего уровня слишком короткий (минимум 2 символа)");
       else if (tld.length > 6) errors.push("Домен верхнего уровня слишком длинный (максимум 6 символов)");
-      if (!/^[a-zA-Z0-9.\-]+$/.test(domain)) errors.push("Недопустимые символы в домене");
+      if (!/^[a-zA-Z0-9._-]+$/.test(domain)) errors.push("Недопустимые символы в домене");
     }
   }
   return { valid: errors.length === 0, errors };
@@ -864,7 +864,7 @@ export const tasks: Task[] = [
     const [local, domain] = email.split("@");
     if (!local || local.length === 0) {
       errors.push("Пустая локальная часть (до @)");
-    } else if (!/^[a-zA-Z0-9.\-]+$/.test(local)) {
+    } else if (!/^[a-zA-Z0-9._-]+$/.test(local)) {
       errors.push("Недопустимые символы в локальной части");
     }
     if (!domain || domain.length === 0) {
@@ -879,7 +879,7 @@ export const tasks: Task[] = [
       } else if (tld.length > 6) {
         errors.push("Домен верхнего уровня слишком длинный (максимум 6 символов)");
       }
-      if (!/^[a-zA-Z0-9.\-]+$/.test(domain)) {
+      if (!/^[a-zA-Z0-9._-]+$/.test(domain)) {
         errors.push("Недопустимые символы в домене");
       }
     }

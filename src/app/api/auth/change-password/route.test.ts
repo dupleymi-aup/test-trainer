@@ -232,7 +232,7 @@ describe("POST /api/auth/change-password", () => {
 
   describe("missing fields", () => {
     it("rejects missing currentPassword with 400", async () => {
-      const { currentPassword, ...payload } = validChangePayload;
+      const { currentPassword: _currentPassword, ...payload } = validChangePayload;
       const req = makeRequest(payload);
       const res = await POST(req);
       const json = await res.json();
@@ -251,7 +251,7 @@ describe("POST /api/auth/change-password", () => {
     });
 
     it("rejects missing newPassword with 400", async () => {
-      const { newPassword, ...payload } = validChangePayload;
+      const { newPassword: _newPassword, ...payload } = validChangePayload;
       const req = makeRequest(payload);
       const res = await POST(req);
       const json = await res.json();

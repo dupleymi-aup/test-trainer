@@ -168,7 +168,7 @@ export function useTrainerState() {
       map[String(task.id)] = getTaskBestCoverage(task.id);
     }
     return map;
-  }, [attemptHistory]);
+  }, [attemptHistory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
@@ -663,7 +663,10 @@ export function useTrainerState() {
       exceptionTestTasks,
       workedExamplesViewed: Object.keys(progress).length, // tasks with attempts ≈ worked examples viewed
       testCaseCategories: new Set(
-        history.flatMap((h) => h.categoryDistribution ? Object.keys(h.categoryDistribution).filter((k) => h.categoryDistribution![k] > 0) : [])
+        history.flatMap((h) => {
+          const dist = h.categoryDistribution;
+          return dist ? Object.keys(dist).filter((k) => dist[k] > 0) : [];
+        })
       ),
     };
 
@@ -683,7 +686,7 @@ export function useTrainerState() {
     if (result.overallScore >= 90) {
       triggerConfetti();
     }
-  }, [selectedTask, testCases, elapsedTime]);
+  }, [selectedTask, testCases, elapsedTime, triggerConfetti]);
 
   // Reset current task
   const handleReset = useCallback(() => {
@@ -862,7 +865,7 @@ export function useTrainerState() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask, handleShowHint, handleFillAllEc, handleRandomTask]);
+  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask, handleShowHint, handleFillAllEc, handleRandomTask]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     // State

@@ -236,7 +236,7 @@ describe("POST /api/auth/login", () => {
 
   describe("missing fields", () => {
     it("rejects missing login with 400", async () => {
-      const { login, ...payload } = validCredentials;
+      const { login: _login, ...payload } = validCredentials;
       const req = makeRequest(payload);
       const res = await POST(req);
       const json = await res.json();
@@ -255,7 +255,7 @@ describe("POST /api/auth/login", () => {
     });
 
     it("rejects missing password with 400", async () => {
-      const { password, ...payload } = validCredentials;
+      const { password: _password, ...payload } = validCredentials;
       const req = makeRequest(payload);
       const res = await POST(req);
       const json = await res.json();

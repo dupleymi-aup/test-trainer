@@ -53,7 +53,7 @@ function startOtpCleanup() {
   cleanupTimer.unref?.(); // Don't prevent Node.js from exiting
 }
 
-function purgeOtpSendLog() {
+function _purgeOtpSendLog() {
   otpSendLog.clear();
   if (cleanupTimer) {
     clearInterval(cleanupTimer);

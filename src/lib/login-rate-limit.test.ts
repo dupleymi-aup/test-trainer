@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isLoginRateLimited } from "./login-rate-limit";
-import { checkRateLimit, rateLimits } from "./rate-limit";
+import { checkRateLimit as _checkRateLimit, rateLimits as _rateLimits } from "./rate-limit";
 
 beforeEach(() => {
   vi.useFakeTimers();

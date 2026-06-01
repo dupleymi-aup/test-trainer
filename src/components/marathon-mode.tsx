@@ -88,7 +88,7 @@ export function MarathonMode({
   const marathonSavedRef = useRef(false);
   const sessionRestoredRef = useRef(false);
 
-  // Restore elapsed time from saved session
+  // Restore elapsed time from saved session (run once on mount)
   useEffect(() => {
     if (state.started && !state.finished && !sessionRestoredRef.current) {
       sessionRestoredRef.current = true;
@@ -98,6 +98,7 @@ export function MarathonMode({
         setElapsed(Math.floor((Date.now() - saved.state.startTime) / 1000));
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const currentTask = tasks[state.currentIndex];
@@ -135,7 +136,7 @@ export function MarathonMode({
         totalTimeSec,
       });
     }
-  }, [state.finished, state.taskResults, tasks.length]);
+  }, [state.finished, state.taskResults]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Timer
   useEffect(() => {

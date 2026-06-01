@@ -6,7 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import { db } from "@/lib/db";
 import { isLoginRateLimited } from "@/lib/login-rate-limit";
-import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
+import { rateLimits } from "@/lib/rate-limit";
 
 // In-memory store for email rate limiting (keyed by email address)
 const emailRateLimitStore = new Map<string, { count: number; resetAt: number }>();
