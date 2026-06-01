@@ -10,6 +10,7 @@ import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 
 // In-memory store for email rate limiting (keyed by email address)
 const emailRateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const EMAIL_RATE_LIMIT_MAX_SIZE = 10_000;
 
 function isEmailRateLimited(email: string): boolean {
   const now = Date.now();
@@ -28,6 +29,31 @@ function isEmailRateLimited(email: string): boolean {
 
   entry.count += 1;
   return false;
+}
+
+// Auto-cleanup for email rate limit store — singleton guard to prevent HMR leaks
+if (typeof global !== "undefined") {
+  const emailRateLimitCleanupSymbol = Symbol.for("email-rate-limit-cleanup-interval");
+  const existingInterval = (global as Record<symbol, unknown>)[emailRateLimitCleanupSymbol] as ReturnType<typeof setInterval> | undefined;
+  if (existingInterval) clearInterval(existingInterval);
+  (global as Record<symbol, unknown>)[emailRateLimitCleanupSymbol] = setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of emailRateLimitStore) {
+      if (entry.resetAt <= now) {
+        emailRateLimitStore.delete(key);
+      }
+    }
+    // LRU-style eviction if over capacity
+    if (emailRateLimitStore.size > EMAIL_RATE_LIMIT_MAX_SIZE) {
+      const iterator = emailRateLimitStore.keys();
+      const evictCount = Math.min(500, emailRateLimitStore.size - EMAIL_RATE_LIMIT_MAX_SIZE);
+      for (let i = 0; i < evictCount; i++) {
+        const result = iterator.next();
+        if (result.done) break;
+        emailRateLimitStore.delete(result.value);
+      }
+    }
+  }, 60 * 1000);
 }
 
 // Extend next-auth types

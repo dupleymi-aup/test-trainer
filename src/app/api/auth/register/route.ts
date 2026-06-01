@@ -20,9 +20,10 @@ export async function POST(req: Request) {
   const ip = getClientIp(req);
   const result = checkRateLimit(`register:${ip}`, rateLimits.register);
   if (result.limited) {
+    const retryAfter = Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000));
     return NextResponse.json(
       { error: "Слишком много попыток. Попробуйте позже" },
-      { status: 429, headers: { "Retry-After": String(Math.ceil((result.resetAt - Date.now()) / 1000)) } }
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
     );
   }
 

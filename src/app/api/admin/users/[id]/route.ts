@@ -92,6 +92,30 @@ export async function PATCH(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Check email/phone uniqueness if being changed
+    const updateData = parsed.data as Record<string, unknown>;
+    if (updateData.email && updateData.email !== existing.email) {
+      const emailTaken = await db.user.findFirst({
+        where: { email: (updateData.email as string).toLowerCase().trim(), id: { not: id } },
+        select: { id: true },
+      });
+      if (emailTaken) {
+        return NextResponse.json({ error: "Пользователь с таким email уже существует" }, { status: 409 });
+      }
+    }
+    if (updateData.phone !== undefined && updateData.phone !== existing.phone) {
+      const phoneStr = updateData.phone as string | null;
+      if (phoneStr) {
+        const phoneTaken = await db.user.findFirst({
+          where: { phone: phoneStr.trim(), id: { not: id } },
+          select: { id: true },
+        });
+        if (phoneTaken) {
+          return NextResponse.json({ error: "Пользователь с таким номером телефона уже существует" }, { status: 409 });
+        }
+      }
+    }
+
     const user = await db.user.update({
       where: { id },
       data: parsed.data,
