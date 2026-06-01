@@ -66,6 +66,10 @@ vi.mock("@/lib/rate-limit", () => {
   };
 });
 
+vi.mock("@/lib/csrf-middleware", () => ({
+  requireCSRF: vi.fn().mockResolvedValue({ verified: true }),
+}));
+
 // ---------------------------------------------------------------------------
 // Import route handler AFTER mocks are set up
 // ---------------------------------------------------------------------------

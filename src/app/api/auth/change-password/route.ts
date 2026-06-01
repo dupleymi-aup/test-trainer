@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
@@ -16,6 +17,9 @@ export async function POST(req: Request) {
   try {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const result = checkRateLimit(`change-pw:${auth.session.userId}`, rateLimits.changePassword);
     if (result.limited) {
