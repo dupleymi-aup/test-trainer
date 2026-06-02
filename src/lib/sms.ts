@@ -165,7 +165,6 @@ export async function sendSMS({ phone, message }: SendSMSOptions): Promise<SMSPr
 
 export async function sendOTP(phone: string): Promise<{
   success: boolean;
-  code?: string;
   error?: string;
   retryAfter?: number;
 }> {
@@ -182,7 +181,7 @@ export async function sendOTP(phone: string): Promise<{
   if (result.success) {
     otpSendLog.set(phone, Date.now());
     startOtpCleanup();
-    return { success: true, code };
+    return { success: true };
   }
 
   return { success: false, error: result.error };
