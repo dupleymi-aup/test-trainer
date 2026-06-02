@@ -113,12 +113,21 @@ function TypedWords() {
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPausing, setIsPausing] = useState(false);
 
   useEffect(() => {
     const currentWord = words[wordIndex];
     const typeSpeed = isDeleting ? 40 : 80;
     const pauseAtEnd = 2000;
     const pauseAtStart = 400;
+
+    if (isPausing) {
+      const timer = setTimeout(() => {
+        setIsPausing(false);
+        setCharIndex(1);
+      }, pauseAtStart);
+      return () => clearTimeout(timer);
+    }
 
     const timer = setTimeout(() => {
       if (!isDeleting && charIndex < currentWord.length) {
@@ -130,12 +139,12 @@ function TypedWords() {
       } else if (isDeleting && charIndex === 0) {
         setIsDeleting(false);
         setWordIndex((wordIndex + 1) % words.length);
-        setTimeout(() => {}, pauseAtStart);
+        setIsPausing(true);
       }
-    }, isDeleting && charIndex === 0 ? pauseAtStart : typeSpeed);
+    }, typeSpeed);
 
     return () => clearTimeout(timer);
-  }, [charIndex, isDeleting, wordIndex, words]);
+  }, [charIndex, isDeleting, wordIndex, words, isPausing]);
 
   return (
     <span className="text-emerald-600 dark:text-emerald-400">
