@@ -52,24 +52,10 @@ export async function POST(req: Request) {
 
     const isValid = await bcrypt.compare(password, hashToCompare);
 
-    if (!user || !user.hashedPassword || !isValid) {
+    if (!user || !user.hashedPassword || !isValid || !user.isActive || user.deletedAt) {
       return NextResponse.json(
         { error: "Неверный email/телефон или пароль" },
         { status: 401 }
-      );
-    }
-
-    if (!user.isActive) {
-      return NextResponse.json(
-        { error: "Аккаунт неактивен" },
-        { status: 403 }
-      );
-    }
-
-    if (user.deletedAt) {
-      return NextResponse.json(
-        { error: "Аккаунт удалён" },
-        { status: 403 }
       );
     }
 

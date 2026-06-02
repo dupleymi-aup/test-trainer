@@ -214,7 +214,7 @@ describe("POST /api/auth/login", () => {
       expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
 
-    it("returns 403 when user account is inactive", async () => {
+    it("returns 401 when user account is inactive (prevents account enumeration)", async () => {
       mocks.mockUserFindFirst.mockResolvedValue({ ...mockUser, isActive: false });
       mocks.bcryptCompare.mockResolvedValue(true);
 
@@ -222,8 +222,20 @@ describe("POST /api/auth/login", () => {
       const res = await POST(req);
       const json = await res.json();
 
-      expect(res.status).toBe(403);
-      expect(json.error).toBe("Аккаунт неактивен");
+      expect(res.status).toBe(401);
+      expect(json.error).toBe("Неверный email/телефон или пароль");
+    });
+
+    it("returns 401 when user account is deleted (prevents account enumeration)", async () => {
+      mocks.mockUserFindFirst.mockResolvedValue({ ...mockUser, deletedAt: new Date() });
+      mocks.bcryptCompare.mockResolvedValue(true);
+
+      const req = makeRequest(validCredentials);
+      const res = await POST(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(401);
+      expect(json.error).toBe("Неверный email/телефон или пароль");
     });
 
     it("compares password even for inactive users (prevents timing attacks)", async () => {
@@ -233,7 +245,7 @@ describe("POST /api/auth/login", () => {
       const req = makeRequest(validCredentials);
       await POST(req);
 
-      // Password is compared first; 403 is only returned after valid password + inactive account
+      // Password is compared first; 401 is returned for all failure cases
       expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
   });
