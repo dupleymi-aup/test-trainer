@@ -62,6 +62,8 @@ export async function GET(request: Request) {
         bvCoverage: true,
         createdAt: true,
       },
+      orderBy: { createdAt: "desc" },
+      take: 10_000,
     });
 
     // Aggregate by university

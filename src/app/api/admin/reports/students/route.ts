@@ -17,38 +17,35 @@ export async function GET(req: Request) {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "20", 10);
 
-  const now = new Date();
-  const fourteenDaysAgo = new Date(now);
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  // Build base where clause for count query (without pagination)
+  const countWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
+  if (group) countWhere.group = group;
+  if (university) countWhere.university = university;
+  if (search) {
+    countWhere.OR = [
+      { name: { contains: search } },
+      { email: { contains: search } },
+    ];
+  }
 
-  // Fetch all students with attempts
-  const whereClause: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
-  if (group) whereClause.group = group;
-  if (university) whereClause.university = university;
+  // Get total count
+  const total = await db.user.count({ where: countWhere });
 
+  // Fetch students with database-level pagination
+  const skip = (page - 1) * limit;
   const students = await db.user.findMany({
-    where: whereClause,
+    where: countWhere,
+    skip,
+    take: limit,
+    orderBy: { name: "asc" },
     select: {
       id: true, name: true, email: true, group: true, university: true, createdAt: true,
-      attempts: { select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true }, orderBy: { createdAt: "asc" } },
+      attempts: { select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true }, orderBy: { createdAt: "asc" }, take: 100 },
     },
   });
 
-  // Filter by search
-  let filtered = students;
-  if (search) {
-    const lower = search.toLowerCase();
-    filtered = students.filter(
-      (s) =>
-        (s.name || "").toLowerCase().includes(lower) ||
-        (s.email || "").toLowerCase().includes(lower)
-    );
-  }
-
   // Compute risk for each student
-  const enriched = filtered.map((s) => {
+  const enriched = students.map((s) => {
     const attemptsData = s.attempts.map((a) => ({
       score: a.score, ecCoverage: a.ecCoverage, bvCoverage: a.bvCoverage, createdAt: a.createdAt,
     }));
@@ -73,19 +70,15 @@ export async function GET(req: Request) {
     };
   });
 
-  // Filter by risk level
-  let riskFiltered = enriched;
+  // Client-side risk filter (applied after DB pagination)
+  let paginated = enriched;
   if (riskLevel && riskLevel !== "none") {
-    riskFiltered = enriched.filter((s) => s.riskLevel === riskLevel);
+    paginated = enriched.filter((s) => s.riskLevel === riskLevel);
   } else if (riskLevel === "none") {
-    riskFiltered = enriched.filter((s) => s.riskLevel === "none");
+    paginated = enriched.filter((s) => s.riskLevel === "none");
   }
 
-  // Pagination
-  const total = riskFiltered.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
-  const start = (page - 1) * limit;
-  const paginated = riskFiltered.slice(start, start + limit);
 
   return NextResponse.json({
     students: paginated,
