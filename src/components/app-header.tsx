@@ -1,10 +1,18 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Beaker, Sun, Moon, HelpCircle, Flame, PlayCircle } from "lucide-react";
+import { useLocale } from "next-intl";
+import { Beaker, Sun, Moon, HelpCircle, Flame, PlayCircle, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 import { GlobalNotesDialog } from "@/components/global-notes-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "@/i18n/routing";
 
 interface AppHeaderProps {
   streak: { currentStreak: number };
@@ -13,21 +21,76 @@ interface AppHeaderProps {
   onMarathonClick?: () => void;
 }
 
+const locales = [
+  { code: "ru", label: "Русский", flag: "🇷🇺" },
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "zh", label: "中文", flag: "🇨🇳" },
+] as const;
+
+const themeCycle = ["light", "dark", "system"] as const;
+const themeLabels: Record<string, string> = {
+  light: "Светлая",
+  dark: "Тёмная",
+  system: "Системная",
+};
+const themeIcons: Record<string, React.ReactNode> = {
+  light: <Sun className="h-4 w-4" />,
+  dark: <Moon className="h-4 w-4" />,
+  system: <Sun className="h-4 w-4 opacity-50" />,
+};
+
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
+  const currentTheme = theme || "system";
+  const currentIndex = themeCycle.indexOf(currentTheme as (typeof themeCycle)[number]);
+  const nextTheme = themeCycle[(currentIndex + 1) % themeCycle.length];
 
   return (
     <Button
       variant="ghost"
       size="icon"
       className="h-9 w-9 text-muted-foreground hover:text-foreground"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      aria-label={isDark ? "Переключить на светлую тему" : "Переключить на тёмную тему"}
+      onClick={() => setTheme(nextTheme)}
+      aria-label={`Тема: ${themeLabels[nextTheme]}`}
+      title={`Тема: ${themeLabels[nextTheme]}`}
       suppressHydrationWarning
     >
-      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {themeIcons[currentTheme] || themeIcons.light}
     </Button>
+  );
+}
+
+function LanguageSwitcher() {
+  const locale = useLocale();
+  const router = useRouter();
+  const currentLocale = locales.find((l) => l.code === locale) || locales[0];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 gap-1 text-muted-foreground hover:text-foreground"
+          aria-label="Выбрать язык"
+        >
+          <Languages className="h-4 w-4" />
+          <span className="text-xs hidden sm:inline">{currentLocale.flag}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {locales.map((l) => (
+          <DropdownMenuItem
+            key={l.code}
+            onClick={() => router.replace("/", { locale: l.code })}
+            className={locale === l.code ? "bg-muted" : ""}
+          >
+            <span className="mr-2">{l.flag}</span>
+            {l.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -95,6 +158,7 @@ export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarat
                 ?
               </kbd>
             </Button>
+            <LanguageSwitcher />
             <ThemeToggle />
             <UserMenu />
           </div>
