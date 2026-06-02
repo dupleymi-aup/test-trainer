@@ -59,11 +59,21 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
 export async function apiFetchJson<T>(url: string, options?: ApiFetchJsonOptions): Promise<T> {
   const { init, onError, timeoutMs = API_TIMEOUT_MS } = options || {};
 
+  const externalSignal = (init as RequestInit & { signal?: AbortSignal })?.signal;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  // If an external signal is provided, abort when it fires (e.g., component unmount)
+  if (externalSignal) {
+    externalSignal.addEventListener("abort", () => {
+      controller.abort();
+    }, { once: true });
+  }
+
   try {
-    const res = await apiFetch(url, { ...init, signal: controller.signal });
+    // Spread init first, then override signal with our controller so both timeout and external abort work
+    const { signal: _, ...initWithoutSignal } = (init as RequestInit & { signal?: AbortSignal }) || {};
+    const res = await apiFetch(url, { ...initWithoutSignal, signal: controller.signal });
 
     if (!res.ok) {
       throw await parseApiError(res);

@@ -64,7 +64,11 @@ export function useApiFetch<T>(
       onError?.(apiError);
     };
 
-    apiFetchJson<T>(currentUrl, { init, onError: handleError, timeoutMs })
+    apiFetchJson<T>(currentUrl, {
+      init: { ...init, signal: controller.signal },
+      onError: handleError,
+      timeoutMs,
+    })
       .then((result) => {
         setData(result);
         setError(null);
