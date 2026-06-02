@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api-client";
 import { Beaker, Loader2, Mail, Phone, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,7 @@ export default function ForgotPasswordPage() {
   const onEmailSubmit = async (data: EmailForm) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await apiFetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: data.email, phone: "" }),

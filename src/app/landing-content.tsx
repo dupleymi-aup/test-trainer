@@ -114,12 +114,19 @@ function TypedWords() {
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPausing, setIsPausing] = useState(false);
+  const pauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const currentWord = words[wordIndex];
     const typeSpeed = isDeleting ? 40 : 80;
     const pauseAtEnd = 2000;
     const pauseAtStart = 400;
+
+    // Clear any pending pause timer
+    if (pauseTimerRef.current) {
+      clearTimeout(pauseTimerRef.current);
+      pauseTimerRef.current = null;
+    }
 
     if (isPausing) {
       const timer = setTimeout(() => {
@@ -133,7 +140,10 @@ function TypedWords() {
       if (!isDeleting && charIndex < currentWord.length) {
         setCharIndex(charIndex + 1);
       } else if (!isDeleting && charIndex === currentWord.length) {
-        setTimeout(() => setIsDeleting(true), pauseAtEnd);
+        pauseTimerRef.current = setTimeout(() => {
+          pauseTimerRef.current = null;
+          setIsDeleting(true);
+        }, pauseAtEnd);
       } else if (isDeleting && charIndex > 0) {
         setCharIndex(charIndex - 1);
       } else if (isDeleting && charIndex === 0) {

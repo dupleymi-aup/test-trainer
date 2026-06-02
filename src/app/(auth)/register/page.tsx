@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/api-client";
 import { Beaker, Loader2, Eye, EyeOff, GraduationCap, Users, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,7 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await apiFetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
