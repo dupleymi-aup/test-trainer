@@ -34,6 +34,7 @@ model User {
   group          String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  lastSessionInvalidation DateTime? // When all JWT tokens for this user should be considered invalid
 
   accounts       Account[]
   sessions       Session[]

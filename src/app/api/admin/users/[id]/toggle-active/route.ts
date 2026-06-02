@@ -36,14 +36,9 @@ export async function PATCH(
 
     const updated = await db.user.update({
       where: { id },
-      data: { isActive: !user.isActive },
+      data: { isActive: !user.isActive, lastSessionInvalidation: user.isActive ? new Date() : undefined },
       select: { id: true, name: true, email: true, isActive: true },
     });
-
-    // Invalidate all sessions when deactivating — user is logged out immediately
-    if (user.isActive) {
-      await db.session.deleteMany({ where: { userId: id } });
-    }
 
     await db.activityLog.create({
       data: {

@@ -125,6 +125,8 @@ export async function middleware(request: NextRequest) {
       if (token.role === "ADMIN") {
         return NextResponse.redirect(new URL("/admin", request.url));
       }
+      // Unknown role — safe fallback to home
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 

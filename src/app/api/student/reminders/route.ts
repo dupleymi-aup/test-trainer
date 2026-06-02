@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/admin-guard";
+import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
@@ -19,7 +19,7 @@ const updateReminderSchema = z.object({
 
 export async function GET() {
   try {
-    const guard = await requireAuth();
+    const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
@@ -72,7 +72,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const guard = await requireAuth();
+    const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;

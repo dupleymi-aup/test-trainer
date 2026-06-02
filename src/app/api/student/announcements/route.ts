@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/admin-guard";
+import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
-    const guard = await requireAuth();
+    const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
 

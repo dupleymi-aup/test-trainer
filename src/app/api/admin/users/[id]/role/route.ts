@@ -45,12 +45,9 @@ export async function PATCH(
 
     const updated = await db.user.update({
       where: { id },
-      data: { role: parsed.data.role },
+      data: { role: parsed.data.role, lastSessionInvalidation: new Date() },
       select: { id: true, name: true, email: true, role: true },
     });
-
-    // Invalidate all existing sessions so the role change takes effect immediately
-    await db.session.deleteMany({ where: { userId: id } });
 
     await db.activityLog.create({
       data: {

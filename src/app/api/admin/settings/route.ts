@@ -41,7 +41,6 @@ export async function GET() {
     ];
     await db.systemSetting.createMany({
       data: defaults.map((d) => ({ key: d.key, value: d.value })),
-      skipDuplicates: true,
     });
 
     const settings = await db.systemSetting.findMany({

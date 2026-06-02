@@ -154,3 +154,45 @@ export async function getTeacherGroupIds(userId: string, role: string): Promise<
   });
   return groups.map((g) => g.id);
 }
+
+export interface StudentSession {
+  userId: string;
+  role: string;
+}
+
+/**
+ * Require STUDENT role. Admins bypass (they can access everything).
+ * Use this for student-only API endpoints.
+ */
+export async function requireStudent(): Promise<
+  { session: StudentSession } | { response: NextResponse }
+> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  }
+
+  let user;
+  try {
+    user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, role: true, isActive: true },
+    });
+  } catch (_error) {
+    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
+  }
+
+  if (!user) {
+    return { response: NextResponse.json({ error: "User not found" }, { status: 404 }) };
+  }
+
+  if (user.role !== "STUDENT" && user.role !== "ADMIN") {
+    return { response: NextResponse.json({ error: "Forbidden: student access required" }, { status: 403 }) };
+  }
+
+  if (!user.isActive) {
+    return { response: NextResponse.json({ error: "Account is inactive" }, { status: 403 }) };
+  }
+
+  return { session: { userId: user.id, role: user.role } };
+}
