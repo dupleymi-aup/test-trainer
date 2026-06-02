@@ -58,7 +58,7 @@ export async function GET() {
     try {
       coveredEc = JSON.parse(a.coveredEcIds || "[]");
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON");
+      logger.warn("Invalid coveredEcIds JSON in ec-bv-heatmap analytics");
       coveredEc = [];
     }
 
@@ -67,7 +67,7 @@ export async function GET() {
     try {
       coveredBv = JSON.parse(a.coveredBvDescriptions || "[]");
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON");
+      logger.warn("Invalid coveredBvDescriptions JSON in ec-bv-heatmap analytics");
       coveredBv = [];
     }
 

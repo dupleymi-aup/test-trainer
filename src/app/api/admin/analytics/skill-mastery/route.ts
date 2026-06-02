@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     try {
       coveredEcIds = JSON.parse(a.coveredEcIds || "[]");
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON");
+      logger.warn("Invalid coveredEcIds JSON in skill-mastery analytics");
       coveredEcIds = [];
     }
 
@@ -111,7 +111,7 @@ export async function GET(request: Request) {
     try {
       coveredBvDescs = JSON.parse(a.coveredBvDescriptions || "[]");
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON");
+      logger.warn("Invalid coveredBvDescriptions JSON in skill-mastery analytics");
       coveredBvDescs = [];
     }
 

@@ -9,6 +9,13 @@ const EC_COVERAGE_WEIGHT = 0.4;
 const BOUNDARY_COVERAGE_WEIGHT = 0.3;
 const CORRECTNESS_WEIGHT = 0.3;
 
+/** Safely convert input to number — returns NaN for undefined/null, preventing silent incorrect comparisons. */
+function safeNum(val: unknown): number {
+  if (val === undefined || val === null) return NaN;
+  const n = Number(val);
+  return n;
+}
+
 export interface TestCase {
   id: string;
   inputs: string[];
@@ -166,12 +173,14 @@ function findCoveredEquivalenceClasses(
       ) {
         // If we get an error and there's an error-related EC, cover it
         // But only if the input is in a reasonable range for that EC
+        const inp0 = safeNum(inputs[0]);
+        const inp1 = safeNum(inputs[1]);
         if (
-          (desc.includes("отрицательн") && inputs[0] !== undefined && Number(inputs[0]) < 0) ||
+          (desc.includes("отрицательн") && !isNaN(inp0) && inp0 < 0) ||
           (desc.includes("не число") && !Number.isInteger(inputs[0]) && typeof inputs[0] !== "number") ||
-          (taskId === 1 && desc.includes("переполнен") && Number(inputs[0]) > 20) ||
-          (desc.includes("превышает") && Number(inputs[1]) !== undefined && Number(inputs[1]) > 100) ||
-          (desc.includes("отрицательн") && Number(inputs[1]) !== undefined && Number(inputs[1]) < 0)
+          (taskId === 1 && desc.includes("переполнен") && !isNaN(inp0) && inp0 > 20) ||
+          (desc.includes("превышает") && !isNaN(inp1) && inp1 > 100) ||
+          (desc.includes("отрицательн") && !isNaN(inp1) && inp1 < 0)
         ) {
           covered.push(ec.id);
         }
@@ -185,38 +194,39 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 1) {
       // Factorial
+      const n = safeNum(inputs[0]);
       if (ec.id === "ec1" && inputs[0] === 0) covered.push(ec.id);
       if (
         ec.id === "ec2" &&
         Number.isInteger(inputs[0]) &&
-        Number(inputs[0]) >= 1 &&
-        Number(inputs[0]) <= 20
+        !isNaN(n) && n >= 1 && n <= 20
       )
         covered.push(ec.id);
     }
 
     if (taskId === 2) {
       // isPrime
-      if (ec.id === "ec1" && Number(inputs[0]) <= 1) covered.push(ec.id);
-      if (ec.id === "ec2" && Number(inputs[0]) === 2) covered.push(ec.id);
+      const n = safeNum(inputs[0]);
+      if (ec.id === "ec1" && !isNaN(n) && n <= 1) covered.push(ec.id);
+      if (ec.id === "ec2" && !isNaN(n) && n === 2) covered.push(ec.id);
       if (
         ec.id === "ec3" &&
         fnResult === true &&
-        Number(inputs[0]) > 2
+        !isNaN(n) && n > 2
       )
         covered.push(ec.id);
       if (
         ec.id === "ec4" &&
         fnResult === false &&
-        Number(inputs[0]) > 1
+        !isNaN(n) && n > 1
       )
         covered.push(ec.id);
     }
 
     if (taskId === 3) {
       // applyDiscount — improved heuristic based on result + input ranges
-      const price = Number(inputs[0]);
-      const discount = Number(inputs[1]);
+      const price = safeNum(inputs[0]);
+      const discount = safeNum(inputs[1]);
 
       if (ec.id === "ec1" && !fnError && discount === 0 && price > 0) {
         covered.push(ec.id);
@@ -246,26 +256,27 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 4) {
       // isLeapYear
-      if (
+      const y = safeNum(inputs[0]);
+      if (!isNaN(y) &&
         ec.id === "ec1" &&
-        Number(inputs[0]) % 400 === 0
+        y % 400 === 0
       )
         covered.push(ec.id);
-      if (
+      if (!isNaN(y) &&
         ec.id === "ec2" &&
-        Number(inputs[0]) % 100 === 0 &&
-        Number(inputs[0]) % 400 !== 0
+        y % 100 === 0 &&
+        y % 400 !== 0
       )
         covered.push(ec.id);
-      if (
+      if (!isNaN(y) &&
         ec.id === "ec3" &&
-        Number(inputs[0]) % 4 === 0 &&
-        Number(inputs[0]) % 100 !== 0
+        y % 4 === 0 &&
+        y % 100 !== 0
       )
         covered.push(ec.id);
-      if (
+      if (!isNaN(y) &&
         ec.id === "ec4" &&
-        Number(inputs[0]) % 4 !== 0
+        y % 4 !== 0
       )
         covered.push(ec.id);
     }
@@ -394,35 +405,35 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 9) {
       // toRoman
-      const n = Number(inputs[0]);
+      const n = safeNum(inputs[0]);
 
-      if (ec.id === "ec1" && !fnError && n === 1) covered.push(ec.id);
-      if (ec.id === "ec2" && !fnError && n >= 2 && n <= 3998) covered.push(ec.id);
-      if (ec.id === "ec3" && !fnError && n === 3999) covered.push(ec.id);
-      if (ec.id === "ec4" && fnError && n < 1) covered.push(ec.id);
-      if (ec.id === "ec5" && fnError && n > 3999) covered.push(ec.id);
-      if (ec.id === "ec6" && fnError && !Number.isInteger(n)) covered.push(ec.id);
+      if (ec.id === "ec1" && !fnError && !isNaN(n) && n === 1) covered.push(ec.id);
+      if (ec.id === "ec2" && !fnError && !isNaN(n) && n >= 2 && n <= 3998) covered.push(ec.id);
+      if (ec.id === "ec3" && !fnError && !isNaN(n) && n === 3999) covered.push(ec.id);
+      if (ec.id === "ec4" && fnError && !isNaN(n) && n < 1) covered.push(ec.id);
+      if (ec.id === "ec5" && fnError && !isNaN(n) && n > 3999) covered.push(ec.id);
+      if (ec.id === "ec6" && fnError && !isNaN(n) && !Number.isInteger(n)) covered.push(ec.id);
     }
 
     if (taskId === 10) {
       // isValidDate
+      const day = safeNum(inputs[0]);
+      const month = safeNum(inputs[1]);
+      const year = safeNum(inputs[2]);
       if (fnError) {
         if (ec.id === "ec8") covered.push(ec.id);
       } else if (fnResult !== undefined) {
         const isValid = fnResult === true;
-        const day = Number(inputs[0]);
-        const month = Number(inputs[1]);
-        const year = Number(inputs[2]);
-        const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        const isLeap = (!isNaN(year) && year % 4 === 0 && year % 100 !== 0) || (!isNaN(year) && year % 400 === 0);
         const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-        if (ec.id === "ec1" && isValid && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1]) covered.push(ec.id);
-        if (ec.id === "ec2" && isValid && day === 29 && month === 2 && isLeap) covered.push(ec.id);
-        if (ec.id === "ec3" && !isValid && month >= 1 && month <= 12 && day > daysInMonth[month - 1]) covered.push(ec.id);
-        if (ec.id === "ec4" && !isValid && day === 29 && month === 2 && !isLeap) covered.push(ec.id);
-        if (ec.id === "ec5" && !isValid && (month < 1 || month > 12)) covered.push(ec.id);
-        if (ec.id === "ec6" && !isValid && day < 1 && month >= 1 && month <= 12) covered.push(ec.id);
-        if (ec.id === "ec7" && isValid && (day === 30 || day === 31) && month >= 1 && month <= 12) covered.push(ec.id);
+        if (ec.id === "ec1" && isValid && !isNaN(month) && month >= 1 && month <= 12 && !isNaN(day) && day >= 1 && day <= daysInMonth[month - 1]) covered.push(ec.id);
+        if (ec.id === "ec2" && isValid && !isNaN(day) && day === 29 && !isNaN(month) && month === 2 && isLeap) covered.push(ec.id);
+        if (ec.id === "ec3" && !isValid && !isNaN(month) && month >= 1 && month <= 12 && !isNaN(day) && day > daysInMonth[month - 1]) covered.push(ec.id);
+        if (ec.id === "ec4" && !isValid && !isNaN(day) && day === 29 && !isNaN(month) && month === 2 && !isLeap) covered.push(ec.id);
+        if (ec.id === "ec5" && !isValid && (!isNaN(month) && (month < 1 || month > 12))) covered.push(ec.id);
+        if (ec.id === "ec6" && !isValid && !isNaN(day) && day < 1 && !isNaN(month) && month >= 1 && month <= 12) covered.push(ec.id);
+        if (ec.id === "ec7" && isValid && (!isNaN(day) && (day === 30 || day === 31)) && !isNaN(month) && month >= 1 && month <= 12) covered.push(ec.id);
       }
     }
 
@@ -447,12 +458,14 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 12) {
       // calculateBMI
+      const weight = safeNum(inputs[0]);
+      const height = safeNum(inputs[1]);
       if (fnError) {
         if (ec.id === "ec9" && fnError) covered.push(ec.id);
-        if (ec.id === "ec5" && fnError && Number(inputs[0]) < 20) covered.push(ec.id);
-        if (ec.id === "ec6" && fnError && Number(inputs[0]) > 300) covered.push(ec.id);
-        if (ec.id === "ec7" && fnError && Number(inputs[1]) < 50) covered.push(ec.id);
-        if (ec.id === "ec8" && fnError && Number(inputs[1]) > 250) covered.push(ec.id);
+        if (ec.id === "ec5" && fnError && !isNaN(weight) && weight < 20) covered.push(ec.id);
+        if (ec.id === "ec6" && fnError && !isNaN(weight) && weight > 300) covered.push(ec.id);
+        if (ec.id === "ec7" && fnError && !isNaN(height) && height < 50) covered.push(ec.id);
+        if (ec.id === "ec8" && fnError && !isNaN(height) && height > 250) covered.push(ec.id);
       } else if (fnResult && typeof fnResult === "object" && "category" in fnResult) {
         const res = fnResult as { category: string };
         if (ec.id === "ec1" && res.category === "Недостаточный вес") covered.push(ec.id);
@@ -501,29 +514,29 @@ function findCoveredEquivalenceClasses(
 
     if (taskId === 15) {
       // fibonacci — detect EC coverage by input value + result/error
+      const n = safeNum(inputs[0]);
       if (fnError) {
-        if (ec.id === "ec5" && fnError && typeof inputs[0] === "number" && (inputs[0] as number) < 0) covered.push(ec.id);
-        if (ec.id === "ec6" && fnError && typeof inputs[0] === "number" && (inputs[0] as number) > 75) covered.push(ec.id);
-        if (ec.id === "ec7" && fnError && typeof inputs[0] === "number" && !Number.isInteger(inputs[0])) covered.push(ec.id);
+        if (ec.id === "ec5" && fnError && !isNaN(n) && n < 0) covered.push(ec.id);
+        if (ec.id === "ec6" && fnError && !isNaN(n) && n > 75) covered.push(ec.id);
+        if (ec.id === "ec7" && fnError && !isNaN(n) && !Number.isInteger(n)) covered.push(ec.id);
       } else if (typeof fnResult === "number") {
-        const n = Number(inputs[0]);
-        if (ec.id === "ec1" && n === 0 && fnResult === 0) covered.push(ec.id);
-        if (ec.id === "ec2" && n === 1 && fnResult === 1) covered.push(ec.id);
-        if (ec.id === "ec3" && n >= 2 && n <= 74) covered.push(ec.id);
-        if (ec.id === "ec4" && n === 75) covered.push(ec.id);
+        if (ec.id === "ec1" && !isNaN(n) && n === 0 && fnResult === 0) covered.push(ec.id);
+        if (ec.id === "ec2" && !isNaN(n) && n === 1 && fnResult === 1) covered.push(ec.id);
+        if (ec.id === "ec3" && !isNaN(n) && n >= 2 && n <= 74) covered.push(ec.id);
+        if (ec.id === "ec4" && !isNaN(n) && n === 75) covered.push(ec.id);
       }
     }
 
     if (taskId === 16) {
       // calculateShipping — decision table
+      const amount = safeNum(inputs[1]);
       if (fnError) {
-        if (ec.id === "ec11" && !isNaN(Number(inputs[1])) && Number(inputs[1]) < 0) covered.push(ec.id);
+        if (ec.id === "ec11" && !isNaN(amount) && amount < 0) covered.push(ec.id);
         if (ec.id === "ec12" && typeof inputs[2] === "string" && !["local", "national", "international"].includes(inputs[2] as string)) covered.push(ec.id);
         if (ec.id === "ec13" && fnError) covered.push(ec.id);
       } else if (fnResult && typeof fnResult === "object" && "shipping" in fnResult) {
         const res = fnResult as { shipping: number };
         const isPremium = inputs[0] as boolean;
-        const amount = Number(inputs[1]);
         const region = inputs[2] as string;
 
         if (ec.id === "ec1" && isPremium === true && amount >= 1000 && res.shipping === 0) covered.push(ec.id);

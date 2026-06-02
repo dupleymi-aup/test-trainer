@@ -47,7 +47,7 @@ export async function GET() {
     try {
       coveredEcIds = JSON.parse(a.coveredEcIds || "[]");
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredEcIds JSON");
+      logger.warn("Invalid coveredEcIds JSON in ec-bv-gaps analytics");
       coveredEcIds = [];
     }
 
@@ -55,7 +55,7 @@ export async function GET() {
     try {
       coveredBvDescriptions = JSON.parse(a.coveredBvDescriptions || "[]");
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid coveredBvDescriptions JSON");
+      logger.warn("Invalid coveredBvDescriptions JSON in ec-bv-gaps analytics");
       coveredBvDescriptions = [];
     }
 

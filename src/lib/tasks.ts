@@ -298,7 +298,7 @@ function handleLoginAction(
   if (typeof action !== "string") throw new Error("action должен быть строкой");
   if (!Number.isInteger(currentAttempts) || currentAttempts < 0) throw new Error("currentAttempts должен быть неотрицательным целым");
   if (lockoutTime !== null && (typeof lockoutTime !== "number" || lockoutTime < 0)) throw new Error("lockoutTime должен быть неотрицательным числом или null");
-  const now = Date.now() / 1000; // Unix timestamp in seconds
+  const now = 0; // Deterministic time for consistent test evaluation
   const isLockedOut = lockoutTime !== null && (now - lockoutTime) < lockoutDurationSec;
   if (action === "login") {
     if (isLockedOut) {

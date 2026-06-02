@@ -116,7 +116,7 @@ export async function GET(request: Request) {
         });
       }
     } catch {
-      if (process.env.NODE_ENV === "development") console.warn("[analytics] Invalid testCases JSON for attempt", { attemptId: a.id });
+      logger.warn("Invalid testCases JSON in task-insights analytics", { attemptId: a.id });
     }
 
     // Score bucket
