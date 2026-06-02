@@ -22,7 +22,16 @@ export async function POST(req: Request) {
     if (!csv) return NextResponse.json({ error: "CSV content is required" }, { status: 400 });
 
     const role = (defaultRole as Role) || "STUDENT";
-    const password = defaultPassword || "changeme123";
+
+    if (!defaultPassword || typeof defaultPassword !== "string") {
+      return NextResponse.json({ error: "defaultPassword is required" }, { status: 400 });
+    }
+
+    if (defaultPassword.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters long" }, { status: 400 });
+    }
+
+    const password = defaultPassword;
 
     if (!Object.values(Role).includes(role)) {
       return NextResponse.json({ error: `Invalid role: ${role}` }, { status: 400 });

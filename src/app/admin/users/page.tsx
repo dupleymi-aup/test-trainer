@@ -237,6 +237,10 @@ export default function AdminUsersPage() {
       toast.error("Вставьте содержимое CSV");
       return;
     }
+    if (!importPassword || importPassword.length < 8) {
+      toast.error("Пароль должен содержать минимум 8 символов");
+      return;
+    }
     setImporting(true);
     try {
       const res = await apiFetch("/api/admin/users/import", {
@@ -245,7 +249,7 @@ export default function AdminUsersPage() {
         body: JSON.stringify({
           csv: csvContent.trim(),
           defaultRole: importRole,
-          defaultPassword: importPassword || undefined,
+          defaultPassword: importPassword,
         }),
       });
       const json = await res.json();
@@ -619,12 +623,16 @@ export default function AdminUsersPage() {
                 </Select>
               </div>
               <div>
-                <Label>Пароль по умолчанию</Label>
+                <Label>Пароль по умолчанию *</Label>
                 <Input
                   value={importPassword}
                   onChange={(e) => setImportPassword(e.target.value)}
-                  placeholder="changeme123"
+                  placeholder="Минимум 8 символов"
+                  type="password"
                 />
+                {importPassword && importPassword.length < 8 && (
+                  <p className="text-sm text-red-600 mt-1">Пароль должен содержать минимум 8 символов</p>
+                )}
               </div>
             </div>
             {importResult && (
