@@ -190,3 +190,50 @@
 14. AI рекомендации
 15. A/B тестирование
 16. Storybook и design system
+
+---
+
+## 5. Новые рекомендации (2026-06-02)
+
+### 5.1 Демо/гостевой режим
+- [ ] Возможность попробовать платформу без регистрации
+- [ ] Ограниченный набор задач (3-5) для ознакомления
+- [ ] CTA для регистрации после демо
+
+### 5.2 PostgreSQL production support
+- [ ] Схема уже готова (`schema.postgresql.prisma`), довести до production
+- [ ] Миграции и скрипты для переезда с SQLite
+- [ ] Документация по развёртыванию с PostgreSQL
+
+### 5.3 API документация (OpenAPI/Swagger)
+- [ ] 100+ API маршрутов без документации
+- [ ] Автоматическая генерация OpenAPI spec из route handlers
+- [ ] Интерактивная Swagger/Scalar UI
+
+### 5.4 Error tracking (Sentry)
+- [ ] Интеграция Sentry для отслеживания ошибок в production
+- [ ] Source maps для фронтенда
+- [ ] Alerting по критическим ошибкам
+
+### 5.5 Мониторинг и observability
+- [ ] Health check endpoint (`/api/health`)
+- [ ] Метрики (Prometheus-compatible или простые счётчики)
+- [ ] Логирование запросов с correlation ID
+
+### 5.6 E2E тесты — расширение покрытия
+- [ ] Сейчас только 4 spec файла — добавить больше сценариев
+- [ ] Тесты для teacher dashboard, admin панели
+- [ ] Multi-user сценарии (teacher + student взаимодействие)
+
+### 5.7 Уведомления в реальном времени
+- [ ] WebSocket/Server-Sent Events для мгновенных уведомлений
+- [ ] Push-уведомления (PWA)
+- [ ] In-app notifications bell с badge count
+
+### 5.8 Технические долги
+- [ ] Вынести бизнес-логику из API routes в service layer
+- [ ] Типизация всех API responses (tRPC или zod-openapi)
+- [ ] Rate limiting на чтение (не только на write)
+- [ ] Dependency audit (npm audit)
+- [ ] Docker Compose для локальной разработки
+- [ ] Conventional commits + changelog генерация
