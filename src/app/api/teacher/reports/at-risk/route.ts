@@ -45,6 +45,7 @@ export async function GET(req: Request) {
             score: true,
             createdAt: true,
           },
+          take: 100,
         },
       },
     });

@@ -48,6 +48,8 @@ export async function GET(req: Request) {
         createdAt: true,
         attempts: {
           select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true },
+          take: 100,
+          orderBy: { createdAt: "desc" },
         },
       },
     });
@@ -58,8 +60,7 @@ export async function GET(req: Request) {
       const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
       const avgEc = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.ecCoverage, 0) / attempts.length) : 0;
       const avgBv = attempts.length > 0 ? Math.round(attempts.reduce((s, a) => s + a.bvCoverage, 0) / attempts.length) : 0;
-      const sorted = [...attempts].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      const lastAttempt = sorted.length > 0 ? sorted[0].createdAt : null;
+      const lastAttempt = attempts.length > 0 ? attempts[0].createdAt : null;
 
       return {
         id: student.id,
