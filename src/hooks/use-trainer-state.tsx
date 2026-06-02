@@ -168,9 +168,7 @@ export function useTrainerState() {
       map[String(task.id)] = getTaskBestCoverage(task.id);
     }
     return map;
-    // Reads from localStorage, not React state — recomputes when attemptHistory changes
-    // because handleSubmit calls setAttemptHistory before this re-renders.
-  }, []);
+  }, [tasks, attemptHistory]);
 
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
