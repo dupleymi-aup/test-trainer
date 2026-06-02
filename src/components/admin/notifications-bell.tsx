@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Bell, Check, AlertTriangle, TrendingDown, Clock, UserX, BookOpen } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatRelativeDate } from "@/lib/format-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ interface Notification {
 
 export function NotificationsBell() {
   const locale = useLocale();
+  const t = useTranslations("adminNav");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -63,20 +64,21 @@ export function NotificationsBell() {
   };
 
   const getNotificationLabel = (type: string) => {
-    switch (type) {
-      case "LOW_PERFORMER": return "Низкий балл";
-      case "DECLINING": return "Снижение тренда";
-      case "INACTIVE": return "Неактивный студент";
-      case "LOW_ENGAGEMENT": return "Мало попыток";
-      case "POOR_EC_COVERAGE": return "Плохое покрытие EC";
-      case "POOR_BV_COVERAGE": return "Плохое покрытие BV";
-      case "RISK_THRESHOLD": return "Превышен порог риска";
-      case "INACTIVE_GROUPS": return "Неактивные группы";
-      case "SCORE_DROP": return "Снижение среднего балла";
-      case "SCHEDULED_REPORT": return "Автоматический отчёт";
-      case "DEADLINE_APPROACHING": return "Срок подходит к концу";
-      default: return type.replace(/_/g, " ");
-    }
+    const keyMap: Record<string, string> = {
+      "LOW_PERFORMER": "notifLowPerformer",
+      "DECLINING": "notifDeclining",
+      "INACTIVE": "notifInactive",
+      "LOW_ENGAGEMENT": "notifLowEngagement",
+      "POOR_EC_COVERAGE": "notifPoorECCoverage",
+      "POOR_BV_COVERAGE": "notifPoorBVCoverage",
+      "RISK_THRESHOLD": "notifRiskThreshold",
+      "INACTIVE_GROUPS": "notifInactiveGroups",
+      "SCORE_DROP": "notifScoreDrop",
+      "SCHEDULED_REPORT": "notifScheduledReport",
+      "DEADLINE_APPROACHING": "notifDeadlineApproaching",
+    };
+    const key = keyMap[type];
+    return key ? t(key) : type.replace(/_/g, " ");
   };
 
   return (
@@ -97,16 +99,16 @@ export function NotificationsBell() {
       <DropdownMenuContent align="end" className="w-80">
         <div className="p-3 border-b flex items-center justify-between">
           <div>
-            <h3 className="font-semibold">Уведомления</h3>
+            <h3 className="font-semibold">{t("notificationTitle")}</h3>
             {unreadCount > 0 && (
               <p className="text-xs text-muted-foreground mt-1">
-                {unreadCount} новых
+                {t("newNotifications", { count: unreadCount })}
               </p>
             )}
           </div>
           <Link href="/admin/notifications">
             <Button variant="ghost" size="sm" className="h-6 text-xs">
-              <Check className="h-3 w-3 mr-1" /> Все
+              <Check className="h-3 w-3 mr-1" /> {t("markAllRead")}
             </Button>
           </Link>
         </div>
@@ -114,7 +116,7 @@ export function NotificationsBell() {
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Нет уведомлений</p>
+              <p className="text-sm">{t("noNotifications")}</p>
             </div>
           ) : (
             notifications.slice(0, 20).map((n) => (
@@ -150,7 +152,7 @@ export function NotificationsBell() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/admin/notifications" className="text-center text-xs justify-center">
-            Все уведомления →
+            {t("viewAllNotifications")}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

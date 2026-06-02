@@ -103,7 +103,9 @@
     "profileLoadError": "加载个人资料时出错",
     "profileUpdated": "个人资料已更新",
     "enterName": "输入您的姓名",
-    "tellAboutYourself": "介绍一下自己..."
+    "tellAboutYourself": "介绍一下自己...",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码"
   },
   "nav": {
     "home": "首页",
@@ -443,7 +445,23 @@
     "database": "数据库",
     "dbAnalytics": "数据库分析",
     "activityLog": "活动日志",
-    "settings": "设置"
+    "settings": "设置",
+    "notificationTitle": "通知",
+    "noNotifications": "暂无通知",
+    "viewAllNotifications": "查看所有通知 →",
+    "markAllRead": "全部",
+    "notifLowPerformer": "分数较低",
+    "notifDeclining": "趋势下降",
+    "notifInactive": "学生不活跃",
+    "notifLowEngagement": "参与度低",
+    "notifPoorECCoverage": "EC 覆盖率不足",
+    "notifPoorBVCoverage": "BV 覆盖率不足",
+    "notifRiskThreshold": "超过风险阈值",
+    "notifInactiveGroups": "小组不活跃",
+    "notifScoreDrop": "平均分下降",
+    "notifScheduledReport": "自动报告",
+    "notifDeadlineApproaching": "截止日期临近",
+    "newNotifications": "{count} 条新通知"
   },
   "teacherNav": {
     "title": "教师面板",
@@ -456,7 +474,10 @@
     "reports": "报告",
     "taskConstructor": "任务构建器",
     "loading": "加载教师面板...",
-    "backToHome": "返回首页"
+    "backToHome": "返回首页",
+    "notificationTitle": "通知",
+    "noNotifications": "暂无通知",
+    "newNotifications": "{count} 条新通知"
   },
   "dashboard": {
     "loading": "加载中...",

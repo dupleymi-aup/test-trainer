@@ -103,7 +103,9 @@
     "profileLoadError": "Error loading profile",
     "profileUpdated": "Profile updated",
     "enterName": "Enter your name",
-    "tellAboutYourself": "Tell us about yourself..."
+    "tellAboutYourself": "Tell us about yourself...",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "nav": {
     "home": "Home",
@@ -442,7 +444,23 @@
     "database": "Database",
     "dbAnalytics": "DB Analytics",
     "activityLog": "Activity Log",
-    "settings": "Settings"
+    "settings": "Settings",
+    "notificationTitle": "Notifications",
+    "noNotifications": "No notifications",
+    "viewAllNotifications": "View all notifications →",
+    "markAllRead": "All",
+    "notifLowPerformer": "Low score",
+    "notifDeclining": "Declining trend",
+    "notifInactive": "Inactive student",
+    "notifLowEngagement": "Low engagement",
+    "notifPoorECCoverage": "Poor EC coverage",
+    "notifPoorBVCoverage": "Poor BV coverage",
+    "notifRiskThreshold": "Risk threshold exceeded",
+    "notifInactiveGroups": "Inactive groups",
+    "notifScoreDrop": "Average score drop",
+    "notifScheduledReport": "Automated report",
+    "notifDeadlineApproaching": "Deadline approaching",
+    "newNotifications": "{count} new"
   },
   "teacherNav": {
     "title": "Teacher Panel",
@@ -455,7 +473,10 @@
     "reports": "Reports",
     "taskConstructor": "Task Constructor",
     "loading": "Loading teacher panel...",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "notificationTitle": "Notifications",
+    "noNotifications": "No notifications",
+    "newNotifications": "{count} new"
   },
   "dashboard": {
     "loading": "Loading...",

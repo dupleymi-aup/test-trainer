@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bell, AlertTriangle, TrendingDown, Clock, UserX } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatRelativeDate } from "@/lib/format-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ interface Notification {
 
 export function NotificationsBell() {
   const locale = useLocale();
+  const t = useTranslations("teacherNav");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -59,18 +60,14 @@ export function NotificationsBell() {
   };
 
   const getNotificationLabel = (type: string) => {
-    switch (type) {
-      case "LOW_PERFORMER":
-        return "Низкий балл";
-      case "DECLINING":
-        return "Снижение тренда";
-      case "INACTIVE":
-        return "Неактивный студент";
-      case "LOW_ENGAGEMENT":
-        return "Мало попыток";
-      default:
-        return type;
-    }
+    const keyMap: Record<string, string> = {
+      "LOW_PERFORMER": "notifLowPerformer",
+      "DECLINING": "notifDeclining",
+      "INACTIVE": "notifInactive",
+      "LOW_ENGAGEMENT": "notifLowEngagement",
+    };
+    const key = keyMap[type];
+    return key ? t(key) : type;
   };
 
   return (
@@ -90,10 +87,10 @@ export function NotificationsBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <div className="p-3 border-b">
-          <h3 className="font-semibold">Уведомления</h3>
+          <h3 className="font-semibold">{t("notificationTitle")}</h3>
           {unreadCount > 0 && (
             <p className="text-xs text-muted-foreground mt-1">
-              {unreadCount} новых уведомлений
+              {t("newNotifications", { count: unreadCount })}
             </p>
           )}
         </div>
@@ -101,7 +98,7 @@ export function NotificationsBell() {
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Нет уведомлений</p>
+              <p className="text-sm">{t("noNotifications")}</p>
             </div>
           ) : (
             notifications.map((notification) => (

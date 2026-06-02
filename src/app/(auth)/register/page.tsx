@@ -29,13 +29,27 @@ import {
 } from "@/components/ui/card";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "nameMinLength"),
+    email: z.string().email("invalidEmail"),
+    phone: z.string().optional().or(z.literal("")),
+    password: z.string().min(8, "passwordMinLength"),
+    confirmPassword: z.string(),
+    accountType: z.enum(["STUDENT", "TEACHER"]),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "passwordsMismatch",
+    path: ["confirmPassword"],
+  });
+
 type RegisterForm = z.infer<typeof registerSchema>;
 
-const accountTypes = [
+const accountTypeKeys = [
   {
     value: "STUDENT" as const,
-    title: "Студент",
-    description: "Прохождение задач, отслеживание прогресса и аналитика",
+    titleKey: "student",
+    descKey: "studentDescription",
     icon: Users,
     color: "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/30",
     activeColor: "border-emerald-600 bg-emerald-100 dark:bg-emerald-950/50 ring-2 ring-emerald-600",
@@ -43,8 +57,8 @@ const accountTypes = [
   },
   {
     value: "TEACHER" as const,
-    title: "Преподаватель",
-    description: "Создание групп, управление студентами и выставление оценок",
+    titleKey: "teacher",
+    descKey: "teacherDescription",
     icon: GraduationCap,
     color: "border-blue-600 bg-blue-50 dark:bg-blue-950/30",
     activeColor: "border-blue-600 bg-blue-100 dark:bg-blue-950/50 ring-2 ring-blue-600",
@@ -61,7 +75,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
 
-  const registerSchema = z
+  const registerSchemaWithTranslations = z
     .object({
       name: z.string().min(2, t("nameMinLength")),
       email: z.string().email(t("invalidEmail")),
@@ -76,7 +90,7 @@ export default function RegisterPage() {
     });
 
   const form = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(registerSchemaWithTranslations),
     defaultValues: {
       name: "",
       email: "",
@@ -138,7 +152,7 @@ export default function RegisterPage() {
           <div className="mb-6">
             <FormLabel className="mb-3 block">{t("accountType")}</FormLabel>
             <div className="grid grid-cols-2 gap-3">
-              {accountTypes.map((type) => {
+              {accountTypeKeys.map((type) => {
                 const Icon = type.icon;
                 const isActive = accountType === type.value;
                 return (
@@ -152,10 +166,10 @@ export default function RegisterPage() {
                   >
                     <Icon className={`h-5 w-5 mb-2 ${type.textColor}`} />
                     <div className={`font-semibold text-sm ${type.textColor}`}>
-                      {type.title}
+                      {t(type.titleKey)}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {type.description}
+                      {t(type.descKey)}
                     </div>
                   </button>
                 );
@@ -170,9 +184,9 @@ export default function RegisterPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Имя</FormLabel>
+                    <FormLabel>{t("name")}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Иван Иванов" />
+                      <Input {...field} placeholder={t("enterName")} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -183,7 +197,7 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{tCommon("email")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -201,7 +215,7 @@ export default function RegisterPage() {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Телефон <span className="text-muted-foreground">(необязательно)</span></FormLabel>
+                    <FormLabel>{tCommon("phone")} <span className="text-muted-foreground">({t("optional")})</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -218,7 +232,7 @@ export default function RegisterPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Пароль</FormLabel>
+                    <FormLabel>{t("password")}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -236,6 +250,7 @@ export default function RegisterPage() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           onClick={() => setShowPassword(!showPassword)}
                           tabIndex={-1}
+                          aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -255,7 +270,7 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Подтвердите пароль</FormLabel>
+                    <FormLabel>{t("confirmPassword")}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -269,6 +284,7 @@ export default function RegisterPage() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           tabIndex={-1}
+                          aria-label={showConfirmPassword ? t("hidePassword") : t("showPassword")}
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -284,17 +300,17 @@ export default function RegisterPage() {
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Зарегистрироваться
+                {t("signUp")}
               </Button>
             </form>
           </Form>
           <div className="mt-6 text-center text-sm">
-            Уже есть аккаунт?{" "}
+            {t("hasAccount")}{" "}
             <Link
               href="/login"
               className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
             >
-              Войти
+              {t("signIn")}
             </Link>
           </div>
         </CardContent>

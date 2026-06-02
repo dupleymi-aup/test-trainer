@@ -103,7 +103,9 @@
     "profileLoadError": "Ошибка при загрузке профиля",
     "profileUpdated": "Профиль обновлён",
     "enterName": "Иван Иванов",
-    "tellAboutYourself": "Расскажите о себе..."
+    "tellAboutYourself": "Расскажите о себе...",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль"
   },
   "nav": {
     "home": "Главная",
@@ -443,7 +445,23 @@
     "database": "База данных",
     "dbAnalytics": "Аналитика БД",
     "activityLog": "Журнал действий",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "notificationTitle": "Уведомления",
+    "noNotifications": "Нет уведомлений",
+    "viewAllNotifications": "Все уведомления →",
+    "markAllRead": "Все",
+    "notifLowPerformer": "Низкий балл",
+    "notifDeclining": "Снижение тренда",
+    "notifInactive": "Неактивный студент",
+    "notifLowEngagement": "Мало попыток",
+    "notifPoorECCoverage": "Плохое покрытие EC",
+    "notifPoorBVCoverage": "Плохое покрытие BV",
+    "notifRiskThreshold": "Превышен порог риска",
+    "notifInactiveGroups": "Неактивные группы",
+    "notifScoreDrop": "Снижение среднего балла",
+    "notifScheduledReport": "Автоматический отчёт",
+    "notifDeadlineApproaching": "Срок подходит к концу",
+    "newNotifications": "{count} новых"
   },
   "teacherNav": {
     "title": "Панель преподавателя",
@@ -456,7 +474,10 @@
     "reports": "Отчёты",
     "taskConstructor": "Конструктор заданий",
     "loading": "Загрузка панели преподавателя...",
-    "backToHome": "На главную"
+    "backToHome": "На главную",
+    "notificationTitle": "Уведомления",
+    "noNotifications": "Нет уведомлений",
+    "newNotifications": "{count} новых"
   },
   "dashboard": {
     "loading": "Загрузка...",
