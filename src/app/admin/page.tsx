@@ -28,6 +28,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { DonutChart } from "@/components/admin/charts/donut-chart";
+import { logger } from "@/lib/logger";
+import { apiFetch } from "@/lib/api-client";
 
 interface Stats {
   totalUsers: number;
@@ -92,15 +94,15 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/stats").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); return null; }),
-      fetch("/api/admin/analytics/predictions").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch(() => null),
-      fetch("/api/teacher/notifications").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch(() => null),
+      apiFetch("/api/admin/stats").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); return null; }),
+      apiFetch("/api/admin/analytics/predictions").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { logger.warn("Failed to fetch predictions", { error: e }); return null; }),
+      apiFetch("/api/admin/notifications").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { logger.warn("Failed to fetch notifications", { error: e }); return null; }),
     ]).then(([statsData, riskResp, notifResp]) => {
       if (statsData) setStats(statsData);
       if (riskResp?.riskOverview) setRiskData(riskResp.riskOverview);
       if (notifResp?.notifications !== undefined) setNotifData(notifResp);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch((e) => { logger.warn("Dashboard data fetch failed", { error: e }); setLoading(false); });
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></AdminLayout>;

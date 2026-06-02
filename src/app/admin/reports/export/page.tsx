@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { apiFetch } from "@/lib/api-client";
 
 interface Group {
   id: string;
@@ -186,7 +187,7 @@ export default function AdminExportPage() {
   const historyLimit = 10;
 
   useEffect(() => {
-    fetch("/api/admin/groups")
+    apiFetch("/api/admin/groups")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -194,13 +195,13 @@ export default function AdminExportPage() {
       .then((data) => {
         if (Array.isArray(data)) setGroups(data);
       })
-      .catch(() => {
-        // Non-critical: groups filter is optional
+      .catch((error) => {
+        logger.warn("Failed to fetch groups for export filter", { error });
       });
   }, []);
 
   const fetchHistory = (page = 1) => {
-    fetch(`/api/admin/activity-log?action=EXPORT_REPORT&page=${page}&limit=${historyLimit}`)
+    apiFetch(`/api/admin/activity-log?action=EXPORT_REPORT&page=${page}&limit=${historyLimit}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -210,8 +211,8 @@ export default function AdminExportPage() {
         setHistoryTotal(data.pagination?.total || 0);
         setHistoryPage(data.pagination?.page || 1);
       })
-      .catch(() => {
-        // Non-critical: export history is optional
+      .catch((error) => {
+        logger.warn("Failed to fetch export history", { error });
       });
   };
 
@@ -227,7 +228,7 @@ export default function AdminExportPage() {
 
     setExporting(reportType);
     try {
-      const res = await fetch("/api/admin/reports/export", {
+      const res = await apiFetch("/api/admin/reports/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,7 +261,8 @@ export default function AdminExportPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       fetchHistory(1);
-    } catch (_e) {
+    } catch (e) {
+      logger.error("Export failed", { reportType, error: e });
       toast.error("Ошибка при экспорте");
     } finally {
       setExporting(null);

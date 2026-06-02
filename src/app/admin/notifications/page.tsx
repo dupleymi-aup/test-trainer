@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { logger } from "@/lib/logger";
 
 interface Notification {
   id: string;
@@ -47,7 +48,7 @@ export default function AdminNotificationsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = () => {
-    fetch("/api/admin/notifications")
+    apiFetch("/api/admin/notifications")
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -93,7 +94,9 @@ export default function AdminNotificationsPage() {
         body: JSON.stringify({ ids: [id] }),
       });
       if (res.ok) fetchData();
-    } catch {}
+    } catch (error) {
+      logger.error("Failed to mark notification as read", { id, error });
+    }
   };
 
   const deleteRead = async () => {

@@ -2,10 +2,41 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export interface AuthSession {
   userId: string;
   role: string;
+}
+
+interface DBUser {
+  id: string;
+  role: string;
+  isActive: boolean;
+}
+
+/**
+ * Fetch fresh user data from DB for session validation.
+ */
+async function fetchUserFromSession(sessionUserId: string): Promise<
+  { user: DBUser } | { response: NextResponse }
+> {
+  let user: DBUser | null;
+  try {
+    user = await db.user.findUnique({
+      where: { id: sessionUserId },
+      select: { id: true, role: true, isActive: true },
+    });
+  } catch (error) {
+    logger.error("Database query failed in auth guard", { userId: sessionUserId, error });
+    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
+  }
+
+  if (!user) {
+    return { response: NextResponse.json({ error: "User not found" }, { status: 404 }) };
+  }
+
+  return { user };
 }
 
 /**
@@ -20,25 +51,14 @@ export async function requireAuth(): Promise<
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  let user;
-  try {
-    user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, role: true, isActive: true },
-    });
-  } catch (_error) {
-    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
-  }
+  const result = await fetchUserFromSession(session.user.id);
+  if ("response" in result) return result;
 
-  if (!user) {
-    return { response: NextResponse.json({ error: "User not found" }, { status: 404 }) };
-  }
-
-  if (!user.isActive) {
+  if (!result.user.isActive) {
     return { response: NextResponse.json({ error: "Account is inactive" }, { status: 403 }) };
   }
 
-  return { session: { userId: user.id, role: user.role } };
+  return { session: { userId: result.user.id, role: result.user.role } };
 }
 
 export interface AdminSession {
@@ -54,26 +74,14 @@ export async function requireAdmin(): Promise<
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  // Fetch fresh role from DB (never trust client-side role)
-  let user;
-  try {
-    user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, role: true, isActive: true },
-    });
-  } catch (_error) {
-    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
-  }
+  const result = await fetchUserFromSession(session.user.id);
+  if ("response" in result) return result;
 
-  if (!user || user.role !== "ADMIN") {
+  if (result.user.role !== "ADMIN" || !result.user.isActive) {
     return { response: NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 }) };
   }
 
-  if (!user.isActive) {
-    return { response: NextResponse.json({ error: "Account is inactive" }, { status: 403 }) };
-  }
-
-  return { session: { userId: user.id, role: user.role } };
+  return { session: { userId: result.user.id, role: result.user.role } };
 }
 
 export interface TeacherSession {
@@ -89,25 +97,14 @@ export async function requireTeacherOrAdmin(): Promise<
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  let user;
-  try {
-    user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, role: true, isActive: true },
-    });
-  } catch (_error) {
-    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
-  }
+  const result = await fetchUserFromSession(session.user.id);
+  if ("response" in result) return result;
 
-  if (!user || (user.role !== "TEACHER" && user.role !== "ADMIN")) {
+  if ((result.user.role !== "TEACHER" && result.user.role !== "ADMIN") || !result.user.isActive) {
     return { response: NextResponse.json({ error: "Forbidden: teacher or admin access required" }, { status: 403 }) };
   }
 
-  if (!user.isActive) {
-    return { response: NextResponse.json({ error: "Account is inactive" }, { status: 403 }) };
-  }
-
-  return { session: { userId: user.id, role: user.role } };
+  return { session: { userId: result.user.id, role: result.user.role } };
 }
 
 /**
@@ -161,8 +158,7 @@ export interface StudentSession {
 }
 
 /**
- * Require STUDENT role. Admins bypass (they can access everything).
- * Use this for student-only API endpoints.
+ * Require STUDENT role. Use this for student-only API endpoints.
  */
 export async function requireStudent(): Promise<
   { session: StudentSession } | { response: NextResponse }
@@ -172,27 +168,12 @@ export async function requireStudent(): Promise<
     return { response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
 
-  let user;
-  try {
-    user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, role: true, isActive: true },
-    });
-  } catch (_error) {
-    return { response: NextResponse.json({ error: "Internal server error" }, { status: 500 }) };
-  }
+  const result = await fetchUserFromSession(session.user.id);
+  if ("response" in result) return result;
 
-  if (!user) {
-    return { response: NextResponse.json({ error: "User not found" }, { status: 404 }) };
-  }
-
-  if (user.role !== "STUDENT" && user.role !== "ADMIN") {
+  if (result.user.role !== "STUDENT" || !result.user.isActive) {
     return { response: NextResponse.json({ error: "Forbidden: student access required" }, { status: 403 }) };
   }
 
-  if (!user.isActive) {
-    return { response: NextResponse.json({ error: "Account is inactive" }, { status: 403 }) };
-  }
-
-  return { session: { userId: user.id, role: user.role } };
+  return { session: { userId: result.user.id, role: result.user.role } };
 }

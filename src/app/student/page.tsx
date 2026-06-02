@@ -26,12 +26,13 @@ import {
 } from "lucide-react";
 import { loadProgress, loadAttemptHistory, loadStreak } from "@/lib/storage";
 import { tasks } from "@/lib/tasks";
+import { logger } from "@/lib/logger";
 
 const TOTAL_TASKS = tasks.length;
-const difficultyConfig: Record<string, { labelKey: string; color: string }> = {
-  easy: { labelKey: "easy", color: "text-green-600 dark:text-green-400" },
-  medium: { labelKey: "medium", color: "text-amber-600 dark:text-amber-400" },
-  hard: { labelKey: "hard", color: "text-rose-600 dark:text-rose-400" },
+const difficultyMap: Record<string, { labelKey: string; color: string; russianValue: string }> = {
+  easy: { labelKey: "easy", color: "text-green-600 dark:text-green-400", russianValue: "Легко" },
+  medium: { labelKey: "medium", color: "text-amber-600 dark:text-amber-400", russianValue: "Средне" },
+  hard: { labelKey: "hard", color: "text-rose-600 dark:text-rose-400", russianValue: "Сложно" },
 };
 
 export default function StudentDashboardPage() {
@@ -50,6 +51,7 @@ export default function StudentDashboardPage() {
     streak: number;
     longestStreak: number;
   } | null>(null);
+  const [progress, setProgress] = useState<Record<string, { score: number }>>({});
   const [announcements, setAnnouncements] = useState<Array<{
     id: string;
     title: string;
@@ -70,12 +72,14 @@ export default function StudentDashboardPage() {
       return;
     }
     if (status === "authenticated") {
-      const progress = loadProgress();
+      const progressData = loadProgress();
       const attempts = loadAttemptHistory();
       const streakData = loadStreak();
 
-      const completedTasks = Object.keys(progress).length;
-      const scores = Object.values(progress).map((p) => p.score);
+      setProgress(progressData);
+
+      const completedTasks = Object.keys(progressData).length;
+      const scores = Object.values(progressData).map((p) => p.score);
       const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
       const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
@@ -92,7 +96,7 @@ export default function StudentDashboardPage() {
       fetch("/api/student/announcements")
         .then((r) => r.ok ? r.json() : { announcements: [] })
         .then((d) => setAnnouncements(d.announcements || []))
-        .catch(() => { /* announcements fetch failed */ });
+        .catch((e) => { logger.warn("Failed to fetch announcements", { error: e }); setAnnouncements([]); });
     }
   }, [status, session, router]);
 
@@ -270,10 +274,10 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(difficultyConfig).map(([difficulty, config]) => {
-                const tasksByDifficulty = tasks.filter((t) => t.difficulty === difficulty);
+              {Object.entries(difficultyMap).map(([difficulty, config]) => {
+                const tasksByDifficulty = tasks.filter((t) => t.difficulty === config.russianValue);
                 const completedByDifficulty = tasksByDifficulty.filter(
-                  (t) => loadProgress()[String(t.id)]
+                  (t) => progress[String(t.id)]
                 ).length;
                 const percent = tasksByDifficulty.length > 0
                   ? Math.round((completedByDifficulty / tasksByDifficulty.length) * 100)
