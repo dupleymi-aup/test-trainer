@@ -26,7 +26,7 @@ export default function TeacherReportsPage() {
     fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) { setGroups(d.groups || []); setLoadingGroups(false); } })
-      .catch(() => { if (!controller.signal.aborted) setLoadingGroups(false); });
+      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-reports] Failed to load groups:", err); setLoadingGroups(false); } });
     return () => controller.abort();
   }, []);
 

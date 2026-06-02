@@ -21,7 +21,7 @@ export default function TeacherAnalyticsPage() {
     fetch("/api/teacher/analytics", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-analytics] Failed to load analytics:", err); setLoading(false); } });
     return () => controller.abort();
   }, []);
 

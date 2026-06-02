@@ -50,7 +50,7 @@ export default function GroupPerformancePage() {
           setLoading(false);
         }
       })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-group-performance] Failed to load groups:", err); setLoading(false); } });
     return () => controller.abort();
   }, []);
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,11 +31,12 @@ interface TestFormProps {
 }
 
 export function TestForm({ task, onAdd }: TestFormProps) {
+  const t = useTranslations("trainer");
   const [inputs, setInputs] = useState<string[]>(
     task.params.map(() => "")
   );
   const [expected, setExpected] = useState("");
-  const [category, setCategory] = useState<TestCaseCategory>("Нормальное значение");
+  const [category, setCategory] = useState<TestCaseCategory>(t("categoryNormal") as TestCaseCategory);
   const [comment, setComment] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -68,13 +70,13 @@ export function TestForm({ task, onAdd }: TestFormProps) {
         const parsedInputs = inputs.map(parseInputForRef);
         const { result, error } = runReferenceFunction(task.id, parsedInputs);
         if (error) {
-          setExpected(`Ошибка: ${error}`);
+          setExpected(`${t("error")} ${error}`);
         } else {
           const output = typeof result === "object" ? JSON.stringify(result) : String(result);
           setExpected(output);
         }
       } catch {
-        setExpected("Ошибка вычисления");
+        setExpected(t("computationError"));
       } finally {
         setIsCalculating(false);
       }
@@ -98,7 +100,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-          Добавить тест-кейс
+          {t("addTestCase")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -114,10 +116,10 @@ export function TestForm({ task, onAdd }: TestFormProps) {
               <Input
                 placeholder={
                   param.type === "string"
-                    ? 'Например: "Abc123!@"'
+                    ? t("placeholderInputString")
                     : param.type === "boolean"
-                      ? "true / false"
-                      : "Например: 5, 0, -1"
+                      ? t("placeholderInputBoolean")
+                      : t("placeholderInputNumber")
                 }
                 value={inputs[idx]}
                 onChange={(e) => {
@@ -131,17 +133,17 @@ export function TestForm({ task, onAdd }: TestFormProps) {
           ))}
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium">Ожидаемый результат</Label>
+            <Label className="text-xs font-medium">{t("expectedResult")}</Label>
             <div className="flex gap-2">
               <Input
                 placeholder={
                   task.returnType === "boolean"
-                    ? "true / false"
+                    ? t("placeholderExpectedBoolean")
                     : task.returnType === "string"
-                      ? 'Например: "равносторонний"'
+                      ? t("placeholderExpectedString")
                       : task.returnType.startsWith("{")
-                        ? '{ valid: true, errors: [] }'
-                        : "Например: 120"
+                        ? t("placeholderExpectedObject")
+                        : t("placeholderExpectedNumber")
                 }
                 value={expected}
                 onChange={(e) => setExpected(e.target.value)}
@@ -156,20 +158,20 @@ export function TestForm({ task, onAdd }: TestFormProps) {
                     className="h-9 w-9 shrink-0"
                     onClick={handleCalculate}
                     disabled={inputs.some((v) => v.trim() === "") || isCalculating}
-                    aria-label="Вычислить ожидаемый результат"
+                    aria-label={t("calculateExpected")}
                   >
                     <Calculator className={`h-4 w-4 ${isCalculating ? "animate-spin" : ""}`} />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Вычислить ожидаемый результат по эталонной функции
+                  {t("calculateExpected")}
                 </TooltipContent>
               </Tooltip>
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium">Категория</Label>
+            <Label className="text-xs font-medium">{t("categoryLabel")}</Label>
             <Select
               value={category}
               onValueChange={(v) => setCategory(v as TestCaseCategory)}
@@ -181,20 +183,20 @@ export function TestForm({ task, onAdd }: TestFormProps) {
                 {categories.map((cat) => {
                   const descriptions: Record<TestCaseCategory, { desc: string; example: string }> = {
                     "Нормальное значение": {
-                      desc: "Обычные входные данные из допустимого диапазона",
-                      example: "factorial(5) → 120",
+                      desc: t("categoryDescNormal"),
+                      example: t("exampleNormal"),
                     },
                     "Граничное значение": {
-                      desc: "Значения на границах диапазонов — min, max и соседние",
-                      example: "factorial(0), factorial(20), factorial(21)",
+                      desc: t("categoryDescBoundary"),
+                      example: t("exampleBoundary"),
                     },
                     "Исключение": {
-                      desc: "Входные данные, вызывающие ошибку или невалидный результат",
-                      example: "factorial(-1) → «Факториал не определён»",
+                      desc: t("categoryDescException"),
+                      example: t("exampleException"),
                     },
                     "Недопустимый тип": {
-                      desc: "Данные неверного типа: строка вместо числа, null, undefined",
-                      example: "factorial('abc') → ошибка типа",
+                      desc: t("categoryDescInvalidType"),
+                      example: t("exampleInvalidType"),
                     },
                   };
                   const info = descriptions[cat];
@@ -234,11 +236,11 @@ export function TestForm({ task, onAdd }: TestFormProps) {
 
           <div className="space-y-1">
             <Label className="text-xs font-medium">
-              Комментарий{" "}
-              <span className="text-muted-foreground">(необязательно)</span>
+              {t("commentLabel")}{" "}
+              <span className="text-muted-foreground">{t("optional")}</span>
             </Label>
             <Textarea
-              placeholder="Заметка к тест-кейсу..."
+              placeholder={t("placeholderComment")}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               className="text-sm min-h-[60px] resize-none"
@@ -251,7 +253,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
             disabled={inputs.some((v) => v.trim() === "") || !expected.trim()}
           >
             <Plus className="h-4 w-4 mr-1" />
-            Добавить
+            {t("addTestCaseButton")}
           </Button>
         </form>
       </CardContent>

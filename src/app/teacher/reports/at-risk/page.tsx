@@ -75,7 +75,7 @@ export default function AtRiskStudentsPage() {
           setLoading(false);
         }
       })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-at-risk] Failed to load at-risk data:", err); setLoading(false); } });
     return () => controller.abort();
   }, []);
 

@@ -34,7 +34,7 @@ export default function TeacherDashboardPage() {
         setStudents(studentsResult.value.students);
       }
       if (!controller.signal.aborted) setLoading(false);
-    }).catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    }).catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-dashboard] Failed to load data:", err); setLoading(false); } });
     return () => controller.abort();
   }, []);
 

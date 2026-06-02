@@ -75,7 +75,7 @@ export default function CompletionMatrixPage() {
     fetch(`/api/teacher/reports/completion-matrix?groupId=${selectedGroup}`, { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-completion-matrix] Failed to load matrix:", err); setLoading(false); } });
     return () => controller.abort();
   }, [selectedGroup]);
 
