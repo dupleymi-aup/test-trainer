@@ -841,6 +841,15 @@ export function useTrainerState() {
         }
       }
 
+      if (e.key === "b" || e.key === "B" || e.key === "и" || e.key === "И") {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+        if (activeTab === "trainer" && selectedTask) {
+          e.preventDefault();
+          handleFillAllBv();
+        }
+      }
+
       if ((e.key === "r" || e.key === "R" || e.key === "к" || e.key === "К") && !e.ctrlKey && !e.metaKey) {
         const target = e.target as HTMLElement;
         if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;

@@ -199,6 +199,7 @@ export function CommandPalette({
               >
                 <GitBranch className="h-4 w-4" />
                 {tTrainer("fillAllBoundaryValues")}
+                <CommandShortcut>B</CommandShortcut>
               </CommandItem>
               <CommandItem
                 onSelect={() => {
