@@ -279,6 +279,8 @@ function findCoveredEquivalenceClasses(
         y % 4 !== 0
       )
         covered.push(ec.id);
+      if (ec.id === "ec5" && fnError && y <= 0)
+        covered.push(ec.id);
     }
 
     if (taskId === 5) {
