@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import bcrypt from "bcryptjs";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +15,13 @@ export async function POST(req: Request) {
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
+
+    // Rate limiting: protect against resource exhaustion
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminUserImport:${ip}`, rateLimits.adminUserImport);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -41,6 +49,16 @@ export async function POST(req: Request) {
     const lines = csv.trim().split("\n");
     if (lines.length < 2) {
       return NextResponse.json({ error: "CSV must have a header row and at least one data row" }, { status: 400 });
+    }
+
+    // Limit CSV size to prevent resource exhaustion
+    const MAX_IMPORT_ROWS = 1000;
+    const dataRows = lines.length - 1;
+    if (dataRows > MAX_IMPORT_ROWS) {
+      return NextResponse.json(
+        { error: `CSV must have at most ${MAX_IMPORT_ROWS} data rows (got ${dataRows})` },
+        { status: 400 }
+      );
     }
 
     const headers = lines[0].split(",").map((h: string) => h.trim().toLowerCase());

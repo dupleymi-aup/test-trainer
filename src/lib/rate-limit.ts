@@ -78,6 +78,8 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   studentPreferences: { max: 10, windowMs: 15 * 60 * 1000 },
   /** Admin report exports: 5 per 15 minutes (expensive queries) */
   adminReportExport: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Admin bulk user import: 5 per 15 minutes (expensive operation) */
+  adminUserImport: { max: 5, windowMs: 15 * 60 * 1000 },
 };
 
 /**

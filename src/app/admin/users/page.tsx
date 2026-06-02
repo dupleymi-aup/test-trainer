@@ -594,7 +594,7 @@ export default function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>Импорт пользователей из CSV</DialogTitle>
             <DialogDescription>
-              Формат: name,email,phone,group,university (первая строка — заголовок)
+              Формат: name,email,phone,group,university (первая строка — заголовок). Максимум 1000 строк за раз.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
