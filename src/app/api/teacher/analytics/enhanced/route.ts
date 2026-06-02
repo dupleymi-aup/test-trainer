@@ -184,7 +184,7 @@ export async function GET(req: Request) {
       const testCases = JSON.parse(a.testCases || "[]");
       if (Array.isArray(testCases)) {
         testCases.forEach((tc: StoredTestCase) => {
-          if (tc.category && categoryCounts.hasOwnProperty(tc.category)) {
+          if (tc.category && Object.prototype.hasOwnProperty.call(categoryCounts, tc.category)) {
             categoryCounts[tc.category]++;
             totalCategories++;
           }
