@@ -630,17 +630,17 @@ export function TheoryPanel({ task }: { task?: Task }) {
             <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
               <p className="font-medium text-emerald-800 dark:text-emerald-300 text-xs mb-1">📊 Покрытие EC (40%)</p>
               <p className="text-xs">Какая доля определённых классов эквивалентности покрыта вашими тестами.</p>
-              <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded p-1">EC = покрытые / всего × 100%</p>
+              <p className="text-xs mt-1 font-mono bg-muted/50 dark:bg-muted/20 rounded p-1">EC = покрытые / всего × 100%</p>
             </div>
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
               <p className="font-medium text-amber-800 dark:text-amber-300 text-xs mb-1">📏 Покрытие BV (30%)</p>
               <p className="text-xs">Какая доля определённых граничных значений протестирована.</p>
-              <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded p-1">BV = покрытые / всего × 100%</p>
+              <p className="text-xs mt-1 font-mono bg-muted/50 dark:bg-muted/20 rounded p-1">BV = покрытые / всего × 100%</p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
               <p className="font-medium text-blue-800 dark:text-blue-300 text-xs mb-1">✅ Корректность (30%)</p>
               <p className="text-xs">Какая доля ожидаемых результатов совпала с фактическим поведением.</p>
-              <p className="text-xs mt-1 font-mono bg-white/50 dark:bg-black/20 rounded p-1">Correctness = правильные / всего × 100%</p>
+              <p className="text-xs mt-1 font-mono bg-muted/50 dark:bg-muted/20 rounded p-1">Correctness = правильные / всего × 100%</p>
             </div>
           </div>
           <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3">

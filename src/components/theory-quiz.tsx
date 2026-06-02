@@ -62,22 +62,7 @@ export function TheoryQuiz() {
   };
 
   const handleQuizSubmit = () => {
-    // Count answered questions
-    let answeredCount = 0;
-    for (const q of quizQuestions) {
-      const idx = quizQuestions.indexOf(q);
-      const answer = quizAnswers[idx];
-      if (answer !== undefined) {
-        if (q.type === "multiple") {
-          if (Array.isArray(answer) && answer.length > 0) answeredCount++;
-        } else if (q.type === "text") {
-          if (String(answer).trim().length > 0) answeredCount++;
-        } else {
-          answeredCount++;
-        }
-      }
-    }
-    if (answeredCount < quizQuestions.length) return;
+    if (getAnsweredCount() < quizQuestions.length) return;
     setQuizSubmitted(true);
   };
 
@@ -133,7 +118,7 @@ export function TheoryQuiz() {
       <CardContent className="space-y-4">
         {quizSubmitted && (
           <div className="text-center py-2">
-            <p className="text-lg font-bold">
+            <p className="text-lg font-bold text-foreground dark:text-foreground">
               Результат: {quizScore}/{quizQuestions.length}
             </p>
             <Progress
@@ -201,7 +186,7 @@ export function TheoryQuiz() {
                             }`}
                           >
                             {oi === answer && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-white dark:bg-white/50" />
                             )}
                           </span>
                         )}
@@ -293,7 +278,7 @@ export function TheoryQuiz() {
                             }`}
                           >
                             {isSelected && (
-                              <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                              <CheckCircle2 className="h-2.5 w-2.5 text-white dark:text-white/80" />
                             )}
                           </span>
                         )}
@@ -308,7 +293,7 @@ export function TheoryQuiz() {
                 <div className="ml-6">
                   <Input
                     type="text"
-                    value={(answer as string) || ""}
+                    value={typeof answer === "string" ? answer : ""}
                     onChange={(e) => handleTextAnswer(qi, e.target.value)}
                     disabled={quizSubmitted}
                     placeholder="Введите ваш ответ..."
