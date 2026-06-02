@@ -389,7 +389,14 @@
     "viewAllReminders": "View all reminders",
     "easy": "Easy",
     "medium": "Medium",
-    "hard": "Hard"
+    "hard": "Hard",
+    "greeting": "Hello, {name}!",
+    "daysInRow": "days in a row",
+    "bestStreak": "best streak",
+    "analytics": "Analytics",
+    "announcements": "Announcements",
+    "announcementsTitle": "Announcements",
+    "viewAllAnnouncements": "View all announcements"
   },
   "adminNav": {
     "title": "Admin Panel",

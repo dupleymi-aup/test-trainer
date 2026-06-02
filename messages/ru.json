@@ -390,7 +390,14 @@
     "viewAllReminders": "Посмотреть все напоминания",
     "easy": "Легко",
     "medium": "Средне",
-    "hard": "Сложно"
+    "hard": "Сложно",
+    "greeting": "Привет, {name}!",
+    "daysInRow": "дней подряд",
+    "bestStreak": "лучшая серия",
+    "analytics": "Аналитика",
+    "announcements": "Объявления",
+    "announcementsTitle": "Объявления",
+    "viewAllAnnouncements": "Посмотреть все объявления"
   },
   "adminNav": {
     "title": "Панель администратора",

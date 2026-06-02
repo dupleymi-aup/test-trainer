@@ -390,7 +390,14 @@
     "viewAllReminders": "查看所有提醒",
     "easy": "简单",
     "medium": "中等",
-    "hard": "困难"
+    "hard": "困难",
+    "greeting": "你好，{name}！",
+    "daysInRow": "天连续",
+    "bestStreak": "最佳连续",
+    "analytics": "数据分析",
+    "announcements": "公告",
+    "announcementsTitle": "公告",
+    "viewAllAnnouncements": "查看所有公告"
   },
   "adminNav": {
     "title": "管理员面板",

@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,7 @@ export default function StudentDashboardPage() {
   const tCommon = useTranslations("common");
   const tNav = useTranslations("nav");
   const tStats = useTranslations("stats");
+  const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<{
@@ -120,7 +121,7 @@ export default function StudentDashboardPage() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Привет, {session?.user?.name || t("teacher")}!
+                  {t("greeting", { name: session?.user?.name || t("teacher") })}
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   {t("dashboardSubtitle")}
@@ -184,19 +185,19 @@ export default function StudentDashboardPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Award className="h-5 w-5 text-orange-600" />
-                Серия занятий
+                {t("streakTitle")}
               </CardTitle>
-              <CardDescription>Поддерживайте ежедневную серию для лучшего результата</CardDescription>
+              <CardDescription>{t("streakSubtitle")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-6">
                 <div className="text-center">
                   <div className="text-4xl font-bold text-orange-600">{stats.streak}</div>
-                  <div className="text-sm text-muted-foreground">дней подряд</div>
+                  <div className="text-sm text-muted-foreground">{t("daysInRow")}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-bold">{stats.longestStreak}</div>
-                  <div className="text-sm text-muted-foreground">лучшая серия</div>
+                  <div className="text-sm text-muted-foreground">{t("bestStreak")}</div>
                 </div>
               </div>
             </CardContent>
@@ -205,14 +206,14 @@ export default function StudentDashboardPage() {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Быстрые действия</CardTitle>
-              <CardDescription>Перейдите к нужному разделу</CardDescription>
+              <CardTitle className="text-base">{t("quickActions")}</CardTitle>
+              <CardDescription>{t("quickActionsSubtitle")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/trainer">
                   <span className="flex items-center gap-2">
-                    <Beaker className="h-4 w-4" /> Открыть тренажёр
+                    <Beaker className="h-4 w-4" /> {t("openTrainer")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -220,7 +221,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/reminders">
                   <span className="flex items-center gap-2">
-                    <Bell className="h-4 w-4" /> Напоминания
+                    <Bell className="h-4 w-4" /> {t("reminders")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -228,7 +229,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/profile?tab=stats">
                   <span className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" /> Подробная статистика
+                    <TrendingUp className="h-4 w-4" /> {t("detailedStats")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -236,7 +237,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/analytics">
                   <span className="flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" /> Аналитика
+                    <BarChart3 className="h-4 w-4" /> {t("analytics")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -244,7 +245,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/history">
                   <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" /> История заданий
+                    <FileText className="h-4 w-4" /> {t("taskHistory")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -252,7 +253,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/trainer#theory">
                   <span className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" /> Теория
+                    <BookOpen className="h-4 w-4" /> {t("theory")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -264,8 +265,8 @@ export default function StudentDashboardPage() {
         {/* Task Difficulty Breakdown */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Задачи по сложности</CardTitle>
-            <CardDescription>Ваш прогресс в каждой категории</CardDescription>
+            <CardTitle>{t("tasksByDifficulty")}</CardTitle>
+            <CardDescription>{t("tasksByDifficultySubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -311,9 +312,9 @@ export default function StudentDashboardPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Megaphone className="h-5 w-5 text-blue-600" />
-                Объявления
+                {t("announcementsTitle")}
               </CardTitle>
-              <CardDescription>Важные сообщения от преподавателей</CardDescription>
+              <CardDescription>{t("announcementsSubtitle")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -322,19 +323,19 @@ export default function StudentDashboardPage() {
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium">{ann.title}</h4>
                       <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                        {new Date(ann.createdAt).toLocaleDateString("ru-RU")}
+                        {new Date(ann.createdAt).toLocaleDateString(locale === "zh" ? "zh-CN" : locale === "en" ? "en-US" : "ru-RU")}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-2">{ann.content}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      {ann.group && <span>Группа: {ann.group.name}</span>}
-                      <span>От: {ann.creator.name || "Преподаватель"}</span>
+                      {ann.group && <span>{t("groupLabel")}{ann.group.name}</span>}
+                      <span>{t("fromLabel")}{ann.creator.name || t("teacher")}</span>
                     </div>
                   </div>
                 ))}
                 {announcements.length > 3 && (
                   <p className="text-sm text-center text-muted-foreground">
-                    Ещё {announcements.length - 3} объявл.
+                    {t("moreAnnouncements", { count: announcements.length - 3 })}
                   </p>
                 )}
               </div>
@@ -347,14 +348,14 @@ export default function StudentDashboardPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Bell className="h-5 w-5 text-amber-600" />
-              Напоминания
+              {t("reminders")}
             </CardTitle>
-            <CardDescription>Не забудьте о дедлайнах</CardDescription>
+            <CardDescription>{t("remindersSubtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full">
               <Link href="/student/reminders">
-                Посмотреть все напоминания <ArrowRight className="ml-2 h-4 w-4" />
+                {t("viewAllReminders")} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </CardContent>
