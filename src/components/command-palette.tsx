@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { tasks } from "@/lib/tasks";
 import {
   CommandDialog,
@@ -64,6 +65,10 @@ export function CommandPalette({
   onResetAllProgress,
   availableTaskIds,
 }: CommandPaletteProps) {
+  const tCommon = useTranslations("common");
+  const tNav = useTranslations("nav");
+  const tTrainer = useTranslations("trainer");
+  const tProgress = useTranslations("progress");
   const [open, setOpen] = useState(false);
 
   const taskNames = useMemo(() => {
@@ -89,22 +94,22 @@ export function CommandPalette({
   }, []);
 
   const tabs = [
-    { id: "tasks", label: "Задания", icon: ListChecks, shortcut: "1" },
-    { id: "trainer", label: "Тренажёр", icon: Dumbbell, shortcut: "2" },
-    { id: "results", label: "Результаты", icon: BarChart3, shortcut: "3" },
-    { id: "statistics", label: "Статистика", icon: TrendingUp, shortcut: "4" },
-    { id: "exam", label: "Экзамен", icon: Timer, shortcut: "5" },
-    { id: "theory", label: "Теория", icon: BookOpen, shortcut: "6" },
+    { id: "tasks", label: tCommon("tasks"), icon: ListChecks, shortcut: "1" },
+    { id: "trainer", label: tNav("trainer"), icon: Dumbbell, shortcut: "2" },
+    { id: "results", label: tNav("results"), icon: BarChart3, shortcut: "3" },
+    { id: "statistics", label: tCommon("statistics"), icon: TrendingUp, shortcut: "4" },
+    { id: "exam", label: tNav("exam"), icon: Timer, shortcut: "5" },
+    { id: "theory", label: tNav("theory"), icon: BookOpen, shortcut: "6" },
   ];
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Введите команду или перейдите к..." />
+      <CommandInput placeholder={tCommon("search")} />
       <CommandList>
-        <CommandEmpty>Ничего не найдено</CommandEmpty>
+        <CommandEmpty>{tCommon("noResults")}</CommandEmpty>
 
         {/* Navigation */}
-        <CommandGroup heading="Навигация">
+        <CommandGroup heading={tCommon("navigation")}>
           {tabs.map((tab) => (
             <CommandItem
               key={tab.id}
@@ -116,7 +121,7 @@ export function CommandPalette({
               <tab.icon className="h-4 w-4" />
               {tab.label}
               {tab.id === activeTab && (
-                <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">активно</span>
+                <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">{tCommon("active")}</span>
               )}
             </CommandItem>
           ))}
@@ -125,7 +130,7 @@ export function CommandPalette({
         <CommandSeparator />
 
         {/* Tasks */}
-        <CommandGroup heading="Задания">
+        <CommandGroup heading={tCommon("tasks")}>
           {visibleTaskIds.map((id) => (
             <CommandItem
               key={id}
@@ -145,7 +150,7 @@ export function CommandPalette({
             }}
           >
             <Shuffle className="h-4 w-4" />
-            Случайное задание
+            {tTrainer("randomTask")}
             <CommandShortcut>R</CommandShortcut>
           </CommandItem>
         </CommandGroup>
@@ -153,7 +158,7 @@ export function CommandPalette({
         <CommandSeparator />
 
         {/* Actions */}
-        <CommandGroup heading="Действия">
+        <CommandGroup heading={tCommon("actions")}>
           {activeTab === "trainer" && (
             <>
               <CommandItem
@@ -163,7 +168,7 @@ export function CommandPalette({
                 }}
               >
                 <Send className="h-4 w-4" />
-                Проверить тесты
+                {tTrainer("checkTests")}
                 <CommandShortcut>Ctrl+Enter</CommandShortcut>
               </CommandItem>
               <CommandItem
@@ -173,7 +178,7 @@ export function CommandPalette({
                 }}
               >
                 <Lightbulb className="h-4 w-4" />
-                Подсказка
+                {tTrainer("hint")}
                 <CommandShortcut>H</CommandShortcut>
               </CommandItem>
               <CommandItem
@@ -183,7 +188,7 @@ export function CommandPalette({
                 }}
               >
                 <Layers className="h-4 w-4" />
-                Заполнить все классы эквивалентности
+                {tTrainer("fillAllEquivalenceClasses")}
                 <CommandShortcut>F</CommandShortcut>
               </CommandItem>
               <CommandItem
@@ -193,7 +198,7 @@ export function CommandPalette({
                 }}
               >
                 <GitBranch className="h-4 w-4" />
-                Заполнить все граничные значения
+                {tTrainer("fillAllBoundaryValues")}
               </CommandItem>
               <CommandItem
                 onSelect={() => {
@@ -202,7 +207,7 @@ export function CommandPalette({
                 }}
               >
                 <RotateCcw className="h-4 w-4" />
-                Сбросить тесты
+                {tTrainer("resetTests")}
               </CommandItem>
             </>
           )}
@@ -214,7 +219,7 @@ export function CommandPalette({
               }}
             >
               <ArrowLeft className="h-4 w-4" />
-              Назад к заданиям
+              {tCommon("back")}
             </CommandItem>
           )}
         </CommandGroup>
@@ -222,7 +227,7 @@ export function CommandPalette({
         <CommandSeparator />
 
         {/* Data */}
-        <CommandGroup heading="Данные">
+        <CommandGroup heading={tCommon("data")}>
           <CommandItem
             onSelect={() => {
               onExport();
@@ -230,7 +235,7 @@ export function CommandPalette({
             }}
           >
             <Download className="h-4 w-4" />
-            Экспорт прогресса
+            {tProgress("exportProgress")}
           </CommandItem>
           <CommandItem
             onSelect={() => {
@@ -239,7 +244,7 @@ export function CommandPalette({
             }}
           >
             <Upload className="h-4 w-4" />
-            Импорт прогресса
+            {tProgress("importProgress")}
           </CommandItem>
           <CommandItem
             onSelect={() => {
@@ -248,7 +253,7 @@ export function CommandPalette({
             }}
           >
             <ResetIcon className="h-4 w-4" />
-            Сбросить весь прогресс
+            {tProgress("resetAllProgress")}
           </CommandItem>
         </CommandGroup>
       </CommandList>

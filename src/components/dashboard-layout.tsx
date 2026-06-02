@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,7 @@ export function DashboardLayout({
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const t = useTranslations("dashboard");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -89,7 +91,7 @@ export function DashboardLayout({
   }, [session, status, router, allowedRoles]);
 
   if (status === "loading") {
-    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div>;
+    return <div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">{t("loading")}</span></div>;
   }
 
   if (!session || !session.user.role || !allowedRoles.includes(session.user.role)) {
@@ -129,7 +131,7 @@ export function DashboardLayout({
           <Link href={backLink}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">На главную</span>
+              <span className="hidden sm:inline">{t("backToHome")}</span>
             </Button>
           </Link>
           <div className="flex items-center gap-2 ml-2">
@@ -180,6 +182,7 @@ function NavSidebar({
 }) {
   const [navSearch, setNavSearch] = useState("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const t = useTranslations("dashboard");
 
   const activeClass = cn(
     activeColor.bg,
@@ -205,7 +208,7 @@ function NavSidebar({
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Поиск..."
+              placeholder={t("search")}
               value={navSearch}
               onChange={(e) => setNavSearch(e.target.value)}
               className="h-7 pl-7 text-xs pr-2"

@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +28,17 @@ import { loadProgress, loadAttemptHistory, loadStreak } from "@/lib/storage";
 import { tasks } from "@/lib/tasks";
 
 const TOTAL_TASKS = tasks.length;
-const difficultyConfig: Record<string, { label: string; color: string }> = {
-  Легко: { label: "Легко", color: "text-green-600 dark:text-green-400" },
-  Средне: { label: "Средне", color: "text-amber-600 dark:text-amber-400" },
-  Сложно: { label: "Сложно", color: "text-rose-600 dark:text-rose-400" },
+const difficultyConfig: Record<string, { labelKey: string; color: string }> = {
+  easy: { labelKey: "easy", color: "text-green-600 dark:text-green-400" },
+  medium: { labelKey: "medium", color: "text-amber-600 dark:text-amber-400" },
+  hard: { labelKey: "hard", color: "text-rose-600 dark:text-rose-400" },
 };
 
 export default function StudentDashboardPage() {
+  const t = useTranslations("student");
+  const tCommon = useTranslations("common");
+  const tNav = useTranslations("nav");
+  const tStats = useTranslations("stats");
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<{
@@ -86,7 +91,7 @@ export default function StudentDashboardPage() {
       fetch("/api/student/announcements")
         .then((r) => r.ok ? r.json() : { announcements: [] })
         .then((d) => setAnnouncements(d.announcements || []))
-        .catch(() => {});
+        .catch(() => { /* announcements fetch failed */ });
     }
   }, [status, session, router]);
 
@@ -95,7 +100,7 @@ export default function StudentDashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-emerald-600 mx-auto mb-4" />
-          <p className="text-muted-foreground">Загрузка...</p>
+          <p className="text-muted-foreground">{tCommon("loading")}</p>
         </div>
       </div>
     );
@@ -115,16 +120,16 @@ export default function StudentDashboardPage() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Привет, {session?.user?.name || "Студент"}!
+                  Привет, {session?.user?.name || t("teacher")}!
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Ваша панель обучения
+                  {t("dashboardSubtitle")}
                 </p>
               </div>
             </div>
             <Button asChild variant="default" className="bg-emerald-600 hover:bg-emerald-700">
               <Link href="/trainer">
-                К тренажёру <ArrowRight className="ml-2 h-4 w-4" />
+                {t("goToTrainer")} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -134,12 +139,12 @@ export default function StudentDashboardPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Progress Overview */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Прогресс обучения</h2>
+          <h2 className="text-lg font-semibold mb-4">{t("progressTitle")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-4">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Target className="h-3 w-3" /> Выполнено
+                  <Target className="h-3 w-3" /> {t("completed")}
                 </div>
                 <div className="text-2xl font-bold">{stats.completed} / {TOTAL_TASKS}</div>
                 <div className="text-xs text-muted-foreground mt-1">{completionPercent}%</div>
@@ -148,7 +153,7 @@ export default function StudentDashboardPage() {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Trophy className="h-3 w-3 text-amber-600" /> Лучший балл
+                  <Trophy className="h-3 w-3 text-amber-600" /> {t("bestScore")}
                 </div>
                 <div className="text-2xl font-bold text-amber-600">{stats.bestScore}%</div>
               </CardContent>
@@ -156,7 +161,7 @@ export default function StudentDashboardPage() {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3 text-blue-600" /> Средний балл
+                  <TrendingUp className="h-3 w-3 text-blue-600" /> {t("avgScore")}
                 </div>
                 <div className="text-2xl font-bold text-blue-600">{stats.avgScore}%</div>
               </CardContent>
@@ -164,7 +169,7 @@ export default function StudentDashboardPage() {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> Попыток
+                  <Clock className="h-3 w-3" /> {tStats("attempts")}
                 </div>
                 <div className="text-2xl font-bold">{stats.totalAttempts}</div>
               </CardContent>
@@ -276,7 +281,7 @@ export default function StudentDashboardPage() {
                 return (
                   <div key={difficulty}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className={`font-medium ${config.color}`}>{config.label}</span>
+                      <span className={`font-medium ${config.color}`}>{t(config.labelKey)}</span>
                       <span className="text-sm text-muted-foreground">
                         {completedByDifficulty} / {tasksByDifficulty.length}
                       </span>
@@ -284,9 +289,9 @@ export default function StudentDashboardPage() {
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          difficulty === "Легко"
+                          difficulty === "easy"
                             ? "bg-green-600"
-                            : difficulty === "Средне"
+                            : difficulty === "medium"
                               ? "bg-amber-600"
                               : "bg-rose-600"
                         }`}

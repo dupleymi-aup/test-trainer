@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Bell, Check, AlertTriangle, TrendingDown, Clock, UserX, BookOpen } from "lucide-react";
+import { useLocale } from "next-intl";
 import { formatRelativeDate } from "@/lib/format-date";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ interface Notification {
 }
 
 export function NotificationsBell() {
+  const locale = useLocale();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -138,7 +140,7 @@ export function NotificationsBell() {
                     </p>
                   )}
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {formatRelativeDate(n.createdAt)}
+                    {formatRelativeDate(n.createdAt, locale)}
                   </p>
                 </div>
               </DropdownMenuItem>

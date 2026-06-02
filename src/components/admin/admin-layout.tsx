@@ -38,6 +38,7 @@ import {
   ListFilter,
   type LucideIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { NotificationsBell } from "@/components/admin/notifications-bell";
 
@@ -46,95 +47,102 @@ interface NavGroup {
   items: Array<{ href: string; label: string; icon: LucideIcon }>;
 }
 
-const navGroups: NavGroup[] = [
-  {
-    label: "Основное",
-    items: [
-      { href: "/admin", label: "Панель управления", icon: LayoutDashboard },
-      { href: "/admin/users", label: "Пользователи", icon: Users },
-      { href: "/admin/groups", label: "Группы", icon: FolderKanban },
-    ],
-  },
-  {
-    label: "Аналитика",
-    items: [
-      { href: "/admin/analytics", label: "Обзор платформы", icon: BarChart3 },
-      { href: "/admin/analytics/comprehensive", label: "Комплексная аналитика", icon: Target },
-      { href: "/admin/analytics/predictions", label: "Прогнозы и риски", icon: AlertTriangle },
-      { href: "/admin/analytics/at-risk", label: "Студенты группы риска", icon: AlertTriangle },
-      { href: "/admin/analytics/improvement-leaderboard", label: "Лидеры улучшений", icon: Trophy },
-      { href: "/admin/analytics/velocity", label: "Скорость обучения", icon: Zap },
-      { href: "/admin/analytics/learning-path", label: "Путь обучения", icon: Route },
-      { href: "/admin/analytics/skill-mastery", label: "Освоение навыков", icon: Layers },
-    ],
-  },
-  {
-    label: "Сравнение и тренды",
-    items: [
-      { href: "/admin/analytics/teacher-performance", label: "Преподаватели", icon: GraduationCap },
-      { href: "/admin/analytics/teacher-comparison", label: "Сравнение преподавателей", icon: Award },
-      { href: "/admin/analytics/university-comparison", label: "Университеты", icon: BookOpen },
-      { href: "/admin/analytics/time-trends", label: "Тренды", icon: TrendingUp },
-      { href: "/admin/analytics/compare-periods", label: "Сравнение периодов", icon: GitCompare },
-      { href: "/admin/analytics/group-comparison", label: "Сравнение групп", icon: GitBranch },
-      { href: "/admin/analytics/student-comparison", label: "Сравнение студентов", icon: Users2 },
-    ],
-  },
-  {
-    label: "Покрытие EC/BV",
-    items: [
-      { href: "/admin/analytics/task-insights", label: "Анализ задач", icon: Activity },
-      { href: "/admin/analytics/ec-bv-gaps", label: "Анализ покрытия EC/BV", icon: AlertTriangle },
-      { href: "/admin/analytics/ec-bv-heatmap", label: "Тепловая карта EC/BV", icon: Crosshair },
-      { href: "/admin/analytics/completion-matrix", label: "Матрица выполнения", icon: Table2 },
-      { href: "/admin/analytics/group-performance", label: "Успеваемость групп", icon: FolderKanban },
-      { href: "/admin/analytics/performance-dashboard", label: "Успеваемость студентов", icon: ListFilter },
-    ],
-  },
-  {
-    label: "Тематический анализ",
-    items: [
-      { href: "/admin/analytics/topic-breakdown", label: "Анализ тем", icon: Layers },
-      { href: "/admin/analytics/topic-heatmap", label: "Тепловая карта тем", icon: Target },
-      { href: "/admin/analytics/cohort-retention", label: "Когортный анализ", icon: Calendar },
-      { href: "/admin/analytics/time-activity", label: "Активность по времени", icon: Clock },
-    ],
-  },
-  {
-    label: "Продвинутая аналитика",
-    items: [
-      { href: "/admin/analytics/forecasting", label: "Прогнозирование", icon: LineChartIcon },
-      { href: "/admin/analytics/anomalies", label: "Аномалии", icon: Siren },
-      { href: "/admin/analytics/recommendations", label: "Рекомендации", icon: Lightbulb },
-      { href: "/admin/analytics/student-timeline", label: "Траектория студента", icon: TimelineIcon },
-      { href: "/admin/analytics/task-detail", label: "Детальный анализ задач", icon: ClipboardList },
-      { href: "/admin/analytics/time-score-correlation", label: "Время и баллы", icon: LineChartIcon },
-      { href: "/admin/analytics/completion-funnel", label: "Воронка прохождения", icon: ListFilter },
-      { href: "/admin/analytics/error-patterns", label: "Типичные ошибки", icon: Siren },
-      { href: "/admin/analytics/item-difficulty", label: "Сложность заданий", icon: Target },
-    ],
-  },
-  {
-    label: "Система",
-    items: [
-      { href: "/admin/alerts", label: "Системные алерты", icon: Siren },
-      { href: "/admin/deadlines", label: "Дедлайны", icon: CalendarClock },
-      { href: "/admin/notifications", label: "Уведомления", icon: Bell },
-      { href: "/admin/reports/export", label: "Экспорт отчётов", icon: Download },
-      { href: "/admin/database", label: "База данных", icon: Database },
-      { href: "/admin/database/analytics", label: "Аналитика БД", icon: Activity },
-      { href: "/admin/activity", label: "Журнал действий", icon: ScrollText },
-      { href: "/admin/settings", label: "Настройки", icon: Settings },
-    ],
-  },
-];
+function useNavGroups(): NavGroup[] {
+  const t = useTranslations("adminNav");
+
+  return [
+    {
+      label: t("main"),
+      items: [
+        { href: "/admin", label: t("dashboard"), icon: LayoutDashboard },
+        { href: "/admin/users", label: t("users"), icon: Users },
+        { href: "/admin/groups", label: t("groups"), icon: FolderKanban },
+      ],
+    },
+    {
+      label: t("analytics"),
+      items: [
+        { href: "/admin/analytics", label: t("platformOverview"), icon: BarChart3 },
+        { href: "/admin/analytics/comprehensive", label: t("comprehensiveAnalytics"), icon: Target },
+        { href: "/admin/analytics/predictions", label: t("predictionsRisks"), icon: AlertTriangle },
+        { href: "/admin/analytics/at-risk", label: t("atRiskStudents"), icon: AlertTriangle },
+        { href: "/admin/analytics/improvement-leaderboard", label: t("improvementLeaders"), icon: Trophy },
+        { href: "/admin/analytics/velocity", label: t("learningSpeed"), icon: Zap },
+        { href: "/admin/analytics/learning-path", label: t("learningPath"), icon: Route },
+        { href: "/admin/analytics/skill-mastery", label: t("skillMastery"), icon: Layers },
+      ],
+    },
+    {
+      label: t("comparisonTrends"),
+      items: [
+        { href: "/admin/analytics/teacher-performance", label: t("teachers"), icon: GraduationCap },
+        { href: "/admin/analytics/teacher-comparison", label: t("teacherComparison"), icon: Award },
+        { href: "/admin/analytics/university-comparison", label: t("universities"), icon: BookOpen },
+        { href: "/admin/analytics/time-trends", label: t("trends"), icon: TrendingUp },
+        { href: "/admin/analytics/compare-periods", label: t("periodComparison"), icon: GitCompare },
+        { href: "/admin/analytics/group-comparison", label: t("groupComparison"), icon: GitBranch },
+        { href: "/admin/analytics/student-comparison", label: t("studentComparison"), icon: Users2 },
+      ],
+    },
+    {
+      label: t("ecBvCoverage"),
+      items: [
+        { href: "/admin/analytics/task-insights", label: t("taskAnalysis"), icon: Activity },
+        { href: "/admin/analytics/ec-bv-gaps", label: t("ecBvGapAnalysis"), icon: AlertTriangle },
+        { href: "/admin/analytics/ec-bv-heatmap", label: t("ecBvHeatmap"), icon: Crosshair },
+        { href: "/admin/analytics/completion-matrix", label: t("completionMatrix"), icon: Table2 },
+        { href: "/admin/analytics/group-performance", label: t("groupPerformance"), icon: FolderKanban },
+        { href: "/admin/analytics/performance-dashboard", label: t("studentPerformance"), icon: ListFilter },
+      ],
+    },
+    {
+      label: t("topicAnalysis"),
+      items: [
+        { href: "/admin/analytics/topic-breakdown", label: t("topicBreakdown"), icon: Layers },
+        { href: "/admin/analytics/topic-heatmap", label: t("topicHeatmap"), icon: Target },
+        { href: "/admin/analytics/cohort-retention", label: t("cohortAnalysis"), icon: Calendar },
+        { href: "/admin/analytics/time-activity", label: t("timeActivity"), icon: Clock },
+      ],
+    },
+    {
+      label: t("advancedAnalytics"),
+      items: [
+        { href: "/admin/analytics/forecasting", label: t("forecasting"), icon: LineChartIcon },
+        { href: "/admin/analytics/anomalies", label: t("anomalies"), icon: Siren },
+        { href: "/admin/analytics/recommendations", label: t("recommendations"), icon: Lightbulb },
+        { href: "/admin/analytics/student-timeline", label: t("studentTimeline"), icon: TimelineIcon },
+        { href: "/admin/analytics/task-detail", label: t("taskDetailAnalysis"), icon: ClipboardList },
+        { href: "/admin/analytics/time-score-correlation", label: t("timeScores"), icon: LineChartIcon },
+        { href: "/admin/analytics/completion-funnel", label: t("completionFunnel"), icon: ListFilter },
+        { href: "/admin/analytics/error-patterns", label: t("commonErrors"), icon: Siren },
+        { href: "/admin/analytics/item-difficulty", label: t("taskDifficulty"), icon: Target },
+      ],
+    },
+    {
+      label: t("system"),
+      items: [
+        { href: "/admin/alerts", label: t("systemAlerts"), icon: Siren },
+        { href: "/admin/deadlines", label: t("deadlines"), icon: CalendarClock },
+        { href: "/admin/notifications", label: t("notifications"), icon: Bell },
+        { href: "/admin/reports/export", label: t("reportExport"), icon: Download },
+        { href: "/admin/database", label: t("database"), icon: Database },
+        { href: "/admin/database/analytics", label: t("dbAnalytics"), icon: Activity },
+        { href: "/admin/activity", label: t("activityLog"), icon: ScrollText },
+        { href: "/admin/settings", label: t("settings"), icon: Settings },
+      ],
+    },
+  ];
+}
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("adminNav");
+  const navGroups = useNavGroups();
+
   return (
     <DashboardLayout
       navGroups={navGroups}
       allowedRoles={["ADMIN"]}
-      title="Панель администратора"
+      title={t("title")}
       titleIcon={Shield}
       activeColor={{
         bg: "bg-amber-100",

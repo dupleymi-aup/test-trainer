@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -29,13 +30,15 @@ import {
 } from "@/components/ui/card";
 
 const loginSchema = z.object({
-  login: z.string().min(1, "Обязательное поле"),
-  password: z.string().min(1, "Обязательное поле"),
+  login: z.string().min(1, "required"),
+  password: z.string().min(1, "required"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
 
 function LoginFormContent() {
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -57,17 +60,17 @@ function LoginFormContent() {
 
       if (result?.error) {
         if (result.error === "rate_limited") {
-          toast.error("Слишком много попыток. Попробуйте позже");
+          toast.error(t("rateLimited"));
         } else {
-          toast.error("Неверный email/телефон или пароль");
+          toast.error(t("invalidCredentials"));
         }
       } else if (result?.ok) {
-        toast.success("Вход выполнен");
+        toast.success(t("loginSuccess"));
         router.push(callbackUrl);
         router.refresh();
       }
     } catch {
-      toast.error("Ошибка при входе");
+      toast.error(t("loginError"));
     } finally {
       setIsLoading(false);
     }
@@ -82,9 +85,9 @@ function LoginFormContent() {
             <Beaker className="h-6 w-6" />
           </div>
         </div>
-        <CardTitle className="text-2xl">Вход</CardTitle>
+        <CardTitle className="text-2xl">{t("signInTitle")}</CardTitle>
         <CardDescription>
-          Войдите в аккаунт для сохранения прогресса
+          {t("signInSubtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -95,11 +98,11 @@ function LoginFormContent() {
               name="login"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email или телефон</FormLabel>
+                  <FormLabel>{t("emailOrPhone")}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
-                      placeholder="email@example.com или +7..."
+                      placeholder={t("loginPlaceholder")}
                       autoComplete="username"
                     />
                   </FormControl>
@@ -112,7 +115,7 @@ function LoginFormContent() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Пароль</FormLabel>
+                  <FormLabel>{t("password")}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -130,22 +133,22 @@ function LoginFormContent() {
                 href="/forgot-password"
                 className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
               >
-                Забыли пароль?
+                {t("forgotPassword")}
               </Link>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Войти
+              {t("signIn")}
             </Button>
           </form>
         </Form>
         <div className="mt-6 text-center text-sm">
-          Нет аккаунта?{" "}
+          {t("noAccount")}{" "}
           <Link
             href="/register"
             className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
           >
-            Зарегистрироваться
+            {t("signUp")}
           </Link>
         </div>
       </CardContent>

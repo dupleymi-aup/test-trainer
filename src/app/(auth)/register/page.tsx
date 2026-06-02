@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Beaker, Loader2, Eye, EyeOff, GraduationCap, Users, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,20 +28,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
-
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "Имя должно быть не менее 2 символов"),
-    email: z.string().email("Неверный формат email"),
-    phone: z.string().optional().or(z.literal("")),
-    password: z.string().min(8, "Пароль должен быть не менее 8 символов"),
-    confirmPassword: z.string(),
-    accountType: z.enum(["STUDENT", "TEACHER"]),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Пароли не совпадают",
-    path: ["confirmPassword"],
-  });
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -67,10 +54,26 @@ const accountTypes = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
+
+  const registerSchema = z
+    .object({
+      name: z.string().min(2, t("nameMinLength")),
+      email: z.string().email(t("invalidEmail")),
+      phone: z.string().optional().or(z.literal("")),
+      password: z.string().min(8, t("passwordMinLength")),
+      confirmPassword: z.string(),
+      accountType: z.enum(["STUDENT", "TEACHER"]),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -104,13 +107,13 @@ export default function RegisterPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Ошибка при регистрации");
+        toast.error(json.error || t("registerError"));
       } else {
-        toast.success("Регистрация успешна! Войдите в аккаунт.");
+        toast.success(t("registerSuccess"));
         router.push("/login");
       }
     } catch {
-      toast.error("Ошибка при регистрации");
+      toast.error(t("registerError"));
     } finally {
       setIsLoading(false);
     }
@@ -125,15 +128,15 @@ export default function RegisterPage() {
               <Beaker className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Регистрация</CardTitle>
+          <CardTitle className="text-2xl">{t("registerTitle")}</CardTitle>
           <CardDescription>
-            Создайте аккаунт для сохранения прогресса
+            {t("registerSubtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Account Type Selector */}
           <div className="mb-6">
-            <FormLabel className="mb-3 block">Тип аккаунта</FormLabel>
+            <FormLabel className="mb-3 block">{t("accountType")}</FormLabel>
             <div className="grid grid-cols-2 gap-3">
               {accountTypes.map((type) => {
                 const Icon = type.icon;
