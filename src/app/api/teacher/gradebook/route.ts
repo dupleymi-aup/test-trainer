@@ -12,6 +12,26 @@ const gradeSchema = z.object({
   comment: z.string().max(500).optional(),
 });
 
+/**
+ * Verify that a student belongs to one of the teacher's groups.
+ * Admins bypass this check.
+ */
+async function verifyStudentInTeacherGroup(
+  studentId: string,
+  teacherUserId: string,
+  teacherRole: string,
+): Promise<boolean> {
+  if (teacherRole === "ADMIN") return true;
+
+  const membership = await db.userGroup.findFirst({
+    where: {
+      userId: studentId,
+      group: { createdByUserId: teacherUserId },
+    },
+  });
+  return !!membership;
+}
+
 export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
@@ -86,6 +106,12 @@ export async function POST(req: Request) {
 
     const { userId, taskId, score, comment } = parsed.data;
 
+    // Verify the student belongs to one of this teacher's groups
+    const isAuthorized = await verifyStudentInTeacherGroup(userId, session.userId, session.role);
+    if (!isAuthorized) {
+      return NextResponse.json({ error: "Forbidden: student is not in your group" }, { status: 403 });
+    }
+
     const grade = await db.grade.upsert({
       where: { userId_taskId: { userId, taskId } },
       create: {
@@ -137,6 +163,12 @@ export async function DELETE(req: Request) {
 
     if (!userId || !taskId) {
       return NextResponse.json({ error: "Missing userId or taskId" }, { status: 400 });
+    }
+
+    // Verify the student belongs to one of this teacher's groups
+    const isAuthorized = await verifyStudentInTeacherGroup(userId, session.userId, session.role);
+    if (!isAuthorized) {
+      return NextResponse.json({ error: "Forbidden: student is not in your group" }, { status: 403 });
     }
 
     await db.grade.delete({
