@@ -98,7 +98,9 @@ export function MarathonMode({
         setElapsed(Math.floor((Date.now() - saved.state.startTime) / 1000));
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Restore elapsed time from saved session (run once on mount).
+    // Empty deps array is intentional — ref guard prevents re-execution.
+    // state.started/finished are read from closure but we don't want re-runs.
   }, []);
 
   const currentTask = tasks[state.currentIndex];

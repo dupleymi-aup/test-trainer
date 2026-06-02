@@ -9,8 +9,9 @@ test.describe("Trainer functionality", () => {
 
   test("should select and display a task", async ({ page }) => {
     await page.goto("/");
-    // Click on the first task card
-    const firstTask = page.getByRole("button").first();
+    // Click on the first task card button (tasks have accessible names)
+    const firstTask = page.getByRole("button", { name: /задание|task|№/i }).first();
+    await expect(firstTask).toBeVisible();
     await firstTask.click();
     // Task workspace should appear
     await expect(page.getByRole("main")).toBeVisible();

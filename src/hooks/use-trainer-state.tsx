@@ -168,7 +168,9 @@ export function useTrainerState() {
       map[String(task.id)] = getTaskBestCoverage(task.id);
     }
     return map;
-  }, [attemptHistory]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Reads from localStorage, not React state — recomputes when attemptHistory changes
+    // because handleSubmit calls setAttemptHistory before this re-renders.
+  }, []);
 
   const filteredTasks = useMemo(() => {
     let filtered = tasks;
@@ -865,7 +867,20 @@ export function useTrainerState() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeTab, selectedTask, testCases, handleSubmit, handleUndo, handleRedo, handleSelectTask, handleShowHint, handleFillAllEc, handleRandomTask]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
+    activeTab,
+    selectedTask,
+    testCases,
+    handleSubmit,
+    handleUndo,
+    handleRedo,
+    handleSelectTask,
+    handleShowHint,
+    handleFillAllEc,
+    handleRandomTask,
+    filteredTasks,
+    handleFillAllBv,
+  ]);
 
   return {
     // State

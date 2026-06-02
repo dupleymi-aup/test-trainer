@@ -11,7 +11,6 @@ interface UseApiFetchResult<T> {
   refetch: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface UseApiFetchOptions<T> extends ApiFetchJsonOptions {
   /** Show a toast notification on error (default: true) */
   showToastOnError?: boolean;

@@ -19,14 +19,12 @@ export function computeLinearRegression(
   let sumY = 0;
   let sumXY = 0;
   let sumX2 = 0;
-  let _sumY2 = 0;
 
   for (const [x, y] of points) {
     sumX += x;
     sumY += y;
     sumXY += x * y;
     sumX2 += x * x;
-    _sumY2 += y * y;
   }
 
   const denom = n * sumX2 - sumX * sumX;

@@ -276,9 +276,16 @@ export function _resetStreakSaveLock(): void {
  * Uses a lock to prevent race conditions from rapid concurrent submissions.
  */
 export async function saveStreak(): Promise<StreakData> {
-  // Mutex: wait for any in-flight save, then queue behind it
+  // If a save is already in progress, queue behind it
   if (streakSaveLock) {
-    return streakSaveLock;
+    const existingLock = streakSaveLock;
+    return existingLock.then(async (prevResult) => {
+      // After the in-flight save finishes, run a new save to incorporate
+      // any changes the caller expected (e.g. streak increment).
+      // Reset lock so this call becomes the new canonical save.
+      streakSaveLock = null;
+      return saveStreak();
+    });
   }
 
   const promise = (async () => {

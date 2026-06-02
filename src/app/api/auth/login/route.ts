@@ -13,10 +13,13 @@ const loginSchema = z.object({
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  const result = checkRateLimit(`login:${ip}`, rateLimits.login);
-  if (result.limited) {
-    return createRateLimitResponse(result.resetAt);
+  const ipResult = checkRateLimit(`login:${ip}`, rateLimits.login);
+  if (ipResult.limited) {
+    return createRateLimitResponse(ipResult.resetAt);
   }
+
+  // Account-level rate limiting (by email/phone) is handled via
+  // isLoginRateLimited in NextAuth authorize — both layers work together.
 
   try {
     const body = await req.json().catch(() => null);
