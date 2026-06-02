@@ -42,23 +42,7 @@ export interface Task {
 
 // Helper to auto-generate code display string from a function
 function getCode(fn: (...args: never[]) => unknown): string {
-  const source = (fn as (...args: unknown[]) => unknown).toString();
-  // If it's an arrow function wrapper like "(args) => factorial(args[0])", extract the inner call
-  const arrowMatch = source.match(/\)\s*=>\s*(\w+)\(/);
-  if (arrowMatch) {
-    const _fnName = arrowMatch[1];
-    // Try to find the original function and return its source
-    const typedFn = fn as { name: string };
-    const originalFn = typedFn.name !== "" ? fn : null;
-    if (originalFn && typedFn.name) {
-      try {
-        return (originalFn as (...args: unknown[]) => unknown).toString();
-      } catch {
-        // Fall through
-      }
-    }
-  }
-  return source;
+  return (fn as (...args: unknown[]) => unknown).toString();
 }
 function factorial(n: number): number {
   if (!Number.isInteger(n)) throw new Error("Аргумент должен быть целым числом");
