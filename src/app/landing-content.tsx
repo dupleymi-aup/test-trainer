@@ -153,7 +153,7 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
       <Header isAuthenticated={isAuthenticated} userRole={userRole} />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {/* Hero Section */}
         <section className="py-16 sm:py-24">
           <div className="max-w-4xl mx-auto px-4 text-center">

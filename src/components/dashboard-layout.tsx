@@ -75,8 +75,6 @@ export function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const [navSearch, setNavSearch] = useState("");
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -98,87 +96,11 @@ export function DashboardLayout({
     return null;
   }
 
-  const activeClass = cn(
-    activeColor.bg,
-    activeColor.text,
-    activeColor.darkBg,
-    activeColor.darkText,
-    "font-medium"
-  );
-
-  const toggleGroup = (label: string) => {
-    setCollapsedGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  };
-
-  const renderNavItem = (item: DashboardNavItem) => {
-    const isActive = pathname === item.href;
-    const matchesSearch = navSearch
-      ? item.label.toLowerCase().includes(navSearch.toLowerCase())
-      : true;
-    if (!matchesSearch) return null;
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        className={cn(
-          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
-          isActive
-            ? activeClass
-            : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
-        )}
-        aria-current={isActive ? "page" : undefined}
-      >
-        <item.icon className="h-4 w-4" />
-        {item.label}
-      </Link>
-    );
-  };
-
-  const renderNav = () => {
-    if (navGroups && navGroups.length > 0) {
-      return navGroups.map((group) => {
-        const isCollapsed = collapsedGroups.has(group.label);
-        const hasActive = group.items.some((item) => pathname === item.href);
-        // Auto-expand group with active item
-        const effectiveCollapsed = isCollapsed && !hasActive;
-
-        return (
-          <div key={group.label} className="mb-2">
-            <button
-              onClick={() => toggleGroup(group.label)}
-              className="w-full flex items-center justify-between px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span>{group.label}</span>
-              {effectiveCollapsed ? (
-                <ChevronRight className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )}
-            </button>
-            {!effectiveCollapsed && (
-              <div className="space-y-0.5 ml-1">
-                {group.items.map((item) => renderNavItem(item))}
-              </div>
-            )}
-          </div>
-        );
-      });
-    }
-
-    // Fallback to flat navItems
-    return (navItems || []).map((item) => renderNavItem(item));
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex items-center gap-3">
           {isMobile && (
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -194,20 +116,12 @@ export function DashboardLayout({
                   </SheetTitle>
                 </SheetHeader>
                 <div className="px-3 py-2 max-h-[calc(100vh-5rem)] overflow-y-auto">
-                  {navGroups && navGroups.length > 0 && (
-                    <div className="px-1 mb-2">
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          placeholder="Поиск..."
-                          value={navSearch}
-                          onChange={(e) => setNavSearch(e.target.value)}
-                          className="h-7 pl-7 text-xs pr-2"
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {renderNav()}
+                  <NavSidebar
+                    navItems={navItems}
+                    navGroups={navGroups}
+                    pathname={pathname}
+                    activeColor={activeColor}
+                  />
                 </div>
               </SheetContent>
             </Sheet>
@@ -236,21 +150,12 @@ export function DashboardLayout({
         {!isMobile && (
           <aside className="w-56 shrink-0" role="navigation" aria-label={title}>
             <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto custom-scrollbar">
-              {/* Search input for grouped nav */}
-              {navGroups && navGroups.length > 0 && (
-                <div className="px-1 mb-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                    <Input
-                      placeholder="Поиск..."
-                      value={navSearch}
-                      onChange={(e) => setNavSearch(e.target.value)}
-                      className="h-7 pl-7 text-xs pr-2"
-                    />
-                  </div>
-                </div>
-              )}
-              {renderNav()}
+              <NavSidebar
+                navItems={navItems}
+                navGroups={navGroups}
+                pathname={pathname}
+                activeColor={activeColor}
+              />
             </div>
           </aside>
         )}
@@ -260,4 +165,126 @@ export function DashboardLayout({
       </div>
     </div>
   );
+}
+
+function NavSidebar({
+  navItems,
+  navGroups,
+  pathname,
+  activeColor,
+}: {
+  navItems?: DashboardNavItem[];
+  navGroups?: NavGroup[];
+  pathname: string;
+  activeColor: ActiveColorClasses;
+}) {
+  const [navSearch, setNavSearch] = useState("");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const activeClass = cn(
+    activeColor.bg,
+    activeColor.text,
+    activeColor.darkBg,
+    activeColor.darkText,
+    "font-medium"
+  );
+
+  const toggleGroup = (label: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
+  if (navGroups && navGroups.length > 0) {
+    return (
+      <>
+        <div className="px-1 mb-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Поиск..."
+              value={navSearch}
+              onChange={(e) => setNavSearch(e.target.value)}
+              className="h-7 pl-7 text-xs pr-2"
+            />
+          </div>
+        </div>
+        {navGroups.map((group) => {
+          const isCollapsed = collapsedGroups.has(group.label);
+          const hasActive = group.items.some((item) => pathname === item.href);
+          const effectiveCollapsed = isCollapsed && !hasActive;
+
+          return (
+            <div key={group.label} className="mb-2">
+              <button
+                onClick={() => toggleGroup(group.label)}
+                className="w-full flex items-center justify-between px-2 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span>{group.label}</span>
+                {effectiveCollapsed ? (
+                  <ChevronRight className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5" />
+                )}
+              </button>
+              {!effectiveCollapsed && (
+                <div className="space-y-0.5 ml-1">
+                  {group.items.map((item) => {
+                    const isActive = pathname === item.href;
+                    const matchesSearch = navSearch
+                      ? item.label.toLowerCase().includes(navSearch.toLowerCase())
+                      : true;
+                    if (!matchesSearch) return null;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+                          isActive
+                            ? activeClass
+                            : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
+                        )}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </>
+    );
+  }
+
+  return (navItems || []).map((item) => {
+    const isActive = pathname === item.href;
+    const matchesSearch = navSearch
+      ? item.label.toLowerCase().includes(navSearch.toLowerCase())
+      : true;
+    if (!matchesSearch) return null;
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={cn(
+          "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+          isActive
+            ? activeClass
+            : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
+        )}
+        aria-current={isActive ? "page" : undefined}
+      >
+        <item.icon className="h-4 w-4" />
+        {item.label}
+      </Link>
+    );
+  });
 }

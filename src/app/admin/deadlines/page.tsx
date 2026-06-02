@@ -2,6 +2,7 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState, useEffect, useCallback } from "react";
+import { logger } from "@/lib/logger";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -120,7 +121,7 @@ export default function AdminDeadlinesPage() {
       .then((d) => setGroups(d.groups || []))
       .catch(() => {
         // Non-critical: groups filter is optional, but log for debugging
-        console.warn("Failed to fetch groups — group filter will be unavailable");
+        logger.warn("Failed to fetch groups — group filter will be unavailable");
       });
   }, []);
 
