@@ -437,29 +437,29 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
               label="Общая оценка"
               color={
                 result.overallScore >= 75
-                  ? "#10b981"
+                  ? "hsl(var(--chart-2))"
                   : result.overallScore >= 50
-                    ? "#f59e0b"
-                    : "#ef4444"
+                    ? "hsl(var(--chart-4))"
+                    : "hsl(var(--destructive))"
               }
               delay={0}
             />
             <ScoreCircle
               score={result.ecCoverage}
               label="Классы эквивалентности"
-              color="#14b8a6"
+              color="hsl(var(--chart-2))"
               delay={0.1}
             />
             <ScoreCircle
               score={result.boundaryCoverage}
               label="Граничные значения"
-              color="#f59e0b"
+              color="hsl(var(--chart-4))"
               delay={0.2}
             />
             <ScoreCircle
               score={result.correctnessScore}
               label="Корректность"
-              color="#8b5cf6"
+              color="hsl(var(--chart-5))"
               delay={0.3}
             />
           </div>

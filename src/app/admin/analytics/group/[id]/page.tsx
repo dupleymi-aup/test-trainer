@@ -220,7 +220,7 @@ export default function AdminGroupAnalyticsPage() {
                   <Tooltip />
                   <Legend />
                   <Bar dataKey="groupAvgScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Группа" />
-                  <Bar dataKey="platformAvgScore" fill="#94a3b8" radius={[4, 4, 0, 0]} name="Платформа" />
+                  <Bar dataKey="platformAvgScore" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} name="Платформа" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -239,7 +239,7 @@ export default function AdminGroupAnalyticsPage() {
                 <Tooltip />
                 <Legend />
                 <Area type="monotone" dataKey="attemptsCount" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} name="Попытки" />
-                <Area type="monotone" dataKey="uniqueStudents" stroke="#10b981" fill="#10b981" fillOpacity={0.1} name="Студенты" />
+                <Area type="monotone" dataKey="uniqueStudents" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.1} name="Студенты" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

@@ -82,7 +82,7 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0}%`,
-                background: "linear-gradient(to right, #10b981, #059669)",
+                background: "linear-gradient(to right, hsl(var(--chart-2)), hsl(162 67% 35%))",
               }}
             />
           </div>

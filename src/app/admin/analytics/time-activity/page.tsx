@@ -66,9 +66,9 @@ function HeatmapCellComponent({ cell }: { cell: HeatmapCell }) {
   if (cell.count === 0) {
     bgColor = "bg-gray-100 dark:bg-gray-800";
   } else if (intensity > 0.7) {
-    bgColor = "bg-blue-600";
+    bgColor = "bg-blue-600 dark:bg-blue-500";
   } else if (intensity > 0.4) {
-    bgColor = "bg-blue-400";
+    bgColor = "bg-blue-400 dark:bg-blue-500";
   } else if (intensity > 0.1) {
     bgColor = "bg-blue-200 dark:bg-blue-800";
   } else {
