@@ -97,7 +97,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
-  const htmlLang = localeNames[locale] || "ru_RU";
   const t = await getTranslations("header");
 
   const fontClass = locale === "zh"
@@ -105,7 +104,7 @@ export default async function RootLayout({
     : `${geistSans.variable} ${geistMono.variable}`;
 
   return (
-    <html lang={htmlLang} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${fontClass} antialiased bg-background text-foreground`}
       >

@@ -87,7 +87,7 @@ The platform automatically evaluates each set of test cases on three metrics:
 | **EC Coverage** | Percentage of equivalence classes covered |
 | **BV Coverage** | Percentage of boundary values covered |
 | **Correctness** | Percentage of correctly classified results |
-| **Overall Score** | Weighted average: (EC + BV + 2 × Correctness) / 4 |
+| **Overall Score** | Weighted average: EC × 40% + BV × 30% + Correctness × 30% |
 
 ## Achievements
 
