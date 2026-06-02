@@ -112,6 +112,9 @@ export const authOptions: NextAuthOptions = {
         if (!user.isActive) {
           return null; // Block inactive users
         }
+        if (user.deletedAt) {
+          return null; // Block deleted users
+        }
 
         const isValid = await bcrypt.compare(credentials.password, user.hashedPassword);
         if (!isValid) {
@@ -237,11 +240,15 @@ export const authOptions: NextAuthOptions = {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id },
-            select: { role: true, isActive: true, lastSessionInvalidation: true },
+            select: { role: true, isActive: true, deletedAt: true, lastSessionInvalidation: true },
           });
           if (dbUser) {
             token.role = dbUser.role;
             token.isActive = dbUser.isActive;
+            // If user was deleted, invalidate token immediately
+            if (dbUser.deletedAt) {
+              token.id = "" as string;
+            }
             // If token was issued before session invalidation, force re-auth
             if (dbUser.lastSessionInvalidation && (!token.tokenIssuedAt || dbUser.lastSessionInvalidation.getTime() > token.tokenIssuedAt)) {
               // Clear token id — next request will be unauthorized, forcing re-login

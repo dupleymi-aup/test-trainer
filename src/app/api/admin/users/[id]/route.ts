@@ -94,6 +94,9 @@ export async function PATCH(
     if (!existing) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    if (existing.deletedAt) {
+      return NextResponse.json({ error: "Cannot update a deleted user" }, { status: 400 });
+    }
 
     // Check email/phone uniqueness if being changed
     const updateData = parsed.data as Record<string, unknown>;
@@ -177,6 +180,9 @@ export async function DELETE(
     const existing = await db.user.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    if (existing.deletedAt) {
+      return NextResponse.json({ error: "User is already deleted" }, { status: 400 });
     }
 
     // Soft delete

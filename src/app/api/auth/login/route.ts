@@ -63,6 +63,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (user.deletedAt) {
+      return NextResponse.json(
+        { error: "Аккаунт удалён" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
       {
         user: {
