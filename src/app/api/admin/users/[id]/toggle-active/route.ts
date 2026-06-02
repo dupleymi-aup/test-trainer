@@ -40,6 +40,11 @@ export async function PATCH(
       select: { id: true, name: true, email: true, isActive: true },
     });
 
+    // Invalidate all sessions when deactivating — user is logged out immediately
+    if (user.isActive) {
+      await db.session.deleteMany({ where: { userId: id } });
+    }
+
     await db.activityLog.create({
       data: {
         userId: session.userId,

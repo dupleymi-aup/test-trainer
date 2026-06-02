@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "CSV must have a header row and at least one data row" }, { status: 400 });
     }
 
-    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const headers = lines[0].split(",").map((h: string) => h.trim().toLowerCase());
     const results: Array<{ status: "ok" | "error"; email?: string; error?: string }> = [];
     let created = 0;
     let skipped = 0;
@@ -42,11 +42,11 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",").map((v) => v.trim());
+      const values = lines[i].split(",").map((v: string) => v.trim());
       if (values.length < 2) continue;
 
       const row: Record<string, string> = {};
-      headers.forEach((h, idx) => { row[h] = values[idx] || ""; });
+      headers.forEach((h: string, idx: number) => { row[h] = values[idx] || ""; });
 
       const email = row.email?.toLowerCase().trim();
       if (!email) {

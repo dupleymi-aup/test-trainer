@@ -75,6 +75,7 @@ declare module "next-auth/jwt" {
     id: string;
     role?: string;
     isActive?: boolean;
+    lastRoleCheck?: number;
   }
 }
 
@@ -225,7 +226,27 @@ export const authOptions: NextAuthOptions = {
         const u = user as typeof user & { role?: string; isActive?: boolean };
         token.role = u.role ?? "STUDENT";
         token.isActive = u.isActive ?? true;
+        token.lastRoleCheck = Date.now();
       }
+
+      // Revalidate role from DB every 5 minutes to catch role changes by admins
+      const ROLE_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+      if (token.id && (!token.lastRoleCheck || Date.now() - token.lastRoleCheck > ROLE_CHECK_INTERVAL)) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { role: true, isActive: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.isActive = dbUser.isActive;
+          }
+          token.lastRoleCheck = Date.now();
+        } catch {
+          // On DB error, keep the existing role from token
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

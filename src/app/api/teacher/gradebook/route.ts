@@ -81,7 +81,7 @@ export async function POST(req: Request) {
 
     const parsed = gradeSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.issues }, { status: 400 });
     }
 
     const { userId, taskId, score, comment } = parsed.data;
