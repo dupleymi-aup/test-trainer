@@ -7,20 +7,45 @@ import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
-    const groups = await db.group.findMany({
-      include: {
-        _count: { select: { members: true } },
-        createdBy: { select: { name: true, email: true } },
+    // Rate limiting for expensive read operation
+    const rateResult = checkRateLimit(`adminGroups:${session.userId}`, rateLimits.adminGroupCrud);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
+    }
+
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
+    const skip = (page - 1) * limit;
+
+    const [groups, total] = await Promise.all([
+      db.group.findMany({
+        skip,
+        take: limit,
+        include: {
+          _count: { select: { members: true } },
+          createdBy: { select: { name: true, email: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      db.group.count(),
+    ]);
+
+    return NextResponse.json({
+      groups,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json({ groups }, { status: 200 });
+    }, { status: 200 });
   } catch (error) {
     logger.error("Failed to fetch groups", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch groups" }, { status: 500 });
