@@ -7,6 +7,7 @@ import EmailProvider from "next-auth/providers/email";
 import { db } from "@/lib/db";
 import { isLoginRateLimited } from "@/lib/login-rate-limit";
 import { rateLimits } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 // In-memory store for email rate limiting (keyed by email address)
 const emailRateLimitStore = new Map<string, { count: number; resetAt: number }>();
@@ -257,7 +258,7 @@ export const authOptions: NextAuthOptions = {
           }
           token.lastRoleCheck = Date.now();
         } catch {
-          // On DB error, keep the existing role from token
+          logger.warn("JWT revalidation: DB query failed, keeping cached role");
         }
       }
 

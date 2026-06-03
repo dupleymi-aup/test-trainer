@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { logApiError, apiErrorResponse } from "@/lib/api-error-handler";
 
 export async function GET() {
   try {
@@ -116,10 +117,8 @@ export async function GET() {
         percent: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0,
       })),
     });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch analytics" },
-      { status: 500 }
-    );
+  } catch (error) {
+    logApiError("student/analytics", error);
+    return apiErrorResponse("Failed to fetch analytics");
   }
 }

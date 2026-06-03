@@ -150,6 +150,7 @@ export const achievements: Achievement[] = [
     description: "Изучите 5 разделов теории",
     icon: "📖",
     condition: (ctx) => (ctx.theorySectionsRead ?? 0) >= 5,
+    progressFn: (ctx) => Math.min((ctx.theorySectionsRead ?? 0) / 5, 1),
   },
   {
     id: "self_corrector",

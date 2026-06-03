@@ -191,7 +191,7 @@ export async function GET(req: Request) {
         });
       }
     } catch {
-      // Skip invalid JSON
+      logger.warn("Invalid testCases JSON in enhanced analytics");
     }
   });
 
