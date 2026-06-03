@@ -276,19 +276,17 @@ export function _resetStreakSaveLock(): void {
  * Uses a lock to prevent race conditions from rapid concurrent submissions.
  */
 export async function saveStreak(): Promise<StreakData> {
-  // If a save is already in progress, queue behind it
+  // If a save is already in progress, queue behind it and retry after
   if (streakSaveLock) {
     const existingLock = streakSaveLock;
-    return existingLock.then(async (prevResult) => {
-      // After the in-flight save finishes, run a new save to incorporate
-      // any changes the caller expected (e.g. streak increment).
-      // Reset lock so this call becomes the new canonical save.
-      streakSaveLock = null;
-      return saveStreak();
+    return new Promise<StreakData>((resolve) => {
+      existingLock.then(() => {
+        resolve(saveStreak());
+      });
     });
   }
 
-  const promise = (async () => {
+  streakSaveLock = (async () => {
     try {
       const streak = loadStreak();
       const today = getTodayDate();
@@ -310,12 +308,15 @@ export async function saveStreak(): Promise<StreakData> {
     } catch {
       return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
     } finally {
+      // Clear the lock only after this save completes, so queued callers
+      // see a null lock and acquire it themselves in their retry.
+      // This must happen in finally (not after .then) to avoid the race
+      // where the lock is cleared before queued callers can acquire it.
       streakSaveLock = null;
     }
   })();
 
-  streakSaveLock = promise;
-  return promise;
+  return streakSaveLock;
 }
 
 /**

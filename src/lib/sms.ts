@@ -34,30 +34,40 @@ const OTP_MAX_AGE_MS = 15 * 60_000; // 15 minutes — OTP expiry
 const OTP_CLEANUP_INTERVAL_MS = 5 * 60_000; // 5 minutes between cleanups
 
 // Periodic cleanup of stale entries to prevent unbounded growth
-let cleanupTimer: ReturnType<typeof setInterval> | null = null;
-
 function startOtpCleanup() {
-  if (cleanupTimer) return;
-  cleanupTimer = setInterval(() => {
+  if (typeof global === "undefined") return;
+
+  const timerSymbol = Symbol.for("sms-otp-cleanup-interval");
+  const globalThis_ = global as Record<symbol, unknown>;
+  const existing = globalThis_[timerSymbol] as ReturnType<typeof setInterval> | undefined;
+  if (existing) clearInterval(existing);
+
+  globalThis_[timerSymbol] = setInterval(() => {
     const now = Date.now();
     for (const [phone, ts] of otpSendLog.entries()) {
       if (now - ts > OTP_MAX_AGE_MS) {
         otpSendLog.delete(phone);
       }
     }
-    if (otpSendLog.size === 0 && cleanupTimer) {
-      clearInterval(cleanupTimer);
-      cleanupTimer = null;
+    if (otpSendLog.size === 0) {
+      clearInterval(globalThis_[timerSymbol] as ReturnType<typeof setInterval>);
+      delete globalThis_[timerSymbol];
     }
   }, OTP_CLEANUP_INTERVAL_MS);
-  cleanupTimer.unref?.(); // Don't prevent Node.js from exiting
+
+  (globalThis_[timerSymbol] as ReturnType<typeof setInterval>).unref?.();
 }
 
 function _purgeOtpSendLog() {
   otpSendLog.clear();
-  if (cleanupTimer) {
-    clearInterval(cleanupTimer);
-    cleanupTimer = null;
+  if (typeof global !== "undefined") {
+    const timerSymbol = Symbol.for("sms-otp-cleanup-interval");
+    const globalThis_ = global as Record<symbol, unknown>;
+    const existing = globalThis_[timerSymbol] as ReturnType<typeof setInterval> | undefined;
+    if (existing) {
+      clearInterval(existing);
+      delete globalThis_[timerSymbol];
+    }
   }
 }
 

@@ -16,15 +16,10 @@ const DEFAULT_TTL = {
 };
 
 function hashParams(params: Record<string, unknown>): string {
-  const sorted = Object.keys(params)
+  return Object.keys(params)
     .sort()
     .map((k) => `${k}=${String(params[k] ?? "")}`)
     .join("&");
-  let h = 0;
-  for (let i = 0; i < sorted.length; i++) {
-    h = (Math.imul(31, h) + sorted.charCodeAt(i)) | 0;
-  }
-  return h.toString(36);
 }
 
 export function makeCacheKey(route: string, params: Record<string, unknown> = {}): string {
