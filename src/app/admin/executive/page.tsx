@@ -47,10 +47,12 @@ export default function ExecutivePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/executive")
+    const controller = new AbortController();
+    fetch("/api/admin/executive", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
       .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;

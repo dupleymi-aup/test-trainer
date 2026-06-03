@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { logger } from "@/lib/logger";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -96,36 +96,53 @@ export default function AdminDeadlinesPage() {
     },
   });
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const fetchDeadlines = useCallback(() => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     const params = new URLSearchParams();
     if (showPast) params.set("showPast", "true");
 
-    fetch(`/api/admin/deadlines?${params}`)
+    fetch(`/api/admin/deadlines?${params}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setDeadlines(d.deadlines || []); setLoading(false); })
       .catch((_error) => {
+        if (_error instanceof DOMException && _error.name === "AbortError") return;
         toast.error("Не удалось загрузить дедлайны");
         setLoading(false);
       });
   }, [showPast]);
 
   const fetchGroups = useCallback(() => {
-    fetch("/api/admin/groups")
+    const controller = new AbortController();
+
+    fetch("/api/admin/groups", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => setGroups(d.groups || []))
-      .catch(() => {
-        // Non-critical: groups filter is optional, but log for debugging
+      .catch((err) => {
+        if ((err as DOMException)?.name === "AbortError") return;
         logger.warn("Failed to fetch groups — group filter will be unavailable");
       });
+    return controller;
   }, []);
 
-  useEffect(() => { fetchDeadlines(); fetchGroups(); }, [showPast, fetchDeadlines, fetchGroups]);
+  useEffect(() => {
+    fetchDeadlines();
+    const groupsController = fetchGroups();
+    return () => {
+      abortRef.current?.abort();
+      groupsController?.abort();
+    };
+  }, [showPast, fetchDeadlines, fetchGroups]);
 
   const handleSubmit = async (data: DeadlineForm) => {
     setIsSubmitting(true);

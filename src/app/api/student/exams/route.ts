@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
@@ -58,6 +59,9 @@ export async function POST(req: Request) {
   try {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
 
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });

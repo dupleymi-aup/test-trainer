@@ -112,7 +112,8 @@ export function useTrainerState() {
 
   // Fetch available tasks on mount (group-based permissions)
   useEffect(() => {
-    fetch("/api/tasks/available")
+    const controller = new AbortController();
+    fetch("/api/tasks/available", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -123,8 +124,10 @@ export function useTrainerState() {
         }
       })
       .catch((err) => {
+        if ((err as DOMException)?.name === "AbortError") return;
         logger.warn("Failed to fetch available tasks", { error: err instanceof Error ? err.message : String(err) });
       });
+    return () => controller.abort();
   }, []);
 
   // Undo/Redo

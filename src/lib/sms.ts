@@ -117,22 +117,29 @@ async function sendViaSMSRU({ phone, message }: SendSMSOptions): Promise<SMSProv
     if (!apiKey) throw new Error("SMSRU_API_KEY not set");
 
     // Send API key in POST body instead of URL query string to avoid logging exposure
-    const response = await fetch("https://sms.ru/sms/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        api_id: apiKey,
-        to: phone,
-        msg: message,
-        json: "1",
-      }),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try {
+      const response = await fetch("https://sms.ru/sms/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          api_id: apiKey,
+          to: phone,
+          msg: message,
+          json: "1",
+        }),
+        signal: controller.signal,
+      });
 
-    const data = await response.json();
-    if (data.status === "ok") {
-      return { success: true, messageId: data.sms?.[0]?.sms_id };
+      const data = await response.json();
+      if (data.status === "ok") {
+        return { success: true, messageId: data.sms?.[0]?.sms_id };
+      }
+      return { success: false, error: data.status_description || "SMS.ru error" };
+    } finally {
+      clearTimeout(timeout);
     }
-    return { success: false, error: data.status_description || "SMS.ru error" };
   } catch (error) {
     return {
       success: false,

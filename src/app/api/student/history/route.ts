@@ -58,8 +58,12 @@ export async function GET(req: Request) {
     const taskMap = new Map<string, typeof attempts>();
     for (const attempt of attempts) {
       const key = String(attempt.taskId);
-      if (!taskMap.has(key)) taskMap.set(key, []);
-      taskMap.get(key)!.push(attempt);
+      const entry = taskMap.get(key);
+      if (entry) {
+        entry.push(attempt);
+      } else {
+        taskMap.set(key, [attempt]);
+      }
     }
 
     const taskHistory = Array.from(taskMap.entries()).map(([taskId, taskAttempts]) => {

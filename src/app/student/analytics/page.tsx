@@ -91,10 +91,12 @@ export default function StudentAnalyticsPage() {
       return;
     }
     if (status === "authenticated") {
-      fetch("/api/student/analytics")
+      const controller = new AbortController();
+      fetch("/api/student/analytics", { signal: controller.signal })
         .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((d) => { setData(d); setLoading(false); })
         .catch(() => setLoading(false));
+      return () => controller.abort();
     }
   }, [status, session, router]);
 

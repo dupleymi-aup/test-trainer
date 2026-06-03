@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,6 +138,8 @@ export default function AdminUsersPage() {
   const [sortBy, setSortBy] = useState<string>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const handleSort = (field: string) => {
     if (sortBy === field) {
       setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -162,6 +164,10 @@ export default function AdminUsersPage() {
 
   const fetchUsers = useCallback(
     (overridePage?: number) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (roleFilter !== "ALL") params.set("role", roleFilter);
@@ -171,7 +177,7 @@ export default function AdminUsersPage() {
       params.set("sortBy", sortBy);
       params.set("sortDir", sortDir);
 
-      fetch(`/api/admin/users?${params}`)
+      fetch(`/api/admin/users?${params}`, { signal: controller.signal })
         .then(async (r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
@@ -182,7 +188,8 @@ export default function AdminUsersPage() {
           setTotal(data.pagination.total);
           setLoading(false);
         })
-        .catch(() => {
+        .catch((err) => {
+          if ((err as DOMException)?.name === "AbortError") return;
           toast.error("Не удалось загрузить список пользователей");
           setLoading(false);
         });
@@ -196,7 +203,10 @@ export default function AdminUsersPage() {
     const timer = setTimeout(() => {
       fetchUsers();
     }, 400);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      abortRef.current?.abort();
+    };
   }, [search, roleFilter, page, showDeleted, sortBy, sortDir, fetchUsers]);
 
   const handleToggleActive = async (id: string, currentlyActive: boolean) => {

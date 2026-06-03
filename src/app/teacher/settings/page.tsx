@@ -16,10 +16,12 @@ export default function TeacherSettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    apiFetch("/api/auth/profile")
+    const controller = new AbortController();
+    apiFetch("/api/auth/profile", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then((d) => { setProfile({ name: d.name || "", email: d.email || "", phone: d.phone || "", university: d.university || "", bio: d.bio || "" }); setLoading(false); })
       .catch(() => setLoading(false));
+    return () => controller.abort();
   }, []);
 
   const handleSave = async () => {

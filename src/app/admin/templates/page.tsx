@@ -24,10 +24,12 @@ export default function AdminTemplatesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/teacher/templates")
+    const controller = new AbortController();
+    fetch("/api/teacher/templates", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then((d) => { setTemplates(d.templates || []); setLoading(false); })
       .catch(() => setLoading(false));
+    return () => controller.abort();
   }, []);
 
   const handleDelete = async (id: string) => {

@@ -28,6 +28,7 @@ import { evaluateTestCases } from "@/lib/evaluator";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { toast } from "sonner";
 import { saveAttempt } from "@/lib/storage";
+import { apiFetch } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
 import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
@@ -147,7 +148,7 @@ export function ExamMode() {
     if (results.length === 0) return;
     const avg = Math.round(results.reduce((s, r) => s + r.overallScore, 0) / results.length);
     const sorted = [...results].sort((a, b) => a.overallScore - b.overallScore);
-    fetch("/api/student/exams", {
+    apiFetch("/api/student/exams", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
