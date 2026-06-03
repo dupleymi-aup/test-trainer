@@ -117,7 +117,7 @@ export default function CompletionFunnelPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Всего студентов</span></div>
+              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Всего студентов</span></div>
               <p className="text-2xl font-bold">{data.totalStudents}</p>
             </CardContent>
           </Card>
@@ -200,7 +200,7 @@ export default function CompletionFunnelPage() {
           <Card className="border-amber-200">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 Критические bottleneck-задания
               </CardTitle>
               <CardDescription>Задания с наибольшим оттоком студентов</CardDescription>
@@ -295,7 +295,7 @@ export default function CompletionFunnelPage() {
                         <Badge variant={step.avgScore >= 75 ? "default" : step.avgScore >= 50 ? "secondary" : "destructive"}>{step.avgScore}%</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className={step.passRate >= 70 ? "text-emerald-600 font-bold" : step.passRate >= 50 ? "text-amber-600" : "text-rose-600"}>
+                        <span className={step.passRate >= 70 ? "text-emerald-600 font-bold" : step.passRate >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600"}>
                           {step.passRate}%
                         </span>
                       </TableCell>

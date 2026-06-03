@@ -40,8 +40,8 @@ interface AlertsData {
 
 const severityConfig = {
   critical: { icon: <AlertTriangle className="h-4 w-4" />, label: "Критический", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-950/50 border-rose-200" },
-  warning: { icon: <AlertCircle className="h-4 w-4" />, label: "Предупреждение", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-950/50 border-amber-200" },
-  info: { icon: <Info className="h-4 w-4" />, label: "Информация", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-950/50 border-blue-200" },
+  warning: { icon: <AlertCircle className="h-4 w-4" />, label: "Предупреждение", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/50 border-amber-200" },
+  info: { icon: <Info className="h-4 w-4" />, label: "Информация", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/50 border-blue-200" },
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -124,17 +124,17 @@ export default function AdminAlertsPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <AlertCircle className="h-3 w-3 text-amber-600" /> Предупреждения
+                <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Предупреждения
               </div>
-              <div className="text-2xl font-bold text-amber-600">{data.summary.warning}</div>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{data.summary.warning}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Info className="h-3 w-3 text-blue-600" /> Информационные
+                <Info className="h-3 w-3 text-blue-600 dark:text-blue-400" /> Информационные
               </div>
-              <div className="text-2xl font-bold text-blue-600">{data.summary.info}</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{data.summary.info}</div>
             </CardContent>
           </Card>
           <Card>

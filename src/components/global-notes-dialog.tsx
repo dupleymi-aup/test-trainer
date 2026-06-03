@@ -51,7 +51,7 @@ export function GlobalNotesDialog() {
       <DialogContent className="max-w-2xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <StickyNote className="h-4 w-4 text-amber-600" />
+            <StickyNote className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             Глобальные заметки
             {note.length > 0 && (
               <Badge variant="secondary" className="text-[10px]">{note.length}</Badge>
@@ -125,7 +125,7 @@ export function GlobalNotesDialog() {
                 {saved ? (
                   <span className="text-emerald-600">Сохранено</span>
                 ) : (
-                  <span className="text-amber-600">Не сохранено</span>
+                  <span className="text-amber-600 dark:text-amber-400">Не сохранено</span>
                 )}
               </div>
             </>

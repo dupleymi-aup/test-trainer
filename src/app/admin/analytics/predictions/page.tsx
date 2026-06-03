@@ -45,9 +45,9 @@ const riskFactorConfig: Record<string, { label: string; color: string; icon: Rea
 };
 
 const dropoutRiskConfig: Record<string, { label: string; color: string }> = {
-  high: { label: "Высокий", color: "bg-rose-600 text-white" },
-  medium: { label: "Средний", color: "bg-amber-500 text-white" },
-  low: { label: "Низкий", color: "bg-green-500 text-white" },
+  high: { label: "Высокий", color: "bg-rose-600 text-white dark:bg-rose-700" },
+  medium: { label: "Средний", color: "bg-amber-500 text-white dark:bg-amber-600" },
+  low: { label: "Низкий", color: "bg-green-500 text-white dark:bg-green-600" },
 };
 
 interface PredictionsData {
@@ -134,8 +134,8 @@ export default function PredictionsPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><AlertTriangle className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Средний риск</span></div>
-              <p className="text-2xl font-bold text-amber-600">{mediumRisk}</p>
+              <div className="flex items-center gap-2 mb-2"><AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Средний риск</span></div>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{mediumRisk}</p>
             </CardContent>
           </Card>
           <Card>

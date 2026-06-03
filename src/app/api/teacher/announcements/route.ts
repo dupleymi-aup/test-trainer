@@ -154,3 +154,68 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Failed to delete announcement" }, { status: 500 });
   }
 }
+
+const updateAnnouncementSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().min(1).max(5000).optional(),
+  expiresAt: z.string().nullable().optional(),
+});
+
+export async function PATCH(req: Request) {
+  try {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
+    const { session } = guard;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
+
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
+    const parsed = updateAnnouncementSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.issues }, { status: 400 });
+    }
+
+    const { id, title, content, expiresAt } = parsed.data;
+
+    const announcement = await db.announcement.findUnique({
+      where: { id },
+      select: { createdById: true, groupId: true },
+    });
+
+    if (!announcement) return NextResponse.json({ error: "Announcement not found" }, { status: 404 });
+
+    if (announcement.createdById !== session.userId && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const updated = await db.announcement.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(expiresAt !== undefined && { expiresAt: expiresAt ? new Date(expiresAt) : null }),
+      },
+      include: {
+        group: { select: { id: true, name: true } },
+      },
+    });
+
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "ANNOUNCEMENT_UPDATE",
+        entity: "Announcement",
+        entityId: id,
+      },
+    });
+
+    return NextResponse.json({ announcement: updated });
+  } catch (error) {
+    logger.error("Failed to update announcement", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to update announcement" }, { status: 500 });
+  }
+}

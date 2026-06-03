@@ -1,0 +1,68 @@
+import { NextResponse } from "next/server";
+import { requireStudent } from "@/lib/admin-guard";
+import { requireCSRF } from "@/lib/csrf-middleware";
+import { db } from "@/lib/db";
+import { z } from "zod";
+import { logger } from "@/lib/logger";
+
+export async function GET(req: Request) {
+  try {
+    const auth = await requireStudent();
+    if ("response" in auth) return auth.response;
+
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(parseInt(searchParams.get("limit") || "30"), 50);
+
+    const [messages, total, unreadCount] = await Promise.all([
+      db.message.findMany({
+        where: { toUserId: auth.session.userId },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          fromUser: { select: { id: true, name: true, role: true } },
+        },
+      }),
+      db.message.count({ where: { toUserId: auth.session.userId } }),
+      db.message.count({ where: { toUserId: auth.session.userId, read: false } }),
+    ]);
+
+    return NextResponse.json({ messages, total, page, limit, unreadCount });
+  } catch (error) {
+    logger.error("Failed to fetch student messages", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
+  }
+}
+
+const markReadSchema = z.object({
+  messageIds: z.array(z.string()).min(1),
+});
+
+export async function PATCH(req: Request) {
+  try {
+    const auth = await requireStudent();
+    if ("response" in auth) return auth.response;
+
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
+
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
+    const parsed = markReadSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data", details: parsed.error.issues }, { status: 400 });
+    }
+
+    await db.message.updateMany({
+      where: { id: { in: parsed.data.messageIds }, toUserId: auth.session.userId },
+      data: { read: true, readAt: new Date() },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error("Failed to mark messages read", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to mark messages read" }, { status: 500 });
+  }
+}

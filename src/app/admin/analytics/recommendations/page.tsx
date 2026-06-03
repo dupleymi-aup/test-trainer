@@ -68,7 +68,7 @@ const priorityLabels: Record<string, string> = {
 
 const riskColors: Record<string, string> = {
   high: "text-rose-600",
-  medium: "text-amber-600",
+  medium: "text-amber-600 dark:text-amber-400",
   low: "text-green-600",
 };
 
@@ -145,7 +145,7 @@ export default function RecommendationsPage() {
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <Lightbulb className="h-3 w-3 text-amber-500" /> С рекомендациями
               </div>
-              <div className="text-2xl font-bold text-amber-600">{summary.withRecommendations}</div>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{summary.withRecommendations}</div>
             </CardContent>
           </Card>
           <Card>
@@ -159,7 +159,7 @@ export default function RecommendationsPage() {
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <Target className="h-3 w-3 text-blue-500" /> Всего пробелов
               </div>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {data.students.reduce((s, r) => s + r.totalGaps, 0)}
               </div>
             </CardContent>

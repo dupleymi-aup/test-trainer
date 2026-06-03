@@ -92,7 +92,7 @@ export function AppHeader({ streak, onShowShortcuts, onReplayOnboarding, onMarat
   const t = useTranslations("header");
 
   return (
-    <header role="banner" className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
+    <header role="banner" className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">

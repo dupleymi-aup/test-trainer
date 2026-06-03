@@ -9,22 +9,22 @@ const trendConfig = {
   improving: {
     icon: ArrowUpRight,
     label: "Растёт",
-    className: "text-green-600",
+    className: "text-green-600 dark:text-green-400",
   },
   stable: {
     icon: Minus,
     label: "Стабильно",
-    className: "text-yellow-600",
+    className: "text-yellow-600 dark:text-yellow-400",
   },
   declining: {
     icon: ArrowDownRight,
     label: "Снижается",
-    className: "text-red-600",
+    className: "text-red-600 dark:text-red-400",
   },
   none: {
     icon: HelpCircle,
     label: "Нет данных",
-    className: "text-gray-400",
+    className: "text-gray-400 dark:text-gray-500",
   },
 };
 

@@ -25,23 +25,23 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
   }
 
   if (passedCount <= 1) {
-    return { score: 1, label: "Слабый", color: "text-red-500", checks };
+    return { score: 1, label: "Слабый", color: "text-red-500 dark:text-red-400", checks };
   }
   if (passedCount === 2) {
-    return { score: 2, label: "Средний", color: "text-orange-500", checks };
+    return { score: 2, label: "Средний", color: "text-orange-500 dark:text-orange-400", checks };
   }
   if (passedCount === 3 || passedCount === 4) {
-    return { score: 3, label: "Хороший", color: "text-yellow-500", checks };
+    return { score: 3, label: "Хороший", color: "text-yellow-500 dark:text-yellow-400", checks };
   }
-  return { score: 4, label: "Надёжный", color: "text-emerald-500", checks };
+  return { score: 4, label: "Надёжный", color: "text-emerald-500 dark:text-emerald-400", checks };
 }
 
 const barColorMap: Record<number, string> = {
   0: "bg-transparent",
-  1: "bg-red-500",
-  2: "bg-orange-500",
-  3: "bg-yellow-500",
-  4: "bg-emerald-500",
+  1: "bg-red-500 dark:bg-red-400",
+  2: "bg-orange-500 dark:bg-orange-400",
+  3: "bg-yellow-500 dark:bg-yellow-400",
+  4: "bg-emerald-500 dark:bg-emerald-400",
 };
 
 interface PasswordStrengthIndicatorProps {
@@ -75,11 +75,11 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
         {checks.map((check) => (
           <li key={check.label} className="flex items-center gap-2 text-xs">
             {check.passed ? (
-              <Check className="h-3 w-3 text-emerald-500" />
+              <Check className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
             ) : (
               <X className="h-3 w-3 text-muted-foreground" />
             )}
-            <span className={check.passed ? "text-emerald-600" : "text-muted-foreground"}>
+            <span className={check.passed ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}>
               {check.label}
             </span>
           </li>

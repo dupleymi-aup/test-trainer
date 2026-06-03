@@ -109,7 +109,7 @@ export default function TimeTrendsPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><TrendingUp className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Рост (месяц)</span></div>
+              <div className="flex items-center gap-2 mb-2"><TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Рост (месяц)</span></div>
               <p className={`text-2xl font-bold ${data.growthRates.monthOverMonth >= 0 ? "text-green-600" : "text-rose-600"}`}>
                 {data.growthRates.monthOverMonth >= 0 ? "+" : ""}{data.growthRates.monthOverMonth}%
               </p>
@@ -117,7 +117,7 @@ export default function TimeTrendsPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><Clock className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Пик активности</span></div>
+              <div className="flex items-center gap-2 mb-2"><Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Пик активности</span></div>
               <p className="text-lg font-bold">{data.seasonalInsights.peakHours.map((h) => `${h}:00`).join(", ")}</p>
             </CardContent>
           </Card>

@@ -75,9 +75,9 @@ interface CorrelationData {
 
 const segmentConfig: Record<string, { label: string; color: string; icon: typeof Clock; description: string }> = {
   rushers: { label: "Торопыги", color: "text-rose-600", icon: Zap, description: "Быстро и плохо" },
-  perfectionists: { label: "Перфекционисты", color: "text-blue-600", icon: Target, description: "Медленно и качественно" },
+  perfectionists: { label: "Перфекционисты", color: "text-blue-600 dark:text-blue-400", icon: Target, description: "Медленно и качественно" },
   efficient: { label: "Эффективные", color: "text-emerald-600", icon: Brain, description: "Быстро и качественно" },
-  struggling: { label: "Испытывающие трудности", color: "text-amber-600", icon: AlertTriangle, description: "Медленно и плохо" },
+  struggling: { label: "Испытывающие трудности", color: "text-amber-600 dark:text-amber-400", icon: AlertTriangle, description: "Медленно и плохо" },
 };
 
 export default function TimeScoreCorrelationPage() {
@@ -122,7 +122,7 @@ export default function TimeScoreCorrelationPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Корреляция (r)</span></div>
+              <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Корреляция (r)</span></div>
               <p className={`text-2xl font-bold ${globalCorrelation > 0 ? "text-emerald-600" : "text-rose-600"}`}>
                 {globalCorrelation.toFixed(2)}
               </p>

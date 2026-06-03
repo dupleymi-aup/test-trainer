@@ -58,14 +58,14 @@ const reportTypes = [
     title: "Комплексная аналитика",
     description: "Сводка платформы, все студенты с метриками, KPI",
     icon: Target,
-    color: "text-blue-600",
+    color: "text-blue-600 dark:text-blue-400",
   },
   {
     id: "teacher-performance",
     title: "Преподаватели",
     description: "Эффективность преподавателей, группы, активность студентов",
     icon: GraduationCap,
-    color: "text-amber-600",
+    color: "text-amber-600 dark:text-amber-400",
   },
   {
     id: "task-insights",
@@ -150,7 +150,7 @@ const reportTypes = [
     title: "Эффективность преподавателей",
     description: "Композитный score, рейтинг, влияние на прогресс студентов",
     icon: GraduationCap,
-    color: "text-amber-600",
+    color: "text-amber-600 dark:text-amber-400",
   },
   {
     id: "cohort-analysis",

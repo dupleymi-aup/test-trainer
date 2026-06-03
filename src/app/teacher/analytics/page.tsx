@@ -42,7 +42,7 @@ export default function TeacherAnalyticsPage() {
                   <div key={range} className="flex-1 flex flex-col items-center gap-1">
                     <span className="text-xs font-bold">{count}</span>
                     <div className="w-full bg-muted rounded-t" style={{ height: `${height}%`, minHeight: "4px" }}>
-                      <div className="w-full h-full bg-emerald-500 rounded-t" style={{ height: "100%" }} />
+                      <div className="w-full h-full bg-emerald-500 dark:bg-emerald-400 rounded-t" style={{ height: "100%" }} />
                     </div>
                     <span className="text-[10px] text-muted-foreground">{range}</span>
                   </div>
@@ -63,7 +63,7 @@ export default function TeacherAnalyticsPage() {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${t.avgScore >= 75 ? "bg-emerald-500" : t.avgScore >= 50 ? "bg-amber-500" : "bg-rose-500"}`}
+                          className={`h-full rounded-full ${t.avgScore >= 75 ? "bg-emerald-500 dark:bg-emerald-400" : t.avgScore >= 50 ? "bg-amber-500 dark:bg-amber-400" : "bg-rose-500 dark:bg-rose-400"}`}
                           style={{ width: `${t.avgScore}%` }}
                         />
                       </div>

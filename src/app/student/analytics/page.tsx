@@ -199,9 +199,9 @@ export default function StudentAnalyticsPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <BarChart3 className="h-3 w-3 text-blue-600" /> Среднее ЭК
+                <BarChart3 className="h-3 w-3 text-blue-600 dark:text-blue-400" /> Среднее ЭК
               </div>
-              <div className="text-2xl font-bold text-blue-600">{avgEc}%</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{avgEc}%</div>
             </CardContent>
           </Card>
           <Card>
@@ -312,7 +312,7 @@ export default function StudentAnalyticsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 Зоны роста
               </CardTitle>
               <CardDescription>Темы, которым стоит уделить больше внимания</CardDescription>

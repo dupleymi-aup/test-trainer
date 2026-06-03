@@ -144,7 +144,7 @@ export default function ItemDifficultyPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><FileText className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Всего заданий</span></div>
+              <div className="flex items-center gap-2 mb-1"><FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Всего заданий</span></div>
               <p className="text-2xl font-bold">{summary.totalTasks}</p>
             </CardContent>
           </Card>
@@ -202,7 +202,7 @@ export default function ItemDifficultyPage() {
                         <p>p-value: {d.difficulty.toFixed(2)}</p>
                         <p>Дискриминация: {d.discrimination.toFixed(2)}</p>
                         <p>Попыток: {d.attempts}</p>
-                        <p className={d.quality === "good" ? "text-emerald-600" : d.quality === "poor" ? "text-rose-600" : "text-amber-600"}>
+                        <p className={d.quality === "good" ? "text-emerald-600" : d.quality === "poor" ? "text-rose-600" : "text-amber-600 dark:text-amber-400"}>
                           Качество: {qc.label}
                         </p>
                       </div>
@@ -271,12 +271,12 @@ export default function ItemDifficultyPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={t.discrimination > 0.3 ? "text-emerald-600 font-bold" : t.discrimination > 0.2 ? "text-amber-600" : "text-rose-600"}>
+                          <span className={t.discrimination > 0.3 ? "text-emerald-600 font-bold" : t.discrimination > 0.2 ? "text-amber-600 dark:text-amber-400" : "text-rose-600"}>
                             {t.discrimination.toFixed(2)}
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className={t.guessability < 20 ? "text-emerald-600" : t.guessability < 40 ? "text-amber-600" : "text-rose-600"}>
+                          <span className={t.guessability < 20 ? "text-emerald-600" : t.guessability < 40 ? "text-amber-600 dark:text-amber-400" : "text-rose-600"}>
                             {t.guessability}%
                           </span>
                         </TableCell>

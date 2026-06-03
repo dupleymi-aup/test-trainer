@@ -654,10 +654,10 @@ export function TheoryPanel({ task }: { task?: Task }) {
           <div className="bg-muted/50 rounded-lg p-3">
             <p className="font-medium text-foreground text-xs uppercase tracking-wider mb-2">Градации оценок</p>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span><span><strong>90-100%</strong> — Отлично</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500"></span><span><strong>75-89%</strong> — Хорошо</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500"></span><span><strong>50-74%</strong> — Удовл.</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500"></span><span><strong>0-49%</strong> — Неудовл.</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span><span><strong>90-100%</strong> — Отлично</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400"></span><span><strong>75-89%</strong> — Хорошо</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400"></span><span><strong>50-74%</strong> — Удовл.</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500 dark:bg-rose-400"></span><span><strong>0-49%</strong> — Неудовл.</span></div>
             </div>
           </div>
         </div>
@@ -1011,7 +1011,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "white-box",
       icon: <Code className="h-4 w-4" />,
-      iconBg: "bg-purple-100 dark:bg-purple-900",
+      iconBg: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400",
       title: "White-box тестирование",
       subtitle: "Покрытие кода: statement, branch, path",
       openBorder: "border-l-purple-500",
@@ -1040,7 +1040,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "mutation-testing",
       icon: <TestTube className="h-4 w-4" />,
-      iconBg: "bg-orange-100 dark:bg-orange-900",
+      iconBg: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400",
       title: "Мутационное тестирование",
       subtitle: "Проверка качества тестов через намеренные ошибки",
       openBorder: "border-l-orange-500",
@@ -1067,7 +1067,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "testing-pyramid",
       icon: <Layers className="h-4 w-4" />,
-      iconBg: "bg-teal-100 dark:bg-teal-900",
+      iconBg: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400",
       title: "Пирамида тестирования",
       subtitle: "Unit → Integration → E2E: баланс уровней тестирования",
       openBorder: "border-l-teal-500",
@@ -1089,7 +1089,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "regression-smoke",
       icon: <ShieldCheck className="h-4 w-4" />,
-      iconBg: "bg-indigo-100 dark:bg-indigo-900",
+      iconBg: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400",
       title: "Регрессионное и smoke-тестирование",
       subtitle: "Что проверять после изменений и при релизе",
       openBorder: "border-l-indigo-500",
@@ -1113,7 +1113,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "risk-based-testing",
       icon: <AlertTriangle className="h-4 w-4" />,
-      iconBg: "bg-amber-100 dark:bg-amber-900",
+      iconBg: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400",
       title: "Риск-ориентированное тестирование",
       subtitle: "Приоритезация: что тестировать в первую очередь",
       openBorder: "border-l-amber-500",
@@ -1141,7 +1141,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "positive-negative-testing",
       icon: <ArrowLeftRight className="h-4 w-4" />,
-      iconBg: "bg-pink-100 dark:bg-pink-900",
+      iconBg: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-400",
       title: "Позитивное и негативное тестирование",
       subtitle: "Happy path vs edge cases — оба нужны",
       openBorder: "border-l-pink-500",
@@ -1165,7 +1165,7 @@ export function TheoryPanel({ task }: { task?: Task }) {
     {
       id: "bug-patterns",
       icon: <Bug className="h-4 w-4" />,
-      iconBg: "bg-red-100 dark:bg-red-900",
+      iconBg: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400",
       title: "Типичные паттерны багов",
       subtitle: "Off-by-one, type coercion, floating point и другие",
       openBorder: "border-l-red-500",

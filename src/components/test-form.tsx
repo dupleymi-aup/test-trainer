@@ -202,12 +202,12 @@ export function TestForm({ task, onAdd }: TestFormProps) {
                   const info = descriptions[cat];
                   const dotColor =
                     cat === "Нормальное значение"
-                      ? "bg-emerald-500"
+                      ? "bg-emerald-500 dark:bg-emerald-400"
                       : cat === "Граничное значение"
-                        ? "bg-amber-500"
+                        ? "bg-amber-500 dark:bg-amber-400"
                         : cat === "Исключение"
-                          ? "bg-rose-500"
-                          : "bg-purple-500";
+                          ? "bg-rose-500 dark:bg-rose-400"
+                          : "bg-purple-500 dark:bg-purple-400";
 
                   return (
                     <SelectItem key={cat} value={cat}>

@@ -128,7 +128,7 @@ export default function StudentReturnPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><RotateCcw className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Вернулись</span></div>
+              <div className="flex items-center gap-2 mb-1"><RotateCcw className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Вернулись</span></div>
               <p className="text-2xl font-bold">{data.summary.totalReturned}</p>
             </CardContent>
           </Card>
@@ -140,7 +140,7 @@ export default function StudentReturnPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Clock className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Ср. перерыв</span></div>
+              <div className="flex items-center gap-2 mb-1"><Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Ср. перерыв</span></div>
               <p className="text-2xl font-bold">{data.summary.avgGapDays} дн.</p>
             </CardContent>
           </Card>

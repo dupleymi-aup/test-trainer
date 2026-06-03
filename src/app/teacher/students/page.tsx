@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface Student {
@@ -20,21 +21,39 @@ interface Student {
   lastAttempt: string | null;
 }
 
+interface Group {
+  id: string;
+  name: string;
+}
+
 export default function TeacherStudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/teacher/students", { signal: controller.signal })
+    fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data) => { if (!controller.signal.aborted) { setStudents(data.students); setLoading(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-students] Failed to load students:", err); setLoading(false); } });
+      .then((data) => { if (!controller.signal.aborted) { setGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
+      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-students] Failed to load groups:", err); });
     return () => controller.abort();
   }, []);
 
-  if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  useEffect(() => {
+    if (!selectedGroupId) { setLoading(false); return; }
+    setLoading(true);
+    const controller = new AbortController();
+    fetch(`/api/teacher/students?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal })
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((data) => { if (!controller.signal.aborted) { setStudents(data.students || []); setLoading(false); } })
+      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-students] Failed to load students:", err); setLoading(false); } });
+    return () => controller.abort();
+  }, [selectedGroupId]);
+
+  if (loading) return <TeacherLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div></TeacherLayout>;
 
   const filtered = search
     ? students.filter((s) => (s.name?.toLowerCase().includes(search.toLowerCase()) || s.email?.toLowerCase().includes(search.toLowerCase())))
@@ -44,8 +63,20 @@ export default function TeacherStudentsPage() {
     <TeacherLayout>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">Студенты</CardTitle>
-          <div className="relative max-w-xs">
+          <div className="flex items-center gap-4">
+            <CardTitle className="text-sm">Студенты</CardTitle>
+            <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Выберите группу" />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="relative max-w-xs mt-3">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Поиск по имени или email..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>

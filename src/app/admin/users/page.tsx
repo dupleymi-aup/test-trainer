@@ -62,6 +62,7 @@ import {
   ArrowUp,
   ArrowDown,
   Upload,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -386,6 +387,17 @@ export default function AdminUsersPage() {
               <Button variant="outline" size="sm" onClick={() => { setShowImportModal(true); setImportResult(null); setCsvContent(""); }}>
                 <Upload className="mr-2 h-4 w-4" />
                 Импорт CSV
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/api/admin/users/export?format=csv" target="_blank" rel="noopener">
+                  <Download className="mr-2 h-4 w-4" />
+                  Экспорт CSV
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/api/admin/users/export?format=json" target="_blank" rel="noopener">
+                  Экспорт JSON
+                </a>
               </Button>
             </div>
           </div>
@@ -789,7 +801,7 @@ export default function AdminUsersPage() {
             </div>
             {newRole === "ADMIN" && roleChangeUser?.role !== "ADMIN" && (
               <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded">
-                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="text-sm">
                   <p className="font-medium text-amber-800 dark:text-amber-300">Внимание!</p>
                   <p className="text-amber-700 dark:text-amber-400">

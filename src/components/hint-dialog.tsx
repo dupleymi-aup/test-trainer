@@ -104,7 +104,7 @@ export function HintDialog({
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === step
-                  ? "w-6 bg-amber-500"
+                  ? "w-6 bg-amber-500 dark:bg-amber-400"
                   : i < step
                     ? "w-1.5 bg-amber-300 dark:bg-amber-700"
                     : "w-1.5 bg-muted"

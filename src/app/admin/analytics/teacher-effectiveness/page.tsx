@@ -117,7 +117,7 @@ export default function TeacherEffectivenessPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><GraduationCap className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Преподаватели</span></div>
+              <div className="flex items-center gap-2 mb-1"><GraduationCap className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Преподаватели</span></div>
               <p className="text-2xl font-bold">{data.summary.totalTeachers}</p>
             </CardContent>
           </Card>
@@ -129,7 +129,7 @@ export default function TeacherEffectivenessPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Ср. улучшение</span></div>
+              <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Ср. улучшение</span></div>
               <p className="text-2xl font-bold">{data.summary.avgImprovementRate}%</p>
             </CardContent>
           </Card>
@@ -219,7 +219,7 @@ export default function TeacherEffectivenessPage() {
                       <Badge variant={t.avgStudentScore >= 75 ? "default" : t.avgStudentScore >= 50 ? "secondary" : "destructive"}>{t.avgStudentScore}%</Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={t.improvementRate >= 40 ? "text-emerald-600 font-bold" : t.improvementRate >= 20 ? "text-amber-600" : "text-rose-600"}>
+                      <span className={t.improvementRate >= 40 ? "text-emerald-600 font-bold" : t.improvementRate >= 20 ? "text-amber-600 dark:text-amber-400" : "text-rose-600"}>
                         {t.improvementRate}%
                       </span>
                     </TableCell>
@@ -230,7 +230,7 @@ export default function TeacherEffectivenessPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={t.riskRate <= 20 ? "text-emerald-600" : t.riskRate <= 40 ? "text-amber-600" : "text-rose-600 font-bold"}>
+                      <span className={t.riskRate <= 20 ? "text-emerald-600" : t.riskRate <= 40 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 font-bold"}>
                         {t.riskRate}%
                       </span>
                     </TableCell>

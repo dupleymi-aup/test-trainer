@@ -228,8 +228,13 @@ export async function GET(req: Request) {
         : 0,
   };
 
-  // 7. Group Comparison
+  // 7. Group Comparison (only groups owned by the teacher, or all for admin)
+  const groupWhere = guard.session.role === "ADMIN"
+    ? {}
+    : { createdByUserId: guard.session.userId };
+
   const groups = await db.group.findMany({
+    where: groupWhere,
     select: {
       id: true,
       name: true,

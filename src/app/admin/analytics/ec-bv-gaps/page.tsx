@@ -71,7 +71,7 @@ export default function EcbvGapsPage() {
 
           {/* Worst BVs */}
           <Card>
-            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-amber-600" /> Наиболее пропускаемые BV</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" /> Наиболее пропускаемые BV</CardTitle></CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow><TableHead>Задача</TableHead><TableHead>Граничное значение</TableHead><TableHead className="text-right">Miss Rate</TableHead></TableRow></TableHeader>

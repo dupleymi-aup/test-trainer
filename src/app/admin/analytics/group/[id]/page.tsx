@@ -37,7 +37,7 @@ interface GroupData {
 function TrendIcon({ trend }: { trend: string }) {
   if (trend === "improving") return <TrendingUp className="h-3 w-3 text-emerald-600" />;
   if (trend === "declining") return <TrendingDown className="h-3 w-3 text-rose-600" />;
-  return <Minus className="h-3 w-3 text-gray-400" />;
+  return <Minus className="h-3 w-3 text-gray-400 dark:text-gray-500" />;
 }
 
 function difficultyBadge(difficulty: string) {
@@ -46,7 +46,7 @@ function difficultyBadge(difficulty: string) {
     "Средне": "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
     "Сложно": "bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300",
   };
-  return <Badge className={`${colors[difficulty] || "bg-gray-100 text-gray-800"} border-0`}>{difficulty}</Badge>;
+  return <Badge className={`${colors[difficulty] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"} border-0`}>{difficulty}</Badge>;
 }
 
 export default function AdminGroupAnalyticsPage() {

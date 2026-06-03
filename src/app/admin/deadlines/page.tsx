@@ -237,9 +237,9 @@ export default function AdminDeadlinesPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3 text-amber-600" /> Предстоящие
+                <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Предстоящие
               </div>
-              <div className="text-2xl font-bold text-amber-600">{upcoming.length}</div>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{upcoming.length}</div>
             </CardContent>
           </Card>
           <Card>

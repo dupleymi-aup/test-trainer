@@ -4,7 +4,8 @@ import { TeacherLayout } from "@/components/teacher/teacher-layout";
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, TrendingDown, Clock, UserX } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertTriangle, TrendingDown, Clock, UserX, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   Table,
@@ -31,6 +32,11 @@ interface AtRiskStudent {
     trend: number;
   };
   recommendation: string;
+}
+
+interface Group {
+  id: string;
+  name: string;
 }
 
 const riskFactorConfig: Record<
@@ -63,11 +69,24 @@ const riskFactorConfig: Record<
 
 export default function AtRiskStudentsPage() {
   const [students, setStudents] = useState<AtRiskStudent[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/teacher/reports/at-risk", { signal: controller.signal })
+    fetch("/api/teacher/groups", { signal: controller.signal })
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((data) => { if (!controller.signal.aborted) { setGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
+      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-at-risk] Failed to load groups:", err); });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedGroupId) { setLoading(false); return; }
+    setLoading(true);
+    const controller = new AbortController();
+    fetch(`/api/teacher/reports/at-risk?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
         if (!controller.signal.aborted) {
@@ -77,12 +96,12 @@ export default function AtRiskStudentsPage() {
       })
       .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-at-risk] Failed to load at-risk data:", err); setLoading(false); } });
     return () => controller.abort();
-  }, []);
+  }, [selectedGroupId]);
 
   if (loading)
     return (
       <TeacherLayout>
-        <div className="p-8 text-center">Загрузка...</div>
+        <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </TeacherLayout>
     );
 
@@ -90,7 +109,19 @@ export default function AtRiskStudentsPage() {
     <TeacherLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Студенты группы риска</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold">Студенты группы риска</h2>
+            <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="Выберите группу" />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Badge variant="destructive">{students.length} студентов</Badge>
         </div>
 

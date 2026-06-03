@@ -51,7 +51,7 @@ interface StudentData {
 function TrendIcon({ trend }: { trend: string }) {
   if (trend === "improving") return <TrendingUp className="h-4 w-4 text-emerald-600" />;
   if (trend === "declining") return <TrendingDown className="h-4 w-4 text-rose-600" />;
-  return <Minus className="h-4 w-4 text-gray-400" />;
+  return <Minus className="h-4 w-4 text-gray-400 dark:text-gray-500" />;
 }
 
 
@@ -261,7 +261,7 @@ export default function AdminStudentReportPage() {
             <ul className="space-y-2">
               {recommendations.map((rec, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                   <span>{rec}</span>
                 </li>
               ))}

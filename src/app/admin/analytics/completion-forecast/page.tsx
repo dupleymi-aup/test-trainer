@@ -71,7 +71,7 @@ interface ForecastData {
 const riskConfig: Record<string, { label: string; color: string; variant: "destructive" | "secondary" | "default" }> = {
   critical: { label: "Критический", color: "text-rose-600", variant: "destructive" },
   high: { label: "Высокий", color: "text-orange-600", variant: "destructive" },
-  medium: { label: "Средний", color: "text-amber-600", variant: "secondary" },
+  medium: { label: "Средний", color: "text-amber-600 dark:text-amber-400", variant: "secondary" },
   low: { label: "Низкий", color: "text-emerald-600", variant: "default" },
 };
 
@@ -135,7 +135,7 @@ export default function CompletionForecastPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Студенты</span></div>
+              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Студенты</span></div>
               <p className="text-2xl font-bold">{data.summary.totalStudents}</p>
             </CardContent>
           </Card>
@@ -159,7 +159,7 @@ export default function CompletionForecastPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Calendar className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Скорость (зад/нед)</span></div>
+              <div className="flex items-center gap-2 mb-1"><Calendar className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Скорость (зад/нед)</span></div>
               <p className="text-2xl font-bold">{data.summary.avgVelocity}</p>
             </CardContent>
           </Card>

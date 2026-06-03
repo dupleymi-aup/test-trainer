@@ -32,18 +32,23 @@ export function NotificationsBell() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    fetch("/api/admin/notifications?unreadOnly=true&limit=20")
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
-      })
-      .catch((err) => {
-        logger.warn("Failed to fetch admin notifications", { error: err instanceof Error ? err.message : String(err) });
-      });
+    const fetchNotifications = () => {
+      fetch("/api/admin/notifications?unreadOnly=true&limit=20")
+        .then(async (r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.json();
+        })
+        .then((data) => {
+          setNotifications(data.notifications || []);
+          setUnreadCount(data.unreadCount || 0);
+        })
+        .catch((err) => {
+          logger.warn("Failed to fetch admin notifications", { error: err instanceof Error ? err.message : String(err) });
+        });
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60_000);
+    return () => clearInterval(interval);
   }, []);
 
   const getNotificationIcon = (type: string) => {
@@ -51,9 +56,9 @@ export function NotificationsBell() {
       case "LOW_PERFORMER": case "RISK_THRESHOLD":
         return <AlertTriangle className="h-4 w-4 text-rose-600" />;
       case "DECLINING": case "SCORE_DROP":
-        return <TrendingDown className="h-4 w-4 text-amber-600" />;
+        return <TrendingDown className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
       case "INACTIVE": case "INACTIVE_GROUPS":
-        return <Clock className="h-4 w-4 text-blue-600" />;
+        return <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
       case "LOW_ENGAGEMENT":
         return <UserX className="h-4 w-4 text-purple-600" />;
       case "POOR_EC_COVERAGE": case "POOR_BV_COVERAGE":

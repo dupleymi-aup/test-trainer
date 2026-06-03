@@ -34,11 +34,11 @@ interface ForecastData {
 function TrendIcon({ trend }: { trend: string }) {
   if (trend === "improving") return <TrendingUp className="h-4 w-4 text-emerald-600" />;
   if (trend === "declining") return <TrendingDown className="h-4 w-4 text-rose-600" />;
-  return <Minus className="h-4 w-4 text-gray-400" />;
+  return <Minus className="h-4 w-4 text-gray-400 dark:text-gray-500" />;
 }
 
 function ConfidenceBadge({ level }: { level: string }) {
-  const colors = { high: "bg-emerald-100 text-emerald-700", medium: "bg-amber-100 text-amber-700", low: "bg-rose-100 text-rose-700" };
+  const colors = { high: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", low: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" };
   const labels = { high: "Высокая", medium: "Средняя", low: "Низкая" };
   return <Badge className={colors[level as keyof typeof colors]}>{labels[level as keyof typeof labels]}</Badge>;
 }

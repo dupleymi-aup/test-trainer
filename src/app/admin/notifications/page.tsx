@@ -33,8 +33,8 @@ interface Notification {
 
 const typeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   LOW_PERFORMER: { label: "Низкая успеваемость", icon: <AlertTriangle className="h-4 w-4" />, color: "text-rose-600" },
-  DECLINING: { label: "Снижение прогресса", icon: <TrendingDown className="h-4 w-4" />, color: "text-amber-600" },
-  INACTIVE: { label: "Неактивность", icon: <Clock className="h-4 w-4" />, color: "text-blue-600" },
+  DECLINING: { label: "Снижение прогресса", icon: <TrendingDown className="h-4 w-4" />, color: "text-amber-600 dark:text-amber-400" },
+  INACTIVE: { label: "Неактивность", icon: <Clock className="h-4 w-4" />, color: "text-blue-600 dark:text-blue-400" },
   LOW_ENGAGEMENT: { label: "Низкая вовлечённость", icon: <UserX className="h-4 w-4" />, color: "text-purple-600" },
   POOR_EC_COVERAGE: { label: "Плохое покрытие EC", icon: <BookOpen className="h-4 w-4" />, color: "text-orange-600" },
   POOR_BV_COVERAGE: { label: "Плохое покрытие BV", icon: <BookOpen className="h-4 w-4" />, color: "text-cyan-600" },

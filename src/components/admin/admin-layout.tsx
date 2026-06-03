@@ -36,6 +36,7 @@ import {
   ClipboardList,
   Users2,
   ListFilter,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -121,12 +122,15 @@ function useNavGroups(): NavGroup[] {
     {
       label: t("system"),
       items: [
+        { href: "/admin/executive", label: t("executive"), icon: FileText },
+        { href: "/admin/reports", label: t("reportsHub"), icon: ClipboardList },
         { href: "/admin/alerts", label: t("systemAlerts"), icon: Siren },
         { href: "/admin/deadlines", label: t("deadlines"), icon: CalendarClock },
         { href: "/admin/notifications", label: t("notifications"), icon: Bell },
         { href: "/admin/reports/export", label: t("reportExport"), icon: Download },
         { href: "/admin/database", label: t("database"), icon: Database },
         { href: "/admin/database/analytics", label: t("dbAnalytics"), icon: Activity },
+        { href: "/admin/cache", label: t("cache"), icon: Zap },
         { href: "/admin/activity", label: t("activityLog"), icon: ScrollText },
         { href: "/admin/settings", label: t("settings"), icon: Settings },
       ],
@@ -149,7 +153,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         text: "text-amber-800",
         darkBg: "dark:bg-amber-900/30",
         darkText: "dark:text-amber-400",
-        icon: "text-amber-600",
+        icon: "text-amber-600 dark:text-amber-400",
       }}
       notifications={<NotificationsBell />}
     >

@@ -69,7 +69,7 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <Grid3X3 className="h-4 w-4 text-blue-600" />
+          <Grid3X3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           Матрица покрытия
           <Badge variant="secondary" className="ml-auto text-xs">
             {result.coveredEcsCount + result.coveredBvsCount}/

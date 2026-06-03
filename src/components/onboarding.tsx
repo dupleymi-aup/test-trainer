@@ -27,7 +27,7 @@ const steps = [
     description: "Начните с выбора функции из списка заданий. Каждое задание содержит описание, классы эквивалентности и граничные значения, которые нужно покрыть.",
   },
   {
-    icon: <Dumbbell className="h-8 w-8 text-amber-600" />,
+    icon: <Dumbbell className="h-8 w-8 text-amber-600 dark:text-amber-400" />,
     title: "Создавайте тесты",
     description: "Добавляйте тест-кейсы с входными значениями и ожидаемым результатом. Используйте кнопку «Подсказка», если застряли. Нажмите «Проверить» для оценки.",
   },
@@ -37,7 +37,7 @@ const steps = [
     description: "Получите детальную оценку по трём критериям: покрытие классов эквивалентности (40%), граничных значений (30%) и корректность ожиданий (30%).",
   },
   {
-    icon: <BookOpen className="h-8 w-8 text-blue-600" />,
+    icon: <BookOpen className="h-8 w-8 text-blue-600 dark:text-blue-400" />,
     title: "Учитесь и растите",
     description: "Раздел «Теория» содержит пояснения методов тестирования. Раздел «Статистика» отслеживает ваш прогресс. Попробуйте «Режим экзамена» для вызова!",
   },
@@ -114,7 +114,7 @@ export function Onboarding() {
                   key={i}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     i === step
-                      ? "w-6 bg-emerald-500"
+                      ? "w-6 bg-emerald-500 dark:bg-emerald-400"
                       : i < step
                         ? "w-1.5 bg-emerald-300 dark:bg-emerald-700"
                         : "w-1.5 bg-muted"

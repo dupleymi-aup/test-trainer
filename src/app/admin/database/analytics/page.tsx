@@ -99,7 +99,7 @@ export default function AdminDatabaseAnalyticsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-blue-600" />
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-muted-foreground">Пользователи</span>
               </div>
               <p className="text-2xl font-bold">{data.database.totalUsers}</p>
@@ -135,7 +135,7 @@ export default function AdminDatabaseAnalyticsPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-amber-600" />
+                <Activity className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <span className="text-xs text-muted-foreground">Записи</span>
               </div>
               <p className="text-2xl font-bold">{data.database.totalRecords}</p>

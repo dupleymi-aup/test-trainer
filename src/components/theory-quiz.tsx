@@ -273,7 +273,7 @@ export function TheoryQuiz() {
                           <span
                             className={`w-3.5 h-3.5 rounded border shrink-0 flex items-center justify-center ${
                               isSelected
-                                ? "border-amber-500 bg-amber-500"
+                                ? "border-amber-500 bg-amber-500 dark:border-amber-400 dark:bg-amber-400"
                                 : "border-muted-foreground/30"
                             }`}
                           >

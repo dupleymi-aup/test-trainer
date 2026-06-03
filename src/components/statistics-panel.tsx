@@ -327,10 +327,10 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
           {categoryDistribution && (() => {
             const { catTotals, totalCats, imbalance } = categoryDistribution;
             const catColors: Record<string, string> = {
-              "normal": "bg-emerald-500",
-              "boundary": "bg-amber-500",
-              "exception": "bg-rose-500",
-              "invalidType": "bg-purple-500",
+              "normal": "bg-emerald-500 dark:bg-emerald-400",
+              "boundary": "bg-amber-500 dark:bg-amber-400",
+              "exception": "bg-rose-500 dark:bg-rose-400",
+              "invalidType": "bg-purple-500 dark:bg-purple-400",
             };
             const catLabels: Record<string, string> = {
               "normal": t("categoryNormal"),
@@ -397,10 +397,10 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
                     ? "text-amber-600 dark:text-amber-400"
                     : "text-rose-600 dark:text-rose-400";
                 const barColor = item.avgScore >= 90
-                  ? "bg-emerald-500"
+                  ? "bg-emerald-500 dark:bg-emerald-400"
                   : item.avgScore >= 60
-                    ? "bg-amber-500"
-                    : "bg-rose-500";
+                    ? "bg-amber-500 dark:bg-amber-400"
+                    : "bg-rose-500 dark:bg-rose-400";
                 return (
                   <div key={item.name} className="flex items-center gap-3">
                     <span className="text-xs font-medium min-w-[130px]">{t(topicLabelKey[item.name] ?? item.name)}</span>

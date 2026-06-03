@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Download } from "lucide-react";
 
 interface HealthStatus {
   status: string;
@@ -44,9 +44,21 @@ export default function AdminDatabasePage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Состояние базы данных</CardTitle>
-            <Button variant="outline" size="sm" onClick={checkHealth}>
-              <RefreshCw className="h-4 w-4 mr-1" /> Обновить
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <a href="/api/admin/database/backup?format=sqlite" download>
+                  <Download className="h-4 w-4 mr-1" /> Скачать БД
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href="/api/admin/database/backup?format=json" target="_blank">
+                  <RefreshCw className="h-4 w-4 mr-1" /> Статистика JSON
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" onClick={checkHealth}>
+                <RefreshCw className="h-4 w-4 mr-1" /> Обновить
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">

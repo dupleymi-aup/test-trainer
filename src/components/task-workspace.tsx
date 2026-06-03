@@ -107,7 +107,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
             </p>
 
             {/* Signature */}
-            <div className="bg-zinc-900 dark:bg-zinc-950 rounded-lg p-3">
+            <div className="bg-card rounded-lg p-3 border">
               <div className="flex items-center gap-2 mb-2">
                 <Code2 className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="text-xs font-medium text-zinc-400">
@@ -153,7 +153,7 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
 
             {/* Code */}
             <div className="rounded-lg overflow-hidden">
-              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-800 dark:bg-zinc-950">
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted dark:bg-muted/50">
                 <span className="text-xs font-medium text-zinc-400">
                   Реализация
                 </span>

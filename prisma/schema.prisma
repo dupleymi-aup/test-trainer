@@ -49,6 +49,12 @@ model User {
   createdAnnouncements Announcement[]
   gradesGiven     Grade[]    @relation("GradesGiven")
   gradesReceived  Grade[]    @relation("GradesReceived")
+  favorites       FavoriteTask[]
+  sentMessages    Message[]  @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  courseTemplates CourseTemplate[]
+  exams          StudentExam[]
+  customTasks    CustomTask[]
 
   @@index([role])
   @@index([deletedAt])
@@ -116,6 +122,7 @@ model Group {
   assignedTasks   GroupTask[]
   deadlines       Deadline[]
   announcements   Announcement[]
+  templateAssignments TemplateAssignment[]
 }
 
 model GroupTask {
@@ -293,4 +300,118 @@ model Announcement {
   @@index([createdById])
   @@index([createdAt])
   @@index([expiresAt])
+}
+
+model FavoriteTask {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@index([taskId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  fromUserId  String
+  toUserId    String
+  subject     String
+  content     String
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  replyToId   String?
+  createdAt   DateTime @default(now())
+
+  fromUser    User     @relation("SentMessages", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User     @relation("ReceivedMessages", fields: [toUserId], references: [id], onDelete: Cascade)
+  replyTo     Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[] @relation("MessageReplies")
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([toUserId, read])
+  @@index([createdAt])
+  @@index([replyToId])
+}
+
+model CourseTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  taskIds     String   // JSON array of task IDs in recommended order
+  topics      String?  // JSON array of topic tags
+  estimatedHours Int?
+  createdByUserId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User     @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  assignments  TemplateAssignment[]
+
+  @@index([createdByUserId])
+  @@index([name])
+}
+
+model TemplateAssignment {
+  id          String   @id @default(cuid())
+  templateId  String
+  groupId     String
+  assignedAt  DateTime @default(now())
+
+  template    CourseTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  group       Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, groupId])
+  @@index([templateId])
+  @@index([groupId])
+}
+
+model StudentExam {
+  id              String   @id @default(cuid())
+  userId          String
+  taskIds         String   // JSON array of task IDs
+  timeLimit       Int      // seconds
+  mode            String   // "exam" or "practice"
+  avgScore        Int
+  bestTaskId      Int?
+  bestTaskScore   Int
+  worstTaskId     Int?
+  worstTaskScore  Int
+  totalCorrectness Int
+  timeSpent       Int      // seconds
+  results         String   // JSON: per-task scores
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+model CustomTask {
+  id            String   @id @default(cuid())
+  name          String
+  difficulty    String   // "Легко", "Средне", "Сложно"
+  signature     String
+  description   String
+  returnType    String
+  topics        String   // JSON array of topic strings
+  parameters    String   // JSON: [{name, type, description}]
+  ecClasses     String   // JSON: [{className, ecLabel, description, exampleValues}]
+  bvValues      String   // JSON: [{value, description}]
+  code          String
+  commonMistakes String?  // JSON array of strings
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdById])
+  @@index([name])
 }

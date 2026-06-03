@@ -122,7 +122,7 @@ export default function AdminCohortRetentionPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-blue-600" />
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-muted-foreground">Всего студентов</span>
               </div>
               <p className="text-2xl font-bold">{totalStudents}</p>

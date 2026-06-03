@@ -27,10 +27,10 @@ interface AnomalyData {
 
 const anomalyIcons: Record<string, React.ReactNode> = {
   sudden_drop: <AlertTriangle className="h-4 w-4 text-rose-600" />,
-  score_spike: <AlertCircle className="h-4 w-4 text-amber-600" />,
-  returned_student: <Info className="h-4 w-4 text-blue-600" />,
-  time_anomaly: <AlertCircle className="h-4 w-4 text-amber-600" />,
-  first_attempt_perfection: <Info className="h-4 w-4 text-blue-600" />,
+  score_spike: <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
+  returned_student: <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />,
+  time_anomaly: <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />,
+  first_attempt_perfection: <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />,
 };
 
 const anomalyLabels: Record<string, string> = {
@@ -83,7 +83,7 @@ export default function AnomaliesPage() {
           <Link href="/admin/analytics">
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
-          <h2 className="text-xl font-bold flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /> Аномалии</h2>
+          <h2 className="text-xl font-bold flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" /> Аномалии</h2>
           <Button variant="outline" size="sm" onClick={() => fetchData()}>
             <RefreshCw className="h-3 w-3 mr-1" /> Обновить
           </Button>

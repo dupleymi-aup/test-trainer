@@ -65,7 +65,7 @@ const roleLabels: Record<string, string> = {
 };
 
 const quickReports = [
-  { href: "/admin/analytics/comprehensive", title: "Обзор платформы", icon: BarChart3, color: "text-blue-600" },
+  { href: "/admin/analytics/comprehensive", title: "Обзор платформы", icon: BarChart3, color: "text-blue-600 dark:text-blue-400" },
   { href: "/admin/analytics/predictions", title: "Риск-анализ", icon: AlertTriangle, color: "text-rose-600" },
   { href: "/admin/analytics/compare-periods", title: "Сравнение периодов", icon: GitCompare, color: "text-cyan-600" },
   { href: "/admin/analytics/completion-matrix", title: "Матрица выполнения", icon: Table2, color: "text-orange-600" },
@@ -79,7 +79,7 @@ const quickReports = [
   { href: "/admin/analytics/error-patterns", title: "Типичные ошибки", icon: AlertTriangle, color: "text-red-600" },
   { href: "/admin/analytics/activity-time", title: "Активность по времени", icon: Calendar, color: "text-teal-600" },
   { href: "/admin/analytics/completion-forecast", title: "Прогноз завершения", icon: TrendingUp, color: "text-emerald-600" },
-  { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преп.", icon: GraduationCap, color: "text-amber-600" },
+  { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преп.", icon: GraduationCap, color: "text-amber-600 dark:text-amber-400" },
   { href: "/admin/analytics/cohort-analysis", title: "Анализ когорт", icon: Users, color: "text-indigo-600" },
   { href: "/admin/analytics/student-return", title: "Анализ возврата", icon: Calendar, color: "text-cyan-600" },
   { href: "/admin/analytics/group-task-matrix", title: "Группы × Задачи", icon: FolderKanban, color: "text-teal-600" },
@@ -110,10 +110,10 @@ export default function AdminDashboardPage() {
   if (!stats) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-destructive" /><span className="ml-3 text-sm text-destructive">Ошибка загрузки</span></div></AdminLayout>;
 
   const statCards = [
-    { label: "Студенты", value: stats.usersByRole["STUDENT"] || 0, icon: Users, color: "text-blue-600", href: "/admin/users" },
+    { label: "Студенты", value: stats.usersByRole["STUDENT"] || 0, icon: Users, color: "text-blue-600 dark:text-blue-400", href: "/admin/users" },
     { label: "Попытки", value: stats.totalAttempts, icon: FileText, color: "text-emerald-600", href: "/admin/analytics/comprehensive" },
     { label: "Группы", value: stats.totalGroups, icon: FolderKanban, color: "text-purple-600", href: "/admin/groups" },
-    { label: "Преподаватели", value: stats.usersByRole["TEACHER"] || 0, icon: GraduationCap, color: "text-amber-600", href: "/admin/analytics/teacher-performance" },
+    { label: "Преподаватели", value: stats.usersByRole["TEACHER"] || 0, icon: GraduationCap, color: "text-amber-600 dark:text-amber-400", href: "/admin/analytics/teacher-performance" },
   ];
 
   return (
@@ -143,7 +143,7 @@ export default function AdminDashboardPage() {
           <Card className="border-amber-200 bg-amber-50/50">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 Студенты в зоне риска
               </CardTitle>
             </CardHeader>
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-muted-foreground">Низкая успеваемость</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-amber-600">{riskData.declining}</p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{riskData.declining}</p>
                   <p className="text-xs text-muted-foreground">Снижение прогресса</p>
                 </div>
                 <div className="text-center">

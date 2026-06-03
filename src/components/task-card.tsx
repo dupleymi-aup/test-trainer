@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/lib/tasks";
-import { Trophy, Circle, BookOpen } from "lucide-react";
+import { Trophy, Circle, BookOpen, Star } from "lucide-react";
 import {
   FunctionSquare,
   Hash,
@@ -45,8 +45,10 @@ interface TaskCardProps {
   bestEcCoverage?: number;
   bestBvCoverage?: number;
   attemptCount?: number;
+  isFavorite?: boolean;
   onClick: () => void;
   onStudyTheory?: () => void;
+  onToggleFavorite?: (taskId: number) => void;
 }
 
 const difficultyBorderColors: Record<string, string> = {
@@ -55,7 +57,7 @@ const difficultyBorderColors: Record<string, string> = {
   Сложно: "border-l-rose-500",
 };
 
-export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, onClick, onStudyTheory }: TaskCardProps) {
+export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, isFavorite, onClick, onStudyTheory, onToggleFavorite }: TaskCardProps) {
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
@@ -88,12 +90,23 @@ export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, be
               </div>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <Badge
-                variant="secondary"
-                className={difficultyColors[task.difficulty]}
-              >
-                {task.difficulty}
-              </Badge>
+              <div className="flex items-center gap-1">
+                {onToggleFavorite && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onToggleFavorite(task.id); }}
+                    className="p-0.5 hover:opacity-80 transition-opacity"
+                    aria-label={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+                  >
+                    <Star className={`h-4 w-4 ${isFavorite ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />
+                  </button>
+                )}
+                <Badge
+                  variant="secondary"
+                  className={difficultyColors[task.difficulty]}
+                >
+                  {task.difficulty}
+                </Badge>
+              </div>
               {bestScore !== undefined && bestScore > 0 ? (
                 <Badge className="bg-amber-100 text-amber-800 text-[10px] dark:bg-amber-900/30 dark:text-amber-400">
                   <Trophy className="h-3 w-3 mr-0.5" />

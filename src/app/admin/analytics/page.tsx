@@ -69,8 +69,8 @@ interface AnalyticsData {
 }
 
 const reportCards = [
-  { href: "/admin/analytics/comprehensive", title: "Комплексная аналитика", description: "KPI, тренды, когорты, университеты, рейтинг преподавателей", icon: Target, color: "text-blue-600" },
-  { href: "/admin/analytics/teacher-performance", title: "Преподаватели", description: "Детальная аналитика активности и эффективности преподавателей", icon: GraduationCap, color: "text-amber-600" },
+  { href: "/admin/analytics/comprehensive", title: "Комплексная аналитика", description: "KPI, тренды, когорты, университеты, рейтинг преподавателей", icon: Target, color: "text-blue-600 dark:text-blue-400" },
+  { href: "/admin/analytics/teacher-performance", title: "Преподаватели", description: "Детальная аналитика активности и эффективности преподавателей", icon: GraduationCap, color: "text-amber-600 dark:text-amber-400" },
   { href: "/admin/analytics/teacher-comparison", title: "Сравнение преподавателей", description: "Рейтинг, композитный score эффективности, динамика студентов", icon: Award, color: "text-amber-500" },
   { href: "/admin/analytics/university-comparison", title: "Университеты", description: "Сравнение успеваемости между университетами", icon: BookOpen, color: "text-purple-600" },
   { href: "/admin/analytics/task-insights", title: "Анализ задач", description: "Сложность, типичные ошибки, покрытие EC/BV", icon: BarChart3, color: "text-emerald-600" },
@@ -96,7 +96,7 @@ const reportCards = [
   { href: "/admin/analytics/forecasting", title: "Прогнозирование", description: "Предсказание будущих баллов с линейной регрессией и уверенностью", icon: TrendingUp, color: "text-violet-600" },
   { href: "/admin/analytics/anomalies", title: "Аномалии", description: "Автообнаружение: резкие падения, всплески, возвраты, аномалии времени", icon: Siren, color: "text-red-600" },
   { href: "/admin/analytics/task-detail", title: "Детальный анализ задач", description: "Распределение баллов, типичные ошибки, тренды, студенты с трудностями", icon: BarChart3, color: "text-emerald-600" },
-  { href: "/admin/analytics/student-comparison", title: "Сравнение студентов", description: "Side-by-side сравнение 2-5 студентов с радаром и траекториями", icon: Users, color: "text-blue-600" },
+  { href: "/admin/analytics/student-comparison", title: "Сравнение студентов", description: "Side-by-side сравнение 2-5 студентов с радаром и траекториями", icon: Users, color: "text-blue-600 dark:text-blue-400" },
   { href: "/admin/analytics/performance-dashboard", title: "Успеваемость студентов", description: "Сводная таблица всех студентов с сортировкой, фильтрами и рисками", icon: Users, color: "text-indigo-600" },
   { href: "/admin/analytics/item-difficulty", title: "Анализ сложности заданий", description: "IRT-анализ: сложность (p-value), дифференциация, угадываемость, качество заданий", icon: Target, color: "text-violet-600" },
   { href: "/admin/analytics/time-score-correlation", title: "Корреляция времени и баллов", description: "Связь времени выполнения с качеством, поведенческие сегменты, scatter-анализ", icon: Brain, color: "text-sky-600" },
@@ -104,7 +104,7 @@ const reportCards = [
   { href: "/admin/analytics/error-patterns", title: "Анализ типичных ошибок", description: "Проблемные EC/BV, студенты с худшим покрытием, тренды ошибок по месяцам", icon: AlertTriangle, color: "text-red-600" },
   { href: "/admin/analytics/activity-time", title: "Активность по времени", description: "Heatmap день×час, пики активности, периоды суток, тренды по дням", icon: Clock, color: "text-sky-600" },
   { href: "/admin/analytics/completion-forecast", title: "Прогноз завершения", description: "Кто завершит курс, скорость, недели до завершения, уровень риска", icon: Calendar, color: "text-teal-600" },
-  { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преподавателей", description: "Композитный score, рейтинг, влияние на прогресс студентов, радар", icon: GraduationCap, color: "text-amber-600" },
+  { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преподавателей", description: "Композитный score, рейтинг, влияние на прогресс студентов, радар", icon: GraduationCap, color: "text-amber-600 dark:text-amber-400" },
   { href: "/admin/analytics/cohort-analysis", title: "Анализ когорт", description: "Кривые удержения по месяцам регистрации, сравнение когорт", icon: Users, color: "text-indigo-600" },
   { href: "/admin/analytics/student-return", title: "Анализ возврата", description: "Студенты после перерыва: прогресс до/после, догоняют ли", icon: RotateCcw, color: "text-cyan-600" },
   { href: "/admin/analytics/group-task-matrix", title: "Группы × Задачи", description: "Матрица сравнения групп по заданиям, Δ от платформы", icon: FolderKanban, color: "text-teal-600" },
@@ -165,7 +165,7 @@ export default function AdminAnalyticsHubPage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Card>
               <CardContent className="pt-6">
-                <div className="flex items-center gap-2 mb-2"><Activity className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">ДАУ</span></div>
+                <div className="flex items-center gap-2 mb-2"><Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">ДАУ</span></div>
                 <p className="text-2xl font-bold">{data.platformEngagement.dau}</p>
               </CardContent>
             </Card>
@@ -183,7 +183,7 @@ export default function AdminAnalyticsHubPage() {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="flex items-center gap-2 mb-2"><UserPlus className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Новые (неделя)</span></div>
+                <div className="flex items-center gap-2 mb-2"><UserPlus className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Новые (неделя)</span></div>
                 <p className="text-2xl font-bold">{data.platformEngagement.newUsersWeek}</p>
               </CardContent>
             </Card>

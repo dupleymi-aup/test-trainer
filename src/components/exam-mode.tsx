@@ -106,6 +106,7 @@ export function ExamMode() {
   const examResultsRef = useRef(examResults);
   const examTasksRef = useRef(examTasks);
   const examTestCasesRef = useRef(examTestCases);
+  const startTimeRef = useRef(0);
 
   useEffect(() => {
     examResultsRef.current = examResults;
@@ -183,8 +184,38 @@ export function ExamMode() {
     if (newAvg >= 90) {
       triggerConfetti();
     }
+    // Auto-save exam results to server
+    const elapsedSeconds = startTimeRef.current > 0 ? Math.round((Date.now() - startTimeRef.current) / 1000) : timeLimit * 60;
+    saveExamToServer(results, currentTasks.map((t) => t.id), elapsedSeconds);
     isFinishingRef.current = false;
-  }, [triggerConfetti]);
+  }, [timeLimit, practiceMode, triggerConfetti]);
+
+  const saveExamToServer = useCallback((results: EvaluationResult[], taskIds: number[], elapsedSeconds: number) => {
+    if (results.length === 0) return;
+    const avg = Math.round(results.reduce((s, r) => s + r.overallScore, 0) / results.length);
+    const sorted = [...results].sort((a, b) => a.overallScore - b.overallScore);
+    fetch("/api/student/exams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        taskIds,
+        timeLimit,
+        mode: practiceMode ? "practice" : "exam",
+        avgScore: avg,
+        bestTaskId: sorted.length > 0 ? sorted[sorted.length - 1].task.id : null,
+        bestTaskScore: sorted.length > 0 ? sorted[sorted.length - 1].overallScore : 0,
+        worstTaskId: sorted.length > 0 ? sorted[0].task.id : null,
+        worstTaskScore: sorted.length > 0 ? sorted[0].overallScore : 0,
+        totalCorrectness: results.length > 0 ? Math.round(results.reduce((s, r) => s + r.correctnessScore, 0) / results.length) : 0,
+        timeSpent: elapsedSeconds,
+        results: Object.fromEntries(results.map((r) => [String(r.task.id), r.overallScore])),
+      }),
+    }).then((r) => {
+      if (!r.ok) toast.error("Не удалось сохранить результаты экзамена на сервер");
+    }).catch(() => {
+      toast.error("Не удалось сохранить результаты экзамена");
+    });
+  }, [timeLimit, practiceMode]);
 
   useEffect(() => {
     finishExamRef.current = finishExam;
@@ -262,14 +293,10 @@ export function ExamMode() {
       [foundTasks[i], foundTasks[j]] = [foundTasks[j], foundTasks[i]];
     }
     setExamTasks(foundTasks);
-    setExamTestCases({});
-    setExamResults([]);
-    setLastPracticeResult(null);
     setCurrentTaskIndex(0);
-    setExamInputs(foundTasks[0].params.map(() => ""));
-    setExamExpected("");
     setTimeRemaining(timeLimit * 60);
     setExamState("running");
+    startTimeRef.current = Date.now();
   };
 
   const addExamTestCase = useCallback(() => {
@@ -804,7 +831,7 @@ export function ExamMode() {
             </div>
 
             {showCode && (
-              <div className="bg-zinc-900 dark:bg-zinc-950 rounded-lg p-3 overflow-x-auto">
+              <div className="bg-card rounded-lg p-3 overflow-x-auto border">
                 <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
                   <code>{task.code}</code>
                 </pre>
@@ -891,12 +918,12 @@ export function ExamMode() {
                         <span
                           className={`inline-block w-2 h-2 rounded-full ${
                             cat === "Нормальное значение"
-                              ? "bg-emerald-500"
+                              ? "bg-emerald-500 dark:bg-emerald-400"
                               : cat === "Граничное значение"
-                                ? "bg-amber-500"
+                                ? "bg-amber-500 dark:bg-amber-400"
                                 : cat === "Исключение"
-                                  ? "bg-rose-500"
-                                  : "bg-purple-500"
+                                  ? "bg-rose-500 dark:bg-rose-400"
+                                  : "bg-purple-500 dark:bg-purple-400"
                           }`}
                         />
                         {cat}

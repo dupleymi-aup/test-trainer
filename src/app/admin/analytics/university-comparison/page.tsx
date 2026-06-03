@@ -100,7 +100,7 @@ export default function UniversityComparisonPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Университеты</span></div>
+              <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Университеты</span></div>
               <p className="text-2xl font-bold">{data.universities.length}</p>
             </CardContent>
           </Card>

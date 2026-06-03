@@ -108,7 +108,7 @@ export default function ErrorPatternsPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><FileText className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Всего попыток</span></div>
+              <div className="flex items-center gap-2 mb-1"><FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Всего попыток</span></div>
               <p className="text-2xl font-bold">{summary.totalAttempts}</p>
             </CardContent>
           </Card>
@@ -132,8 +132,8 @@ export default function ErrorPatternsPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><AlertTriangle className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">% ошибок</span></div>
-              <p className="text-2xl font-bold text-amber-600">{summary.lowScorePct}%</p>
+              <div className="flex items-center gap-2 mb-1"><AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">% ошибок</span></div>
+              <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{summary.lowScorePct}%</p>
             </CardContent>
           </Card>
         </div>
@@ -206,7 +206,7 @@ export default function ErrorPatternsPage() {
           <Card className="border-amber-200">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 Задания с наибольшим количеством ошибок
               </CardTitle>
             </CardHeader>
@@ -235,7 +235,7 @@ export default function ErrorPatternsPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center gap-2 justify-center">
                             <Progress value={t.errorRate} className="w-16 h-2" />
-                            <span className={`text-xs font-bold ${t.errorRate > 50 ? "text-rose-600" : t.errorRate > 30 ? "text-amber-600" : "text-emerald-600"}`}>
+                            <span className={`text-xs font-bold ${t.errorRate > 50 ? "text-rose-600" : t.errorRate > 30 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600"}`}>
                               {t.errorRate}%
                             </span>
                           </div>
@@ -257,7 +257,7 @@ export default function ErrorPatternsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Users className="h-4 w-4 text-blue-600" />
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 Студенты с худшим EC/BV покрытием
               </CardTitle>
               <CardDescription>Среднее покрытие ниже 60%</CardDescription>
@@ -281,7 +281,7 @@ export default function ErrorPatternsPage() {
                       <TableCell className="text-center">
                         <div className="flex items-center gap-2 justify-center">
                           <Progress value={s.avgEC} className="w-16 h-2" />
-                          <span className={`text-xs font-bold ${s.avgEC < 30 ? "text-rose-600" : s.avgEC < 50 ? "text-amber-600" : "text-emerald-600"}`}>
+                          <span className={`text-xs font-bold ${s.avgEC < 30 ? "text-rose-600" : s.avgEC < 50 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600"}`}>
                             {s.avgEC}%
                           </span>
                         </div>
@@ -289,7 +289,7 @@ export default function ErrorPatternsPage() {
                       <TableCell className="text-center">
                         <div className="flex items-center gap-2 justify-center">
                           <Progress value={s.avgBV} className="w-16 h-2" />
-                          <span className={`text-xs font-bold ${s.avgBV < 30 ? "text-rose-600" : s.avgBV < 50 ? "text-amber-600" : "text-emerald-600"}`}>
+                          <span className={`text-xs font-bold ${s.avgBV < 30 ? "text-rose-600" : s.avgBV < 50 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600"}`}>
                             {s.avgBV}%
                           </span>
                         </div>

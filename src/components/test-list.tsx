@@ -82,7 +82,7 @@ function CoverageBar({ task, evaluationResult }: { task: Task | null; evaluation
   const bvPercent = evaluationResult.totalBvs > 0 ? (evaluationResult.coveredBvsCount / evaluationResult.totalBvs) * 100 : 0;
 
   const colorClass = (pct: number) =>
-    pct >= 100 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+    pct >= 100 ? "bg-emerald-500 dark:bg-emerald-400" : pct >= 50 ? "bg-amber-500 dark:bg-amber-400" : "bg-rose-500 dark:bg-rose-400";
 
   const textColor = (pct: number) =>
     pct >= 100 ? "text-emerald-600 dark:text-emerald-400" : pct >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400";

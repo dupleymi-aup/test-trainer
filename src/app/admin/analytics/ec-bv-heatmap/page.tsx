@@ -101,7 +101,7 @@ export default function AdminEcBvHeatmapPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="h-4 w-4 text-blue-600" />
+                <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-muted-foreground">Покрытие EC</span>
               </div>
               <p className="text-2xl font-bold">{summary?.ecCoverageRate}%</p>
@@ -175,7 +175,7 @@ export default function AdminEcBvHeatmapPage() {
                         <TableCell>
                           <Badge variant="outline" className={
                             ec.difficulty === "Легко" ? "text-green-600" :
-                            ec.difficulty === "Средне" ? "text-amber-600" : "text-red-600"
+                            ec.difficulty === "Средне" ? "text-amber-600 dark:text-amber-400" : "text-red-600"
                           }>{ec.difficulty}</Badge>
                         </TableCell>
                         <TableCell className="text-right text-green-600 font-bold">{ec.covered}</TableCell>
@@ -219,7 +219,7 @@ export default function AdminEcBvHeatmapPage() {
                         <TableCell>
                           <Badge variant="outline" className={
                             bv.difficulty === "Легко" ? "text-green-600" :
-                            bv.difficulty === "Средне" ? "text-amber-600" : "text-red-600"
+                            bv.difficulty === "Средне" ? "text-amber-600 dark:text-amber-400" : "text-red-600"
                           }>{bv.difficulty}</Badge>
                         </TableCell>
                         <TableCell className="text-right text-green-600 font-bold">{bv.covered}</TableCell>

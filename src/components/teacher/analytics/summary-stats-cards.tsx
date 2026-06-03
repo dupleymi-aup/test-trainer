@@ -18,13 +18,13 @@ export function SummaryStatsCards({ stats }: SummaryStatsCardsProps) {
       label: "Всего попыток",
       value: stats.totalAttempts,
       icon: TrendingUp,
-      color: "text-blue-600",
+      color: "text-blue-600 dark:text-blue-400",
     },
     {
       label: "Средний балл",
       value: `${stats.avgScore}%`,
       icon: stats.avgScore >= 75 ? TrendingUp : stats.avgScore >= 50 ? Minus : TrendingDown,
-      color: stats.avgScore >= 75 ? "text-emerald-600" : stats.avgScore >= 50 ? "text-amber-600" : "text-rose-600",
+      color: stats.avgScore >= 75 ? "text-emerald-600" : stats.avgScore >= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600",
     },
     {
       label: "Ср. покрытие EC",

@@ -107,7 +107,7 @@ export default function TeacherReportsPage() {
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
-                  <Users className="h-8 w-8 text-blue-600 shrink-0" />
+                  <Users className="h-8 w-8 text-blue-600 dark:text-blue-400 shrink-0" />
                   <div>
                     <h3 className="font-semibold mb-1">Прогресс по группам</h3>
                     <p className="text-xs text-muted-foreground">

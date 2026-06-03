@@ -100,9 +100,9 @@ export default function PerformanceDashboardPage() {
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Всего</div><div className="text-2xl font-bold">{data.summary.totalStudents}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. балл</div><div className="text-2xl font-bold">{data.summary.avgScore}%</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-emerald-600">Низкий риск</div><div className="text-2xl font-bold text-emerald-600">{data.summary.lowRisk}</div></CardContent></Card>
-              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-amber-600">Средний риск</div><div className="text-2xl font-bold text-amber-600">{data.summary.mediumRisk}</div></CardContent></Card>
+              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-amber-600 dark:text-amber-400">Средний риск</div><div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{data.summary.mediumRisk}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-rose-600">Высокий риск</div><div className="text-2xl font-bold text-rose-600">{data.summary.highRisk}</div></CardContent></Card>
-              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-blue-600">Активные (7д)</div><div className="text-2xl font-bold text-blue-600">{data.summary.activeLast7Days}</div></CardContent></Card>
+              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-blue-600 dark:text-blue-400">Активные (7д)</div><div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{data.summary.activeLast7Days}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground dark:text-zinc-400">Неактивные</div><div className="text-2xl font-bold dark:text-zinc-300">{data.summary.inactive}</div></CardContent></Card>
             </div>
 

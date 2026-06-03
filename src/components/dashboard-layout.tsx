@@ -39,7 +39,7 @@ interface ActiveColorClasses {
   darkBg: string;
   /** Dark mode text, e.g. "dark:text-amber-400" */
   darkText: string;
-  /** Header icon color, e.g. "text-amber-600" */
+  /** Header icon color, e.g. "text-amber-600 dark:text-amber-400" */
   icon: string;
 }
 
@@ -99,9 +99,9 @@ export function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-white dark:bg-gray-900 sticky top-0 z-10">
+      <header className="border-b bg-card sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex items-center gap-3">
           {isMobile && (
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -249,7 +249,7 @@ function NavSidebar({
                           "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
                           isActive
                             ? activeClass
-                            : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
+                            : "text-muted-foreground hover:bg-accent"
                         )}
                         aria-current={isActive ? "page" : undefined}
                       >
@@ -281,7 +281,7 @@ function NavSidebar({
           "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
           isActive
             ? activeClass
-            : "text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800"
+            : "text-muted-foreground hover:bg-accent"
         )}
         aria-current={isActive ? "page" : undefined}
       >

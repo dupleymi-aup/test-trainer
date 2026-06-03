@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 interface Student {
@@ -35,14 +36,32 @@ interface GroupData {
   students: Student[];
 }
 
+interface Group {
+  id: string;
+  name: string;
+}
+
 export default function GroupPerformancePage() {
   const [groups, setGroups] = useState<GroupData[]>([]);
+  const [teacherGroups, setTeacherGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/teacher/reports/group-performance", { signal: controller.signal })
+    fetch("/api/teacher/groups", { signal: controller.signal })
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((data) => { if (!controller.signal.aborted) { setTeacherGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
+      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-group-performance] Failed to load groups:", err); });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedGroupId) { setLoading(false); return; }
+    setLoading(true);
+    const controller = new AbortController();
+    fetch(`/api/teacher/reports/group-performance?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => {
         if (!controller.signal.aborted) {
@@ -52,7 +71,7 @@ export default function GroupPerformancePage() {
       })
       .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-group-performance] Failed to load groups:", err); setLoading(false); } });
     return () => controller.abort();
-  }, []);
+  }, [selectedGroupId]);
 
   const toggleGroup = (groupName: string) => {
     const newExpanded = new Set(expandedGroups);
@@ -81,14 +100,26 @@ export default function GroupPerformancePage() {
   if (loading)
     return (
       <TeacherLayout>
-        <div className="p-8 text-center">Загрузка...</div>
+        <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
       </TeacherLayout>
     );
 
   return (
     <TeacherLayout>
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Прогресс по группам</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-xl font-bold">Прогресс по группам</h2>
+          <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Выберите группу" />
+            </SelectTrigger>
+            <SelectContent>
+              {teacherGroups.map((g) => (
+                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {groups.length === 0 && (
           <Card>
@@ -195,7 +226,6 @@ export default function GroupPerformancePage() {
           </Card>
         ))}
 
-        {/* Summary table */}
         {groups.length > 1 && (
           <Card>
             <CardHeader>

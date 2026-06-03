@@ -241,11 +241,11 @@ export function MarathonMode({
                 <p className="text-xs text-muted-foreground">Заданий</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-2xl font-bold text-amber-600">{tasks.filter((t) => t.difficulty === "Сложно").length}</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{tasks.filter((t) => t.difficulty === "Сложно").length}</p>
                 <p className="text-xs text-muted-foreground">Сложных</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-2xl font-bold text-blue-600">{tasks.reduce((s, t) => s + t.equivalenceClasses.length, 0)}</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{tasks.reduce((s, t) => s + t.equivalenceClasses.length, 0)}</p>
                 <p className="text-xs text-muted-foreground">Классов EC</p>
               </div>
             </div>
@@ -326,7 +326,7 @@ export function MarathonMode({
                 const task = tasks.find((t) => t.id === r.taskId);
                 const scoreColor = r.bestScore >= 90
                   ? "text-emerald-600" : r.bestScore >= 60
-                    ? "text-amber-600" : "text-rose-600";
+                    ? "text-amber-600 dark:text-amber-400" : "text-rose-600";
                 return (
                   <div key={r.taskId} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40">
                     <div className="shrink-0 w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">

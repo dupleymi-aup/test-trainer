@@ -512,7 +512,7 @@ export default function TaskConstructorPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <GitBranch className="h-4 w-4 text-amber-600" />
+                  <GitBranch className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   Граничные значения
                 </CardTitle>
                 <CardDescription>
@@ -595,7 +595,7 @@ export default function TaskConstructorPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     Типичные ошибки
                   </CardTitle>
                   <CardDescription>Ошибки, которые часто допускают студенты</CardDescription>

@@ -76,8 +76,8 @@ export default function ExecutivePage() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           {[
-            { label: "Студенты", value: kpi.totalStudents, icon: Users, color: "text-blue-600" },
-            { label: "Преподаватели", value: kpi.totalTeachers, icon: GraduationCap, color: "text-amber-600" },
+            { label: "Студенты", value: kpi.totalStudents, icon: Users, color: "text-blue-600 dark:text-blue-400" },
+            { label: "Преподаватели", value: kpi.totalTeachers, icon: GraduationCap, color: "text-amber-600 dark:text-amber-400" },
             { label: "Группы", value: kpi.totalGroups, icon: FolderKanban, color: "text-purple-600" },
             { label: "Попытки", value: kpi.totalAttempts, icon: FileText, color: "text-emerald-600" },
             { label: "Ср. балл", value: `${kpi.avgScore}%`, icon: TrendingUp, color: "text-cyan-600" },
@@ -172,7 +172,7 @@ export default function ExecutivePage() {
           <Card className="border-amber-200">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 Студенты с наибольшим риском
               </CardTitle>
             </CardHeader>

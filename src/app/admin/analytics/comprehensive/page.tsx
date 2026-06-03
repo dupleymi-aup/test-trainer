@@ -95,13 +95,13 @@ export default function ComprehensiveAnalyticsPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><Users className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Студенты</span></div>
+              <div className="flex items-center gap-2 mb-2"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Студенты</span></div>
               <p className="text-2xl font-bold">{data.kpi.totalStudents}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Преподаватели</span></div>
+              <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Преподаватели</span></div>
               <p className="text-2xl font-bold">{data.kpi.totalTeachers}</p>
             </CardContent>
           </Card>
@@ -243,7 +243,7 @@ export default function ComprehensiveAnalyticsPage() {
                 <Progress value={data.riskOverview.total > 0 ? (data.riskOverview.lowPerformers / data.riskOverview.total) * 100 : 0} className="h-2" />
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1"><span>Снижение прогресса</span><span className="font-bold text-amber-600">{data.riskOverview.declining}</span></div>
+                <div className="flex justify-between text-sm mb-1"><span>Снижение прогресса</span><span className="font-bold text-amber-600 dark:text-amber-400">{data.riskOverview.declining}</span></div>
                 <Progress value={data.riskOverview.total > 0 ? (data.riskOverview.declining / data.riskOverview.total) * 100 : 0} className="h-2" />
               </div>
               <div>
@@ -251,7 +251,7 @@ export default function ComprehensiveAnalyticsPage() {
                 <Progress value={data.riskOverview.total > 0 ? (data.riskOverview.inactive / data.riskOverview.total) * 100 : 0} className="h-2" />
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1"><span>Низкая вовлечённость</span><span className="font-bold text-blue-600">{data.riskOverview.lowEngagement}</span></div>
+                <div className="flex justify-between text-sm mb-1"><span>Низкая вовлечённость</span><span className="font-bold text-blue-600 dark:text-blue-400">{data.riskOverview.lowEngagement}</span></div>
                 <Progress value={data.riskOverview.total > 0 ? (data.riskOverview.lowEngagement / data.riskOverview.total) * 100 : 0} className="h-2" />
               </div>
               <div className="pt-4 border-t">

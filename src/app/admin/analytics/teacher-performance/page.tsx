@@ -137,13 +137,13 @@ export default function TeacherPerformancePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><Users className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Преподаватели</span></div>
+              <div className="flex items-center gap-2 mb-2"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Преподаватели</span></div>
               <p className="text-2xl font-bold">{data.teachers.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><FolderKanban className="h-4 w-4 text-amber-600" /><span className="text-xs text-muted-foreground">Всего групп</span></div>
+              <div className="flex items-center gap-2 mb-2"><FolderKanban className="h-4 w-4 text-amber-600 dark:text-amber-400" /><span className="text-xs text-muted-foreground">Всего групп</span></div>
               <p className="text-2xl font-bold">{data.teachers.reduce((s, t) => s + t.groupsCount, 0)}</p>
             </CardContent>
           </Card>

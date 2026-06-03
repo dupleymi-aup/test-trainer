@@ -221,7 +221,7 @@ export default function AdminTopicHeatmapPage() {
                           <TableCell>
                             <Badge variant="outline" className={
                               task.difficulty === "Легко" ? "text-green-600" :
-                              task.difficulty === "Средне" ? "text-amber-600" : "text-red-600"
+                              task.difficulty === "Средне" ? "text-amber-600 dark:text-amber-400" : "text-red-600"
                             }>
                               {task.difficulty}
                             </Badge>
@@ -273,7 +273,7 @@ export default function AdminTopicHeatmapPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-muted-foreground">Всего тем</span>
               </div>
               <p className="text-2xl font-bold">{topicSummary.length}</p>

@@ -110,7 +110,7 @@ export default function CohortAnalysisPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Calendar className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Когорты</span></div>
+              <div className="flex items-center gap-2 mb-1"><Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Когорты</span></div>
               <p className="text-2xl font-bold">{data.summary.totalCohorts}</p>
             </CardContent>
           </Card>
@@ -197,10 +197,10 @@ export default function CohortAnalysisPage() {
                       <Badge variant={c.avgScore >= 75 ? "default" : c.avgScore >= 50 ? "secondary" : "destructive"}>{c.avgScore}%</Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={c.activeRate >= 50 ? "text-emerald-600 font-bold" : c.activeRate >= 30 ? "text-amber-600" : "text-rose-600"}>{c.activeRate}%</span>
+                      <span className={c.activeRate >= 50 ? "text-emerald-600 font-bold" : c.activeRate >= 30 ? "text-amber-600 dark:text-amber-400" : "text-rose-600"}>{c.activeRate}%</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={c.dropOffRate <= 30 ? "text-emerald-600" : c.dropOffRate <= 50 ? "text-amber-600" : "text-rose-600 font-bold"}>{c.dropOffRate}%</span>
+                      <span className={c.dropOffRate <= 30 ? "text-emerald-600" : c.dropOffRate <= 50 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 font-bold"}>{c.dropOffRate}%</span>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center gap-2 justify-center">

@@ -22,6 +22,12 @@ import {
   FileText,
   BarChart3,
   Megaphone,
+  Star,
+  Medal,
+  Mail,
+  Settings,
+  Map,
+  History,
 } from "lucide-react";
 import { loadProgress, loadAttemptHistory, loadStreak } from "@/lib/storage";
 import { tasks } from "@/lib/tasks";
@@ -37,7 +43,6 @@ const difficultyMap: Record<string, { labelKey: string; color: string; russianVa
 export default function StudentDashboardPage() {
   const t = useTranslations("student");
   const tCommon = useTranslations("common");
-  const tNav = useTranslations("nav");
   const tStats = useTranslations("stats");
   const locale = useLocale();
   const { data: session, status } = useSession();
@@ -59,6 +64,8 @@ export default function StudentDashboardPage() {
     group: { name: string } | null;
     creator: { name: string | null; role: string };
   }>>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [lastTaskId, setLastTaskId] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -96,6 +103,18 @@ export default function StudentDashboardPage() {
         .then((r) => r.ok ? r.json() : { announcements: [] })
         .then((d) => setAnnouncements(d.announcements || []))
         .catch((e) => { logger.warn("Failed to fetch announcements", { error: e }); setAnnouncements([]); });
+
+      // Find last attempted task for "resume" feature
+      if (attempts.length > 0) {
+        const sortedAttempts = [...attempts].sort((a, b) => b.timestamp - a.timestamp);
+        setLastTaskId(sortedAttempts[0].taskId);
+      }
+
+      // Fetch unread messages count
+      fetch("/api/student/messages?limit=1")
+        .then((r) => r.ok ? r.json() : { unreadCount: 0 })
+        .then((d) => setUnreadMessages(d.unreadCount || 0))
+        .catch(() => {});
     }
   }, [status, session, router]);
 
@@ -131,11 +150,20 @@ export default function StudentDashboardPage() {
                 </p>
               </div>
             </div>
-            <Button asChild variant="default" className="bg-emerald-600 hover:bg-emerald-700">
-              <Link href="/trainer">
-                {t("goToTrainer")} <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button asChild variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+                <Link href="/trainer">
+                  {t("goToTrainer")} <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              {lastTaskId && (
+                <Button asChild variant="outline">
+                  <Link href={`/trainer?task=${lastTaskId}`}>
+                    <Clock className="h-4 w-4 mr-1" /> Продолжить
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -157,17 +185,17 @@ export default function StudentDashboardPage() {
             <Card>
               <CardContent className="pt-4">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Trophy className="h-3 w-3 text-amber-600" /> {t("bestScore")}
+                  <Trophy className="h-3 w-3 text-amber-600 dark:text-amber-400" /> {t("bestScore")}
                 </div>
-                <div className="text-2xl font-bold text-amber-600">{stats.bestScore}%</div>
+                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.bestScore}%</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-4">
                 <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3 text-blue-600" /> {t("avgScore")}
+                  <TrendingUp className="h-3 w-3 text-blue-600 dark:text-blue-400" /> {t("avgScore")}
                 </div>
-                <div className="text-2xl font-bold text-blue-600">{stats.avgScore}%</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.avgScore}%</div>
               </CardContent>
             </Card>
             <Card>
@@ -261,6 +289,65 @@ export default function StudentDashboardPage() {
                   <ChevronRight className="h-4 w-4" />
                 </Link>
               </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/favorites">
+                  <span className="flex items-center gap-2">
+                    <Star className="h-4 w-4" /> {t("favorites") || "Избранное"}
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/messages">
+                  <span className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" /> Сообщения
+                    {unreadMessages > 0 && (
+                      <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-rose-500 dark:bg-rose-600 rounded-full">{unreadMessages}</span>
+                    )}
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/achievements">
+                  <span className="flex items-center gap-2">
+                    <Award className="h-4 w-4" /> Достижения
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/learning-path">
+                  <span className="flex items-center gap-2">
+                    <Map className="h-4 w-4" /> Учебный план
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/exams">
+                  <span className="flex items-center gap-2">
+                    <History className="h-4 w-4" /> История экзаменов
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/preferences">
+                  <span className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" /> Настройки уведомлений
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/student/leaderboard">
+                  <span className="flex items-center gap-2">
+                    <Medal className="h-4 w-4" /> {t("leaderboard") || "Таблица лидеров"}
+                  </span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -314,7 +401,7 @@ export default function StudentDashboardPage() {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-blue-600" />
+                <Megaphone className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 {t("announcementsTitle")}
               </CardTitle>
               <CardDescription>{t("announcementsSubtitle")}</CardDescription>
@@ -350,7 +437,7 @@ export default function StudentDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Bell className="h-5 w-5 text-amber-600" />
+              <Bell className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               {t("reminders")}
             </CardTitle>
             <CardDescription>{t("remindersSubtitle")}</CardDescription>

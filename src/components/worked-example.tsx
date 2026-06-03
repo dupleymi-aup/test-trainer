@@ -67,7 +67,7 @@ function StepCard({ step }: { step: WorkedExample["steps"][number] }) {
                   </code>
                 </div>
               </div>
-              <Badge variant="secondary" className={`mt-2 text-[10px] ${categoryBadgeStyles[step.example.category] || "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-200"}`}>
+              <Badge variant="secondary" className={`mt-2 text-[10px] ${categoryBadgeStyles[step.example.category] || "bg-gray-100 text-gray-800 dark:bg-muted dark:text-muted-foreground"}`}>
                 {step.example.category}
               </Badge>
             </div>

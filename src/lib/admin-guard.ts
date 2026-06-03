@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
+import type { Permission } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
 
 export interface AuthSession {
   userId: string;
@@ -176,4 +178,30 @@ export async function requireStudent(): Promise<
   }
 
   return { session: { userId: result.user.id, role: result.user.role } };
+}
+
+export async function requirePermission(
+  requiredPermission: Permission
+): Promise<{ session: AuthSession } | { response: NextResponse }> {
+  const auth = await requireAuth();
+  if ("response" in auth) return auth;
+
+  if (!hasPermission(auth.session.role, requiredPermission)) {
+    return { response: NextResponse.json({ error: `Forbidden: missing permission '${requiredPermission}'` }, { status: 403 }) };
+  }
+
+  return { session: auth.session };
+}
+
+export async function requirePermissionOrRole(
+  requiredPermission: Permission,
+  allowedRoles: string[]
+): Promise<{ session: AuthSession } | { response: NextResponse }> {
+  const auth = await requireAuth();
+  if ("response" in auth) return auth;
+
+  if (allowedRoles.includes(auth.session.role)) return { session: auth.session };
+  if (hasPermission(auth.session.role, requiredPermission)) return { session: auth.session };
+
+  return { response: NextResponse.json({ error: `Forbidden: missing permission '${requiredPermission}'` }, { status: 403 }) };
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, FileText, TrendingUp, Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -20,23 +21,41 @@ interface Student {
   lastAttempt: string | null;
 }
 
+interface Group {
+  id: string;
+  name: string;
+}
+
 export default function TeacherDashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
+    fetch("/api/teacher/groups", { signal: controller.signal })
+      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((data) => { if (!controller.signal.aborted) { setGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
+      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-dashboard] Failed to load groups:", err); });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedGroupId) return;
+    const controller = new AbortController();
+    setLoading(true);
     Promise.allSettled([
-      fetch("/api/teacher/students", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-      fetch("/api/teacher/analytics", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch(`/api/teacher/students?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+      fetch(`/api/teacher/analytics?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
     ]).then(([studentsResult, _analyticsResult]) => {
       if (studentsResult.status === "fulfilled" && !controller.signal.aborted) {
-        setStudents(studentsResult.value.students);
+        setStudents(studentsResult.value.students || []);
       }
       if (!controller.signal.aborted) setLoading(false);
     }).catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-dashboard] Failed to load data:", err); setLoading(false); } });
     return () => controller.abort();
-  }, []);
+  }, [selectedGroupId]);
 
   if (loading) return <TeacherLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></TeacherLayout>;
 
@@ -45,10 +64,23 @@ export default function TeacherDashboardPage() {
   return (
     <TeacherLayout>
       <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Выберите группу" />
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((g) => (
+                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Users className="h-8 w-8 text-blue-600" /><div><p className="text-2xl font-bold">{students.length}</p><p className="text-xs text-muted-foreground">Студенты</p></div></div></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Users className="h-8 w-8 text-blue-600 dark:text-blue-400" /><div><p className="text-2xl font-bold">{students.length}</p><p className="text-xs text-muted-foreground">Студенты</p></div></div></CardContent></Card>
           <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><FileText className="h-8 w-8 text-emerald-600" /><div><p className="text-2xl font-bold">{avgScore}%</p><p className="text-xs text-muted-foreground">Средний балл</p></div></div></CardContent></Card>
-          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-amber-600" /><div><p className="text-2xl font-bold">{students.filter((s) => s.bestScore >= 75).length}</p><p className="text-xs text-muted-foreground">Успешные (&ge;75%)</p></div></div></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-amber-600 dark:text-amber-400" /><div><p className="text-2xl font-bold">{students.filter((s) => s.bestScore >= 75).length}</p><p className="text-xs text-muted-foreground">Успешные (&ge;75%)</p></div></div></CardContent></Card>
         </div>
 
         <Card>

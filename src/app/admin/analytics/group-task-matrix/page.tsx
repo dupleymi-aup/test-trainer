@@ -115,7 +115,7 @@ export default function GroupTaskMatrixPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-blue-600" /><span className="text-xs text-muted-foreground">Ср. проход (лучшая)</span></div>
+              <div className="flex items-center gap-2 mb-1"><TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Ср. проход (лучшая)</span></div>
               <p className="text-2xl font-bold">{data.groupSummary[0]?.avgPassRate || 0}%</p>
             </CardContent>
           </Card>

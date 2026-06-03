@@ -143,7 +143,7 @@ export function AchievementToast({ achievement }: { achievement: Achievement }) 
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 50, scale: 0.9 }}
-      className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 shadow-lg"
+      className="flex items-center gap-3 bg-card border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 shadow-lg"
     >
       <span className="text-3xl">{achievement.icon}</span>
       <div>
