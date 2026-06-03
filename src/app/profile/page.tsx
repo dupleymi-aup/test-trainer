@@ -118,7 +118,7 @@ export default function ProfilePage() {
 }
 
 function ProfileContent() {
-  const { data: _session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") || "profile";

@@ -147,7 +147,6 @@ export default function TrainerPage() {
       <Confetti active={state.showConfetti} />
       <Onboarding />
       <HintDialog
-        testCases={state.testCases}
         onAddTestCase={state.handleAddTestCase}
       />
       <CommandPalette
