@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
@@ -116,7 +116,7 @@ export async function GET(req: Request) {
         percent: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0,
       })),
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch analytics" },
       { status: 500 }

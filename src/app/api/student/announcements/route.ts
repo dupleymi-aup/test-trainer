@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
@@ -18,9 +18,16 @@ export async function GET(req: Request) {
     // Get announcements: system-wide + for their groups
     const announcements = await db.announcement.findMany({
       where: {
-        OR: [{ groupId: { in: groupIds } }, { groupId: null }],
-        // Exclude expired announcements
-        AND: [{ expiresAt: { gt: new Date() } }, { expiresAt: null }],
+        OR: [
+          { groupId: { in: groupIds } },
+          { groupId: null },
+        ],
+        AND: {
+          OR: [
+            { expiresAt: { gt: new Date() } },
+            { expiresAt: null },
+          ],
+        },
       },
       orderBy: { createdAt: "desc" },
       include: {
@@ -31,7 +38,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ announcements });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch announcements" }, { status: 500 });
   }
 }

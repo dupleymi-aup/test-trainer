@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import { tasks } from "@/lib/tasks";
 import type { TaskProgress } from "@/lib/storage";
 import { Trophy, Download, Upload, RotateCcw } from "lucide-react";
@@ -38,6 +39,10 @@ export const ProgressStatsBar = memo(function ProgressStatsBar({
   onImport,
   onResetAll,
 }: ProgressStatsBarProps) {
+  const t = useTranslations("common");
+  const tTrainer = useTranslations("trainer");
+  const tProgress = useTranslations("progress");
+
   const percentage = (completedCount / totalTasks) * 100;
 
   const barGradient =
@@ -53,7 +58,7 @@ export const ProgressStatsBar = memo(function ProgressStatsBar({
         <div className="flex items-center gap-2 text-sm">
           <Trophy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <span className="font-medium">
-            Выполнено: {completedCount} из {totalTasks} заданий
+            {tTrainer("completedXofY", { completed: completedCount, total: totalTasks })}
           </span>
         </div>
 
@@ -63,20 +68,20 @@ export const ProgressStatsBar = memo(function ProgressStatsBar({
             size="sm"
             className="h-7 text-xs text-muted-foreground hover:text-foreground"
             onClick={onExport}
-            title="Экспортировать прогресс"
+            title={tProgress("exportProgress")}
           >
             <Download className="h-3 w-3 mr-1" />
-            Экспорт
+            {t("export")}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             className="h-7 text-xs text-muted-foreground hover:text-foreground"
             onClick={onImport}
-            title="Импортировать прогресс"
+            title={tProgress("importProgress")}
           >
             <Upload className="h-3 w-3 mr-1" />
-            Импорт
+            {t("import")}
           </Button>
 
           <AlertDialog open={resetDialogOpen} onOpenChange={onResetDialogOpenChange}>
@@ -85,26 +90,26 @@ export const ProgressStatsBar = memo(function ProgressStatsBar({
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                title="Сбросить весь прогресс"
+                title={tProgress("resetAllProgress")}
               >
                 <RotateCcw className="h-3 w-3 mr-1" />
-                Сбросить
+                {t("reset")}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Весь прогресс будет безвозвратно удалён.
+                  {t("allProgressWillBeLost")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={onResetAll}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Удалить всё
+                  {t("deleteAll")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

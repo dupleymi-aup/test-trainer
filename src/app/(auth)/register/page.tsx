@@ -9,7 +9,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/api-client";
-import { Beaker, Loader2, Eye, EyeOff, GraduationCap, Users, Shield } from "lucide-react";
+import { Beaker, Loader2, Eye, EyeOff, GraduationCap, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,21 +30,23 @@ import {
 } from "@/components/ui/card";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "nameMinLength"),
-    email: z.string().email("invalidEmail"),
-    phone: z.string().optional().or(z.literal("")),
-    password: z.string().min(8, "passwordMinLength"),
-    confirmPassword: z.string(),
-    accountType: z.enum(["STUDENT", "TEACHER"]),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "passwordsMismatch",
-    path: ["confirmPassword"],
-  });
+type RegisterForm = z.infer<ReturnType<typeof getRegisterSchema>>;
 
-type RegisterForm = z.infer<typeof registerSchema>;
+function getRegisterSchema(t: (key: string) => string) {
+  return z
+    .object({
+      name: z.string().min(2, t("nameMinLength")),
+      email: z.string().email(t("invalidEmail")),
+      phone: z.string().optional().or(z.literal("")),
+      password: z.string().min(8, t("passwordMinLength")),
+      confirmPassword: z.string(),
+      accountType: z.enum(["STUDENT", "TEACHER"]),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
+}
 
 const accountTypeKeys = [
   {
@@ -76,22 +78,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
 
-  const registerSchemaWithTranslations = z
-    .object({
-      name: z.string().min(2, t("nameMinLength")),
-      email: z.string().email(t("invalidEmail")),
-      phone: z.string().optional().or(z.literal("")),
-      password: z.string().min(8, t("passwordMinLength")),
-      confirmPassword: z.string(),
-      accountType: z.enum(["STUDENT", "TEACHER"]),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: t("passwordsMismatch"),
-      path: ["confirmPassword"],
-    });
-
   const form = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchemaWithTranslations),
+    resolver: zodResolver(getRegisterSchema(t)),
     defaultValues: {
       name: "",
       email: "",

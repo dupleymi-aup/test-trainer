@@ -38,7 +38,6 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 function LoginFormContent() {
   const t = useTranslations("auth");
-  const tCommon = useTranslations("common");
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";

@@ -32,8 +32,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { tasks } from "@/lib/tasks";
+
 
 interface AnalyticsData {
   attempts: number;
