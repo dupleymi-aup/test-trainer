@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertTriangle, TrendingDown, Clock, UserX, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -78,7 +79,7 @@ export default function AtRiskStudentsPage() {
     fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => { if (!controller.signal.aborted) { setGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
-      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-at-risk] Failed to load groups:", err); });
+      .catch((err) => { if (!controller.signal.aborted) logger.error("Failed to load groups for at-risk", err); });
     return () => controller.abort();
   }, []);
 
@@ -94,7 +95,7 @@ export default function AtRiskStudentsPage() {
           setLoading(false);
         }
       })
-      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-at-risk] Failed to load at-risk data:", err); setLoading(false); } });
+      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load at-risk data", err); setLoading(false); } });
     return () => controller.abort();
   }, [selectedGroupId]);
 

@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Printer, TrendingUp, TrendingDown, Minus, Award, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import {
   LineChart,
   Line,
@@ -99,7 +100,7 @@ export default function StudentReportCardPage({
       fetch(`/api/teacher/reports/student/${id}/report-card`, { signal: controller.signal })
         .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-        .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-report-card] Failed to load report card:", err); setLoading(false); } });
+        .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load report card", err); setLoading(false); } });
     });
     return () => controller.abort();
   }, [params]);

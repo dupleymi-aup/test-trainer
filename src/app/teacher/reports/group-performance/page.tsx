@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronDown, ChevronRight, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 
 interface Student {
   id: string;
@@ -53,7 +54,7 @@ export default function GroupPerformancePage() {
     fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => { if (!controller.signal.aborted) { setTeacherGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
-      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-group-performance] Failed to load groups:", err); });
+      .catch((err) => { if (!controller.signal.aborted) logger.error("Failed to load groups for performance", err); });
     return () => controller.abort();
   }, []);
 
@@ -69,7 +70,7 @@ export default function GroupPerformancePage() {
           setLoading(false);
         }
       })
-      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-group-performance] Failed to load groups:", err); setLoading(false); } });
+      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load group performance data", err); setLoading(false); } });
     return () => controller.abort();
   }, [selectedGroupId]);
 

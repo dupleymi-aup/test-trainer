@@ -11,6 +11,7 @@ import {
 import { Download, Users, AlertTriangle, Grid3X3, FileJson } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 export default function TeacherReportsPage() {
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
@@ -26,7 +27,7 @@ export default function TeacherReportsPage() {
     fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) { setGroups(d.groups || []); setLoadingGroups(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-reports] Failed to load groups:", err); setLoadingGroups(false); } });
+      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load groups", err); toast.error("Не удалось загрузить список групп"); setLoadingGroups(false); } });
     return () => controller.abort();
   }, []);
 

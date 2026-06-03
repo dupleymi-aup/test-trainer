@@ -4,6 +4,8 @@ import { TeacherLayout } from "@/components/teacher/teacher-layout";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { logger } from "@/lib/logger";
+import { toast } from "sonner";
 
 interface Analytics {
   distribution: Record<string, number>;
@@ -21,7 +23,7 @@ export default function TeacherAnalyticsPage() {
     fetch("/api/teacher/analytics", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-analytics] Failed to load analytics:", err); setLoading(false); } });
+      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load analytics", err); toast.error("Не удалось загрузить аналитику"); setLoading(false); } });
     return () => controller.abort();
   }, []);
 

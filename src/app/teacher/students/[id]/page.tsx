@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, FileText, AlertCircle, Award } from "lucide-react";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -48,7 +49,7 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
       fetch(`/api/teacher/students/${id}/progress`, { signal: controller.signal })
         .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-        .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-student-detail] Failed to load progress:", err); setLoading(false); } });
+        .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load student progress", err); setLoading(false); } });
     });
     return () => controller.abort();
   }, [params]);

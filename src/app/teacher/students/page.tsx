@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 
 interface Student {
   id: string;
@@ -38,7 +39,7 @@ export default function TeacherStudentsPage() {
     fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => { if (!controller.signal.aborted) { setGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
-      .catch((err) => { if (!controller.signal.aborted) console.error("[teacher-students] Failed to load groups:", err); });
+      .catch((err) => { if (!controller.signal.aborted) logger.error("Failed to load groups", err); });
     return () => controller.abort();
   }, []);
 
@@ -49,7 +50,7 @@ export default function TeacherStudentsPage() {
     fetch(`/api/teacher/students?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data) => { if (!controller.signal.aborted) { setStudents(data.students || []); setLoading(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { console.error("[teacher-students] Failed to load students:", err); setLoading(false); } });
+      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load students", err); setLoading(false); } });
     return () => controller.abort();
   }, [selectedGroupId]);
 
