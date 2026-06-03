@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Noto_Sans_SC } from "next/font/google";
 import { getLocale, getTranslations } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
 import { Providers } from "@/components/auth-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { DEFAULT_APP_URL } from "@/lib/constants";
@@ -98,6 +99,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const t = await getTranslations("header");
+  const messages = (await import(`../../messages/${locale}.json`)).default;
 
   const fontClass = locale === "zh"
     ? `${geistSans.variable} ${geistMono.variable} ${notoSansSC.variable} font-[var(--font-noto-sans-sc)]`
@@ -114,9 +116,11 @@ export default async function RootLayout({
         >
           {t("skipToContent")}
         </a>
-        <Providers>
-          <ErrorBoundary>{children}</ErrorBoundary>
-        </Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            <ErrorBoundary>{children}</ErrorBoundary>
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

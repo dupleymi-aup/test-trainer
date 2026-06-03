@@ -81,7 +81,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
         setIsCalculating(false);
       }
     });
-  }, [inputs, task.id, parseInputForRef]);
+  }, [inputs, task.id, parseInputForRef, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Allow Ctrl+Enter or Cmd+Enter to submit from any input

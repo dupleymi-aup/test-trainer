@@ -168,7 +168,9 @@ export function useTrainerState() {
       map[String(task.id)] = getTaskBestCoverage(task.id);
     }
     return map;
-  }, [tasks, attemptHistory]);
+    // tasks is a module-level import; attemptHistory triggers re-render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attemptHistory]);
 
   const filteredTasks = useMemo(() => {
     let filtered = tasks;

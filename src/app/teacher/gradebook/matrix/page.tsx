@@ -5,11 +5,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Grid3X3, Loader2, Pencil, Trash2, Save, X, Download } from "lucide-react";
+import { Loader2, Save, Download } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { tasks } from "@/lib/tasks";
@@ -56,11 +53,6 @@ export default function GradebookMatrixPage() {
   const getGradeFor = (userId: string, taskId: number) => {
     const g = grades.find((g) => g.userId === userId && Number(g.taskId) === taskId);
     return g ? g.score : null;
-  };
-
-  const getCommentFor = (userId: string, taskId: number) => {
-    const g = grades.find((g) => g.userId === userId && Number(g.taskId) === taskId);
-    return g?.comment || "";
   };
 
   const setCellValue = (userId: string, taskId: number, score: number) => {

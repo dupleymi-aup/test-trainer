@@ -31,6 +31,10 @@ bun.lockb
 .env
 .env*.local
 
+# server logs
+server.log
+server-error.log
+
 # vercel
 .vercel
 

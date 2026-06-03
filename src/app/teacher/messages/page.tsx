@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,12 +48,7 @@ export default function MessagesPage() {
   // Student list for recipient selection
   const [students, setStudents] = useState<Array<{ id: string; name: string | null; email: string | null; group: string | null }>>([]);
 
-  useEffect(() => {
-    loadMessages();
-    loadStudents();
-  }, [tab]);
-
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     setLoading(true);
     try {
       const folder = tab === "sent" ? "sent" : "inbox";
@@ -68,7 +63,7 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tab]);
 
   const loadStudents = async () => {
     try {
@@ -79,6 +74,11 @@ export default function MessagesPage() {
       }
     } catch { /* ignore */ }
   };
+
+  useEffect(() => {
+    loadMessages();
+    loadStudents();
+  }, [loadMessages, tab]);
 
   const sendMessage = async () => {
     if (!toUserId || !subject.trim() || !content.trim()) {

@@ -60,8 +60,6 @@ export async function GET(req: Request) {
         : db.group.findMany({ select: { id: true } }),
     ]);
 
-    const tasksWithGroups = tasks;
-
     if (groupId) {
       const assigned = await db.group.findMany({
         where: { id: groupId },

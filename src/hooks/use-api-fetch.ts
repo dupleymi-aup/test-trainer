@@ -11,7 +11,7 @@ interface UseApiFetchResult<T> {
   refetch: () => void;
 }
 
-interface UseApiFetchOptions<T> extends ApiFetchJsonOptions {
+interface UseApiFetchOptions extends ApiFetchJsonOptions {
   /** Show a toast notification on error (default: true) */
   showToastOnError?: boolean;
   /** Custom error message for the toast */
@@ -27,12 +27,15 @@ interface UseApiFetchOptions<T> extends ApiFetchJsonOptions {
  * Custom hook for data fetching with automatic loading, error state,
  * AbortController cleanup, and optional toast notifications.
  *
+ * Options (init, onError, timeoutMs, etc.) are stored in refs to avoid
+ * re-render loops when callers pass inline object literals.
+ *
  * Usage:
  *   const { data, loading, error, refetch } = useApiFetch<User[]>("/api/users");
  */
 export function useApiFetch<T>(
   url: string,
-  options?: UseApiFetchOptions<T>
+  options?: UseApiFetchOptions
 ): UseApiFetchResult<T> {
   const {
     init,
@@ -50,6 +53,21 @@ export function useApiFetch<T>(
   const urlRef = useRef(url);
   urlRef.current = url;
 
+  const initRef = useRef(init);
+  initRef.current = init;
+
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+
+  const timeoutMsRef = useRef(timeoutMs);
+  timeoutMsRef.current = timeoutMs;
+
+  const showToastRef = useRef(showToastOnError);
+  showToastRef.current = showToastOnError;
+
+  const errorMsgRef = useRef(errorMessage);
+  errorMsgRef.current = errorMessage;
+
   const executeFetch = useCallback(() => {
     const controller = new AbortController();
     const currentUrl = urlRef.current;
@@ -58,16 +76,16 @@ export function useApiFetch<T>(
     setError(null);
 
     const handleError = (apiError: APIError) => {
-      if (showToastOnError) {
-        toast.error(errorMessage || apiError.message);
+      if (showToastRef.current) {
+        toast.error(errorMsgRef.current || apiError.message);
       }
-      onError?.(apiError);
+      onErrorRef.current?.(apiError);
     };
 
     apiFetchJson<T>(currentUrl, {
-      init: { ...init, signal: controller.signal },
+      init: { ...initRef.current, signal: controller.signal },
       onError: handleError,
-      timeoutMs,
+      timeoutMs: timeoutMsRef.current,
     })
       .then((result) => {
         setData(result);
@@ -81,7 +99,7 @@ export function useApiFetch<T>(
       });
 
     return controller;
-  }, [init, onError, timeoutMs, showToastOnError, errorMessage]);
+  }, []);
 
   useEffect(() => {
     if (lazy) return;

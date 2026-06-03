@@ -7,12 +7,11 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { ArrowLeft, Bell, Mail, Smartphone, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function NotificationPreferencesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [prefs, setPrefs] = useState({ email: false, sms: false, inApp: true });
   const [loading, setLoading] = useState(true);

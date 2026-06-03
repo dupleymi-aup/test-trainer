@@ -143,6 +143,33 @@ export function ExamMode() {
 
   const completedCount = examResults.length;
 
+  const saveExamToServer = useCallback((results: EvaluationResult[], taskIds: number[], elapsedSeconds: number) => {
+    if (results.length === 0) return;
+    const avg = Math.round(results.reduce((s, r) => s + r.overallScore, 0) / results.length);
+    const sorted = [...results].sort((a, b) => a.overallScore - b.overallScore);
+    fetch("/api/student/exams", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        taskIds,
+        timeLimit,
+        mode: practiceMode ? "practice" : "exam",
+        avgScore: avg,
+        bestTaskId: sorted.length > 0 ? sorted[sorted.length - 1].task.id : null,
+        bestTaskScore: sorted.length > 0 ? sorted[sorted.length - 1].overallScore : 0,
+        worstTaskId: sorted.length > 0 ? sorted[0].task.id : null,
+        worstTaskScore: sorted.length > 0 ? sorted[0].overallScore : 0,
+        totalCorrectness: results.length > 0 ? Math.round(results.reduce((s, r) => s + r.correctnessScore, 0) / results.length) : 0,
+        timeSpent: elapsedSeconds,
+        results: Object.fromEntries(results.map((r) => [String(r.task.id), r.overallScore])),
+      }),
+    }).then((r) => {
+      if (!r.ok) toast.error("Не удалось сохранить результаты экзамена на сервер");
+    }).catch(() => {
+      toast.error("Не удалось сохранить результаты экзамена");
+    });
+  }, [timeLimit, practiceMode]);
+
   const finishExam = useCallback(() => {
     if (isFinishingRef.current) return;
     isFinishingRef.current = true;
@@ -184,38 +211,10 @@ export function ExamMode() {
     if (newAvg >= 90) {
       triggerConfetti();
     }
-    // Auto-save exam results to server
     const elapsedSeconds = startTimeRef.current > 0 ? Math.round((Date.now() - startTimeRef.current) / 1000) : timeLimit * 60;
     saveExamToServer(results, currentTasks.map((t) => t.id), elapsedSeconds);
     isFinishingRef.current = false;
-  }, [timeLimit, practiceMode, triggerConfetti]);
-
-  const saveExamToServer = useCallback((results: EvaluationResult[], taskIds: number[], elapsedSeconds: number) => {
-    if (results.length === 0) return;
-    const avg = Math.round(results.reduce((s, r) => s + r.overallScore, 0) / results.length);
-    const sorted = [...results].sort((a, b) => a.overallScore - b.overallScore);
-    fetch("/api/student/exams", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        taskIds,
-        timeLimit,
-        mode: practiceMode ? "practice" : "exam",
-        avgScore: avg,
-        bestTaskId: sorted.length > 0 ? sorted[sorted.length - 1].task.id : null,
-        bestTaskScore: sorted.length > 0 ? sorted[sorted.length - 1].overallScore : 0,
-        worstTaskId: sorted.length > 0 ? sorted[0].task.id : null,
-        worstTaskScore: sorted.length > 0 ? sorted[0].overallScore : 0,
-        totalCorrectness: results.length > 0 ? Math.round(results.reduce((s, r) => s + r.correctnessScore, 0) / results.length) : 0,
-        timeSpent: elapsedSeconds,
-        results: Object.fromEntries(results.map((r) => [String(r.task.id), r.overallScore])),
-      }),
-    }).then((r) => {
-      if (!r.ok) toast.error("Не удалось сохранить результаты экзамена на сервер");
-    }).catch(() => {
-      toast.error("Не удалось сохранить результаты экзамена");
-    });
-  }, [timeLimit, practiceMode]);
+  }, [timeLimit, triggerConfetti, saveExamToServer]);
 
   useEffect(() => {
     finishExamRef.current = finishExam;
