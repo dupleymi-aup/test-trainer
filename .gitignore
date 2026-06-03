@@ -23,6 +23,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# lock files (keep only one)
+bun.lock
+bun.lockb
+
 # env files
 .env
 .env*.local

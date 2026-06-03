@@ -83,7 +83,7 @@ function parseInputValue(raw: string): unknown {
   const num = Number(trimmed);
   if (trimmed !== "" && !isNaN(num)) {
     // Check that it looks like a number (allow negatives, decimals)
-    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(trimmed)) {
       return num;
     }
   }

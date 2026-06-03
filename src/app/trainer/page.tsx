@@ -16,49 +16,9 @@ import { HintDialog } from "@/components/hint-dialog";
 import { MarathonMode } from "@/components/marathon-mode";
 import { CommandPalette } from "@/components/command-palette";
 import { Button } from "@/components/ui/button";
-import { CloudOff, ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 const TOTAL_TASKS = tasks.length;
-
-function DemoBanner() {
-  const { status } = useSession();
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    setDismissed(sessionStorage.getItem("demo-banner-dismissed") === "true");
-  }, []);
-
-  if (status !== "unauthenticated" || dismissed) return null;
-
-  const handleDismiss = () => {
-    sessionStorage.setItem("demo-banner-dismissed", "true");
-    setDismissed(true);
-  };
-
-  return (
-    <div className="relative bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-800">
-      <div className="max-w-7xl mx-auto w-full px-4 py-2.5 flex items-center gap-3">
-        <CloudOff className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-        <p className="text-sm text-amber-800 dark:text-amber-200 flex-1">
-          Демо-режим — прогресс сохраняется только в этом браузере.{" "}
-          <Link href="/login?callbackUrl=/trainer" className="underline font-medium hover:text-amber-900 dark:hover:text-amber-100">
-            Войдите в аккаунт
-          </Link>{" "}
-          для облачного сохранения.
-        </p>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200"
-          onClick={handleDismiss}
-          aria-label="Закрыть баннер"
-        >
-          <CloudOff className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 export default function TrainerPage() {
   const { status } = useSession();
@@ -128,8 +88,6 @@ export default function TrainerPage() {
         onReplayOnboarding={handleReplayOnboarding}
         onMarathonClick={() => setMarathonActive(true)}
       />
-
-      <DemoBanner />
 
       <main id="main-content" className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6">
         <ProgressStatsBar
