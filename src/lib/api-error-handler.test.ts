@@ -50,7 +50,7 @@ describe("formatZodError", () => {
   });
 
   it("handles empty issues array gracefully", () => {
-    const mockError = { issues: [] } as z.ZodError;
+    const mockError = { issues: [] } as unknown as z.ZodError;
     expect(formatZodError(mockError)).toBe("Validation failed");
   });
 
