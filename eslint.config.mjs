@@ -65,6 +65,13 @@ const eslintConfig = [
   },
 
   {
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "no-console": "off",
+    },
+  },
+
+  {
     ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills", "*.js", "scripts/**", "next.config.ts", "tailwind.config.ts"],
   },
 ];
