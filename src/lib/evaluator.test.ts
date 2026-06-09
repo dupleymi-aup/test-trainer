@@ -47,14 +47,19 @@ function makeTestCase(
 
 import { getTaskById } from "./tasks";
 
-const factorialTask = getTaskById(1)!;
-const isPrimeTask = getTaskById(2)!;
-const applyDiscountTask = getTaskById(3)!;
-const isLeapYearTask = getTaskById(4)!;
-const triangleTask = getTaskById(5)!;
-const validatePasswordTask = getTaskById(6)!;
-const fibonacciTask = getTaskById(15)!;
-const calculateShippingTask = getTaskById(16)!;
+const factorialTask = getTaskById(1);
+const isPrimeTask = getTaskById(2);
+const applyDiscountTask = getTaskById(3);
+const isLeapYearTask = getTaskById(4);
+const triangleTask = getTaskById(5);
+const validatePasswordTask = getTaskById(6);
+const fibonacciTask = getTaskById(15);
+const calculateShippingTask = getTaskById(16);
+
+if (!factorialTask || !isPrimeTask || !applyDiscountTask || !isLeapYearTask || 
+    !triangleTask || !validatePasswordTask || !fibonacciTask || !calculateShippingTask) {
+  throw new Error("Required tasks not found in task library");
+}
 
 // ===========================================================================
 // 1. evaluateTestCases — happy path and basic scoring
@@ -1114,7 +1119,8 @@ describe("Edge cases", () => {
     });
 
     it("handles three-input functions (isValidDate)", () => {
-      const isValidDateTask = getTaskById(10)!;
+      const isValidDateTask = getTaskById(10);
+      if (!isValidDateTask) return;
       const result = evaluateTestCases(isValidDateTask, [
         makeTestCase("tc1", ["15", "6", "2023"], "true"),
       ]);

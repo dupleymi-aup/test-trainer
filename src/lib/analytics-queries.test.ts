@@ -15,10 +15,11 @@ describe("computeLinearRegression", () => {
       [3, 6],
     ]);
     expect(result).not.toBeNull();
-    expect(result!.slope).toBe(2);
-    expect(result!.intercept).toBe(0);
-    expect(result!.r2).toBe(1);
-    expect(result!.predict(5)).toBe(10);
+    if (!result) return;
+    expect(result.slope).toBe(2);
+    expect(result.intercept).toBe(0);
+    expect(result.r2).toBe(1);
+    expect(result.predict(5)).toBe(10);
   });
 
   it("calculates regression with noise", () => {
@@ -30,8 +31,9 @@ describe("computeLinearRegression", () => {
       [4, 13],
     ]);
     expect(result).not.toBeNull();
-    expect(result!.slope).toBeGreaterThan(0);
-    expect(result!.r2).toBeGreaterThan(0.5);
+    if (!result) return;
+    expect(result.slope).toBeGreaterThan(0);
+    expect(result.r2).toBeGreaterThan(0.5);
   });
 
   it("handles flat line", () => {
@@ -41,8 +43,9 @@ describe("computeLinearRegression", () => {
       [2, 50],
     ]);
     expect(result).not.toBeNull();
-    expect(result!.slope).toBe(0);
-    expect(result!.r2).toBe(1);
+    if (!result) return;
+    expect(result.slope).toBe(0);
+    expect(result.r2).toBe(1);
   });
 });
 
@@ -58,8 +61,9 @@ describe("tTest", () => {
       [20, 21, 22, 20, 21]
     );
     expect(result).not.toBeNull();
-    expect(result!.significant).toBe(true);
-    expect(Math.abs(result!.t)).toBeGreaterThan(1.96);
+    if (!result) return;
+    expect(result.significant).toBe(true);
+    expect(Math.abs(result.t)).toBeGreaterThan(1.96);
   });
 
   it("detects no significant difference for similar samples", () => {
@@ -68,7 +72,8 @@ describe("tTest", () => {
       [10, 12, 11, 10, 12]
     );
     expect(result).not.toBeNull();
-    expect(result!.significant).toBe(false);
+    if (!result) return;
+    expect(result.significant).toBe(false);
   });
 
   it("returns t=0 for identical variance and mean", () => {
@@ -77,7 +82,8 @@ describe("tTest", () => {
       [5, 5, 5]
     );
     expect(result).not.toBeNull();
-    expect(result!.t).toBe(0);
+    if (!result) return;
+    expect(result.t).toBe(0);
   });
 });
 

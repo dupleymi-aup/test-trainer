@@ -314,8 +314,9 @@ describe("predictNextScore", () => {
       { score: 80, createdAt: day(1) },
     ]);
     expect(result).not.toBeNull();
-    expect(result!.trend).toBe("improving");
-    expect(result!.predicted).toBeGreaterThan(80);
+    if (!result) return;
+    expect(result.trend).toBe("improving");
+    expect(result.predicted).toBeGreaterThan(80);
   });
 
   it("predicts declining trend", () => {
@@ -327,8 +328,9 @@ describe("predictNextScore", () => {
       { score: 50, createdAt: day(1) },
     ]);
     expect(result).not.toBeNull();
-    expect(result!.trend).toBe("declining");
-    expect(result!.predicted).toBeLessThan(50);
+    if (!result) return;
+    expect(result.trend).toBe("declining");
+    expect(result.predicted).toBeLessThan(50);
   });
 
   it("predicts stable trend", () => {
@@ -340,7 +342,8 @@ describe("predictNextScore", () => {
       { score: 69, createdAt: day(1) },
     ]);
     expect(result).not.toBeNull();
-    expect(result!.trend).toBe("stable");
+    if (!result) return;
+    expect(result.trend).toBe("stable");
   });
 
   it("clamps prediction to 0-100 range", () => {
@@ -352,8 +355,9 @@ describe("predictNextScore", () => {
       { score: 100, createdAt: day(1) },
     ]);
     expect(result).not.toBeNull();
-    expect(result!.predicted).toBeLessThanOrEqual(100);
-    expect(result!.predicted).toBeGreaterThanOrEqual(0);
+    if (!result) return;
+    expect(result.predicted).toBeLessThanOrEqual(100);
+    expect(result.predicted).toBeGreaterThanOrEqual(0);
   });
 
   it("returns confidence between 0 and 100", () => {
@@ -365,7 +369,8 @@ describe("predictNextScore", () => {
       { score: 70, createdAt: day(1) },
     ]);
     expect(result).not.toBeNull();
-    expect(result!.confidence).toBeGreaterThanOrEqual(0);
-    expect(result!.confidence).toBeLessThanOrEqual(100);
+    if (!result) return;
+    expect(result.confidence).toBeGreaterThanOrEqual(0);
+    expect(result.confidence).toBeLessThanOrEqual(100);
   });
 });
