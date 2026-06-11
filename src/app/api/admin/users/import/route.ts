@@ -5,7 +5,14 @@ import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
+
+const importSchema = z.object({
+  csv: z.string().min(1, "CSV content is required"),
+  defaultRole: z.nativeEnum(Role).optional().default(Role.STUDENT),
+  defaultPassword: z.string().min(8, "Password must be at least 8 characters long"),
+});
 
 export async function POST(req: Request) {
   try {
@@ -26,24 +33,12 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
 
-    const { csv, defaultRole, defaultPassword } = body;
-    if (!csv) return NextResponse.json({ error: "CSV content is required" }, { status: 400 });
-
-    const role = (defaultRole as Role) || "STUDENT";
-
-    if (!defaultPassword || typeof defaultPassword !== "string") {
-      return NextResponse.json({ error: "defaultPassword is required" }, { status: 400 });
+    const parsed = importSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    if (defaultPassword.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters long" }, { status: 400 });
-    }
-
-    const password = defaultPassword;
-
-    if (!Object.values(Role).includes(role)) {
-      return NextResponse.json({ error: `Invalid role: ${role}` }, { status: 400 });
-    }
+    const { csv, defaultRole: role, defaultPassword: password } = parsed.data;
 
     // Parse CSV (expecting: name,email,phone,group,university or just name,email)
     const lines = csv.trim().split("\n");
