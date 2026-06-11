@@ -12,6 +12,7 @@ export default function TeacherError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // eslint-disable-next-line no-console
     console.error("[TeacherError]", error);
   }, [error]);
 

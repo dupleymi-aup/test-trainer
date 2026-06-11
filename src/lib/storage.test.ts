@@ -542,7 +542,8 @@ describe("storage", () => {
       vi.spyOn(mockLocalStorage, "setItem").mockImplementation(() => {
         throw new Error("fail");
       });
-      expect(() => saveMarathonRecord({} as any)).not.toThrow();
+      const minimalRecord = { timestamp: 0, totalTasks: 0, completedTasks: 0, avgScore: 0, totalTimeSec: 0 };
+      expect(() => saveMarathonRecord(minimalRecord)).not.toThrow();
     });
   });
 
