@@ -71,6 +71,7 @@ async function logExport(userId: string, reportType: string, format: string, det
 }
 
 export async function POST(req: Request) {
+  try {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
   const csrf = await requireCSRF(req);
@@ -981,4 +982,8 @@ export async function POST(req: Request) {
       "Content-Disposition": 'attachment; filename="admin-report-comprehensive.json"',
     },
   });
+  } catch (error) {
+    logger.error("Export report failed", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Export failed" }, { status: 500 });
+  }
 }
