@@ -4,6 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 /**
  * POST /api/admin/alerts/check-thresholds
@@ -16,6 +17,12 @@ export async function POST(req: Request) {
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminAlertCheck:${ip}`, rateLimits.adminAlertCheck);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const now = new Date();
     const fourteenDaysAgo = new Date(now);

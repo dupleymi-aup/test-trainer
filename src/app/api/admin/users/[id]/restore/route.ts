@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function PATCH(
   _req: Request,
@@ -14,6 +15,12 @@ export async function PATCH(
     const csrf = await requireCSRF(_req);
     if ("response" in csrf) return csrf.response;
     const { session } = guard;
+
+    const ip = getClientIp(_req);
+    const rateLimit = checkRateLimit(`adminUserRestore:${ip}`, rateLimits.adminUserRestore);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
   const { id } = await params;
 

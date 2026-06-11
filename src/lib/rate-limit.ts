@@ -90,6 +90,24 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   teacherGradebook: { max: 30, windowMs: 15 * 60 * 1000 },
   /** Verify email: 5 per 15 minutes (brute-force token guessing) */
   verifyEmail: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Admin alert threshold checks: 10 per 15 minutes */
+  adminAlertCheck: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Admin user restore: 10 per 15 minutes */
+  adminUserRestore: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Admin deadline send-reminders: 10 per 15 minutes */
+  adminDeadlineSendReminders: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Student exam submissions: 10 per 15 minutes */
+  studentExamSubmit: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Student favorite toggle: 20 per 15 minutes */
+  studentFavoriteToggle: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Student mark-messages-read: 30 per 15 minutes */
+  studentMarkRead: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Teacher message send: 20 per 15 minutes */
+  teacherMessageSend: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Teacher task constructor: 20 per 15 minutes */
+  teacherTaskConstructor: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Teacher template CRUD: 20 per 15 minutes */
+  teacherTemplateCrud: { max: 20, windowMs: 15 * 60 * 1000 },
 };
 
 /**

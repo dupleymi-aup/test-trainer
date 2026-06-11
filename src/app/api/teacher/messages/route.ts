@@ -4,6 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
   try {
@@ -60,6 +61,12 @@ export async function POST(req: Request) {
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`teacherMessageSend:${ip}`, rateLimits.teacherMessageSend);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -125,6 +132,12 @@ export async function PATCH(req: Request) {
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`teacherMessageSend:${ip}`, rateLimits.teacherMessageSend);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
+
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
 
@@ -153,6 +166,12 @@ export async function DELETE(req: Request) {
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`teacherMessageSend:${ip}`, rateLimits.teacherMessageSend);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

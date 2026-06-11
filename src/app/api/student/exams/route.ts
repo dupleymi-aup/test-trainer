@@ -4,6 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const saveExamSchema = z.object({
   taskIds: z.array(z.number().int().positive()).min(1),
@@ -62,6 +63,12 @@ export async function POST(req: Request) {
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`studentExamSubmit:${ip}`, rateLimits.studentExamSubmit);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });

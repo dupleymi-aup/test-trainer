@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
 import { secureCompare } from "@/lib/crypto";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 // Send reminders for deadlines approaching within the specified hours
 export async function POST(req: Request) {
@@ -27,6 +28,12 @@ export async function POST(req: Request) {
       const csrf = await requireCSRF(req);
       if ("response" in csrf) return csrf.response;
       userId = guard.session.userId;
+    }
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`adminDeadlineSendReminders:${ip}`, rateLimits.adminDeadlineSendReminders);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
     }
 
     const { searchParams } = new URL(req.url);

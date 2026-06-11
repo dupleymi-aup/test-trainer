@@ -4,6 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
@@ -59,6 +60,12 @@ export async function PATCH(
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
+
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`teacherTemplateCrud:${ip}`, rateLimits.teacherTemplateCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const templateId = (await params).id;
     const template = await db.courseTemplate.findUnique({ where: { id: templateId } });
@@ -136,6 +143,12 @@ export async function DELETE(
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const ip = getClientIp(_req);
+    const rateLimit = checkRateLimit(`teacherTemplateCrud:${ip}`, rateLimits.teacherTemplateCrud);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
     const templateId = (await params).id;
     const template = await db.courseTemplate.findUnique({ where: { id: templateId } });
