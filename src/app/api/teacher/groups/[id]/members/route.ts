@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
-import { checkRateLimit, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
