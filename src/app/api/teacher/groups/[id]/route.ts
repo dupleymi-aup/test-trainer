@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
+import { checkRateLimit, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
 const updateGroupSchema = z.object({
   name: z.string().min(1).optional(),
@@ -18,6 +19,9 @@ export async function PATCH(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("teacherGroupCrud:" + ip, rateLimits.teacherGroupCrud);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
     const { session } = guard;
@@ -62,6 +66,9 @@ export async function DELETE(
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(_req);
+    const rl = checkRateLimit("teacherGroupCrud:" + ip, rateLimits.teacherGroupCrud);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(_req);
     if ("response" in csrf) return csrf.response;
     const { session } = guard;

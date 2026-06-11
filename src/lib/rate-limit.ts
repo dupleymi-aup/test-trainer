@@ -64,6 +64,8 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   adminUserCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Admin group CRUD: 20 per 15 minutes */
   adminGroupCrud: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Teacher group CRUD: 20 per 15 minutes */
+  teacherGroupCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Admin deadline CRUD: 20 per 15 minutes */
   adminDeadlineCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Admin cache invalidation: 10 per 15 minutes */

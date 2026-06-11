@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
+import { checkRateLimit, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
@@ -42,6 +43,9 @@ export async function POST(
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
     const { session } = guard;
@@ -98,6 +102,9 @@ export async function DELETE(
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
