@@ -3,10 +3,9 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
-import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Текущий пароль обязателен"),

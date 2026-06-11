@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { formatZodError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 const verifyOtpSchema = z.object({
   phone: z.string().min(1, "Телефон обязателен").max(20, "Номер телефона слишком длинный"),

@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { formatZodError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Токен обязателен"),

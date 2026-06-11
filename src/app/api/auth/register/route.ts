@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
-import { checkRateLimit, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
@@ -21,11 +21,7 @@ export async function POST(req: Request) {
   const ip = getClientIp(req);
   const result = checkRateLimit(`register:${ip}`, rateLimits.register);
   if (result.limited) {
-    const retryAfter = Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000));
-    return NextResponse.json(
-      { error: "Слишком много попыток. Попробуйте позже" },
-      { status: 429, headers: { "Retry-After": String(retryAfter) } }
-    );
+    return createRateLimitResponse(result.resetAt);
   }
 
   try {

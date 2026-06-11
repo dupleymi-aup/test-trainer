@@ -3,11 +3,10 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { sendEmail, generatePasswordResetEmail } from "@/lib/email";
 import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
-import { DEFAULT_APP_URL } from "@/lib/constants";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { formatZodError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Неверный формат email").max(255).optional(),

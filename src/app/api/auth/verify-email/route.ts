@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, "Токен обязателен"),
