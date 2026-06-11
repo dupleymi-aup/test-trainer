@@ -4,7 +4,8 @@ import { z } from "zod";
 import { sendEmail, generatePasswordResetEmail } from "@/lib/email";
 import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
 import { generateSecureToken } from "@/lib/crypto";
-import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { DEFAULT_APP_URL } from "@/lib/constants";
+import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { formatZodError } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
