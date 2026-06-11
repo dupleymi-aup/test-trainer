@@ -11,6 +11,7 @@ const { mocks } = vi.hoisted(() => ({
     mockVerificationTokenDelete: vi.fn(),
     mockUserUpdate: vi.fn(),
     loggerError: vi.fn(),
+    rateLimitResult: { limited: false, remaining: 99, resetAt: Date.now() + 3600000 },
   },
 }));
 
@@ -35,6 +36,30 @@ vi.mock("@/lib/logger", () => ({
     error: mocks.loggerError,
   },
 }));
+
+vi.mock("@/lib/rate-limit", () => {
+  const m = mocks;
+  return {
+    checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
+    getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
+    createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
+      const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+      return new Response(
+        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(retryAfter),
+          },
+        }
+      );
+    }),
+    rateLimits: {
+      verifyEmail: { max: 5, windowMs: 15 * 60 * 1000 },
+    },
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Import route handler AFTER mocks are set up
