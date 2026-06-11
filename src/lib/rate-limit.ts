@@ -82,6 +82,14 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   adminReportExport: { max: 5, windowMs: 15 * 60 * 1000 },
   /** Admin bulk user import: 5 per 15 minutes (expensive operation) */
   adminUserImport: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Admin notifications CRUD: 30 per 15 minutes */
+  adminNotifications: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Teacher announcements CRUD: 10 per 15 minutes */
+  teacherAnnouncements: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Teacher gradebook mutations: 30 per 15 minutes */
+  teacherGradebook: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Verify email: 5 per 15 minutes (brute-force token guessing) */
+  verifyEmail: { max: 5, windowMs: 15 * 60 * 1000 },
 };
 
 /**

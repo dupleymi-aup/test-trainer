@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createNotificationSchema = z.object({
   type: z.string().max(100),
@@ -76,6 +77,9 @@ export async function PATCH(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("adminNotifications:" + ip, rateLimits.adminNotifications);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
@@ -121,6 +125,9 @@ export async function POST(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("adminNotifications:" + ip, rateLimits.adminNotifications);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
@@ -166,6 +173,9 @@ export async function DELETE(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("adminNotifications:" + ip, rateLimits.adminNotifications);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 

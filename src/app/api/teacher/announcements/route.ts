@@ -4,6 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createAnnouncementSchema = z.object({
   title: z.string().min(1, "Заголовок обязателен").max(200),
@@ -56,6 +57,10 @@ export async function POST(req: Request) {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("teacherAnnouncements:" + ip, rateLimits.teacherAnnouncements);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
@@ -118,6 +123,10 @@ export async function DELETE(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("teacherAnnouncements:" + ip, rateLimits.teacherAnnouncements);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
+
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
@@ -167,6 +176,10 @@ export async function PATCH(req: Request) {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("teacherAnnouncements:" + ip, rateLimits.teacherAnnouncements);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
 
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;

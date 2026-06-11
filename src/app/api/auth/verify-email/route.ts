@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const verifyEmailSchema = z.object({
   token: z.string().min(1, "Токен обязателен"),
@@ -10,6 +11,10 @@ const verifyEmailSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req);
+    const rl = checkRateLimit("verifyEmail:" + ip, rateLimits.verifyEmail);
+    if (rl.limited) return createRateLimitResponse(rl.resetAt);
+
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
