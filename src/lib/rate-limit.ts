@@ -108,6 +108,8 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   teacherTaskConstructor: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Teacher template CRUD: 20 per 15 minutes */
   teacherTemplateCrud: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Teacher report exports: 5 per 15 minutes (expensive queries) */
+  teacherReportExport: { max: 5, windowMs: 15 * 60 * 1000 },
 };
 
 /**

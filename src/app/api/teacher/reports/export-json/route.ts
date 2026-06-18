@@ -3,6 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
 
@@ -18,6 +19,12 @@ export async function POST(req: Request) {
   const csrf = await requireCSRF(req);
   if ("response" in csrf) return csrf.response;
   const { session } = guard;
+
+  const ip = getClientIp(req);
+  const rateLimit = checkRateLimit(`teacherReportExport:${ip}`, rateLimits.teacherReportExport);
+  if (rateLimit.limited) {
+    return createRateLimitResponse(rateLimit.resetAt);
+  }
 
   try {
     let body: Record<string, unknown>;
