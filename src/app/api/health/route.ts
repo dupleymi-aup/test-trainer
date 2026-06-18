@@ -4,14 +4,27 @@ import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
+let cachedVersion: string | null = null;
+
+async function getVersion(): Promise<string> {
+  if (cachedVersion) return cachedVersion;
+  try {
+    const pkg = await import("../../../../package.json");
+    cachedVersion = pkg.version;
+  } catch {
+    cachedVersion = "0.0.0";
+  }
+  return cachedVersion;
+}
+
 export async function GET() {
   try {
-    const dbHealth = await healthCheck();
+    const [dbHealth, version] = await Promise.all([healthCheck(), getVersion()]);
     const uptime = process.uptime();
 
     return NextResponse.json({
       status: dbHealth.ok ? "healthy" : "degraded",
-      version: process.env.npm_package_version || "0.2.0",
+      version,
       uptime: Math.floor(uptime),
       timestamp: new Date().toISOString(),
       database: dbHealth,
