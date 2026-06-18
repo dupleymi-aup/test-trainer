@@ -88,7 +88,7 @@ export default function StudentMessagesPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-4">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">Сообщения</h1>
         {unreadCount > 0 && (
           <Badge variant="destructive" className="animate-pulse">{unreadCount} нов.</Badge>

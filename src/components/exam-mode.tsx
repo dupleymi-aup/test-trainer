@@ -832,7 +832,7 @@ export function ExamMode() {
 
             {showCode && (
               <div className="bg-card rounded-lg p-3 overflow-x-auto border">
-                <pre className="text-xs font-mono text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                <pre className="text-xs font-mono text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
                   <code>{task.code}</code>
                 </pre>
               </div>

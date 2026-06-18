@@ -140,6 +140,17 @@
   html {
     scrollbar-color: var(--border) transparent;
   }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="tab"]:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
 }
 
 /* Smooth theme transitions */

@@ -459,7 +459,7 @@ export default function AdminGroupsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <button onClick={selectAllGroups} className="flex items-center">
+                    <button onClick={selectAllGroups} className="flex items-center" aria-label="Выбрать все группы">
                       {selectedGroups.size === filteredGroups.length && filteredGroups.length > 0 ? (
                         <CheckSquare className="h-4 w-4" />
                       ) : (
@@ -480,7 +480,7 @@ export default function AdminGroupsPage() {
                 {filteredGroups.map((g) => (
                   <TableRow key={g.id} className={selectedGroups.has(g.id) ? "bg-muted/50" : ""}>
                     <TableCell>
-                      <button onClick={() => toggleGroupSelect(g.id)} className="flex items-center">
+                      <button onClick={() => toggleGroupSelect(g.id)} className="flex items-center" aria-label={`Выбрать группу ${g.name}`}>
                         {selectedGroups.has(g.id) ? (
                           <CheckSquare className="h-4 w-4 text-primary" />
                         ) : (

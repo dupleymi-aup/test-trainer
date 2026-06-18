@@ -45,7 +45,7 @@ export default function StudentExamHistoryPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">История экзаменов</h1>
       </div>
 

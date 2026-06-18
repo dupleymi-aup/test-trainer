@@ -342,7 +342,7 @@ export default function TaskConstructorPage() {
                           }
                         }}
                       />
-                      <Button type="button" variant="outline" size="sm" onClick={addTopic}>
+                      <Button type="button" variant="outline" size="sm" onClick={addTopic} aria-label="Добавить тему">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -613,7 +613,7 @@ export default function TaskConstructorPage() {
                         }
                       }}
                     />
-                    <Button variant="outline" size="sm" onClick={addMistake}>
+                    <Button variant="outline" size="sm" onClick={addMistake} aria-label="Добавить ошибку">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>

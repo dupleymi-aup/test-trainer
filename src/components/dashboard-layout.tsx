@@ -106,7 +106,7 @@ export function DashboardLayout({
           {isMobile && (
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Меню">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>

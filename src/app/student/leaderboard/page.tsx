@@ -24,14 +24,14 @@ type Period = "week" | "month" | "all";
 
 const rankColors: Record<number, string> = {
   1: "text-amber-500",
-  2: "text-zinc-400",
-  3: "text-amber-700",
+  2: "text-zinc-500 dark:text-zinc-400",
+  3: "text-amber-700 dark:text-amber-500",
 };
 
 const rankIcons: Record<number, React.ReactNode> = {
   1: <Crown className="h-5 w-5 text-amber-500" />,
-  2: <Medal className="h-5 w-5 text-zinc-400" />,
-  3: <Medal className="h-5 w-5 text-amber-700" />,
+  2: <Medal className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />,
+  3: <Medal className="h-5 w-5 text-amber-700 dark:text-amber-500" />,
 };
 
 export default function LeaderboardPage() {
@@ -77,7 +77,7 @@ export default function LeaderboardPage() {
       <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" asChild aria-label="Назад">
               <Link href="/student"><ArrowLeft className="h-5 w-5" /></Link>
             </Button>
             <div className="flex items-center gap-2">
