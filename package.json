@@ -20,7 +20,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test": "vitest run --",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f app",
+    "docker:build": "docker compose build --no-cache",
+    "docker:reset": "docker compose down -v && docker compose up -d"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
