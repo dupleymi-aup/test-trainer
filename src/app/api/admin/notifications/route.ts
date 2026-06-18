@@ -188,6 +188,16 @@ export async function DELETE(req: NextRequest) {
       await db.notification.deleteMany({ where: { read: true } });
     }
 
+    await db.activityLog.create({
+      data: {
+        userId: guard.session.userId,
+        action: "NOTIFICATIONS_DELETE",
+        entity: "Notification",
+        details: JSON.stringify({ deleteAll: all }),
+        ipAddress: getClientIp(req),
+      },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Failed to delete notifications", error instanceof Error ? error : undefined);

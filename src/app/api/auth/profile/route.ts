@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
-import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
 
@@ -113,6 +113,17 @@ export async function PUT(req: Request) {
           university: true,
           group: true,
           createdAt: true,
+        },
+      });
+
+      await db.activityLog.create({
+        data: {
+          userId: auth.session.userId,
+          action: "PROFILE_UPDATE",
+          entity: "User",
+          entityId: auth.session.userId,
+          details: JSON.stringify({ fields: Object.keys(updateData) }),
+          ipAddress: getClientIp(req),
         },
       });
 

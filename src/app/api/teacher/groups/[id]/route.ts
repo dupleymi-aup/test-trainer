@@ -86,6 +86,17 @@ export async function DELETE(
 
     await db.group.delete({ where: { id } });
 
+    await db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "GROUP_DELETE",
+        entity: "Group",
+        entityId: id,
+        details: JSON.stringify({ name: group.name }),
+        ipAddress: getClientIp(_req),
+      },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Teacher group DELETE failed", error instanceof Error ? error : undefined);

@@ -94,6 +94,16 @@ export async function DELETE(req: Request) {
       where: { userId: auth.session.userId, taskId: parseInt(taskId) },
     });
 
+    await db.activityLog.create({
+      data: {
+        userId: auth.session.userId,
+        action: "FAVORITE_REMOVE",
+        entity: "FavoriteTask",
+        details: JSON.stringify({ taskId: parseInt(taskId) }),
+        ipAddress: getClientIp(req),
+      },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Failed to remove favorite", error instanceof Error ? error : undefined);
