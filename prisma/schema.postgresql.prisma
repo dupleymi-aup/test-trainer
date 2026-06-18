@@ -47,6 +47,12 @@ model User {
   createdAnnouncements Announcement[]
   gradesGiven     Grade[]    @relation("GradesGiven")
   gradesReceived  Grade[]    @relation("GradesReceived")
+  favorites       FavoriteTask[]
+  sentMessages    Message[]  @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  courseTemplates CourseTemplate[]
+  exams           StudentExam[]
+  customTasks     CustomTask[]
 
   @@index([role])
   @@index([deletedAt])
@@ -114,6 +120,7 @@ model Group {
   assignedTasks   GroupTask[]
   deadlines       Deadline[]
   announcements   Announcement[]
+  templateAssignments TemplateAssignment[]
 }
 
 model GroupTask {
@@ -291,4 +298,118 @@ model Announcement {
   @@index([createdById])
   @@index([createdAt])
   @@index([expiresAt])
+}
+
+model FavoriteTask {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@index([taskId])
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  fromUserId  String
+  toUserId    String
+  subject     String
+  content     String
+  read        Boolean  @default(false)
+  readAt      DateTime?
+  replyToId   String?
+  createdAt   DateTime @default(now())
+
+  fromUser    User     @relation("SentMessages", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User     @relation("ReceivedMessages", fields: [toUserId], references: [id], onDelete: Cascade)
+  replyTo     Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[] @relation("MessageReplies")
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([toUserId, read])
+  @@index([createdAt])
+  @@index([replyToId])
+}
+
+model CourseTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  taskIds     String
+  topics      String?
+  estimatedHours Int?
+  createdByUserId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User     @relation(fields: [createdByUserId], references: [id], onDelete: Cascade)
+  assignments  TemplateAssignment[]
+
+  @@index([createdByUserId])
+  @@index([name])
+}
+
+model TemplateAssignment {
+  id          String   @id @default(cuid())
+  templateId  String
+  groupId     String
+  assignedAt  DateTime @default(now())
+
+  template    CourseTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  group       Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, groupId])
+  @@index([templateId])
+  @@index([groupId])
+}
+
+model StudentExam {
+  id              String   @id @default(cuid())
+  userId          String
+  taskIds         String
+  timeLimit       Int
+  mode            String
+  avgScore        Int
+  bestTaskId      Int?
+  bestTaskScore   Int
+  worstTaskId     Int?
+  worstTaskScore  Int
+  totalCorrectness Int
+  timeSpent       Int
+  results         String
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+model CustomTask {
+  id            String   @id @default(cuid())
+  name          String
+  difficulty    String
+  signature     String
+  description   String
+  returnType    String
+  topics        String
+  parameters    String
+  ecClasses     String
+  bvValues      String
+  code          String
+  commonMistakes String?
+  createdById   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdBy     User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdById])
+  @@index([name])
 }
