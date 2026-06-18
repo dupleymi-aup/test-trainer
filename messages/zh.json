@@ -419,7 +419,15 @@
     "analytics": "数据分析",
     "announcements": "公告",
     "announcementsTitle": "公告",
-    "viewAllAnnouncements": "查看所有公告"
+    "viewAllAnnouncements": "查看所有公告",
+    "favorites": "收藏",
+    "leaderboard": "排行榜",
+    "continue": "继续",
+    "messages": "消息",
+    "achievements": "成就",
+    "learningPath": "学习路径",
+    "examHistory": "考试历史",
+    "notificationSettings": "通知设置"
   },
   "adminNav": {
     "title": "管理员面板",

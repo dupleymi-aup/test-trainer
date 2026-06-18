@@ -421,7 +421,13 @@
     "announcementsTitle": "Объявления",
     "viewAllAnnouncements": "Посмотреть все объявления",
     "favorites": "Избранное",
-    "leaderboard": "Таблица лидеров"
+    "leaderboard": "Таблица лидеров",
+    "continue": "Продолжить",
+    "messages": "Сообщения",
+    "achievements": "Достижения",
+    "learningPath": "Учебный план",
+    "examHistory": "История экзаменов",
+    "notificationSettings": "Настройки уведомлений"
   },
   "adminNav": {
     "title": "Панель администратора",

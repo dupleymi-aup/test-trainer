@@ -159,7 +159,7 @@ export default function StudentDashboardPage() {
               {lastTaskId && (
                 <Button asChild variant="outline">
                   <Link href={`/trainer?task=${lastTaskId}`}>
-                    <Clock className="h-4 w-4 mr-1" /> Продолжить
+                    <Clock className="h-4 w-4 mr-1" /> {t("continue")}
                   </Link>
                 </Button>
               )}
@@ -292,7 +292,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/favorites">
                   <span className="flex items-center gap-2">
-                    <Star className="h-4 w-4" /> {t("favorites") || "Избранное"}
+                    <Star className="h-4 w-4" /> {t("favorites")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -300,7 +300,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/messages">
                   <span className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" /> Сообщения
+                    <Mail className="h-4 w-4" /> {t("messages")}
                     {unreadMessages > 0 && (
                       <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-rose-500 dark:bg-rose-600 rounded-full">{unreadMessages}</span>
                     )}
@@ -311,7 +311,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/achievements">
                   <span className="flex items-center gap-2">
-                    <Award className="h-4 w-4" /> Достижения
+                    <Award className="h-4 w-4" /> {t("achievements")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -319,7 +319,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/learning-path">
                   <span className="flex items-center gap-2">
-                    <Map className="h-4 w-4" /> Учебный план
+                    <Map className="h-4 w-4" /> {t("learningPath")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -327,7 +327,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/exams">
                   <span className="flex items-center gap-2">
-                    <History className="h-4 w-4" /> История экзаменов
+                    <History className="h-4 w-4" /> {t("examHistory")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -335,7 +335,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/preferences">
                   <span className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" /> Настройки уведомлений
+                    <Settings className="h-4 w-4" /> {t("notificationSettings")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -343,7 +343,7 @@ export default function StudentDashboardPage() {
               <Button asChild variant="outline" className="w-full justify-between">
                 <Link href="/student/leaderboard">
                   <span className="flex items-center gap-2">
-                    <Medal className="h-4 w-4" /> {t("leaderboard") || "Таблица лидеров"}
+                    <Medal className="h-4 w-4" /> {t("leaderboard")}
                   </span>
                   <ChevronRight className="h-4 w-4" />
                 </Link>

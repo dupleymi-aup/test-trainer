@@ -420,7 +420,13 @@
     "announcementsTitle": "Announcements",
     "viewAllAnnouncements": "View all announcements",
     "favorites": "Favorites",
-    "leaderboard": "Leaderboard"
+    "leaderboard": "Leaderboard",
+    "continue": "Continue",
+    "messages": "Messages",
+    "achievements": "Achievements",
+    "learningPath": "Learning Path",
+    "examHistory": "Exam History",
+    "notificationSettings": "Notification Settings"
   },
   "adminNav": {
     "title": "Admin Panel",
