@@ -4,6 +4,17 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const comparePeriodsParamsSchema = z.object({
+  period1Start: z.string().optional(),
+  period1End: z.string().optional(),
+  period2Start: z.string().optional(),
+  period2End: z.string().optional(),
+  groupId: z.string().optional(),
+  university: z.string().optional(),
+});
 
 function calculateMetrics(attempts: { userId: string; taskId: string; score: number; ecCoverage: number; bvCoverage: number; correctness: number; timeSpent: number }[]) {
   const totalAttempts = attempts.length;
@@ -51,13 +62,9 @@ export async function GET(req: Request) {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const { searchParams } = new URL(req.url);
-    const period1Start = searchParams.get("period1Start");
-    const period1End = searchParams.get("period1End");
-    const period2Start = searchParams.get("period2Start");
-    const period2End = searchParams.get("period2End");
-    const groupId = searchParams.get("groupId");
-    const university = searchParams.get("university");
+    const params = parseSearchParams(req, comparePeriodsParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { period1Start, period1End, period2Start, period2End, groupId, university } = params.data;
 
     if (!period1Start || !period1End) {
       const now = new Date();

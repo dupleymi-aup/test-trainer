@@ -3,19 +3,26 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const studentsParamsSchema = z.object({
+  search: z.string().max(100).default(""),
+  group: z.string().default(""),
+  university: z.string().default(""),
+  riskLevel: z.enum(["high", "medium", "low", "none", ""]).default(""),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
 
 export async function GET(req: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-  const { searchParams } = new URL(req.url);
-  const search = searchParams.get("search") || "";
-  const group = searchParams.get("group") || "";
-  const university = searchParams.get("university") || "";
-  const riskLevel = searchParams.get("riskLevel") || "";
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "20", 10);
+  const params = parseSearchParams(req, studentsParamsSchema);
+  if (!params.success) return params.errorResponse;
+  const { search, group, university, riskLevel, page, limit } = params.data;
 
   // Build base where clause for count query (without pagination)
   const countWhere: Record<string, unknown> = { role: "STUDENT", deletedAt: null };
