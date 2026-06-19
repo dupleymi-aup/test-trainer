@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { analyticsParamsSchema } from "@/lib/shared-schemas";
 
 export async function GET(request: Request) {
-  try {
+  return withErrorHandler(request, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -342,8 +341,5 @@ export async function GET(request: Request) {
 
     setCache(cacheKey, result, DEFAULT_TTL.expensive);
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("Failed to fetch comprehensive analytics", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch comprehensive analytics" }, { status: 500 });
-  }
+  });
 }

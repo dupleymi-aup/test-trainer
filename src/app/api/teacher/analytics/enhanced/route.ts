@@ -3,8 +3,7 @@ import type { StoredTestCase } from "@/lib/evaluator";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { withErrorHandler, parseSearchParams } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const enhancedParamsSchema = z.object({
@@ -15,7 +14,7 @@ const enhancedParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 
@@ -303,8 +302,5 @@ export async function GET(req: Request) {
     overallStats,
     groupComparison,
   });
-  } catch (error) {
-    logger.error("Failed to fetch enhanced analytics", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch enhanced analytics" }, { status: 500 });
-  }
+  });
 }

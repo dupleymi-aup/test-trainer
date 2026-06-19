@@ -6,7 +6,7 @@ import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const exportReportSchema = z.object({
@@ -71,7 +71,7 @@ async function logExport(userId: string, reportType: string, format: string, det
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
   const guard = await requireAdmin();
   if ("response" in guard) return guard.response;
   const csrf = await requireCSRF(req);
@@ -982,8 +982,5 @@ export async function POST(req: Request) {
       "Content-Disposition": 'attachment; filename="admin-report-comprehensive.json"',
     },
   });
-  } catch (error) {
-    logger.error("Export report failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Export failed" }, { status: 500 });
-  }
+  });
 }

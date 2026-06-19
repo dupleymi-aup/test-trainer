@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 interface TaskRecommendation {
   taskId: number;
@@ -30,7 +30,7 @@ interface StudentRecommendation {
 }
 
 export async function GET(request: Request) {
-  try {
+  return withErrorHandler(request, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -346,8 +346,5 @@ export async function GET(request: Request) {
   };
     setCache(cacheKey, result, DEFAULT_TTL.expensive);
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("Recommendations analytics failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }
