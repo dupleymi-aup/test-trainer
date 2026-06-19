@@ -63,6 +63,8 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Parse all rows into structured data
+    const rows: Array<{ email: string; name?: string; phone?: string; group?: string; university?: string }> = [];
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(",").map((v: string) => v.trim());
       if (values.length < 2) continue;
@@ -77,32 +79,63 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // Check if user exists
-      const existing = await db.user.findUnique({ where: { email } });
-      if (existing) {
-        results.push({ status: "error", email, error: "User already exists" });
+      // Deduplicate within the batch (keep first occurrence)
+      if (rows.some((r) => r.email === email)) {
+        results.push({ status: "error", email, error: "Duplicate in CSV" });
         skipped++;
         continue;
       }
 
+      rows.push({
+        email,
+        name: row.name || undefined,
+        phone: row.phone || undefined,
+        group: row.group || undefined,
+        university: row.university || undefined,
+      });
+    }
+
+    // Batch check existing users (1 query instead of N)
+    const allEmails = rows.map((r) => r.email);
+    const existingUsers = allEmails.length > 0
+      ? await db.user.findMany({ where: { email: { in: allEmails } }, select: { email: true } })
+      : [];
+    const existingEmails = new Set(existingUsers.map((u) => u.email));
+
+    const toCreate: typeof rows = [];
+    for (const r of rows) {
+      if (existingEmails.has(r.email)) {
+        results.push({ status: "error", email: r.email, error: "User already exists" });
+        skipped++;
+      } else {
+        toCreate.push(r);
+      }
+    }
+
+    // Batch create all new users (1 query instead of N)
+    if (toCreate.length > 0) {
       try {
-        await db.user.create({
-          data: {
-            name: row.name || null,
-            email,
-            phone: row.phone || null,
+        await db.user.createMany({
+          data: toCreate.map((r) => ({
+            name: r.name || null,
+            email: r.email,
+            phone: r.phone || null,
             hashedPassword,
             role,
-            group: row.group || null,
-            university: row.university || null,
+            group: r.group || null,
+            university: r.university || null,
             isActive: true,
-          },
+          })),
         });
-        results.push({ status: "ok", email });
-        created++;
+        for (const r of toCreate) {
+          results.push({ status: "ok", email: r.email });
+          created++;
+        }
       } catch (err) {
-        results.push({ status: "error", email, error: err instanceof Error ? err.message : "Unknown error" });
-        skipped++;
+        for (const r of toCreate) {
+          results.push({ status: "error", email: r.email, error: err instanceof Error ? err.message : "Unknown error" });
+          skipped++;
+        }
       }
     }
 
