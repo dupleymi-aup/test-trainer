@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams } from "./api-error-handler";
+import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler } from "./api-error-handler";
 import { z } from "zod";
 
 describe("formatZodError", () => {
@@ -210,5 +210,65 @@ describe("parseSearchParams", () => {
     if (!result.success) {
       expect(result.errorResponse.status).toBe(400);
     }
+  });
+});
+
+describe("withErrorHandler", () => {
+  it("returns handler result on success", async () => {
+    const req = new Request("http://localhost/api/test");
+    const res = await withErrorHandler(req, async () => {
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ ok: true });
+  });
+
+  it("returns 500 JSON error when handler throws", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const req = new Request("http://localhost/api/test");
+    const res = await withErrorHandler(req, async () => {
+      throw new Error("something broke");
+    });
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Internal server error");
+  });
+
+  it("includes details in development mode", async () => {
+    const original = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const req = new Request("http://localhost/api/test");
+    const res = await withErrorHandler(req, async () => {
+      throw new Error("dev error detail");
+    });
+    const body = await res.json();
+    expect(body.details).toBe("dev error detail");
+    process.env.NODE_ENV = original;
+  });
+
+  it("hides details in production mode", async () => {
+    const original = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const req = new Request("http://localhost/api/test");
+    const res = await withErrorHandler(req, async () => {
+      throw new Error("prod secret");
+    });
+    const body = await res.json();
+    expect(body.details).toBe("Internal server error");
+    process.env.NODE_ENV = original;
+  });
+
+  it("handles non-Error thrown values", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const req = new Request("http://localhost/api/test");
+    const res = await withErrorHandler(req, async () => {
+      throw "string error";
+    });
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Internal server error");
   });
 });
