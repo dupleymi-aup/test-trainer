@@ -4,6 +4,15 @@ import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const activityLogParamsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  action: z.string().optional(),
+  userId: z.string().optional(),
+});
 
 export async function GET(req: Request) {
   try {
@@ -11,17 +20,14 @@ export async function GET(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
-    // Rate limit activity log reads
     const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminSettings);
     if (rateResult.limited) {
       return createRateLimitResponse(rateResult.resetAt);
     }
 
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const action = searchParams.get("action");
-    const userId = searchParams.get("userId");
+    const params = parseSearchParams(req, activityLogParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { page, limit, action, userId } = params.data;
     const skip = (page - 1) * limit;
 
     const where: Prisma.ActivityLogWhereInput = {};
