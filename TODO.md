@@ -1,12 +1,12 @@
-# Plan
+# Plan — 10 пунктов улучшения качества
 
-1. Провести аудит текущего кода и выявить узкие места
-2. Оптимизировать запросы к базе данных и добавить индексы
-3. Покрыть unit-тестами критичную бизнес-логику
-4. Добавить валидацию входных данных во всех API-маршрутах
-5. Оптимизировать рендеринг фронтенд-компонентов
-6. Настроить CI/CD пайплайн для автоматического тестирования
-7. Внедрить кеширование для часто запрашиваемых данных
-8. Добавить мониторинг и логирование для продакшена
-9. Рефакторинг кода с соблюдением единых паттернов проектирования
-10. Документировать API и процедуры деплоя
+- [x] 1. Добавить Zod-валидацию к API-маршрутам без проверки входных данных (34 файла без валидации)
+- [ ] 2. Добавить Zod-валидацию к остальным 33 API-маршрутам (admin/reports, compare-periods, messages, grades, deadlines, students, groups)
+- [ ] 3. Написать unit-тесты для нового parseSearchParams/parseRequestBody на каждом маршруте
+- [ ] 4. Добавить индексы в Prisma-схему для полей, участвующих в частых WHERE-запросах (userId, groupId, action, createdAt)
+- [ ] 5. Оптимизировать N+1 запросы в teacher/analytics и admin/analytics (preload relations, batch queries)
+- [ ] 6. Настроить CI/CD: GitHub Actions workflow с lint, typecheck, test, schema:check
+- [ ] 7. Добавить structured logging (JSON) во все API-маршруты через withErrorHandler
+- [ ] 8. Извлечь общие Zod-схемы (pageParams, dateRange, groupId) в shared/schemas.ts для переиспользования
+- [ ] 9. Добавить Rate Limiting к endpoints без него (student/history, teacher/gradebook, attempts)
+- [ ] 10. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt, view analytics
