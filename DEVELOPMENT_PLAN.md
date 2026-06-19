@@ -6,7 +6,7 @@
 ## 2. Health endpoint: добавить проверку MongoDB
 Сейчас `healthCheck()` проверяет только Prisma. Добавить параллельную проверку MongoDB через `mongodb.ts` и возвращать статус каждого бэкенда.
 
-## 3. Loading skeleton для student subroutes
+## 3. ~~Loading skeleton для student subroutes~~ ✅
 Добавить `loading.tsx` для `/student/analytics`, `/student/history`, `/student/achievements` — сейчас загрузка этих страниц показывает пустой экран.
 
 ## 4. CSP headers в next.config.ts
