@@ -7,6 +7,6 @@
 - [ ] 5. Оптимизировать N+1 запросы в teacher/analytics и admin/analytics (preload relations, batch queries)
 - [ ] 6. Настроить CI/CD: GitHub Actions workflow с lint, typecheck, test, schema:check
 - [ ] 7. Добавить structured logging (JSON) во все API-маршруты через withErrorHandler
-- [ ] 8. Извлечь общие Zod-схемы (pageParams, dateRange, groupId) в shared/schemas.ts для переиспользования
+- [x] 8. Извлечь общие Zod-схемы (pageParams, dateRange, groupId) в shared/schemas.ts для переиспользования
 - [ ] 9. Добавить Rate Limiting к endpoints без него (student/history, teacher/gradebook, attempts)
 - [ ] 10. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt, view analytics
