@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { healthCheck } from "@/lib/db-factory";
+import { healthCheck, checkMongoHealth } from "@/lib/db-factory";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -19,15 +19,22 @@ async function getVersion(): Promise<string> {
 
 export async function GET() {
   try {
-    const [dbHealth, version] = await Promise.all([healthCheck(), getVersion()]);
+    const [dbHealth, mongoHealth, version] = await Promise.all([
+      healthCheck(),
+      checkMongoHealth(),
+      getVersion(),
+    ]);
     const uptime = process.uptime();
 
+    const allHealthy = dbHealth.ok && (mongoHealth.ok || mongoHealth.details === 'MONGODB_URI not configured');
+
     return NextResponse.json({
-      status: dbHealth.ok ? "healthy" : "degraded",
+      status: allHealthy ? "healthy" : dbHealth.ok ? "degraded" : "unhealthy",
       version,
       uptime: Math.floor(uptime),
       timestamp: new Date().toISOString(),
       database: dbHealth,
+      mongodb: mongoHealth,
       memory: process.memoryUsage(),
     });
   } catch (error) {

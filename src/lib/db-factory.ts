@@ -80,6 +80,19 @@ export async function getDbInfo(): Promise<DBInfo> {
   }
 }
 
+export async function checkMongoHealth(): Promise<{ ok: boolean; details: string }> {
+  if (!config.mongodbUri) {
+    return { ok: false, details: 'MONGODB_URI not configured' }
+  }
+  try {
+    const { checkMongoConnection } = await import('./mongodb')
+    const ok = await checkMongoConnection()
+    return { ok, details: ok ? 'MongoDB reachable' : 'MongoDB unreachable' }
+  } catch {
+    return { ok: false, details: 'MongoDB check failed' }
+  }
+}
+
 export async function healthCheck(): Promise<{ ok: boolean; type: DbType; details: string }> {
   try {
     const info = await getDbInfo()

@@ -3,17 +3,17 @@
 ## 1. ~~i18n для student dashboard~~ ✅
 Заменить hardcoded русские строки ("Продолжить", "Сообщения", "Достижения", "Учебный план", "История экзаменов", "Настройки уведомлений", "Таблица лидеров") на ключи из `useTranslations`.
 
-## 2. Health endpoint: добавить проверку MongoDB
-Сейчас `healthCheck()` проверяет только Prisma. Добавить параллельную проверку MongoDB через `mongodb.ts` и возвращать статус каждого бэкенда.
+## 2. ~~Loading skeleton для student subroutes~~ ✅
+Добавить `loading.tsx` для `/student/analytics`, `/student/history`, `/student/achievements` — теперь загрузка показывает спиннер вместо пустого экрана.
 
-## 3. ~~Loading skeleton для student subroutes~~ ✅
-Добавить `loading.tsx` для `/student/analytics`, `/student/history`, `/student/achievements` — сейчас загрузка этих страниц показывает пустой экран.
+## 3. ~~CSP headers в next.config.ts~~ ✅
+Content-Security-Policy заголовки добавлены для dev и prod окружений.
 
-## 4. CSP headers в next.config.ts
-Добавить Content-Security-Policy заголовки для защиты от XSS. Минимальный набор: `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'`.
+## 4. ~~TypeScript strict mode~~ ✅
+`strict: true` уже включён в `tsconfig.json` вместе с `noImplicitAny`.
 
-## 5. TypeScript strict mode
-Включить `strict: true` в `tsconfig.json` и исправить resulting errors. Сейчас strict отключён — это скрывает потенциальные баги.
+## 5. ~~Health endpoint: добавить проверку MongoDB~~ ✅
+`checkMongoHealth()` добавлена в `db-factory.ts`, health endpoint проверяет MongoDB параллельно с активной БД через `Promise.all`.
 
 ## 6. API response types
 Создать `src/lib/api-types.ts` с Zod-схемами для всех API responses и валидировать ответы через middleware.
