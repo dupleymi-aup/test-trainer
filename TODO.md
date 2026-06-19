@@ -8,5 +8,5 @@
 - [ ] 6. Настроить CI/CD: GitHub Actions workflow с lint, typecheck, test, schema:check
 - [ ] 7. Добавить structured logging (JSON) во все API-маршруты через withErrorHandler
 - [x] 8. Извлечь общие Zod-схемы (pageParams, dateRange, groupId) в shared/schemas.ts для переиспользования
-- [ ] 9. Добавить Rate Limiting к endpoints без него (student/history, teacher/gradebook, attempts)
+- [x] 9. Добавить Rate Limiting к endpoints без него (student/history, teacher/gradebook, attempts)
 - [ ] 10. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt, view analytics
