@@ -34,6 +34,7 @@ export async function GET() {
         coveredEcIds: true,
         coveredBvDescriptions: true,
         createdAt: true,
+        user: { select: { name: true, group: true } },
       },
       orderBy: { createdAt: "asc" },
       take: 50_000,
@@ -67,14 +68,6 @@ export async function GET() {
 
       // For low-scoring attempts (< 60), analyze what was missed
       if (a.score < 60) {
-        // Track which ECs appear in low-score attempts
-        if (coveredEcIds.length > 0) {
-          for (let i = 0; i < coveredEcIds.length; i++) {
-            // We can't know total ECs per task from this data alone,
-            // so we track which ECs appear in low-score attempts
-          }
-        }
-
         // Track tasks with low EC/BV coverage
         if (!taskECAnalysis[a.taskId]) {
           taskECAnalysis[a.taskId] = { ecIds: coveredEcIds, bvDescs: coveredBvDescs, scores: [] };
@@ -123,18 +116,8 @@ export async function GET() {
 
     // Students with worst EC/BV coverage
     const studentCoverage: Record<string, { ecTotal: number; bvTotal: number; count: number; name?: string; group?: string }> = {};
-    const attemptsWithUser = await db.attempt.findMany({
-      where: { id: { in: allAttempts.map((a) => a.id) } },
-      select: {
-        userId: true,
-        ecCoverage: true,
-        bvCoverage: true,
-        user: { select: { name: true, group: true } },
-      },
-      take: 50_000,
-    });
 
-    for (const a of attemptsWithUser) {
+    for (const a of allAttempts) {
       if (!studentCoverage[a.userId]) {
         studentCoverage[a.userId] = { ecTotal: 0, bvTotal: 0, count: 0, name: a.user?.name || undefined, group: a.user?.group || undefined };
       }
