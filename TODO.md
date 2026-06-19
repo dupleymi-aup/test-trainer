@@ -1,7 +1,7 @@
 # Plan — 10 пунктов улучшения качества
 
 - [x] 1. Добавить Zod-валидацию к API-маршрутам без проверки входных данных (34 файла без валидации)
-- [ ] 2. Добавить Zod-валидацию к остальным 33 API-маршрутам (admin/reports, compare-periods, messages, grades, deadlines, students, groups)
+- [x] 2. Добавить Zod-валидацию к остальным 33 API-маршрутам (admin/reports, compare-periods, messages, grades, deadlines, students, groups)
 - [ ] 3. Написать unit-тесты для нового parseSearchParams/parseRequestBody на каждом маршруте
 - [ ] 4. Добавить индексы в Prisma-схему для полей, участвующих в частых WHERE-запросах (userId, groupId, action, createdAt)
 - [ ] 5. Оптимизировать N+1 запросы в teacher/analytics и admin/analytics (preload relations, batch queries)
