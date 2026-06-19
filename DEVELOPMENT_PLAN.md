@@ -15,7 +15,7 @@ Content-Security-Policy заголовки добавлены для dev и prod
 ## 5. ~~Health endpoint: добавить проверку MongoDB~~ ✅
 `checkMongoHealth()` добавлена в `db-factory.ts`, health endpoint проверяет MongoDB параллельно с активной БД через `Promise.all`.
 
-## 6. API response types
+## 6. ~~API response types~~ ✅
 Создать `src/lib/api-types.ts` с Zod-схемами для всех API responses и валидировать ответы через middleware.
 
 ## 7. E2E тесты для teacher workflow
