@@ -6,6 +6,13 @@ import { logger } from "@/lib/logger";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
 import { secureCompare } from "@/lib/crypto";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const sendRemindersParamsSchema = z.object({
+  hoursAhead: z.coerce.number().int().min(1).max(168).default(48),
+  force: z.enum(["true", "false"]).default("false"),
+});
 
 // Send reminders for deadlines approaching within the specified hours
 export async function POST(req: Request) {
@@ -36,9 +43,9 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const { searchParams } = new URL(req.url);
-    const hoursAhead = parseInt(searchParams.get("hoursAhead") || "48");
-    const forceSend = searchParams.get("force") === "true";
+    const params = parseSearchParams(req, sendRemindersParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { hoursAhead, force: forceSend } = params.data;
 
     let result;
 

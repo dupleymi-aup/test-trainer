@@ -78,6 +78,38 @@ export async function parseRequestBody<T>(
 }
 
 /**
+ * Parse and validate URL search params against a Zod schema.
+ * Returns the parsed data or an error response for the route to return.
+ * Usage:
+ *   const params = parseSearchParams(req, schema);
+ *   if (!params.success) return params.errorResponse;
+ *   const { groupId, dateFrom } = params.data;
+ */
+export function parseSearchParams<T>(
+  req: Request,
+  schema: ZodSchema<T>
+):
+  | { success: true; data: T }
+  | { success: false; errorResponse: NextResponse<{ error: string }> } {
+  const { searchParams } = new URL(req.url);
+  const raw: Record<string, string> = {};
+  searchParams.forEach((value, key) => {
+    raw[key] = value;
+  });
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      success: false,
+      errorResponse: NextResponse.json(
+        { error: formatZodError(parsed.error) },
+        { status: 400 }
+      ),
+    };
+  }
+  return { success: true, data: parsed.data };
+}
+
+/**
  * Wraps an API route handler with try/catch error handling.
  * Returns a JSON error response with status 500 on failure.
  *

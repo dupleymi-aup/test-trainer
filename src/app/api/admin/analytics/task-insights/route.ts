@@ -5,16 +5,23 @@ import { tasks } from "@/lib/tasks";
 import type { StoredTestCase } from "@/lib/evaluator";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const taskInsightsParamsSchema = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  groupId: z.string().optional(),
+});
 
 export async function GET(request: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-  const { searchParams } = new URL(request.url);
-  const dateFrom = searchParams.get("dateFrom");
-  const dateTo = searchParams.get("dateTo");
-  const groupId = searchParams.get("groupId");
+    const params = parseSearchParams(request, taskInsightsParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { dateFrom, dateTo, groupId } = params.data;
 
   // Check cache
   const cacheKey = makeCacheKey("task-insights", { dateFrom, dateTo, groupId });

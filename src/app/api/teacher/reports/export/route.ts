@@ -315,6 +315,16 @@ export async function POST(req: Request) {
       "at-risk": "student-report-at-risk.csv",
     };
 
+    db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "EXPORT_REPORT",
+        entity: "Report",
+        details: JSON.stringify({ reportType: exportType, format: "csv", groupId, startDate, endDate }),
+        ipAddress: ip,
+      },
+    }).catch(() => {});
+
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": "text/csv;charset=utf-8",

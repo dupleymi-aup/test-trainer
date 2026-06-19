@@ -4,20 +4,27 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { batchComputeStudentRisk, AttemptData } from "@/lib/risk-analysis";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const dashboardParamsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  search: z.string().default(""),
+  groupId: z.string().optional(),
+  university: z.string().optional(),
+  sortBy: z.enum(["avgScore", "name", "attemptsCount", "lastAttempt"]).default("avgScore"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
 
 export async function GET(req: NextRequest) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const search = searchParams.get("search") || "";
-    const groupId = searchParams.get("groupId");
-    const university = searchParams.get("university");
-    const sortBy = searchParams.get("sortBy") || "avgScore";
-    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const params = parseSearchParams(req, dashboardParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { page, limit, search, groupId, university, sortBy, sortOrder } = params.data;
 
     const cacheKey = makeCacheKey("performance-dashboard", { page, limit, search, groupId: groupId || "", university: university || "", sortBy, sortOrder });
     const cached = getCache(cacheKey);

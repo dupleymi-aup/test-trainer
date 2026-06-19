@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const studentsParamsSchema = z.object({
+  groupId: z.string().min(1),
+  search: z.string().optional(),
+});
 
 export async function GET(req: Request) {
   try {
@@ -9,14 +16,9 @@ export async function GET(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
-    const { searchParams } = new URL(req.url);
-    const groupId = searchParams.get("groupId");
-    const search = searchParams.get("search");
-
-    // Require groupId to prevent teachers from accessing all students on the platform
-    if (!groupId) {
-      return NextResponse.json({ error: "groupId is required" }, { status: 400 });
-    }
+    const params = parseSearchParams(req, studentsParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { groupId, search } = params.data;
 
     const groupCheck = await requireTeacherGroup(groupId, session);
     if ("response" in groupCheck) return groupCheck.response;

@@ -5,17 +5,24 @@ import { tasks } from "@/lib/tasks";
 import { computeStudentRisk, computeStudentStats } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const predictionsParamsSchema = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  groupId: z.string().optional(),
+  university: z.string().optional(),
+});
 
 export async function GET(request: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const { searchParams } = new URL(request.url);
-    const dateFrom = searchParams.get("dateFrom");
-    const dateTo = searchParams.get("dateTo");
-    const groupId = searchParams.get("groupId");
-    const universityFilter = searchParams.get("university");
+    const params = parseSearchParams(request, predictionsParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { dateFrom, dateTo, groupId, university: universityFilter } = params.data;
 
     const cacheKey = makeCacheKey("predictions", { dateFrom: dateFrom || "", dateTo: dateTo || "", groupId: groupId || "", university: universityFilter || "" });
     const cached = getCache(cacheKey);

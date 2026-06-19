@@ -3,16 +3,23 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const universityParamsSchema = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  groupId: z.string().optional(),
+});
 
 export async function GET(request: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const { searchParams } = new URL(request.url);
-    const dateFrom = searchParams.get("dateFrom");
-    const dateTo = searchParams.get("dateTo");
-    const groupId = searchParams.get("groupId");
+    const params = parseSearchParams(request, universityParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { dateFrom, dateTo, groupId } = params.data;
 
     // Check cache
     const cacheKey = makeCacheKey("university-comparison", { dateFrom, dateTo, groupId });

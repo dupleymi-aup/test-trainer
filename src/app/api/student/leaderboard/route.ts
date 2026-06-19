@@ -2,17 +2,24 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const leaderboardParamsSchema = z.object({
+  period: z.enum(["all", "week", "month"]).default("all"),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  groupId: z.string().optional(),
+});
 
 export async function GET(req: Request) {
   try {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
-    const { searchParams } = new URL(req.url);
-    const period = searchParams.get("period") || "all";
-    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const groupId = searchParams.get("groupId");
+    const params = parseSearchParams(req, leaderboardParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { period, limit, page, groupId } = params.data;
 
     const now = new Date();
     let dateFrom: Date | undefined;

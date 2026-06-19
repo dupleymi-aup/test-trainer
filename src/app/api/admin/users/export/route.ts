@@ -35,6 +35,15 @@ export async function GET(req: Request) {
     });
 
     if (format === "json") {
+      db.activityLog.create({
+        data: {
+          userId: guard.session.userId,
+          action: "EXPORT_REPORT",
+          entity: "User",
+          details: JSON.stringify({ reportType: "user-list", format: "json", count: users.length }),
+          ipAddress: ip,
+        },
+      }).catch(() => {});
       return NextResponse.json({ users, count: users.length, exportedAt: new Date().toISOString() });
     }
 
@@ -58,6 +67,16 @@ export async function GET(req: Request) {
 
     const csv = "\uFEFF" + csvRows.join("\n");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    db.activityLog.create({
+      data: {
+        userId: guard.session.userId,
+        action: "EXPORT_REPORT",
+        entity: "User",
+        details: JSON.stringify({ reportType: "user-list", format, count: users.length }),
+        ipAddress: ip,
+      },
+    }).catch(() => {});
 
     return new NextResponse(csv, {
       headers: {

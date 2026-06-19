@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const historyParamsSchema = z.object({
+  taskId: z.string().optional(),
+});
 
 export async function GET(req: Request) {
   try {
@@ -9,8 +15,9 @@ export async function GET(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
-    const { searchParams } = new URL(req.url);
-    const taskId = searchParams.get("taskId");
+    const params = parseSearchParams(req, historyParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { taskId } = params.data;
 
     if (taskId) {
       // Detailed history for a specific task

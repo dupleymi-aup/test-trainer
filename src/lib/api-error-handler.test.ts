@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { formatZodError, logApiError, apiErrorResponse, parseRequestBody } from "./api-error-handler";
+import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams } from "./api-error-handler";
 import { z } from "zod";
 
 describe("formatZodError", () => {
@@ -147,6 +147,68 @@ describe("parseRequestBody", () => {
       expect(result.errorResponse.status).toBe(400);
       const body = await result.errorResponse.json();
       expect(body.error).toBe("Invalid JSON body");
+    }
+  });
+});
+
+describe("parseSearchParams", () => {
+  const schema = z.object({
+    groupId: z.string().min(1),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+  });
+
+  it("parses valid search params and returns success", () => {
+    const req = new Request("http://localhost/api/test?groupId=abc&page=2&limit=20");
+    const result = parseSearchParams(req, schema);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ groupId: "abc", page: 2, limit: 20 });
+    }
+  });
+
+  it("applies defaults for missing optional params", () => {
+    const req = new Request("http://localhost/api/test?groupId=abc");
+    const result = parseSearchParams(req, schema);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ groupId: "abc", page: 1, limit: 10 });
+    }
+  });
+
+  it("returns validation error for missing required params", () => {
+    const req = new Request("http://localhost/api/test?page=1");
+    const result = parseSearchParams(req, schema);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errorResponse.status).toBe(400);
+    }
+  });
+
+  it("returns validation error for invalid param types", () => {
+    const req = new Request("http://localhost/api/test?groupId=abc&page=notanumber");
+    const result = parseSearchParams(req, schema);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errorResponse.status).toBe(400);
+    }
+  });
+
+  it("returns validation error for out-of-range values", () => {
+    const req = new Request("http://localhost/api/test?groupId=abc&limit=999");
+    const result = parseSearchParams(req, schema);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errorResponse.status).toBe(400);
+    }
+  });
+
+  it("handles empty query string", () => {
+    const req = new Request("http://localhost/api/test");
+    const result = parseSearchParams(req, schema);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errorResponse.status).toBe(400);
     }
   });
 });

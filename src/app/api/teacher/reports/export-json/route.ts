@@ -197,6 +197,16 @@ export async function POST(req: Request) {
       },
     };
 
+    db.activityLog.create({
+      data: {
+        userId: session.userId,
+        action: "EXPORT_REPORT",
+        entity: "Report",
+        details: JSON.stringify({ reportType: "detailed", format: "json", groupId, startDate, endDate }),
+        ipAddress: ip,
+      },
+    }).catch(() => {});
+
     return NextResponse.json(exportData);
   } catch (error) {
     logger.error("Export JSON failed", error instanceof Error ? error : undefined);

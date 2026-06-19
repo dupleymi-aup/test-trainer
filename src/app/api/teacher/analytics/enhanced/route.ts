@@ -4,17 +4,24 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { parseSearchParams } from "@/lib/api-error-handler";
+import { z } from "zod";
+
+const enhancedParamsSchema = z.object({
+  groupId: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  taskId: z.string().optional(),
+});
 
 export async function GET(req: Request) {
   try {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 
-  const { searchParams } = new URL(req.url);
-  const groupId = searchParams.get("groupId");
-  const startDate = searchParams.get("startDate");
-  const endDate = searchParams.get("endDate");
-  const taskId = searchParams.get("taskId");
+    const params = parseSearchParams(req, enhancedParamsSchema);
+    if (!params.success) return params.errorResponse;
+    const { groupId, startDate, endDate, taskId } = params.data;
 
   // Build user filter
   let userIds: string[] | undefined;
