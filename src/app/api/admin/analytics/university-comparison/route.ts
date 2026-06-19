@@ -4,13 +4,9 @@ import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
 import { parseSearchParams } from "@/lib/api-error-handler";
-import { z } from "zod";
+import { dateRangeSchema, groupFilterSchema } from "@/lib/shared-schemas";
 
-const universityParamsSchema = z.object({
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  groupId: z.string().optional(),
-});
+const universityParamsSchema = dateRangeSchema.merge(groupFilterSchema);
 
 export async function GET(request: Request) {
   try {

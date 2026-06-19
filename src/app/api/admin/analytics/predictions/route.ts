@@ -6,21 +6,14 @@ import { computeStudentRisk, computeStudentStats } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { logger } from "@/lib/logger";
 import { parseSearchParams } from "@/lib/api-error-handler";
-import { z } from "zod";
-
-const predictionsParamsSchema = z.object({
-  dateFrom: z.string().optional(),
-  dateTo: z.string().optional(),
-  groupId: z.string().optional(),
-  university: z.string().optional(),
-});
+import { analyticsParamsSchema } from "@/lib/shared-schemas";
 
 export async function GET(request: Request) {
   try {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-    const params = parseSearchParams(request, predictionsParamsSchema);
+    const params = parseSearchParams(request, analyticsParamsSchema);
     if (!params.success) return params.errorResponse;
     const { dateFrom, dateTo, groupId, university: universityFilter } = params.data;
 

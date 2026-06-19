@@ -5,11 +5,10 @@ import { Prisma } from "@prisma/client";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { parseSearchParams } from "@/lib/api-error-handler";
+import { paginationSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
 
-const activityLogParamsSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+const activityLogParamsSchema = paginationSchema.extend({
   action: z.string().optional(),
   userId: z.string().optional(),
 });

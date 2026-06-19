@@ -4,15 +4,13 @@ import { db } from "@/lib/db";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
 import { logger } from "@/lib/logger";
 import { parseSearchParams } from "@/lib/api-error-handler";
+import { paginationSchema, searchParamsSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
 
-const studentsParamsSchema = z.object({
-  search: z.string().max(100).default(""),
+const studentsParamsSchema = paginationSchema.merge(searchParamsSchema).extend({
   group: z.string().default(""),
   university: z.string().default(""),
   riskLevel: z.enum(["high", "medium", "low", "none", ""]).default(""),
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export async function GET(req: Request) {
