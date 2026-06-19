@@ -93,21 +93,25 @@ export async function POST(req: Request) {
       },
     });
 
+    const allMemberIds = groups.flatMap((g) => g.members.map((m) => m.userId));
+    const activeUserRows = allMemberIds.length > 0
+      ? await db.attempt.groupBy({
+          by: ["userId"],
+          where: {
+            userId: { in: allMemberIds },
+            createdAt: { gte: thirtyDaysAgo },
+          },
+        })
+      : [];
+    const activeUserIds = new Set(activeUserRows.map((r) => r.userId));
+
     let inactiveGroupCount = 0;
     for (const g of groups) {
       const memberIds = g.members.map((m) => m.userId);
       if (memberIds.length === 0) continue;
 
-      const activeUsers = await db.user.count({
-        where: {
-          id: { in: memberIds },
-          attempts: { some: { createdAt: { gte: thirtyDaysAgo } } },
-        },
-      });
-
-      const inactiveRate = memberIds.length > 0
-        ? (memberIds.length - activeUsers) / memberIds.length
-        : 0;
+      const activeCount = memberIds.filter((id) => activeUserIds.has(id)).length;
+      const inactiveRate = (memberIds.length - activeCount) / memberIds.length;
 
       if (inactiveRate >= 0.5 && memberIds.length >= 3) {
         inactiveGroupCount++;
