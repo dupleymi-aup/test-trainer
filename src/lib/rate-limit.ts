@@ -110,6 +110,14 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   teacherTemplateCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Teacher report exports: 5 per 15 minutes (expensive queries) */
   teacherReportExport: { max: 5, windowMs: 15 * 60 * 1000 },
+  /** Student analytics: 30 per 15 minutes */
+  studentAnalytics: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Student history: 30 per 15 minutes */
+  studentHistory: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Student leaderboard: 30 per 15 minutes */
+  studentLeaderboard: { max: 30, windowMs: 15 * 60 * 1000 },
+  /** Teacher analytics: 30 per 15 minutes */
+  teacherAnalytics: { max: 30, windowMs: 15 * 60 * 1000 },
 };
 
 /**

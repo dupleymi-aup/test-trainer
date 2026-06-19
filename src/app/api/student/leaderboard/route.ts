@@ -3,6 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { parseSearchParams } from "@/lib/api-error-handler";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const leaderboardParamsSchema = z.object({
@@ -16,6 +17,11 @@ export async function GET(req: Request) {
   try {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
+
+    const rateResult = checkRateLimit(`studentLeaderboard:${auth.session.userId}`, rateLimits.studentLeaderboard);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
+    }
 
     const params = parseSearchParams(req, leaderboardParamsSchema);
     if (!params.success) return params.errorResponse;

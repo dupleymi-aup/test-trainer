@@ -3,6 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { parseSearchParams } from "@/lib/api-error-handler";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const historyParamsSchema = z.object({
@@ -14,6 +15,11 @@ export async function GET(req: Request) {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const rateResult = checkRateLimit(`studentHistory:${session.userId}`, rateLimits.studentHistory);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
+    }
 
     const params = parseSearchParams(req, historyParamsSchema);
     if (!params.success) return params.errorResponse;

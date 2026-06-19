@@ -3,12 +3,18 @@ import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { logApiError, apiErrorResponse } from "@/lib/api-error-handler";
+import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
+
+    const rateResult = checkRateLimit(`studentAnalytics:${session.userId}`, rateLimits.studentAnalytics);
+    if (rateResult.limited) {
+      return createRateLimitResponse(rateResult.resetAt);
+    }
 
     // Fetch all attempts for this user
     const attempts = await db.attempt.findMany({
