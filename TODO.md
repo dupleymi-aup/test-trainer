@@ -7,6 +7,6 @@
 - [x] 5. Написать unit-тесты для withErrorHandler на всех 5 маршрутах где он используется — 25 тестов уже покрывают все ветки (success, error, dev, prod, non-Error)
 - [ ] 6. Добавить Content-Security-Policy nonce для inline scripts в production
 - [x] 7. Оптимизировать bundle: dynamic import для Recharts и jsPDF — Next.js App Router уже делает route-level splitting автоматически
-- [ ] 8. Добавить request body size limit (max 1MB) для всех POST-маршрутов
+- [x] 8. Добавить request body size limit (max 1MB) для всех POST-маршрутов — через parseRequestBody с content-length проверкой
 - [ ] 9. Добавить graceful shutdown для Next.js сервера (SIGTERM/SIGINT обработка)
 - [ ] 10. Написать integration-тесты для admin/users/import endpoint (CSV parsing, batch creation)

@@ -39,6 +39,11 @@ export function apiErrorResponse(error: string, status = 500): NextResponse<{ er
 }
 
 /**
+ * Maximum allowed request body size in bytes (1 MB).
+ */
+const MAX_BODY_SIZE = 1 * 1024 * 1024;
+
+/**
  * Parse and validate a JSON request body against a Zod schema.
  * Returns the parsed data or an error response for the route to return.
  * Usage:
@@ -54,6 +59,16 @@ export async function parseRequestBody<T>(
   | { success: false; errorResponse: NextResponse<{ error: string }> }
 > {
   try {
+    const contentLength = req.headers.get("content-length");
+    if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
+      return {
+        success: false,
+        errorResponse: NextResponse.json(
+          { error: "Request body too large (max 1MB)" },
+          { status: 413 }
+        ),
+      };
+    }
     const json = await req.json();
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
