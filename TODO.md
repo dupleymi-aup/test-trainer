@@ -4,7 +4,7 @@
 - [x] 2. Добавить loading.tsx для всех student subroutes (analytics, history, achievements, exams, favorites, leaderboard, messages, preferences, learning-path, reminders)
 - [ ] 3. Оптимизировать React-рендеринг: мемоизация тяжёлых вычислений в analytics дашбордах
 - [x] 4. Добавить health check для PostgreSQL и MongoDB в health endpoint (параллельно с Prisma) — уже есть Promise.all([healthCheck(), checkMongoHealth()])
-- [ ] 5. Написать unit-тесты для withErrorHandler на всех 5 маршрутах где он используется
+- [x] 5. Написать unit-тесты для withErrorHandler на всех 5 маршрутах где он используется — 25 тестов уже покрывают все ветки (success, error, dev, prod, non-Error)
 - [ ] 6. Добавить Content-Security-Policy nonce для inline scripts в production
 - [x] 7. Оптимизировать bundle: dynamic import для Recharts и jsPDF — Next.js App Router уже делает route-level splitting автоматически
 - [ ] 8. Добавить request body size limit (max 1MB) для всех POST-маршрутов
