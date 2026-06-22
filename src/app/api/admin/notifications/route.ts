@@ -32,8 +32,8 @@ export async function GET(req: NextRequest) {
     if ("response" in guard) return guard.response;
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "20"), 100));
     const severity = searchParams.get("severity") || undefined;
     const type = searchParams.get("type") || undefined;
     const unreadOnly = searchParams.get("unreadOnly") === "true";

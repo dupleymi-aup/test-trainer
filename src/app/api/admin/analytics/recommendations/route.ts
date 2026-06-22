@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   const groupId = searchParams.get("groupId");
   const universityFilter = searchParams.get("university");
   const riskLevel = searchParams.get("riskLevel");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "50"), 200));
 
   // Check cache
   const cacheKey = makeCacheKey("recommendations", { groupId, universityFilter, riskLevel, limit });
