@@ -59,6 +59,7 @@ model User {
   @@index([role])
   @@index([deletedAt])
   @@index([university])
+  @@index([isActive])
 }
 
 model Account {
@@ -123,6 +124,8 @@ model Group {
   deadlines       Deadline[]
   announcements   Announcement[]
   templateAssignments TemplateAssignment[]
+
+  @@index([createdByUserId])
 }
 
 model GroupTask {
