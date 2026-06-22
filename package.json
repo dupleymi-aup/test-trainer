@@ -12,6 +12,7 @@
     "db:migrate": "node scripts/generate-schema.js && prisma migrate dev --schema=prisma/schema.active.prisma",
     "db:reset": "node scripts/generate-schema.js && prisma migrate reset --schema=prisma/schema.active.prisma",
     "schema:check": "node scripts/check-schema-parity.js",
+    "db:check": "node scripts/migration-check.js",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:mongodb": "tsx scripts/seed-mongodb.ts",
     "db:sqlite": "cross-env DB_TYPE=sqlite node dev.js",
