@@ -52,7 +52,7 @@ describe("importSchema — CSV validation", () => {
 });
 
 describe("CSV row parsing logic", () => {
-  function parseCSV(csv: string) {
+  function parseCSV(csv: string): { error: string } | { rows: Array<{ email: string; name?: string; phone?: string; group?: string; university?: string }>; errors: string[] } {
     const lines = csv.trim().split("\n");
     if (lines.length < 2) return { error: "CSV must have a header row and at least one data row" };
 
@@ -114,7 +114,7 @@ describe("CSV row parsing logic", () => {
 
   it("normalizes email to lowercase", () => {
     const result = parseCSV("name,email\nIvan,IVAN@TEST.COM");
-    expect(result.rows[0].email).toBe("ivan@test.com");
+    expect("rows" in result && result.rows[0].email).toBe("ivan@test.com");
   });
 
   it("rejects CSV with only header", () => {
@@ -129,15 +129,15 @@ describe("CSV row parsing logic", () => {
 
   it("skips rows with missing email", () => {
     const result = parseCSV("name,email\nIvan,\nBoris,boris@test.com");
-    expect(result.rows).toHaveLength(1);
-    expect(result.rows[0].email).toBe("boris@test.com");
-    expect(result.errors).toContain("Row 1: missing email");
+    expect("rows" in result && result.rows).toHaveLength(1);
+    expect("rows" in result && result.rows[0].email).toBe("boris@test.com");
+    expect("errors" in result && result.errors).toContain("Row 1: missing email");
   });
 
   it("deduplicates emails within batch", () => {
     const result = parseCSV("name,email\nIvan,ivan@test.com\nPetr,ivan@test.com");
-    expect(result.rows).toHaveLength(1);
-    expect(result.errors.some((e) => e.includes("duplicate"))).toBe(true);
+    expect("rows" in result && result.rows).toHaveLength(1);
+    expect("errors" in result && result.errors.some((e) => e.includes("duplicate"))).toBe(true);
   });
 
   it("rejects CSV exceeding 1000 rows", () => {
@@ -156,6 +156,6 @@ describe("CSV row parsing logic", () => {
 
   it("skips rows with < 2 columns", () => {
     const result = parseCSV("name,email\nIvan");
-    expect(result.rows).toHaveLength(0);
+    expect("rows" in result && result.rows).toHaveLength(0);
   });
 });
