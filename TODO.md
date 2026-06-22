@@ -7,6 +7,6 @@
 - [ ] 5. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt
 - [x] 6. Добавить error boundary для React-компонентов (React ErrorBoundary) — уже есть в src/components/error-boundary.tsx
 - [x] 7. Добавить request logging middleware (method, path, status, duration) для всех API
-- [ ] 8. Аудит XSS: проверить user-generated контент (name, email, group) на escaping в CSV/JSON/PDF экспорте
+- [x] 8. Аудит XSS: проверить user-generated контент (name, email, group) на escaping в CSV/JSON/PDF экспорте — CSV: sanitizeCSVValue, JSON: JSON.stringify, PDF: jsPDF doc.text()
 - [ ] 9. Добавить database migration safety: dry-run режим и schema diff перед миграцией
 - [ ] 10. Performance: Lighthouse CI, bundle size monitoring, unused dependencies audit
