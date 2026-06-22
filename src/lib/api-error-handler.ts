@@ -121,10 +121,10 @@ export function parseSearchParams<T>(
  *     });
  *   }
  */
-export async function withErrorHandler<T>(
+export async function withErrorHandler(
   _req: Request,
-  handler: () => Promise<NextResponse<T>>
-): Promise<NextResponse<T | { error: string; details?: string }>> {
+  handler: () => Promise<Response>
+): Promise<Response> {
   try {
     return await handler();
   } catch (error) {

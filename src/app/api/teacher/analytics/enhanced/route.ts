@@ -4,6 +4,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { withErrorHandler, parseSearchParams } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 const enhancedParamsSchema = z.object({

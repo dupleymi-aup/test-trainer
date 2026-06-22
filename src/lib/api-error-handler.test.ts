@@ -236,8 +236,7 @@ describe("withErrorHandler", () => {
   });
 
   it("includes details in development mode", async () => {
-    const original = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
     vi.spyOn(console, "error").mockImplementation(() => {});
     const req = new Request("http://localhost/api/test");
     const res = await withErrorHandler(req, async () => {
@@ -245,12 +244,11 @@ describe("withErrorHandler", () => {
     });
     const body = await res.json();
     expect(body.details).toBe("dev error detail");
-    process.env.NODE_ENV = original;
+    vi.unstubAllEnvs();
   });
 
   it("hides details in production mode", async () => {
-    const original = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     vi.spyOn(console, "error").mockImplementation(() => {});
     const req = new Request("http://localhost/api/test");
     const res = await withErrorHandler(req, async () => {
@@ -258,7 +256,7 @@ describe("withErrorHandler", () => {
     });
     const body = await res.json();
     expect(body.details).toBe("Internal server error");
-    process.env.NODE_ENV = original;
+    vi.unstubAllEnvs();
   });
 
   it("handles non-Error thrown values", async () => {

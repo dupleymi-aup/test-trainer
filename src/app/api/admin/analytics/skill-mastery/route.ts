@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { withErrorHandler } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 interface EcSkill {
   ecId: string;
