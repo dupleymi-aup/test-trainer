@@ -9,4 +9,4 @@
 - [x] 7. Добавить request logging middleware (method, path, status, duration) для всех API
 - [x] 8. Аудит XSS: проверить user-generated контент (name, email, group) на escaping в CSV/JSON/PDF экспорте — CSV: sanitizeCSVValue, JSON: JSON.stringify, PDF: jsPDF doc.text()
 - [x] 9. Добавить database migration safety: dry-run режим и schema diff перед миграцией — npm run db:check
-- [ ] 10. Performance: Lighthouse CI, bundle size monitoring, unused dependencies audit
+- [x] 10. Performance: Lighthouse CI, bundle size monitoring, unused dependencies audit — удалены react-markdown, uuid, zustand (81 пакет)

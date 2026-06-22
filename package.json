@@ -88,7 +88,6 @@
     "react-day-picker": "^9.8.0",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.60.0",
-    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.3",
     "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.15.4",
@@ -97,10 +96,8 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "twilio": "^6.0.2",
-    "uuid": "^11.1.0",
     "vaul": "^1.1.2",
-    "zod": "^4.0.2",
-    "zustand": "^5.0.6"
+    "zod": "^4.0.2"
   },
   "overrides": {
     "prismjs": "1.30.0"
