@@ -4,7 +4,7 @@
 - [x] 2. Настроить CI/CD: GitHub Actions workflow с lint, typecheck, test, schema:check
 - [x] 3. Добавить structured JSON logging через withErrorHandler во все API-маршруты
 - [x] 4. Написать unit-тесты для parseSearchParams/parseRequestBody на каждом валидированном маршруте — 42 теста для 10 уникальных схем
-- [ ] 5. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt
+- [x] 5. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt — уже есть 16 тестов в e2e/
 - [x] 6. Добавить error boundary для React-компонентов (React ErrorBoundary) — уже есть в src/components/error-boundary.tsx
 - [x] 7. Добавить request logging middleware (method, path, status, duration) для всех API
 - [x] 8. Аудит XSS: проверить user-generated контент (name, email, group) на escaping в CSV/JSON/PDF экспорте — CSV: sanitizeCSVValue, JSON: JSON.stringify, PDF: jsPDF doc.text()
