@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { formatZodError } from "@/lib/api-error-handler";
+import { sanitizeCSVValue } from "@/lib/csv-utils";
 
 const exportSchema = z.object({
   groupId: z.string().optional(),
@@ -13,20 +14,6 @@ const exportSchema = z.object({
   endDate: z.string().datetime().optional(),
   exportType: z.enum(["summary", "detailed", "at-risk"]).default("summary"),
 });
-
-/**
- * Sanitize a value to prevent CSV injection attacks.
- * Excel/Calc can execute formulas if a cell starts with =, +, -, @.
- * Escapes double quotes per RFC 4180 and wraps values to neutralize formulas.
- */
-function sanitizeCSVValue(value: string): string {
-  const escaped = value.replace(/"/g, '""');
-  const trimmed = escaped.trimStart();
-  if (trimmed.startsWith("=") || trimmed.startsWith("+") || trimmed.startsWith("-") || trimmed.startsWith("@")) {
-    return "'" + escaped;
-  }
-  return escaped;
-}
 
 export async function POST(req: Request) {
   const guard = await requireTeacherOrAdmin();

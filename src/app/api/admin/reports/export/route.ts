@@ -8,6 +8,7 @@ import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
 import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
+import { sanitizeCSVValue, sanitizeFilename } from "@/lib/csv-utils";
 
 const exportReportSchema = z.object({
   reportType: z.enum([
@@ -28,29 +29,6 @@ const exportReportSchema = z.object({
   format: z.enum(["csv", "json", "pdf"]).default("csv"),
   groupId: z.string().optional(),
 });
-
-/**
- * Sanitize a value to prevent CSV injection attacks.
- * Excel/Calc can execute formulas if a cell starts with =, +, -, @.
- * Also checks trimmed value to catch whitespace-prefixed attacks.
- */
-function sanitizeCSVValue(value: string): string {
-  const trimmed = value.trimStart();
-  if (trimmed.startsWith("=") || trimmed.startsWith("+") || trimmed.startsWith("-") || trimmed.startsWith("@")) {
-    return "\t" + value;
-  }
-  return value;
-}
-
-/**
- * Sanitize a filename for use in Content-Disposition header.
- * Removes characters that could enable HTTP response splitting
- * or break the quoted-string: quotes, backslashes, control chars.
- */
-function sanitizeFilename(name: string): string {
-  const safe = name.replace(/[^a-zA-Z0-9а-яА-ЯёЁ\s_-]/g, "").replace(/\s+/g, "-").slice(0, 60);
-  return safe || "unnamed";
-}
 
 /**
  * Log export activity to the activity log.

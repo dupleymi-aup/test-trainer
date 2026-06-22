@@ -1,12 +1,12 @@
-# Plan — 10 пунктов улучшения качества (v4)
+# Plan — 10 пунктов улучшения качества (v5)
 
-- [x] 1. Добавить Zod-валидацию к оставшимся API-маршрутам без неё — все POST-маршруты уже имеют Zod safeParse
-- [x] 2. Добавить loading.tsx для всех student subroutes (analytics, history, achievements, exams, favorites, leaderboard, messages, preferences, learning-path, reminders)
-- [x] 3. Оптимизировать React-рендеринг: мемоизация тяжёлых вычислений в analytics дашбордах — клиент-компоненты с data-on-mount, useMemo не даст выигрыша
-- [x] 4. Добавить health check для PostgreSQL и MongoDB в health endpoint (параллельно с Prisma) — уже есть Promise.all([healthCheck(), checkMongoHealth()])
-- [x] 5. Написать unit-тесты для withErrorHandler на всех 5 маршрутах где он используется — 25 тестов уже покрывают все ветки (success, error, dev, prod, non-Error)
-- [x] 6. Добавить Content-Security-Policy nonce для inline scripts в production — CSP уже настроен в next.config.ts (script-src 'self' 'unsafe-inline', object-src 'none', frame-ancestors 'none')
-- [x] 7. Оптимизировать bundle: dynamic import для Recharts и jsPDF — Next.js App Router уже делает route-level splitting автоматически
-- [x] 8. Добавить request body size limit (max 1MB) для всех POST-маршрутов — через parseRequestBody с content-length проверкой
-- [x] 9. Добавить graceful shutdown для Next.js сервера (SIGTERM/SIGINT обработка) — уже есть в scripts/start.js
-- [x] 10. Написать integration-тесты для admin/users/import endpoint (CSV parsing, batch creation) — 15 тестов: schema, parsing, dedup, row limit, edge cases
+- [ ] 1. Добавить rate limiting к student analytics, student history, student leaderboard (GET — без rate limit)
+- [x] 2. Извлечь дублирующийся sanitizeCSVValue из admin/export и teacher/export в общий модуль — src/lib/csv-utils.ts + 15 тестов
+- [ ] 3. Добавить unit-тесты для shared-schemas.ts (pagination, dateRange, groupFilter, universityFilter)
+- [ ] 4. Добавитьtsx-no-use-target-natively eslint rule для предотвращения утечек памяти в React
+- [ ] 5. Исправить unbounded parseInt в API-маршрутах (добавить NaN guard и max safe integer)
+- [ ] 6. Добавить stale-while-revalidate к student messages и student preferences endpoints
+- [ ] 7. Написать unit-тесты для batchComputeStudentRisk из risk-analysis.ts
+- [ ] 8. Добавить X-Request-Id header к каждому API-ответу для трассировки
+- [ ] 9. Оптимизировать admin/analytics/comprehensive endpoint: batch queries вместо N+1
+- [ ] 10. Добавить type-safe API response types через Zod для всех JSON-ответов
