@@ -2,6 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { generateCSRFToken, verifyCSRFToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
+import { logger } from "@/lib/logger";
 
 // Routes that require authentication
 const protectedRoutes = ["/profile", "/teacher", "/admin", "/student"];
@@ -19,6 +20,7 @@ const roleRoutes = {
 const stateChangingMethods = ["POST", "PUT", "DELETE", "PATCH"];
 
 export async function middleware(request: NextRequest) {
+  const startTime = Date.now();
   const token = await getToken({ req: request });
   const pathname = request.nextUrl.pathname;
   const method = request.method;
@@ -139,7 +141,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (csrfResponse) return csrfResponse;
+  if (csrfResponse) {
+    if (isApiRoute) {
+      logger.info("API request", { method, path: pathname, status: 200, duration: Date.now() - startTime, userId: token?.sub });
+    }
+    return csrfResponse;
+  }
+  if (isApiRoute) {
+    logger.info("API request", { method, path: pathname, status: 200, duration: Date.now() - startTime, userId: token?.sub });
+  }
   return NextResponse.next();
 }
 
