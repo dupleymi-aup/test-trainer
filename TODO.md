@@ -1,7 +1,7 @@
 # Plan — 10 пунктов улучшения качества (v3)
 
 - [x] 1. Добавить Prisma-индексы для полей в частых WHERE-запросах (userId, taskId, groupId, createdAt, action)
-- [ ] 2. Настроить CI/CD: GitHub Actions workflow с lint, typecheck, test, schema:check
+- [x] 2. Настроить CI/CD: GitHub Actions workflow с lint, typecheck, test, schema:check
 - [ ] 3. Добавить structured JSON logging через withErrorHandler во все API-маршруты
 - [ ] 4. Написать unit-тесты для parseSearchParams/parseRequestBody на каждом валидированном маршруте
 - [ ] 5. Написать E2E-тесты (Playwright) для критичных user flows: login, register, submit attempt
