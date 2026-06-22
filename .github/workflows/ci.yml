@@ -31,6 +31,9 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Schema parity check
+        run: npm run schema:check
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
