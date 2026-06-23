@@ -43,7 +43,7 @@ export async function GET(req: Request) {
           details: JSON.stringify({ reportType: "user-list", format: "json", count: users.length }),
           ipAddress: ip,
         },
-      }).catch(() => {});
+      }).catch((e) => { logger.warn("Failed to log export activity", { error: String(e) }); });
       return NextResponse.json({ users, count: users.length, exportedAt: new Date().toISOString() });
     }
 
@@ -76,7 +76,7 @@ export async function GET(req: Request) {
         details: JSON.stringify({ reportType: "user-list", format, count: users.length }),
         ipAddress: ip,
       },
-    }).catch(() => {});
+    }).catch((e) => { logger.warn("Failed to log export activity", { error: String(e) }); });
 
     return new NextResponse(csv, {
       headers: {

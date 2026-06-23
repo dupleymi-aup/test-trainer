@@ -205,7 +205,7 @@ export async function POST(req: Request) {
         details: JSON.stringify({ reportType: "detailed", format: "json", groupId, startDate, endDate }),
         ipAddress: ip,
       },
-    }).catch(() => {});
+    }).catch((e) => { logger.warn("Failed to log export activity", { error: String(e) }); });
 
     return NextResponse.json(exportData);
   } catch (error) {

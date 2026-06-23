@@ -4,6 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { formatZodError, logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { sanitizeCSVValue } from "@/lib/csv-utils";
 
@@ -309,7 +310,7 @@ export async function POST(req: Request) {
         details: JSON.stringify({ reportType: exportType, format: "csv", groupId, startDate, endDate }),
         ipAddress: ip,
       },
-    }).catch(() => {});
+    }).catch((e) => { logger.warn("Failed to log export activity", { error: String(e) }); });
 
     return new NextResponse(buffer, {
       headers: {
