@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { generateCSRFToken, verifyCSRFToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
 import { logger } from "@/lib/logger";
+import { randomUUID } from "crypto";
 
 // Routes that require authentication
 const protectedRoutes = ["/profile", "/teacher", "/admin", "/student"];
@@ -21,6 +22,7 @@ const stateChangingMethods = ["POST", "PUT", "DELETE", "PATCH"];
 
 export async function middleware(request: NextRequest) {
   const startTime = Date.now();
+  const requestId = request.headers.get("x-request-id") ?? randomUUID();
   const token = await getToken({ req: request });
   const pathname = request.nextUrl.pathname;
   const method = request.method;
@@ -65,7 +67,9 @@ export async function middleware(request: NextRequest) {
     const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
     const headerToken = request.headers.get(CSRF_HEADER_NAME) ?? undefined;
     if (!verifyCSRFToken(cookieToken, headerToken)) {
-      return NextResponse.json({ error: "CSRF token missing or invalid" }, { status: 403 });
+      const res = NextResponse.json({ error: "CSRF token missing or invalid" }, { status: 403 });
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
   }
 
@@ -77,7 +81,9 @@ export async function middleware(request: NextRequest) {
   if (isProtectedRoute && !token) {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(redirectUrl);
+    const res = NextResponse.redirect(redirectUrl);
+    res.headers.set("X-Request-Id", requestId);
+    return res;
   }
 
   // Role-based protection for admin routes
@@ -86,13 +92,19 @@ export async function middleware(request: NextRequest) {
   );
   if (isAdminRoute) {
     if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const res = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
     if (token.role !== "ADMIN") {
       if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 });
+        const res = NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 });
+        res.headers.set("X-Request-Id", requestId);
+        return res;
       }
-      return NextResponse.redirect(new URL("/", request.url));
+      const res = NextResponse.redirect(new URL("/", request.url));
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
   }
 
@@ -102,13 +114,19 @@ export async function middleware(request: NextRequest) {
   );
   if (isTeacherRoute) {
     if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const res = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
     if (token.role !== "TEACHER" && token.role !== "ADMIN") {
       if (pathname.startsWith("/api/")) {
-        return NextResponse.json({ error: "Forbidden: teacher or admin access required" }, { status: 403 });
+        const res = NextResponse.json({ error: "Forbidden: teacher or admin access required" }, { status: 403 });
+        res.headers.set("X-Request-Id", requestId);
+        return res;
       }
-      return NextResponse.redirect(new URL("/", request.url));
+      const res = NextResponse.redirect(new URL("/", request.url));
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
   }
 
@@ -118,17 +136,24 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       const redirectUrl = new URL("/login", request.url);
       redirectUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(redirectUrl);
+      const res = NextResponse.redirect(redirectUrl);
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
     if (token.role !== "STUDENT") {
       if (token.role === "TEACHER") {
-        return NextResponse.redirect(new URL("/teacher", request.url));
+        const res = NextResponse.redirect(new URL("/teacher", request.url));
+        res.headers.set("X-Request-Id", requestId);
+        return res;
       }
       if (token.role === "ADMIN") {
-        return NextResponse.redirect(new URL("/admin", request.url));
+        const res = NextResponse.redirect(new URL("/admin", request.url));
+        res.headers.set("X-Request-Id", requestId);
+        return res;
       }
-      // Unknown role — safe fallback to home
-      return NextResponse.redirect(new URL("/", request.url));
+      const res = NextResponse.redirect(new URL("/", request.url));
+      res.headers.set("X-Request-Id", requestId);
+      return res;
     }
   }
 
@@ -138,19 +163,24 @@ export async function middleware(request: NextRequest) {
   );
 
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL("/", request.url));
+    const res = NextResponse.redirect(new URL("/", request.url));
+    res.headers.set("X-Request-Id", requestId);
+    return res;
   }
 
   if (csrfResponse) {
+    csrfResponse.headers.set("X-Request-Id", requestId);
     if (isApiRoute) {
-      logger.info("API request", { method, path: pathname, status: 200, duration: Date.now() - startTime, userId: token?.sub });
+      logger.info("API request", { method, path: pathname, status: 200, duration: Date.now() - startTime, userId: token?.sub, requestId });
     }
     return csrfResponse;
   }
   if (isApiRoute) {
-    logger.info("API request", { method, path: pathname, status: 200, duration: Date.now() - startTime, userId: token?.sub });
+    logger.info("API request", { method, path: pathname, status: 200, duration: Date.now() - startTime, userId: token?.sub, requestId });
   }
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("X-Request-Id", requestId);
+  return res;
 }
 
 export const config = {
