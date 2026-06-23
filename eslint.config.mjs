@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 import nextPlugin from "@next/eslint-plugin-next";
+import eslintReact from "@eslint-react/eslint-plugin";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -27,6 +28,7 @@ const eslintConfig = [
     plugins: {
       "react-hooks": reactHooks,
       "@next/next": nextPlugin,
+      "@eslint-react": eslintReact,
     },
     rules: {
       // TypeScript rules
@@ -46,6 +48,14 @@ const eslintConfig = [
       // Next.js rules
       "@next/next/no-img-element": "error",
       "@next/next/no-html-link-for-pages": "error",
+
+      // React memory leak prevention rules
+      "@eslint-react/web-api-no-leaked-event-listener": "warn",
+      "@eslint-react/web-api-no-leaked-timeout": "warn",
+      "@eslint-react/web-api-no-leaked-interval": "warn",
+      "@eslint-react/web-api-no-leaked-fetch": "warn",
+      "@eslint-react/web-api-no-leaked-resize-observer": "warn",
+      "@eslint-react/web-api-no-leaked-intersection-observer": "warn",
 
       // General JavaScript rules
       "prefer-const": "error",
