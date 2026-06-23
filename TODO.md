@@ -8,5 +8,5 @@
 - [x] 6. Добавить stale-while-revalidate к student messages и student preferences endpoints
 - [x] 7. Написать unit-тесты для batchComputeStudentRisk из risk-analysis.ts
 - [x] 8. Добавить X-Request-Id header к каждому API-ответу для трассировки
-- [ ] 9. Оптимизировать admin/analytics/comprehensive endpoint: batch queries вместо N+1
+- [x] 9. Оптимизировать admin/analytics/comprehensive endpoint: batch queries вместо N+1
 - [ ] 10. Добавить type-safe API response types через Zod для всех JSON-ответов

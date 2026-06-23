@@ -38,12 +38,12 @@ export async function GET(request: Request) {
     if (userIdFilter) studentWhere.id = { in: [...userIdFilter] };
     if (universityFilter) studentWhere.university = universityFilter;
 
-    // Get filtered student IDs for active students check
-    const filteredStudentIds = await db.user.findMany({
+    // Get filtered student IDs + createdAt (reused later for cohort analysis)
+    const filteredStudents = await db.user.findMany({
       where: studentWhere,
-      select: { id: true },
+      select: { id: true, createdAt: true },
     });
-    const filteredStudentIdSet = new Set(filteredStudentIds.map((s) => s.id));
+    const filteredStudentIdSet = new Set(filteredStudents.map((s) => s.id));
 
     // Build attempt where clause
     const attemptWhere: Record<string, unknown> = {};
@@ -108,23 +108,17 @@ export async function GET(request: Request) {
       attemptsCount: data.count,
     }));
 
-  // Cohort analysis (by registration month) — run both queries in parallel
-  const [students, studentsWithAttempts] = await Promise.all([
-    db.user.findMany({
-      where: studentWhere,
-      select: { id: true, createdAt: true },
-    }),
-    db.user.findMany({
-      where: {
-        ...studentWhere,
-        attempts: { some: {} },
-      },
-      select: { id: true, createdAt: true },
-    }),
-  ]);
+  // Cohort analysis — reuse filteredStudents fetched above (no extra query)
+  const studentsWithAttempts = await db.user.findMany({
+    where: {
+      ...studentWhere,
+      attempts: { some: {} },
+    },
+    select: { id: true, createdAt: true },
+  });
 
   const cohortMap: Record<string, { total: number; withAttempts: number }> = {};
-  students.forEach((s) => {
+  filteredStudents.forEach((s) => {
     const cohort = s.createdAt.toISOString().slice(0, 7);
     if (!cohortMap[cohort]) cohortMap[cohort] = { total: 0, withAttempts: 0 };
     cohortMap[cohort].total++;
@@ -176,32 +170,78 @@ export async function GET(request: Request) {
     }))
     .sort((a, b) => b.avgScore - a.avgScore);
 
-  // Teacher leaderboard
+  // Teacher leaderboard — 4 simple queries instead of 1 deep nested select
   const teachers = await db.user.findMany({
     where: { role: "TEACHER", deletedAt: null },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdGroups: {
-        select: {
-          id: true,
-          members: {
-            select: {
-              user: {
-                select: {
-                  id: true,
-                  attempts: {
-                    select: { score: true, ecCoverage: true, bvCoverage: true, createdAt: true },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    select: { id: true, name: true, email: true },
   });
+
+  const teacherIds = teachers.map((t) => t.id);
+
+  // Fetch groups created by these teachers
+  const teacherGroups = teacherIds.length > 0
+    ? await db.group.findMany({
+        where: { createdByUserId: { in: teacherIds } },
+        select: { id: true, createdByUserId: true },
+      })
+    : [];
+
+  const teacherGroupMap = new Map<string, string[]>();
+  for (const g of teacherGroups) {
+    const existing = teacherGroupMap.get(g.createdByUserId);
+    if (existing) {
+      existing.push(g.id);
+    } else {
+      teacherGroupMap.set(g.createdByUserId, [g.id]);
+    }
+  }
+
+  const groupIds = teacherGroups.map((g) => g.id);
+
+  // Fetch group members
+  const groupMembers = groupIds.length > 0
+    ? await db.userGroup.findMany({
+        where: { groupId: { in: groupIds } },
+        select: { groupId: true, userId: true },
+      })
+    : [];
+
+  const groupStudentMap = new Map<string, Set<string>>();
+  for (const m of groupMembers) {
+    const existing = groupStudentMap.get(m.groupId);
+    if (existing) {
+      existing.add(m.userId);
+    } else {
+      groupStudentMap.set(m.groupId, new Set([m.userId]));
+    }
+  }
+
+  // Collect all unique student IDs across all teachers
+  const allStudentIds = new Set<string>();
+  for (const tg of teacherGroups) {
+    const sids = groupStudentMap.get(tg.id);
+    if (sids) for (const id of sids) allStudentIds.add(id);
+  }
+
+  // Batch fetch all attempts for these students
+  const studentAttempts = allStudentIds.size > 0
+    ? await db.attempt.findMany({
+        where: { userId: { in: [...allStudentIds] } },
+        select: { userId: true, score: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
+
+  // Build userId -> attempts map
+  const studentAttemptsMap = new Map<string, typeof studentAttempts>();
+  for (const a of studentAttempts) {
+    const existing = studentAttemptsMap.get(a.userId);
+    if (existing) {
+      existing.push(a);
+    } else {
+      studentAttemptsMap.set(a.userId, [a]);
+    }
+  }
 
   // Pre-compute timestamp threshold for active students check
   const thirtyDaysAgoTime = thirtyDaysAgo.getTime();
@@ -209,14 +249,20 @@ export async function GET(request: Request) {
   const teacherLeaderboard = teachers
     .map((t) => {
       // Collect attempts with userId tracking
-      const allAttempts: Array<{ userId: string; score: number; ecCoverage: number; bvCoverage: number; createdAt: Date }> = [];
+      const allAttempts: Array<{ userId: string; score: number; createdAt: Date }> = [];
       const uniqueStudents = new Set<string>();
 
-      for (const g of t.createdGroups) {
-        for (const m of g.members) {
-          uniqueStudents.add(m.user.id);
-          for (const a of m.user.attempts) {
-            allAttempts.push({ userId: m.user.id, ...a });
+      const groupIds = teacherGroupMap.get(t.id) || [];
+      for (const gid of groupIds) {
+        const sids = groupStudentMap.get(gid);
+        if (!sids) continue;
+        for (const sid of sids) {
+          uniqueStudents.add(sid);
+          const attempts = studentAttemptsMap.get(sid);
+          if (attempts) {
+            for (const a of attempts) {
+              allAttempts.push({ userId: sid, score: a.score, createdAt: a.createdAt });
+            }
           }
         }
       }
@@ -254,7 +300,7 @@ export async function GET(request: Request) {
       return {
         teacherId: t.id,
         name: t.name || t.email || "Unknown",
-        groupsCount: t.createdGroups.length,
+        groupsCount: groupIds.length,
         studentsCount: uniqueStudents.size,
         avgStudentScore: avgScore,
         avgAttemptsPerStudent: uniqueStudents.size > 0 ? Math.round(allAttempts.length / uniqueStudents.size) : 0,
