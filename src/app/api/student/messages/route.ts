@@ -29,7 +29,9 @@ export async function GET(req: Request) {
       db.message.count({ where: { toUserId: auth.session.userId, read: false } }),
     ]);
 
-    return NextResponse.json({ messages, total, page, limit, unreadCount });
+    const res = NextResponse.json({ messages, total, page, limit, unreadCount });
+    res.headers.set("Cache-Control", "private, max-age=0, stale-while-revalidate=30");
+    return res;
   } catch (error) {
     logger.error("Failed to fetch student messages", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });

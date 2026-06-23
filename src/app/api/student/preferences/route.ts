@@ -52,7 +52,9 @@ export async function GET() {
 
     const preferences = parsePreferences(user?.notificationPreferences || null);
 
-    return NextResponse.json({ preferences });
+    const res = NextResponse.json({ preferences });
+    res.headers.set("Cache-Control", "private, max-age=0, stale-while-revalidate=60");
+    return res;
   } catch (error) {
     logger.error("Failed to fetch preferences", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch preferences" }, { status: 500 });
