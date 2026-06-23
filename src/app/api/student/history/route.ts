@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { parseSearchParams } from "@/lib/api-error-handler";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 const historyParamsSchema = z.object({
@@ -96,7 +97,8 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ taskHistory });
-  } catch {
+  } catch (error) {
+    logger.error("Failed to fetch student history", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
   }
 }

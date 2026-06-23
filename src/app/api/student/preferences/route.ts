@@ -35,6 +35,7 @@ function parsePreferences(raw: string | null): NotificationPreferences {
       inApp: parsed.inApp ?? true,
     };
   } catch {
+    logger.warn("Failed to parse notification preferences, using defaults");
     return DEFAULT_PREFERENCES;
   }
 }
