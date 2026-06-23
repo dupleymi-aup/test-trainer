@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { healthCheck, checkMongoHealth } from "@/lib/db-factory";
 import { logger } from "@/lib/logger";
+import { validateApiResponse } from "@/lib/api-error-handler";
+import { healthResponseSchema } from "@/lib/api-types";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,7 @@ export async function GET() {
 
     const allHealthy = dbHealth.ok && (mongoHealth.ok || mongoHealth.details === 'MONGODB_URI not configured');
 
-    return NextResponse.json({
+    const data = {
       status: allHealthy ? "healthy" : dbHealth.ok ? "degraded" : "unhealthy",
       version,
       uptime: Math.floor(uptime),
@@ -36,7 +38,9 @@ export async function GET() {
       database: dbHealth,
       mongodb: mongoHealth,
       memory: process.memoryUsage(),
-    });
+    };
+    validateApiResponse(healthResponseSchema, data);
+    return NextResponse.json(data);
   } catch (error) {
     logger.error("Health check failed", error instanceof Error ? error : undefined);
     return NextResponse.json(

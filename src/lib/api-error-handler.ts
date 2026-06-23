@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { logger } from "./logger";
-import type { ZodError, ZodSchema } from "zod";
+import { z, type ZodError, type ZodSchema } from "zod";
 
 /**
  * Formats a Zod v4 error into a human-readable string.
@@ -36,6 +36,31 @@ export function logApiError(route: string, error: unknown, extra?: Record<string
 
 export function apiErrorResponse(error: string, status = 500): NextResponse<{ error: string }> {
   return NextResponse.json({ error }, { status });
+}
+
+/**
+ * Validate API response data against a Zod schema before sending.
+ * In development, throws on mismatch. In production, logs a warning.
+ * Usage:
+ *   return validateApiResponse(studentAnalyticsResponseSchema, { attempts: 5, ... });
+ */
+export function validateApiResponse<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const issues = result.error.issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((issue: any) => `${String(issue.path?.join(".") ?? "")}: ${issue.message}`)
+      .join("; ");
+    const msg = `API response validation failed: ${issues}`;
+    if (process.env.NODE_ENV === "development") {
+      throw new Error(msg);
+    }
+    logger.warn(msg);
+  }
+  return (result.success ? result.data : data) as T;
 }
 
 /**

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, validateApiResponse } from "@/lib/api-error-handler";
+import { leaderboardResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -141,7 +142,7 @@ export async function GET(req: Request) {
       currentUserRank = { rank: currentIndex + 1, stats: sortedAll[currentIndex] };
     }
 
-    return NextResponse.json({
+    const responseData = {
       leaderboard,
       totalParticipants,
       currentUser: currentUserRank,
@@ -149,7 +150,9 @@ export async function GET(req: Request) {
       page: clampedPage,
       totalPages,
       groupId: groupId || null,
-    });
+    };
+    validateApiResponse(leaderboardResponseSchema, responseData);
+    return NextResponse.json(responseData);
   } catch (error) {
     logger.error("Failed to fetch leaderboard", error instanceof Error ? error : undefined);
     return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 });
