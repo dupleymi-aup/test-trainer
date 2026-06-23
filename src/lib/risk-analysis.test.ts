@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeStudentStats,
   computeStudentRisk,
+  batchComputeStudentRisk,
   generateRecommendations,
   computeAnomalyFlags,
   predictNextScore,
@@ -372,5 +373,93 @@ describe("predictNextScore", () => {
     if (!result) return;
     expect(result.confidence).toBeGreaterThanOrEqual(0);
     expect(result.confidence).toBeLessThanOrEqual(100);
+  });
+});
+
+describe("batchComputeStudentRisk", () => {
+  it("returns empty map for empty input", () => {
+    const result = batchComputeStudentRisk([]);
+    expect(result.size).toBe(0);
+  });
+
+  it("computes stats and risk for a single student", () => {
+    const now = new Date();
+    const students = [
+      {
+        id: "s1",
+        createdAt: new Date(now.getTime() - 30 * 86400000),
+        attempts: [makeAttempt({ score: 80, ecCoverage: 70, bvCoverage: 60 })],
+      },
+    ];
+    const result = batchComputeStudentRisk(students);
+    expect(result.size).toBe(1);
+    const entry = result.get("s1");
+    expect(entry).toBeDefined();
+    expect(entry?.stats.bestScore).toBe(80);
+    expect(entry?.risk.dropoutRisk).toBe("low");
+  });
+
+  it("computes for multiple students independently", () => {
+    const now = new Date();
+    const students = [
+      {
+        id: "good",
+        createdAt: now,
+        attempts: [
+          makeAttempt({ score: 90 }),
+          makeAttempt({ score: 95 }),
+          makeAttempt({ score: 92 }),
+        ],
+      },
+      {
+        id: "bad",
+        createdAt: new Date(now.getTime() - 30 * 86400000),
+        attempts: [makeAttempt({ score: 20, ecCoverage: 10, bvCoverage: 10 })],
+      },
+    ];
+    const result = batchComputeStudentRisk(students);
+    expect(result.size).toBe(2);
+    expect(result.get("good")?.risk.dropoutRisk).toBe("low");
+    expect(result.get("bad")?.risk.dropoutRisk).not.toBe("low");
+  });
+
+  it("handles students with no attempts", () => {
+    const students = [
+      { id: "empty", createdAt: new Date(), attempts: [] },
+    ];
+    const result = batchComputeStudentRisk(students);
+    const entry = result.get("empty");
+    expect(entry).toBeDefined();
+    expect(entry?.stats.totalAttempts).toBe(0);
+    expect(entry?.risk.riskFactors).toEqual([]);
+  });
+
+  it("returns a Map keyed by student ID", () => {
+    const students = [
+      { id: "a", createdAt: new Date(), attempts: [makeAttempt()] },
+      { id: "b", createdAt: new Date(), attempts: [makeAttempt()] },
+      { id: "c", createdAt: new Date(), attempts: [makeAttempt()] },
+    ];
+    const result = batchComputeStudentRisk(students);
+    expect(result.has("a")).toBe(true);
+    expect(result.has("b")).toBe(true);
+    expect(result.has("c")).toBe(true);
+    expect(result.has("nonexistent")).toBe(false);
+  });
+
+  it("detects high risk student in batch", () => {
+    const now = new Date();
+    const students = [
+      {
+        id: "risk",
+        createdAt: new Date(now.getTime() - 30 * 86400000),
+        attempts: [
+          makeAttempt({ score: 20, ecCoverage: 10, bvCoverage: 10, createdAt: new Date(now.getTime() - 20 * 86400000) }),
+        ],
+      },
+    ];
+    const result = batchComputeStudentRisk(students);
+    expect(result.get("risk")?.risk.dropoutRisk).toBe("high");
+    expect(result.get("risk")?.risk.riskFactors.length).toBeGreaterThanOrEqual(4);
   });
 });
