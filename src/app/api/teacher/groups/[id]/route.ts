@@ -3,8 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const updateGroupSchema = z.object({
@@ -54,7 +53,7 @@ export async function PATCH(
 
     return NextResponse.json({ group: updated });
   } catch (error) {
-    logger.error("Teacher group PATCH failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups/[id]", error);
     return NextResponse.json({ error: "Failed to update group" }, { status: 500 });
   }
 }
@@ -99,7 +98,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Teacher group DELETE failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups/[id]", error);
     return NextResponse.json({ error: "Failed to delete group" }, { status: 500 });
   }
 }

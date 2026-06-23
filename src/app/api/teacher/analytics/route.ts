@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const analyticsParamsSchema = z.object({
@@ -84,7 +83,7 @@ export async function GET(req: Request) {
       totalAttempts: attempts.length,
     });
   } catch (error) {
-    logger.error("Failed to fetch teacher analytics", error instanceof Error ? error : undefined);
+    logApiError("teacher/analytics", error);
     return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
   }
 }

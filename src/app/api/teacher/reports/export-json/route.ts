@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 
 const exportJsonSchema = z.object({
   groupId: z.string().optional(),
@@ -209,7 +209,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(exportData);
   } catch (error) {
-    logger.error("Export JSON failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/reports/export-json", error);
     return NextResponse.json({ error: "Failed to export data" }, { status: 500 });
   }
 }

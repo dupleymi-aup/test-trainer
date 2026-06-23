@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const saveExamSchema = z.object({
@@ -51,7 +51,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ exams, total, page });
   } catch (error) {
-    logger.error("Failed to fetch exam history", error instanceof Error ? error : undefined);
+    logApiError("student/exams", error);
     return NextResponse.json({ error: "Failed to fetch exam history" }, { status: 500 });
   }
 }
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ exam }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to save exam result", error instanceof Error ? error : undefined);
+    logApiError("student/exams", error);
     return NextResponse.json({ error: "Failed to save exam result" }, { status: 500 });
   }
 }

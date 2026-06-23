@@ -3,8 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -27,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json({ groups }, { status: 200 });
   } catch (error) {
-    logger.error("Failed to fetch groups", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups", error);
     return NextResponse.json({ error: "Failed to fetch groups" }, { status: 500 });
   }
 }
@@ -68,7 +67,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ group }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create group", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups", error);
     return NextResponse.json({ error: "Failed to create group" }, { status: 500 });
   }
 }

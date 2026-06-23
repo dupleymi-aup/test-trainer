@@ -3,9 +3,8 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 
 const updateReminderSchema = z.object({
   reminderId: z.string().optional(),
@@ -65,7 +64,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    logger.error("Failed to fetch reminders", error instanceof Error ? error : undefined);
+    logApiError("student/reminders", error);
     return NextResponse.json({ error: "Failed to fetch reminders" }, { status: 500 });
   }
 }
@@ -117,7 +116,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    logger.error("Failed to update reminders", error instanceof Error ? error : undefined);
+    logApiError("student/reminders", error);
     return NextResponse.json({ error: "Failed to update reminders" }, { status: 500 });
   }
 }

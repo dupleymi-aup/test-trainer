@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const groupPerformanceParamsSchema = z.object({
@@ -122,7 +121,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ groups });
   } catch (error) {
-    logger.error("Failed to generate group performance report", error instanceof Error ? error : undefined);
+    logApiError("teacher/reports/group-performance", error);
     return NextResponse.json(
       { error: "Failed to generate group performance report" },
       { status: 500 }

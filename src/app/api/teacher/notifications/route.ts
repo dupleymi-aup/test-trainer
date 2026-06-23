@@ -4,8 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 
 const notificationSchema = z.object({
   type: z.string().max(50).regex(/^[A-Z_]+$/, "Type must be uppercase letters and underscores only"),
@@ -54,7 +53,7 @@ export async function GET() {
       unreadCount,
     });
   } catch (error) {
-    logger.error("Failed to fetch notifications", error instanceof Error ? error : undefined);
+    logApiError("teacher/notifications", error);
     return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
   }
 }
@@ -102,7 +101,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, notification });
   } catch (error) {
-    logger.error("Failed to create notification", error instanceof Error ? error : undefined);
+    logApiError("teacher/notifications", error);
     return NextResponse.json({ error: "Failed to create notification" }, { status: 500 });
   }
 }
@@ -151,7 +150,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    logger.error("Failed to update notification", error instanceof Error ? error : undefined);
+    logApiError("teacher/notifications", error);
     return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });
   }
 }

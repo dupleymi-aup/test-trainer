@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const paramSchema = z.object({
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
       groupIds: groupIds.map((g) => g.id),
     });
   } catch (error) {
-    logger.error("Failed to fetch custom tasks", error instanceof Error ? error : undefined);
+    logApiError("teacher/task-constructor", error);
     return NextResponse.json({ error: "Failed to fetch custom tasks" }, { status: 500 });
   }
 }
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ task: { ...task, topics: JSON.parse(task.topics), parameters: JSON.parse(task.parameters), ecClasses: JSON.parse(task.ecClasses), bvValues: JSON.parse(task.bvValues), commonMistakes: task.commonMistakes ? JSON.parse(task.commonMistakes) : [] } }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create custom task", error instanceof Error ? error : undefined);
+    logApiError("teacher/task-constructor", error);
     return NextResponse.json({ error: "Failed to create custom task" }, { status: 500 });
   }
 }
@@ -187,7 +187,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to delete custom task", error instanceof Error ? error : undefined);
+    logApiError("teacher/task-constructor", error);
     return NextResponse.json({ error: "Failed to delete custom task" }, { status: 500 });
   }
 }

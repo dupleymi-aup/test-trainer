@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const gradeSchema = z.object({
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ grades, students });
   } catch (error) {
-    logger.error("Failed to fetch grades", error instanceof Error ? error : undefined);
+    logApiError("teacher/gradebook", error);
     return NextResponse.json({ error: "Failed to fetch grades" }, { status: 500 });
   }
 }
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ grade });
   } catch (error) {
-    logger.error("Failed to set grade", error instanceof Error ? error : undefined);
+    logApiError("teacher/gradebook", error);
     return NextResponse.json({ error: "Failed to set grade" }, { status: 500 });
   }
 }
@@ -195,7 +195,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to delete grade", error instanceof Error ? error : undefined);
+    logApiError("teacher/gradebook", error);
     return NextResponse.json({ error: "Failed to delete grade" }, { status: 500 });
   }
 }

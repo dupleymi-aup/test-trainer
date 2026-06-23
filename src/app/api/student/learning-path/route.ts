@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 
 export async function GET() {
   try {
@@ -59,7 +59,7 @@ export async function GET() {
 
     return NextResponse.json({ assignments, progress });
   } catch (error) {
-    logger.error("Failed to fetch learning path", error instanceof Error ? error : undefined);
+    logApiError("student/learning-path", error);
     return NextResponse.json({ error: "Failed to fetch learning path" }, { status: 500 });
   }
 }

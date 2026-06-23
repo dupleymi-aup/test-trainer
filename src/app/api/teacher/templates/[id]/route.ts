@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(
@@ -35,7 +35,7 @@ export async function GET(
 
     return NextResponse.json({ template });
   } catch (error) {
-    logger.error("Failed to fetch template", error instanceof Error ? error : undefined);
+    logApiError("teacher/templates/[id]", error);
     return NextResponse.json({ error: "Failed to fetch template" }, { status: 500 });
   }
 }
@@ -130,7 +130,7 @@ export async function PATCH(
 
     return NextResponse.json({ template: updated });
   } catch (error) {
-    logger.error("Failed to update template", error instanceof Error ? error : undefined);
+    logApiError("teacher/templates/[id]", error);
     return NextResponse.json({ error: "Failed to update template" }, { status: 500 });
   }
 }
@@ -177,7 +177,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to delete template", error instanceof Error ? error : undefined);
+    logApiError("teacher/templates/[id]", error);
     return NextResponse.json({ error: "Failed to delete template" }, { status: 500 });
   }
 }

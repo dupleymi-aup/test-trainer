@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
 import { sanitizeCSVValue } from "@/lib/csv-utils";
 
 const exportSchema = z.object({
@@ -319,7 +318,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    logger.error("Export CSV failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/reports/export", error);
     return NextResponse.json({ error: "Failed to export data" }, { status: 500 });
   }
 }

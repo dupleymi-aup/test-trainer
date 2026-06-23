@@ -3,8 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
@@ -38,7 +37,7 @@ export async function GET(
 
     return NextResponse.json({ members: members.map((m) => m.user) });
   } catch (error) {
-    logger.error("Teacher group members GET failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups/members", error);
     return NextResponse.json({ error: "Failed to fetch group members" }, { status: 500 });
   }
 }
@@ -113,7 +112,7 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Teacher group member POST failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups/members", error);
     return NextResponse.json({ error: "Failed to add group member" }, { status: 500 });
   }
 }
@@ -168,7 +167,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Teacher group member DELETE failed", error instanceof Error ? error : undefined);
+    logApiError("teacher/groups/members", error);
     return NextResponse.json({ error: "Failed to remove group member" }, { status: 500 });
   }
 }

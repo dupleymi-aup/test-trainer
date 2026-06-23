@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 
 export async function GET(req: Request) {
   try {
@@ -235,7 +235,7 @@ export async function GET(req: Request) {
       comparison,
     });
   } catch (error) {
-    logger.error("Failed to compare periods", error instanceof Error ? error : undefined);
+    logApiError("teacher/reports/compare-periods", error);
     return NextResponse.json(
       { error: "Failed to compare periods" },
       { status: 500 }

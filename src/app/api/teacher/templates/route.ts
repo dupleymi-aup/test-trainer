@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -27,7 +27,7 @@ export async function GET() {
 
     return NextResponse.json({ templates });
   } catch (error) {
-    logger.error("Failed to fetch templates", error instanceof Error ? error : undefined);
+    logApiError("teacher/templates", error);
     return NextResponse.json({ error: "Failed to fetch templates" }, { status: 500 });
   }
 }
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ template }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create template", error instanceof Error ? error : undefined);
+    logApiError("teacher/templates", error);
     return NextResponse.json({ error: "Failed to create template" }, { status: 500 });
   }
 }

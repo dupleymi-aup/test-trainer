@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -19,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json({ favorites });
   } catch (error) {
-    logger.error("Failed to fetch favorites", error instanceof Error ? error : undefined);
+    logApiError("student/favorites", error);
     return NextResponse.json({ error: "Failed to fetch favorites" }, { status: 500 });
   }
 }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ favorite }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to add favorite", error instanceof Error ? error : undefined);
+    logApiError("student/favorites", error);
     return NextResponse.json({ error: "Failed to add favorite" }, { status: 500 });
   }
 }
@@ -106,7 +106,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to remove favorite", error instanceof Error ? error : undefined);
+    logApiError("student/favorites", error);
     return NextResponse.json({ error: "Failed to remove favorite" }, { status: 500 });
   }
 }

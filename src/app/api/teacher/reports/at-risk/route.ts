@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const atRiskParamsSchema = z.object({
@@ -171,7 +170,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ atRiskStudents });
   } catch (error) {
-    logger.error("Failed to generate at-risk report", error instanceof Error ? error : undefined);
+    logApiError("teacher/reports/at-risk", error);
     return NextResponse.json(
       { error: "Failed to generate at-risk report" },
       { status: 500 }

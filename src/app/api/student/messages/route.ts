@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
     res.headers.set("Cache-Control", "private, max-age=0, stale-while-revalidate=30");
     return res;
   } catch (error) {
-    logger.error("Failed to fetch student messages", error instanceof Error ? error : undefined);
+    logApiError("student/messages", error);
     return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
   }
 }
@@ -71,7 +71,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to mark messages read", error instanceof Error ? error : undefined);
+    logApiError("student/messages", error);
     return NextResponse.json({ error: "Failed to mark messages read" }, { status: 500 });
   }
 }

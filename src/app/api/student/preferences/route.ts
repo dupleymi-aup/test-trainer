@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, logApiError } from "@/lib/api-error-handler";
 
 const preferencesSchema = z.object({
   email: z.boolean().optional(),
@@ -57,7 +57,7 @@ export async function GET() {
     res.headers.set("Cache-Control", "private, max-age=0, stale-while-revalidate=60");
     return res;
   } catch (error) {
-    logger.error("Failed to fetch preferences", error instanceof Error ? error : undefined);
+    logApiError("student/preferences", error);
     return NextResponse.json({ error: "Failed to fetch preferences" }, { status: 500 });
   }
 }
@@ -104,7 +104,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ preferences: updated });
   } catch (error) {
-    logger.error("Failed to update preferences", error instanceof Error ? error : undefined);
+    logApiError("student/preferences", error);
     return NextResponse.json({ error: "Failed to update preferences" }, { status: 500 });
   }
 }

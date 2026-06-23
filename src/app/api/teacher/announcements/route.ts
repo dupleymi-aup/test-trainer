@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
+import { logApiError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createAnnouncementSchema = z.object({
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ announcements });
   } catch (error) {
-    logger.error("Failed to fetch announcements", error instanceof Error ? error : undefined);
+    logApiError("teacher/announcements", error);
     return NextResponse.json({ error: "Failed to fetch announcements" }, { status: 500 });
   }
 }
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ announcement }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create announcement", error instanceof Error ? error : undefined);
+    logApiError("teacher/announcements", error);
     return NextResponse.json({ error: "Failed to create announcement" }, { status: 500 });
   }
 }
@@ -159,7 +159,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to delete announcement", error instanceof Error ? error : undefined);
+    logApiError("teacher/announcements", error);
     return NextResponse.json({ error: "Failed to delete announcement" }, { status: 500 });
   }
 }
@@ -228,7 +228,7 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ announcement: updated });
   } catch (error) {
-    logger.error("Failed to update announcement", error instanceof Error ? error : undefined);
+    logApiError("teacher/announcements", error);
     return NextResponse.json({ error: "Failed to update announcement" }, { status: 500 });
   }
 }

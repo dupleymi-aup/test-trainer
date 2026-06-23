@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const studentsParamsSchema = z.object({
@@ -82,7 +81,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ students: studentsWithStats });
   } catch (error) {
-    logger.error("Failed to fetch students", error instanceof Error ? error : undefined);
+    logApiError("teacher/students", error);
     return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
   }
 }
