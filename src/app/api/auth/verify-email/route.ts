@@ -6,7 +6,7 @@ import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const verifyEmailSchema = z.object({
-  token: z.string().min(1, "Токен обязателен"),
+  token: z.string().min(1, "Token is required"),
 });
 
 export async function POST(req: Request) {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Отсутствует токен", details: formatZodError(parsed.error) },
+        { error: "Token is required", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     if (!verificationToken || verificationToken.expires < new Date()) {
       return NextResponse.json(
-        { error: "Неверный токен или срок его действия истёк" },
+        { error: "Invalid or expired token" },
         { status: 400 }
       );
     }
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     // Ensure this is actually an email-verify token, not another token type
     if (!verificationToken.identifier.startsWith("email-verify:")) {
       return NextResponse.json(
-        { error: "Неверный токен или срок его действия истёк" },
+        { error: "Invalid or expired token" },
         { status: 400 }
       );
     }
@@ -62,11 +62,11 @@ export async function POST(req: Request) {
       db.verificationToken.delete({ where: { token } }),
     ]);
 
-    return NextResponse.json({ message: "Email подтверждён" }, { status: 200 });
+    return NextResponse.json({ message: "Email verified" }, { status: 200 });
   } catch (error) {
     logger.error("Verify email error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при подтверждении email" },
+      { error: "Failed to verify email" },
       { status: 500 }
     );
   }

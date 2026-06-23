@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       if (groupTasks.length > 0) {
         const allowedTaskIds = new Set(groupTasks.map((gt) => String(gt.taskId)));
         if (!allowedTaskIds.has(taskId)) {
-          return NextResponse.json({ error: "Задание недоступно для вашей группы" }, { status: 403 });
+          return NextResponse.json({ error: "Task is not available for your group" }, { status: 403 });
         }
       }
     }

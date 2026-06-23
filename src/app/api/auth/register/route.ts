@@ -10,10 +10,10 @@ import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
 
 const registerSchema = z.object({
-  name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
-  email: z.string().email("Неверный формат email").max(255, "Email слишком длинный"),
-  phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
-  password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+  name: z.string().min(1, "Name is required").max(100, "Name is too long").optional(),
+  email: z.string().email("Invalid email format").max(255, "Email is too long"),
+  phone: z.string().max(20, "Phone number is too long").optional().nullable(),
+  password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
   role: z.enum(["STUDENT", "TEACHER"]).optional(),
 });
 
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -57,14 +57,14 @@ export async function POST(req: Request) {
 
     if (existingUser?.email === emailLower) {
       return NextResponse.json(
-        { error: "Пользователь с таким email уже существует" },
+        { error: "A user with this email already exists" },
         { status: 409 }
       );
     }
 
     if (phone && existingUser?.phone === phone.trim()) {
       return NextResponse.json(
-        { error: "Пользователь с таким номером телефона уже существует" },
+        { error: "A user with this phone number already exists" },
         { status: 409 }
       );
     }
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
         createError.message.includes("P2002")
       ) {
         return NextResponse.json(
-          { error: "Пользователь с таким email или телефоном уже существует" },
+          { error: "A user with this email or phone already exists" },
           { status: 409 }
         );
       }
@@ -119,21 +119,21 @@ export async function POST(req: Request) {
     try {
       await sendEmail({ to: emailLower, ...emailData });
       return NextResponse.json(
-        { message: "Пользователь создан. Проверьте email для подтверждения.", user },
+        { message: "User created. Check email for verification.", user },
         { status: 201 }
       );
     } catch (emailError) {
       // User is created but verification email failed
       logger.error("Registration email failed", emailError instanceof Error ? emailError : undefined);
       return NextResponse.json(
-        { message: "Пользователь создан. Обратитесь к преподавателю для подтверждения email.", user },
+        { message: "User created. Contact teacher for email verification.", user },
         { status: 201 }
       );
     }
   } catch (error) {
     logger.error("Registration error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при регистрации" },
+      { error: "Registration failed" },
       { status: 500 }
     );
   }

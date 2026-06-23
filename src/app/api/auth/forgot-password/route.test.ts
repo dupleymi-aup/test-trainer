@@ -71,7 +71,7 @@ vi.mock("@/lib/rate-limit", () => {
     createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
       const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
       return new Response(
-        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        JSON.stringify({ error: "Too many attempts. Please try later" }),
         {
           status: 429,
           headers: {
@@ -137,7 +137,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Если аккаунт существует, инструкция отправлена на email");
+      expect(json.message).toBe("If account exists, instructions sent to email");
       expect(json.method).toBe("email");
       expect(mocks.mockVerificationTokenCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -177,7 +177,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Если аккаунт существует, инструкция отправлена на email");
+      expect(json.message).toBe("If account exists, instructions sent to email");
       expect(json.method).toBe("email");
       // A dummy token IS created so the DB write matches the real-user path timing,
       // preventing attackers from inferring email existence via response time.
@@ -201,7 +201,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Если аккаунт существует, код отправлен по SMS");
+      expect(json.message).toBe("If account exists, code sent via SMS");
       expect(json.method).toBe("phone");
       expect(mocks.generateOTPCode).toHaveBeenCalled();
       expect(mocks.sendSMS).toHaveBeenCalled();
@@ -234,7 +234,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Если аккаунт существует, код отправлен по SMS");
+      expect(json.message).toBe("If account exists, code sent via SMS");
       expect(json.method).toBe("phone");
       // A dummy OTP IS created so the DB write matches the real-user path timing.
       expect(mocks.mockVerificationCodeCreate).toHaveBeenCalledTimes(1);
@@ -255,7 +255,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects invalid email format with 400", async () => {
@@ -264,7 +264,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects phone that is too long with 400", async () => {
@@ -273,7 +273,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
   });
 
@@ -290,7 +290,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(429);
-      expect(json.error).toBe("Слишком много попыток. Попробуйте позже");
+      expect(json.error).toBe("Too many attempts. Please try later");
     });
 
     it("includes Retry-After header in rate limit response", async () => {
@@ -329,7 +329,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(503);
-      expect(json.error).toBe("Не удалось отправить письмо. Попробуйте позже или используйте телефон");
+      expect(json.error).toBe("Failed to send email. Please try later");
       expect(mocks.mockVerificationTokenDeleteMany).toHaveBeenCalled();
       expect(mocks.loggerError).toHaveBeenCalled();
     });
@@ -349,7 +349,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(503);
-      expect(json.error).toBe("Не удалось отправить SMS. Попробуйте позже или используйте email");
+      expect(json.error).toBe("Failed to send SMS. Please try later");
     });
   });
 
@@ -366,7 +366,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при отправке кода восстановления");
+      expect(json.error).toBe("Failed to send recovery code");
     });
   });
 });

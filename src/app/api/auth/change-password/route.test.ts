@@ -53,7 +53,7 @@ vi.mock("@/lib/rate-limit", () => {
     createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
       const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
       return new Response(
-        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        JSON.stringify({ error: "Too many attempts. Please try later" }),
         {
           status: 429,
           headers: {
@@ -129,7 +129,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Пароль успешно изменён");
+      expect(json.message).toBe("Password changed successfully");
       expect(mocks.bcryptCompare).toHaveBeenCalledWith("OldSecurePass123!", "$2a$12$hashedoldpassword");
       expect(mocks.bcryptHash).toHaveBeenCalledWith("NewSecurePass123!", 12);
       expect(mocks.mockUserUpdate).toHaveBeenCalledWith(
@@ -157,7 +157,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверный текущий пароль");
+      expect(json.error).toBe("Invalid current password");
     });
 
     it("does NOT hash new password when current password is wrong", async () => {
@@ -192,7 +192,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects newPassword of exactly 7 characters with 400", async () => {
@@ -201,7 +201,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("accepts newPassword of exactly 8 characters", async () => {
@@ -226,7 +226,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
   });
 
@@ -242,7 +242,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects empty currentPassword with 400", async () => {
@@ -251,7 +251,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects missing newPassword with 400", async () => {
@@ -261,7 +261,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects empty newPassword with 400", async () => {
@@ -270,7 +270,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
   });
 
@@ -320,7 +320,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Невозможно изменить пароль");
+      expect(json.error).toBe("Cannot change password");
     });
 
     it("returns 400 when user has no hashedPassword", async () => {
@@ -331,7 +331,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Невозможно изменить пароль");
+      expect(json.error).toBe("Cannot change password");
     });
 
     it("does NOT compare password when user has no hashedPassword", async () => {
@@ -357,7 +357,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(429);
-      expect(json.error).toBe("Слишком много попыток. Попробуйте позже");
+      expect(json.error).toBe("Too many attempts. Please try later");
     });
 
     it("includes Retry-After header in rate limit response", async () => {
@@ -395,7 +395,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при смене пароля");
+      expect(json.error).toBe("Failed to change password");
     });
 
     it("returns 500 when user update fails", async () => {
@@ -408,7 +408,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при смене пароля");
+      expect(json.error).toBe("Failed to change password");
     });
   });
 });

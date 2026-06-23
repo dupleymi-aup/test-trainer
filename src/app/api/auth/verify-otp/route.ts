@@ -7,8 +7,8 @@ import { formatZodError } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 const verifyOtpSchema = z.object({
-  phone: z.string().min(1, "Телефон обязателен").max(20, "Номер телефона слишком длинный"),
-  code: z.string().min(1, "Код обязателен"),
+  phone: z.string().min(1, "Phone is required").max(20, "Phone number is too long"),
+  code: z.string().min(1, "Code is required"),
 });
 
 export async function POST(req: Request) {
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Укажите телефон и код", details: formatZodError(parsed.error) },
+        { error: "Provide phone and code", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     if (!verificationCode) {
       return NextResponse.json(
-        { error: "Неверный код или срок его действия истёк" },
+        { error: "Invalid or expired code" },
         { status: 400 }
       );
     }
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const user = await db.user.findUnique({ where: { phone: phone.trim() } });
     if (!user) {
       return NextResponse.json(
-        { error: "Пользователь не найден" },
+        { error: "User not found" },
         { status: 404 }
       );
     }
@@ -73,13 +73,13 @@ export async function POST(req: Request) {
     ]);
 
     return NextResponse.json({
-      message: "Код подтверждён",
+      message: "Code verified",
       token: resetToken,
     });
   } catch (error) {
     logger.error("Verify OTP error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при проверке кода" },
+      { error: "Failed to verify code" },
       { status: 500 }
     );
   }

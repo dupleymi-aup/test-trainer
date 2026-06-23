@@ -10,10 +10,10 @@ import { formatZodError } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email("Неверный формат email").max(255).optional(),
-  phone: z.string().max(20, "Номер телефона слишком длинный").optional(),
+  email: z.string().email("Invalid email format").max(255).optional(),
+  phone: z.string().max(20, "Phone number is too long").optional(),
 }).refine(data => data.email || data.phone, {
-  message: "Укажите email или номер телефона",
+  message: "Email or phone is required",
 });
 
 export async function POST(req: Request) {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
           });
           logger.error("Forgot-password email failed", emailError instanceof Error ? emailError : undefined);
           return NextResponse.json(
-            { error: "Не удалось отправить письмо. Попробуйте позже или используйте телефон" },
+            { error: "Failed to send email. Please try later" },
             { status: 503 }
           );
         }
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({
-        message: "Если аккаунт существует, инструкция отправлена на email",
+        message: "If account exists, instructions sent to email",
         method: "email",
       });
     }
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
           });
           logger.error("SMS send failed", { error: smsResult.error });
           return NextResponse.json(
-            { error: "Не удалось отправить SMS. Попробуйте позже или используйте email" },
+            { error: "Failed to send SMS. Please try later" },
             { status: 503 }
           );
         }
@@ -132,19 +132,19 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({
-        message: "Если аккаунт существует, код отправлен по SMS",
+        message: "If account exists, code sent via SMS",
         method: "phone",
       });
     }
 
     return NextResponse.json(
-      { error: "Укажите email или номер телефона" },
+      { error: "Provide email or phone number" },
       { status: 400 }
     );
   } catch (error) {
     logger.error("Forgot password error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при отправке кода восстановления" },
+      { error: "Failed to send recovery code" },
       { status: 500 }
     );
   }

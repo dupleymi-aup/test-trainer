@@ -9,8 +9,8 @@ import { formatZodError } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Текущий пароль обязателен"),
-  newPassword: z.string().min(8, "Новый пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "New password must be at least 8 characters").max(128, "Password is too long"),
 });
 
 export async function POST(req: Request) {
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
     if (!user || !user.hashedPassword) {
       return NextResponse.json(
-        { error: "Невозможно изменить пароль" },
+        { error: "Cannot change password" },
         { status: 400 }
       );
     }
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const isValid = await bcrypt.compare(currentPassword, user.hashedPassword);
     if (!isValid) {
       return NextResponse.json(
-        { error: "Неверный текущий пароль" },
+        { error: "Invalid current password" },
         { status: 400 }
       );
     }
@@ -67,9 +67,9 @@ export async function POST(req: Request) {
       data: { hashedPassword },
     });
 
-    return NextResponse.json({ message: "Пароль успешно изменён" }, { status: 200 });
+    return NextResponse.json({ message: "Password changed successfully" }, { status: 200 });
   } catch (error) {
     logger.error("Change password error", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Ошибка при смене пароля" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to change password" }, { status: 500 });
   }
 }

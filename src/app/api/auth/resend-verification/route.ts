@@ -28,14 +28,14 @@ export async function POST(req: Request) {
 
     if (!user || !user.email) {
       return NextResponse.json(
-        { error: "Email не указан" },
+        { error: "Email not provided" },
         { status: 400 }
       );
     }
 
     if (user.emailVerified) {
       return NextResponse.json(
-        { error: "Email уже подтверждён" },
+        { error: "Email already verified" },
         { status: 400 }
       );
     }
@@ -59,19 +59,19 @@ export async function POST(req: Request) {
     const emailData = generateVerificationEmail(verificationToken, baseUrl);
     try {
       await sendEmail({ to: user.email, ...emailData });
-      return NextResponse.json({ message: "Письмо отправлено" });
+      return NextResponse.json({ message: "Email sent" });
     } catch (emailError) {
       await db.verificationToken.delete({ where: { token: verificationToken } });
       logger.error("Resend verification email failed", emailError instanceof Error ? emailError : undefined);
       return NextResponse.json(
-        { error: "Не удалось отправить письмо. Попробуйте позже" },
+        { error: "Failed to send email. Please try later" },
         { status: 503 }
       );
     }
   } catch (error) {
     logger.error("Resend verification error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при отправке письма" },
+      { error: "Failed to send email" },
       { status: 500 }
     );
   }

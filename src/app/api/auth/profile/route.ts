@@ -39,13 +39,13 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Пользователь не найден" }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     logger.error("Get profile error", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Ошибка при получении профиля" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
   }
 }
 
@@ -70,7 +70,7 @@ export async function PUT(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -92,7 +92,7 @@ export async function PUT(req: Request) {
       });
       if (existingPhone) {
         return NextResponse.json(
-          { error: "Этот номер телефона уже используется другим пользователем" },
+          { error: "This phone number is already in use" },
           { status: 409 }
         );
       }
@@ -134,7 +134,7 @@ export async function PUT(req: Request) {
         updateError.message.includes("P2002")
       ) {
         return NextResponse.json(
-          { error: "Этот номер телефона уже используется другим пользователем" },
+          { error: "This phone number is already in use" },
           { status: 409 }
         );
       }
@@ -142,6 +142,6 @@ export async function PUT(req: Request) {
     }
   } catch (error) {
     logger.error("Update profile error", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Ошибка при обновлении профиля" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
 }

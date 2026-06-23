@@ -45,7 +45,7 @@ vi.mock("@/lib/rate-limit", () => {
     createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
       const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
       return new Response(
-        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        JSON.stringify({ error: "Too many attempts. Please try later" }),
         {
           status: 429,
           headers: {
@@ -109,7 +109,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Email подтверждён");
+      expect(json.message).toBe("Email verified");
       expect(mocks.mockUserUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: "user-123" },
@@ -163,7 +163,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверный токен или срок его действия истёк");
+      expect(json.error).toBe("Invalid or expired token");
     });
 
     it("returns 400 when token is expired", async () => {
@@ -177,7 +177,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверный токен или срок его действия истёк");
+      expect(json.error).toBe("Invalid or expired token");
     });
 
     it("does NOT update user when token is invalid", async () => {
@@ -210,7 +210,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Отсутствует токен");
+      expect(json.error).toBe("Token is required");
     });
 
     it("rejects empty token with 400", async () => {
@@ -219,7 +219,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Отсутствует токен");
+      expect(json.error).toBe("Token is required");
     });
   });
 
@@ -236,7 +236,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при подтверждении email");
+      expect(json.error).toBe("Failed to verify email");
     });
 
     it("returns 500 when user update fails", async () => {
@@ -248,7 +248,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при подтверждении email");
+      expect(json.error).toBe("Failed to verify email");
     });
   });
 });

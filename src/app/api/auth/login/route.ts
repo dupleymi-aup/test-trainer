@@ -7,8 +7,8 @@ import { logger } from "@/lib/logger";
 import { formatZodError } from "@/lib/api-error-handler";
 
 const loginSchema = z.object({
-  login: z.string().min(1, "Email или телефон обязательны").max(255, "Email или телефон слишком длинные"),
-  password: z.string().min(1, "Пароль обязателен").max(128, "Пароль слишком длинный"),
+  login: z.string().min(1, "Email or phone is required").max(255, "Email or phone is too long"),
+  password: z.string().min(1, "Password is required").max(128, "Password is too long"),
 });
 
 export async function POST(req: Request) {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
     if (!user || !user.hashedPassword || !isValid || !user.isActive || user.deletedAt) {
       return NextResponse.json(
-        { error: "Неверный email/телефон или пароль" },
+        { error: "Invalid email/phone or password" },
         { status: 401 }
       );
     }
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
   } catch (error) {
     logger.error("Login error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при входе" },
+      { error: "Login failed" },
       { status: 500 }
     );
   }

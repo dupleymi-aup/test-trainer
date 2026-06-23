@@ -5,7 +5,7 @@
 - [x] 3. Исправить silent catch {} блоки — добавить логирование ошибок в top-level catch в student API routes
 - [x] 4. Заменить raw logger.error() на logApiError() в student и teacher API routes для единообразия
 - [x] 5. Добавить loading.tsx к teacher sub-routes (top 5: task-constructor, templates, students, settings, groups)
-- [ ] 6. Исправить 41 русскоязычное сообщение об ошибке в auth API routes на английский
+- [x] 6. Исправить 41 русскоязычное сообщение об ошибке в auth API routes на английский
 - [ ] 7. Обернуть 4 silent .catch(() => {}) в teacher/admin export routes в логирование
 - [ ] 8. Добавить withErrorHandler к student/messages и student/preferences endpoints
 - [ ] 9. Добавить unit-тесты для validateApiResponse хелпера

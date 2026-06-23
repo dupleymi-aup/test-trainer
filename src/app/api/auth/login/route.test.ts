@@ -42,7 +42,7 @@ vi.mock("@/lib/rate-limit", () => {
     createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
       const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
       return new Response(
-        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        JSON.stringify({ error: "Too many attempts. Please try later" }),
         {
           status: 429,
           headers: {
@@ -183,7 +183,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(401);
-      expect(json.error).toBe("Неверный email/телефон или пароль");
+      expect(json.error).toBe("Invalid email/phone or password");
       // bcrypt.compare is called with a dummy hash to prevent timing attacks
       expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
@@ -197,7 +197,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(401);
-      expect(json.error).toBe("Неверный email/телефон или пароль");
+      expect(json.error).toBe("Invalid email/phone or password");
     });
 
     it("returns 401 when user has no hashedPassword", async () => {
@@ -209,7 +209,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(401);
-      expect(json.error).toBe("Неверный email/телефон или пароль");
+      expect(json.error).toBe("Invalid email/phone or password");
       // bcrypt.compare is called with a dummy hash to prevent timing attacks
       expect(mocks.bcryptCompare).toHaveBeenCalled();
     });
@@ -223,7 +223,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(401);
-      expect(json.error).toBe("Неверный email/телефон или пароль");
+      expect(json.error).toBe("Invalid email/phone or password");
     });
 
     it("returns 401 when user account is deleted (prevents account enumeration)", async () => {
@@ -235,7 +235,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(401);
-      expect(json.error).toBe("Неверный email/телефон или пароль");
+      expect(json.error).toBe("Invalid email/phone or password");
     });
 
     it("compares password even for inactive users (prevents timing attacks)", async () => {
@@ -262,7 +262,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects empty login with 400", async () => {
@@ -271,7 +271,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects missing password with 400", async () => {
@@ -281,7 +281,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects empty password with 400", async () => {
@@ -290,7 +290,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
   });
 
@@ -307,7 +307,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(429);
-      expect(json.error).toBe("Слишком много попыток. Попробуйте позже");
+      expect(json.error).toBe("Too many attempts. Please try later");
     });
 
     it("includes Retry-After header in rate limit response", async () => {
@@ -345,7 +345,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при входе");
+      expect(json.error).toBe("Login failed");
     });
   });
 });

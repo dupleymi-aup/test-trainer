@@ -53,7 +53,7 @@ vi.mock("@/lib/rate-limit", () => {
     createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
       const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
       return new Response(
-        JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+        JSON.stringify({ error: "Too many attempts. Please try later" }),
         {
           status: 429,
           headers: {
@@ -127,7 +127,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(201);
-      expect(json.message).toContain("Пользователь создан");
+      expect(json.message).toContain("User created");
       expect(json.user).toMatchObject({
         id: "user-123",
         name: "Test User",
@@ -250,7 +250,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects invalid email format with 400", async () => {
@@ -259,7 +259,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects password shorter than 8 characters with 400", async () => {
@@ -268,7 +268,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects missing password with 400", async () => {
@@ -278,7 +278,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects email that is too long with 400", async () => {
@@ -287,7 +287,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects password that is too long with 400", async () => {
@@ -296,7 +296,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects name that is too long with 400", async () => {
@@ -305,7 +305,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
 
     it("rejects phone that is too long with 400", async () => {
@@ -314,7 +314,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Неверные данные");
+      expect(json.error).toBe("Invalid data");
     });
   });
 
@@ -342,7 +342,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(409);
-      expect(json.error).toContain("номером телефона");
+      expect(json.error).toContain("phone number already exists");
     });
 
     it("allows registration when no existing user found", async () => {
@@ -368,7 +368,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(429);
-      expect(json.error).toBe("Слишком много попыток. Попробуйте позже");
+      expect(json.error).toBe("Too many attempts. Please try later");
       expect(res.headers.get("Retry-After")).toBeDefined();
     });
 
@@ -408,7 +408,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(201);
-      expect(json.message).toContain("Обратитесь к преподавателю");
+      expect(json.message).toContain("Contact teacher for email verification");
       expect(json.user).toBeDefined();
     });
   });
@@ -426,7 +426,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Ошибка при регистрации");
+      expect(json.error).toBe("Registration failed");
     });
   });
 });

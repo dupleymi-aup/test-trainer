@@ -7,8 +7,8 @@ import { formatZodError } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 const resetPasswordSchema = z.object({
-  token: z.string().min(1, "Токен обязателен"),
-  newPassword: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+  token: z.string().min(1, "Token is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
 });
 
 export async function POST(req: Request) {
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Неверные данные", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details: formatZodError(parsed.error) },
         { status: 400 }
       );
     }
@@ -65,18 +65,18 @@ export async function POST(req: Request) {
       await tx.verificationToken.delete({ where: { token } });
     });
 
-    return NextResponse.json({ message: "Пароль успешно изменён" }, { status: 200 });
+    return NextResponse.json({ message: "Password changed successfully" }, { status: 200 });
   } catch (error) {
     // Handle transaction-thrown errors for invalid/expired tokens
     if (error instanceof Error && (error.message === "invalid_or_expired_token" || error.message === "invalid_token_type")) {
       return NextResponse.json(
-        { error: "Неверный токен или срок его действия истёк" },
+        { error: "Invalid or expired token" },
         { status: 400 }
       );
     }
     logger.error("Reset password error", error instanceof Error ? error : undefined);
     return NextResponse.json(
-      { error: "Ошибка при сбросе пароля" },
+      { error: "Failed to reset password" },
       { status: 500 }
     );
   }
