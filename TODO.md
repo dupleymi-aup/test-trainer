@@ -5,7 +5,7 @@
 - [x] 3. Добавить unit-тесты для shared-schemas.ts (pagination, dateRange, groupFilter, universityFilter) — покрыто в route-schemas.test.ts
 - [ ] 4. Добавитьtsx-no-use-target-natively eslint rule для предотвращения утечек памяти в React
 - [x] 5. Исправить unbounded parseInt в API-маршрутах (добавить NaN guard и max safe integer) — admin/recommendations, admin/notifications
-- [ ] 6. Добавить stale-while-revalidate к student messages и student preferences endpoints
+- [x] 6. Добавить stale-while-revalidate к student messages и student preferences endpoints
 - [x] 7. Написать unit-тесты для batchComputeStudentRisk из risk-analysis.ts
 - [x] 8. Добавить X-Request-Id header к каждому API-ответу для трассировки
 - [ ] 9. Оптимизировать admin/analytics/comprehensive endpoint: batch queries вместо N+1
