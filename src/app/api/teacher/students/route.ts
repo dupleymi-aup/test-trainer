@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const studentsParamsSchema = z.object({
@@ -10,7 +10,7 @@ const studentsParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -80,8 +80,5 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ students: studentsWithStats });
-  } catch (error) {
-    logApiError("teacher/students", error);
-    return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
-  }
+  });
 }

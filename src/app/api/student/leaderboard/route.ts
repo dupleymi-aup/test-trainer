@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, validateApiResponse, logApiError } from "@/lib/api-error-handler";
+import { parseSearchParams, validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
 import { leaderboardResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -14,7 +14,7 @@ const leaderboardParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -152,8 +152,5 @@ export async function GET(req: Request) {
     };
     validateApiResponse(leaderboardResponseSchema, responseData);
     return NextResponse.json(responseData);
-  } catch (error) {
-    logApiError("student/leaderboard", error);
-    return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 });
-  }
+  });
 }

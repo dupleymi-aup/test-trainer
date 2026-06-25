@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { formatZodError, logApiError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const updateGroupSchema = z.object({
@@ -15,7 +15,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -52,17 +52,14 @@ export async function PATCH(
     });
 
     return NextResponse.json({ group: updated });
-  } catch (error) {
-    logApiError("teacher/groups/[id]", error);
-    return NextResponse.json({ error: "Failed to update group" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(_req);
@@ -97,8 +94,5 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/groups/[id]", error);
-    return NextResponse.json({ error: "Failed to delete group" }, { status: 500 });
-  }
+  });
 }

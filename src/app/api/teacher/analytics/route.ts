@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const analyticsParamsSchema = z.object({
@@ -9,7 +9,7 @@ const analyticsParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -82,8 +82,5 @@ export async function GET(req: Request) {
       overallAvg,
       totalAttempts: attempts.length,
     });
-  } catch (error) {
-    logApiError("teacher/analytics", error);
-    return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
-  }
+  });
 }

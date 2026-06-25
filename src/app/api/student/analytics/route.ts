@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logApiError, apiErrorResponse, validateApiResponse } from "@/lib/api-error-handler";
+import { apiErrorResponse, validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
 import { studentAnalyticsResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -126,8 +126,5 @@ export async function GET() {
     };
     validateApiResponse(studentAnalyticsResponseSchema, responseData);
     return NextResponse.json(responseData);
-  } catch (error) {
-    logApiError("student/analytics", error);
-    return apiErrorResponse("Failed to fetch analytics");
-  }
+  });
 }

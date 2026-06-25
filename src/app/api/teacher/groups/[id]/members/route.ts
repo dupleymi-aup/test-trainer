@@ -3,14 +3,14 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { formatZodError, logApiError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -36,10 +36,7 @@ export async function GET(
     });
 
     return NextResponse.json({ members: members.map((m) => m.user) });
-  } catch (error) {
-    logApiError("teacher/groups/members", error);
-    return NextResponse.json({ error: "Failed to fetch group members" }, { status: 500 });
-  }
+  });
 }
 
 const addMemberSchema = z.object({
@@ -50,7 +47,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -111,17 +108,14 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/groups/members", error);
-    return NextResponse.json({ error: "Failed to add group member" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -166,8 +160,5 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/groups/members", error);
-    return NextResponse.json({ error: "Failed to remove group member" }, { status: 500 });
-  }
+  });
 }

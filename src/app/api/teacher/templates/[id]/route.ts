@@ -3,14 +3,14 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -34,10 +34,7 @@ export async function GET(
     }
 
     return NextResponse.json({ template });
-  } catch (error) {
-    logApiError("teacher/templates/[id]", error);
-    return NextResponse.json({ error: "Failed to fetch template" }, { status: 500 });
-  }
+  });
 }
 
 const updateTemplateSchema = z.object({
@@ -53,7 +50,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -129,17 +126,14 @@ export async function PATCH(
     });
 
     return NextResponse.json({ template: updated });
-  } catch (error) {
-    logApiError("teacher/templates/[id]", error);
-    return NextResponse.json({ error: "Failed to update template" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -176,8 +170,5 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/templates/[id]", error);
-    return NextResponse.json({ error: "Failed to delete template" }, { status: 500 });
-  }
+  });
 }
