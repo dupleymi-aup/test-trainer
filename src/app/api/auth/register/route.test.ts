@@ -426,7 +426,7 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Registration failed");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });

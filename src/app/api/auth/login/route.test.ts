@@ -345,7 +345,7 @@ describe("POST /api/auth/login", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Login failed");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });

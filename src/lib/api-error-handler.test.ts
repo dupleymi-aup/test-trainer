@@ -255,7 +255,7 @@ describe("withErrorHandler", () => {
       throw new Error("prod secret");
     });
     const body = await res.json();
-    expect(body.details).toBe("Internal server error");
+    expect(body.details).toBeUndefined();
     vi.unstubAllEnvs();
   });
 

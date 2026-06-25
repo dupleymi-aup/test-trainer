@@ -395,7 +395,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to change password");
+      expect(json.error).toBe("Internal server error");
     });
 
     it("returns 500 when user update fails", async () => {
@@ -408,7 +408,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to change password");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });

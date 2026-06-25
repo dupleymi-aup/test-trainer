@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { AppError, formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token is required"),
@@ -42,12 +42,12 @@ export async function POST(req: Request) {
       });
 
       if (!verificationToken || verificationToken.expires < new Date()) {
-        throw new Error("invalid_or_expired_token");
+        throw new AppError(400, "Неверный токен или срок его действия истёк");
       }
 
       // Ensure this is actually a password-reset token, not another token type
       if (!verificationToken.identifier.startsWith("password-reset:")) {
-        throw new Error("invalid_token_type");
+        throw new AppError(400, "Неверный тип токена");
       }
 
       // Extract user ID from identifier (format: password-reset:userId)

@@ -236,7 +236,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to verify email");
+      expect(json.error).toBe("Internal server error");
     });
 
     it("returns 500 when user update fails", async () => {
@@ -248,7 +248,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to verify email");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });

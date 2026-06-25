@@ -192,7 +192,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid or expired token");
+      expect(json.error).toBe("Неверный токен или срок его действия истёк");
     });
 
     it("returns 400 when token is expired", async () => {
@@ -206,7 +206,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid or expired token");
+      expect(json.error).toBe("Неверный токен или срок его действия истёк");
     });
 
     it("does NOT update password when token is invalid", async () => {
@@ -371,7 +371,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to reset password");
+      expect(json.error).toBe("Internal server error");
     });
 
     it("returns 500 when user update fails", async () => {
@@ -383,7 +383,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to reset password");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });

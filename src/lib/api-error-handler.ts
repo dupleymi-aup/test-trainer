@@ -150,6 +150,23 @@ export function parseSearchParams<T>(
 }
 
 /**
+ * Application-level error with an associated HTTP status code.
+ * Throw this from within a withErrorHandler to get a non-500 response.
+ *
+ * Usage:
+ *   throw new AppError(400, "Неверный токен или срок его действия истёк");
+ */
+export class AppError extends Error {
+  public readonly statusCode: number;
+
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.name = "AppError";
+    this.statusCode = statusCode;
+  }
+}
+
+/**
  * Wraps an API route handler with try/catch error handling.
  * Returns a JSON error response with status 500 on failure.
  *
@@ -160,6 +177,9 @@ export function parseSearchParams<T>(
  *       return NextResponse.json({ data });
  *     });
  *   }
+ *
+ * Known errors thrown as AppError(code, message) preserve their status.
+ * All other errors return 500 with the error message.
  */
 export async function withErrorHandler(
   _req: Request,
@@ -168,15 +188,16 @@ export async function withErrorHandler(
   try {
     return await handler();
   } catch (error) {
-    logger.error("[API Error]", error instanceof Error ? error : undefined);
-
     const message = error instanceof Error ? error.message : "Internal server error";
 
-    const details =
-      process.env.NODE_ENV === "development" ? message : "Internal server error";
+    if (error instanceof AppError) {
+      return NextResponse.json({ error: message }, { status: error.statusCode });
+    }
+
+    logger.error("[API Error]", error instanceof Error ? error : undefined);
 
     return NextResponse.json(
-      { error: "Internal server error", details },
+      { error: "Internal server error", details: process.env.NODE_ENV === "development" ? message : undefined },
       { status: 500 }
     );
   }

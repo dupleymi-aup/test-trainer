@@ -323,7 +323,7 @@ describe("GET /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to fetch users");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });
@@ -563,7 +563,7 @@ describe("POST /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to create user");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });

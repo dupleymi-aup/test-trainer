@@ -366,7 +366,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(500);
-      expect(json.error).toBe("Failed to send recovery code");
+      expect(json.error).toBe("Internal server error");
     });
   });
 });
