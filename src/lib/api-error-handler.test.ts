@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler } from "./api-error-handler";
+import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler, validateApiResponse } from "./api-error-handler";
 import { z } from "zod";
 
 describe("formatZodError", () => {
@@ -268,5 +268,60 @@ describe("withErrorHandler", () => {
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error).toBe("Internal server error");
+  });
+});
+
+describe("validateApiResponse", () => {
+  const schema = z.object({
+    attempts: z.number(),
+    name: z.string(),
+  });
+
+  it("returns parsed data when valid", () => {
+    const data = { attempts: 5, name: "test" };
+    const result = validateApiResponse(schema, data);
+    expect(result).toEqual(data);
+  });
+
+  it("throws in development mode on invalid data", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const data = { attempts: "not a number", name: 123 };
+    expect(() => validateApiResponse(schema, data)).toThrow("API response validation failed");
+    vi.unstubAllEnvs();
+  });
+
+  it("logs warning and returns raw data in production mode on invalid data", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const data = { attempts: "bad", name: 123 };
+    const result = validateApiResponse(schema, data);
+    expect(result).toEqual(data);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("API response validation failed"));
+    vi.unstubAllEnvs();
+  });
+
+  it("validates nested schemas", () => {
+    const nested = z.object({
+      user: z.object({ id: z.string(), score: z.number() }),
+    });
+    const valid = { user: { id: "u1", score: 100 } };
+    expect(validateApiResponse(nested, valid)).toEqual(valid);
+  });
+
+  it("validates array schemas", () => {
+    const arrSchema = z.array(z.object({ id: z.number() }));
+    const valid = [{ id: 1 }, { id: 2 }];
+    expect(validateApiResponse(arrSchema, valid)).toEqual(valid);
+  });
+
+  it("includes field paths in error messages", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const data = { attempts: "wrong", name: 42 };
+    try {
+      validateApiResponse(schema, data);
+    } catch (e) {
+      expect((e as Error).message).toContain("attempts");
+    }
+    vi.unstubAllEnvs();
   });
 });
