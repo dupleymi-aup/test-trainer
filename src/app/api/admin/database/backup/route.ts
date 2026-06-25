@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
 import { checkRateLimit, getClientIp, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { readFileSync, existsSync } from "fs";
 import path from "path";
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -79,8 +79,5 @@ export async function GET(req: Request) {
       dbSize,
       exportedAt: new Date().toISOString(),
     });
-  } catch (error) {
-    logger.error("Failed to create backup", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to create backup" }, { status: 500 });
-  }
+  });
 }

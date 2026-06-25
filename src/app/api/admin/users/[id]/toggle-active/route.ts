@@ -3,13 +3,13 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -51,8 +51,5 @@ export async function PATCH(
     });
 
     return NextResponse.json({ user: updated });
-  } catch (error) {
-    logger.error("Failed to toggle user active status", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to toggle user active status" }, { status: 500 });
-  }
+  });
 }

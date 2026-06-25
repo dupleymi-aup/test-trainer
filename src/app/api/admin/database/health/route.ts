@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -33,15 +33,5 @@ export async function GET() {
       totalRecords: userCount + attemptCount + groupCount + groupTaskCount + activityLogCount + settingsCount + verificationCodeCount,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    logger.error("Database health check failed", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      {
-        status: "unhealthy",
-        error: (error as Error).message,
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    );
-  }
+  });
 }

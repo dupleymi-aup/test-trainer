@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { healthCheck, checkMongoHealth } from "@/lib/db-factory";
-import { logger } from "@/lib/logger";
-import { validateApiResponse } from "@/lib/api-error-handler";
+import { validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
 import { healthResponseSchema } from "@/lib/api-types";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +19,7 @@ async function getVersion(): Promise<string> {
 }
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const [dbHealth, mongoHealth, version] = await Promise.all([
       healthCheck(),
       checkMongoHealth(),
@@ -41,15 +40,5 @@ export async function GET() {
     };
     validateApiResponse(healthResponseSchema, data);
     return NextResponse.json(data);
-  } catch (error) {
-    logger.error("Health check failed", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      {
-        status: "unhealthy",
-        error: (error as Error).message,
-        timestamp: new Date().toISOString(),
-      },
-      { status: 503 }
-    );
-  }
+  });
 }

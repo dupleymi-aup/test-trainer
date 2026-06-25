@@ -4,8 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const changeRoleSchema = z.object({
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
@@ -15,7 +14,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -60,8 +59,5 @@ export async function PATCH(
     });
 
     return NextResponse.json({ user: updated });
-  } catch (error) {
-    logger.error("Failed to update user role", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to update user role" }, { status: 500 });
-  }
+  });
 }
