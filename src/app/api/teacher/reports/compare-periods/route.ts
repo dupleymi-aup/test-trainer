@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -234,11 +234,5 @@ export async function GET(req: Request) {
       period2Metrics,
       comparison,
     });
-  } catch (error) {
-    logApiError("teacher/reports/compare-periods", error);
-    return NextResponse.json(
-      { error: "Failed to compare periods" },
-      { status: 500 }
-    );
-  }
+  });
 }

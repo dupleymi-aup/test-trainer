@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError, logApiError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const exportJsonSchema = z.object({
   groupId: z.string().optional(),
@@ -14,19 +14,19 @@ const exportJsonSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const guard = await requireTeacherOrAdmin();
-  if ("response" in guard) return guard.response;
-  const csrf = await requireCSRF(req);
-  if ("response" in csrf) return csrf.response;
-  const { session } = guard;
+  return withErrorHandler(req, async () => {
+    const guard = await requireTeacherOrAdmin();
+    if ("response" in guard) return guard.response;
+    const csrf = await requireCSRF(req);
+    if ("response" in csrf) return csrf.response;
+    const { session } = guard;
 
-  const ip = getClientIp(req);
-  const rateLimit = checkRateLimit(`teacherReportExport:${ip}`, rateLimits.teacherReportExport);
-  if (rateLimit.limited) {
-    return createRateLimitResponse(rateLimit.resetAt);
-  }
+    const ip = getClientIp(req);
+    const rateLimit = checkRateLimit(`teacherReportExport:${ip}`, rateLimits.teacherReportExport);
+    if (rateLimit.limited) {
+      return createRateLimitResponse(rateLimit.resetAt);
+    }
 
-  try {
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -208,8 +208,5 @@ export async function POST(req: Request) {
     }).catch((e) => { logger.warn("Failed to log export activity", { error: String(e) }); });
 
     return NextResponse.json(exportData);
-  } catch (error) {
-    logApiError("teacher/reports/export-json", error);
-    return NextResponse.json({ error: "Failed to export data" }, { status: 500 });
-  }
+  });
 }

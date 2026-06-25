@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -275,11 +275,5 @@ export async function GET(
       groupPercentile,
       recommendations,
     });
-  } catch (error) {
-    logApiError("teacher/reports/report-card", error);
-    return NextResponse.json(
-      { error: "Failed to generate report card" },
-      { status: 500 }
-    );
-  }
+  });
 }

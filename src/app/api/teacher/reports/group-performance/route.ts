@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const groupPerformanceParamsSchema = z.object({
@@ -11,7 +11,7 @@ const groupPerformanceParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -120,11 +120,5 @@ export async function GET(req: Request) {
     }];
 
     return NextResponse.json({ groups });
-  } catch (error) {
-    logApiError("teacher/reports/group-performance", error);
-    return NextResponse.json(
-      { error: "Failed to generate group performance report" },
-      { status: 500 }
-    );
-  }
+  });
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const atRiskParamsSchema = z.object({
@@ -9,7 +9,7 @@ const atRiskParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -169,11 +169,5 @@ export async function GET(req: Request) {
     atRiskStudents.sort((a, b) => b.riskFactors.length - a.riskFactors.length);
 
     return NextResponse.json({ atRiskStudents });
-  } catch (error) {
-    logApiError("teacher/reports/at-risk", error);
-    return NextResponse.json(
-      { error: "Failed to generate at-risk report" },
-      { status: 500 }
-    );
-  }
+  });
 }
