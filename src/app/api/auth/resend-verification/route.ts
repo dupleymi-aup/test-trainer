@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     try {
       await sendEmail({ to: user.email, ...emailData });
       return NextResponse.json({ message: "Email sent" });
-    } catch (emailError) {
+    } catch {
       await db.verificationToken.delete({ where: { token: verificationToken } });
       return NextResponse.json(
         { error: "Failed to send email. Please try later" },

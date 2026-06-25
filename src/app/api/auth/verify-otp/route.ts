@@ -4,7 +4,7 @@ import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { formatZodError } from "@/lib/api-error-handler";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 const verifyOtpSchema = z.object({
   phone: z.string().min(1, "Phone is required").max(20, "Phone number is too long"),

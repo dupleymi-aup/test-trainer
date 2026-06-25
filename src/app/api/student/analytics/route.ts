@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { apiErrorResponse, validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
+import { validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
 import { studentAnalyticsResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 

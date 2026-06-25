@@ -47,7 +47,7 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
     const csrf = await requireCSRF(req);
