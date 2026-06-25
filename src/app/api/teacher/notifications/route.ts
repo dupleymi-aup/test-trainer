@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError, logApiError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const notificationSchema = z.object({
   type: z.string().max(50).regex(/^[A-Z_]+$/, "Type must be uppercase letters and underscores only"),
@@ -18,7 +18,7 @@ const updateNotificationSchema = z.object({
 });
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 
@@ -52,14 +52,11 @@ export async function GET() {
       })),
       unreadCount,
     });
-  } catch (error) {
-    logApiError("teacher/notifications", error);
-    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -100,14 +97,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, notification });
-  } catch (error) {
-    logApiError("teacher/notifications", error);
-    return NextResponse.json({ error: "Failed to create notification" }, { status: 500 });
-  }
+  });
 }
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -149,8 +143,5 @@ export async function PATCH(req: Request) {
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
-    logApiError("teacher/notifications", error);
-    return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });
-  }
+  });
 }

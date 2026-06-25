@@ -3,11 +3,11 @@ import { requireTeacherOrAdmin, getTeacherGroupIds } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -40,10 +40,7 @@ export async function GET(req: Request) {
       : 0;
 
     return NextResponse.json({ messages, total, page, limit, unreadCount });
-  } catch (error) {
-    logApiError("teacher/messages", error);
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
-  }
+  });
 }
 
 const sendMessageSchema = z.object({
@@ -54,7 +51,7 @@ const sendMessageSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -114,10 +111,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ message }, { status: 201 });
-  } catch (error) {
-    logApiError("teacher/messages", error);
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
-  }
+  });
 }
 
 const markReadSchema = z.object({
@@ -125,7 +119,7 @@ const markReadSchema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireTeacherOrAdmin();
     if ("response" in auth) return auth.response;
 
@@ -152,14 +146,11 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/messages", error);
-    return NextResponse.json({ error: "Failed to mark messages as read" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -199,8 +190,5 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ error: "Missing id or ids parameter" }, { status: 400 });
-  } catch (error) {
-    logApiError("teacher/messages", error);
-    return NextResponse.json({ error: "Failed to delete message(s)" }, { status: 500 });
-  }
+  });
 }

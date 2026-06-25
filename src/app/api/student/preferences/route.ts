@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { formatZodError, logApiError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const preferencesSchema = z.object({
   email: z.boolean().optional(),
@@ -41,7 +41,7 @@ function parsePreferences(raw: string | null): NotificationPreferences {
 }
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -56,14 +56,11 @@ export async function GET() {
     const res = NextResponse.json({ preferences });
     res.headers.set("Cache-Control", "private, max-age=0, stale-while-revalidate=60");
     return res;
-  } catch (error) {
-    logApiError("student/preferences", error);
-    return NextResponse.json({ error: "Failed to fetch preferences" }, { status: 500 });
-  }
+  });
 }
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -103,8 +100,5 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ preferences: updated });
-  } catch (error) {
-    logApiError("student/preferences", error);
-    return NextResponse.json({ error: "Failed to update preferences" }, { status: 500 });
-  }
+  });
 }

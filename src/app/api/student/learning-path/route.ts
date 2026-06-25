@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -58,8 +58,5 @@ export async function GET() {
     }
 
     return NextResponse.json({ assignments, progress });
-  } catch (error) {
-    logApiError("student/learning-path", error);
-    return NextResponse.json({ error: "Failed to fetch learning path" }, { status: 500 });
-  }
+  });
 }

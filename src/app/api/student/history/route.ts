@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { parseSearchParams, logApiError } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -11,7 +11,7 @@ const historyParamsSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -96,8 +96,5 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ taskHistory });
-  } catch (error) {
-    logApiError("student/history", error);
-    return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
-  }
+  });
 }

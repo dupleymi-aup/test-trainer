@@ -3,11 +3,11 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -26,10 +26,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ templates });
-  } catch (error) {
-    logApiError("teacher/templates", error);
-    return NextResponse.json({ error: "Failed to fetch templates" }, { status: 500 });
-  }
+  });
 }
 
 const createTemplateSchema = z.object({
@@ -41,7 +38,7 @@ const createTemplateSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -85,8 +82,5 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ template }, { status: 201 });
-  } catch (error) {
-    logApiError("teacher/templates", error);
-    return NextResponse.json({ error: "Failed to create template" }, { status: 500 });
-  }
+  });
 }

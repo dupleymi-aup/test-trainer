@@ -3,11 +3,11 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -32,10 +32,7 @@ export async function GET(req: Request) {
     const res = NextResponse.json({ messages, total, page, limit, unreadCount });
     res.headers.set("Cache-Control", "private, max-age=0, stale-while-revalidate=30");
     return res;
-  } catch (error) {
-    logApiError("student/messages", error);
-    return NextResponse.json({ error: "Failed to fetch messages" }, { status: 500 });
-  }
+  });
 }
 
 const markReadSchema = z.object({
@@ -43,7 +40,7 @@ const markReadSchema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -70,8 +67,5 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("student/messages", error);
-    return NextResponse.json({ error: "Failed to mark messages read" }, { status: 500 });
-  }
+  });
 }

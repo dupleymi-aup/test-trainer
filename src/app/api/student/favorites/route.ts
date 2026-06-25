@@ -3,11 +3,11 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -18,10 +18,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ favorites });
-  } catch (error) {
-    logApiError("student/favorites", error);
-    return NextResponse.json({ error: "Failed to fetch favorites" }, { status: 500 });
-  }
+  });
 }
 
 const favoriteSchema = z.object({
@@ -29,7 +26,7 @@ const favoriteSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -66,14 +63,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ favorite }, { status: 201 });
-  } catch (error) {
-    logApiError("student/favorites", error);
-    return NextResponse.json({ error: "Failed to add favorite" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -105,8 +99,5 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("student/favorites", error);
-    return NextResponse.json({ error: "Failed to remove favorite" }, { status: 500 });
-  }
+  });
 }

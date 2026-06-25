@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const gradeSchema = z.object({
@@ -34,7 +34,7 @@ async function verifyStudentInTeacherGroup(
 }
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -82,14 +82,11 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ grades, students });
-  } catch (error) {
-    logApiError("teacher/gradebook", error);
-    return NextResponse.json({ error: "Failed to fetch grades" }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -147,14 +144,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ grade });
-  } catch (error) {
-    logApiError("teacher/gradebook", error);
-    return NextResponse.json({ error: "Failed to set grade" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -194,8 +188,5 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/gradebook", error);
-    return NextResponse.json({ error: "Failed to delete grade" }, { status: 500 });
-  }
+  });
 }

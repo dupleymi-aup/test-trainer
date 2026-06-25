@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError, logApiError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const updateReminderSchema = z.object({
   reminderId: z.string().optional(),
@@ -17,7 +17,7 @@ const updateReminderSchema = z.object({
 });
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -63,14 +63,11 @@ export async function GET() {
         nextWeek: nextWeek.length,
       },
     });
-  } catch (error) {
-    logApiError("student/reminders", error);
-    return NextResponse.json({ error: "Failed to fetch reminders" }, { status: 500 });
-  }
+  });
 }
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -115,8 +112,5 @@ export async function PATCH(req: Request) {
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (error) {
-    logApiError("student/reminders", error);
-    return NextResponse.json({ error: "Failed to update reminders" }, { status: 500 });
-  }
+  });
 }

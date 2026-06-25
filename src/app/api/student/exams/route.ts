@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const saveExamSchema = z.object({
@@ -21,7 +21,7 @@ const saveExamSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -50,14 +50,11 @@ export async function GET(req: Request) {
     ]);
 
     return NextResponse.json({ exams, total, page });
-  } catch (error) {
-    logApiError("student/exams", error);
-    return NextResponse.json({ error: "Failed to fetch exam history" }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 
@@ -96,8 +93,5 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ exam }, { status: 201 });
-  } catch (error) {
-    logApiError("student/exams", error);
-    return NextResponse.json({ error: "Failed to save exam result" }, { status: 500 });
-  }
+  });
 }

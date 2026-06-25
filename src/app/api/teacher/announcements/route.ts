@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createAnnouncementSchema = z.object({
@@ -14,7 +14,7 @@ const createAnnouncementSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -46,14 +46,11 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ announcements });
-  } catch (error) {
-    logApiError("teacher/announcements", error);
-    return NextResponse.json({ error: "Failed to fetch announcements" }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -111,14 +108,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ announcement }, { status: 201 });
-  } catch (error) {
-    logApiError("teacher/announcements", error);
-    return NextResponse.json({ error: "Failed to create announcement" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -158,10 +152,7 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/announcements", error);
-    return NextResponse.json({ error: "Failed to delete announcement" }, { status: 500 });
-  }
+  });
 }
 
 const updateAnnouncementSchema = z.object({
@@ -172,7 +163,7 @@ const updateAnnouncementSchema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -227,8 +218,5 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ announcement: updated });
-  } catch (error) {
-    logApiError("teacher/announcements", error);
-    return NextResponse.json({ error: "Failed to update announcement" }, { status: 500 });
-  }
+  });
 }

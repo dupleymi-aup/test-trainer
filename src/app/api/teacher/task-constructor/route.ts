@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logApiError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const paramSchema = z.object({
@@ -36,7 +36,7 @@ const taskSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -83,14 +83,11 @@ export async function GET(req: Request) {
       })),
       groupIds: groupIds.map((g) => g.id),
     });
-  } catch (error) {
-    logApiError("teacher/task-constructor", error);
-    return NextResponse.json({ error: "Failed to fetch custom tasks" }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -142,14 +139,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ task: { ...task, topics: JSON.parse(task.topics), parameters: JSON.parse(task.parameters), ecClasses: JSON.parse(task.ecClasses), bvValues: JSON.parse(task.bvValues), commonMistakes: task.commonMistakes ? JSON.parse(task.commonMistakes) : [] } }, { status: 201 });
-  } catch (error) {
-    logApiError("teacher/task-constructor", error);
-    return NextResponse.json({ error: "Failed to create custom task" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -186,8 +180,5 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logApiError("teacher/task-constructor", error);
-    return NextResponse.json({ error: "Failed to delete custom task" }, { status: 500 });
-  }
+  });
 }

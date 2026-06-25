@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logApiError, apiErrorResponse } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -39,8 +39,5 @@ export async function GET() {
     });
 
     return NextResponse.json({ announcements });
-  } catch (error) {
-    logApiError("student/announcements", error);
-    return apiErrorResponse("Failed to fetch announcements");
-  }
+  });
 }
