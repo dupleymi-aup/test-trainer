@@ -3,9 +3,8 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const deadlineSchema = z.object({
   title: z.string().min(1, "Название обязательно").max(200, "Название слишком длинное"),
@@ -20,7 +19,7 @@ const deadlineSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -45,14 +44,11 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ deadlines }, { status: 200 });
-  } catch (error) {
-    logger.error("Failed to fetch deadlines", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch deadlines" }, { status: 500 });
-  }
+  });
 }
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -132,14 +128,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ deadline, remindersCount: userIds.length }, { status: 201 });
-  } catch (error) {
-    logger.error("Failed to create deadline", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to create deadline" }, { status: 500 });
-  }
+  });
 }
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -188,14 +181,11 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ deadline });
-  } catch (error) {
-    logger.error("Failed to update deadline", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to update deadline" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -224,8 +214,5 @@ export async function DELETE(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error("Failed to delete deadline", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to delete deadline" }, { status: 500 });
-  }
+  });
 }

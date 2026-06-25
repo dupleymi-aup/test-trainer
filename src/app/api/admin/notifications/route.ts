@@ -3,9 +3,8 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
-import { logger } from "@/lib/logger";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createNotificationSchema = z.object({
@@ -27,7 +26,7 @@ const markReadSchema = z.object({
  * Returns paginated notifications with optional filters.
  */
 export async function GET(req: NextRequest) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -62,10 +61,7 @@ export async function GET(req: NextRequest) {
         ? total
         : await db.notification.count({ where: { read: false } }),
     });
-  } catch (error) {
-    logger.error("Failed to fetch notifications", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
-  }
+  });
 }
 
 /**
@@ -74,7 +70,7 @@ export async function GET(req: NextRequest) {
  * Body: { ids?: string[] } — if ids is empty, marks all as read.
  */
 export async function PATCH(req: NextRequest) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -111,10 +107,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error("Failed to mark notifications as read", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to update notifications" }, { status: 500 });
-  }
+  });
 }
 
 /**
@@ -122,7 +115,7 @@ export async function PATCH(req: NextRequest) {
  * Create a new notification (used by threshold alerts and scheduled reports).
  */
 export async function POST(req: NextRequest) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -159,10 +152,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ notification }, { status: 201 });
-  } catch (error) {
-    logger.error("Failed to create notification", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to create notification" }, { status: 500 });
-  }
+  });
 }
 
 /**
@@ -170,7 +160,7 @@ export async function POST(req: NextRequest) {
  * Delete read notifications or all if ?all=true.
  */
 export async function DELETE(req: NextRequest) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -199,8 +189,5 @@ export async function DELETE(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error("Failed to delete notifications", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to delete notifications" }, { status: 500 });
-  }
+  });
 }

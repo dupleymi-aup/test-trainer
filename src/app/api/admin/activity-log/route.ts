@@ -3,8 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { paginationSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
 
@@ -14,7 +13,7 @@ const activityLogParamsSchema = paginationSchema.extend({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -57,8 +56,5 @@ export async function GET(req: Request) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    logger.error("Activity log fetch failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }
