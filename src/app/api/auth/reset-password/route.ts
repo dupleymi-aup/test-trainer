@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
-import { logger } from "@/lib/logger";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token is required"),
@@ -12,13 +11,13 @@ const resetPasswordSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req);
-  const result = checkRateLimit(`reset-password:${ip}`, rateLimits.resetPassword);
-  if (result.limited) {
-    return createRateLimitResponse(result.resetAt);
-  }
+  return withErrorHandler(req, async () => {
+    const ip = getClientIp(req);
+    const result = checkRateLimit(`reset-password:${ip}`, rateLimits.resetPassword);
+    if (result.limited) {
+      return createRateLimitResponse(result.resetAt);
+    }
 
-  try {
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -66,18 +65,5 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ message: "Password changed successfully" }, { status: 200 });
-  } catch (error) {
-    // Handle transaction-thrown errors for invalid/expired tokens
-    if (error instanceof Error && (error.message === "invalid_or_expired_token" || error.message === "invalid_token_type")) {
-      return NextResponse.json(
-        { error: "Invalid or expired token" },
-        { status: 400 }
-      );
-    }
-    logger.error("Reset password error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Failed to reset password" },
-      { status: 500 }
-    );
-  }
+  });
 }

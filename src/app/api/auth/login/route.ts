@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const loginSchema = z.object({
   login: z.string().min(1, "Email or phone is required").max(255, "Email or phone is too long"),
@@ -12,16 +11,16 @@ const loginSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req);
-  const ipResult = checkRateLimit(`login:${ip}`, rateLimits.login);
-  if (ipResult.limited) {
-    return createRateLimitResponse(ipResult.resetAt);
-  }
+  return withErrorHandler(req, async () => {
+    const ip = getClientIp(req);
+    const ipResult = checkRateLimit(`login:${ip}`, rateLimits.login);
+    if (ipResult.limited) {
+      return createRateLimitResponse(ipResult.resetAt);
+    }
 
-  // Account-level rate limiting (by email/phone) is handled via
-  // isLoginRateLimited in NextAuth authorize — both layers work together.
+    // Account-level rate limiting (by email/phone) is handled via
+    // isLoginRateLimited in NextAuth authorize — both layers work together.
 
-  try {
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -70,11 +69,5 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
-    logger.error("Login error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Login failed" },
-      { status: 500 }
-    );
-  }
+  });
 }

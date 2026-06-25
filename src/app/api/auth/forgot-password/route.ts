@@ -6,7 +6,7 @@ import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
 import { generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 const forgotPasswordSchema = z.object({
@@ -17,13 +17,13 @@ const forgotPasswordSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req);
-  const result = checkRateLimit(`forgot-password:${ip}`, rateLimits.forgotPassword);
-  if (result.limited) {
-    return createRateLimitResponse(result.resetAt);
-  }
+  return withErrorHandler(req, async () => {
+    const ip = getClientIp(req);
+    const result = checkRateLimit(`forgot-password:${ip}`, rateLimits.forgotPassword);
+    if (result.limited) {
+      return createRateLimitResponse(result.resetAt);
+    }
 
-  try {
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -141,11 +141,5 @@ export async function POST(req: Request) {
       { error: "Provide email or phone number" },
       { status: 400 }
     );
-  } catch (error) {
-    logger.error("Forgot password error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Failed to send recovery code" },
-      { status: 500 }
-    );
-  }
+  });
 }

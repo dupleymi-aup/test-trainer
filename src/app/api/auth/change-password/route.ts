@@ -5,8 +5,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
-import { logger } from "@/lib/logger";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
@@ -14,7 +13,7 @@ const changePasswordSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
 
@@ -68,8 +67,5 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ message: "Password changed successfully" }, { status: 200 });
-  } catch (error) {
-    logger.error("Change password error", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to change password" }, { status: 500 });
-  }
+  });
 }

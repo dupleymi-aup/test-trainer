@@ -7,7 +7,7 @@ import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long").optional(),
@@ -18,13 +18,13 @@ const registerSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req);
-  const result = checkRateLimit(`register:${ip}`, rateLimits.register);
-  if (result.limited) {
-    return createRateLimitResponse(result.resetAt);
-  }
+  return withErrorHandler(req, async () => {
+    const ip = getClientIp(req);
+    const result = checkRateLimit(`register:${ip}`, rateLimits.register);
+    if (result.limited) {
+      return createRateLimitResponse(result.resetAt);
+    }
 
-  try {
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -130,11 +130,5 @@ export async function POST(req: Request) {
         { status: 201 }
       );
     }
-  } catch (error) {
-    logger.error("Registration error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Registration failed" },
-      { status: 500 }
-    );
-  }
+  });
 }
