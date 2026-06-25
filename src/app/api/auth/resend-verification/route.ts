@@ -6,10 +6,10 @@ import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
 
@@ -62,17 +62,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Email sent" });
     } catch (emailError) {
       await db.verificationToken.delete({ where: { token: verificationToken } });
-      logger.error("Resend verification email failed", emailError instanceof Error ? emailError : undefined);
       return NextResponse.json(
         { error: "Failed to send email. Please try later" },
         { status: 503 }
       );
     }
-  } catch (error) {
-    logger.error("Resend verification error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Failed to send email" },
-      { status: 500 }
-    );
-  }
+  });
 }

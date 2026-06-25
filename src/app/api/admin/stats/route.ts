@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -40,8 +40,5 @@ export async function GET() {
     totalGroups,
     recentActivity,
   });
-  } catch (error) {
-    logger.error("Failed to fetch admin stats", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
-  }
+  });
 }

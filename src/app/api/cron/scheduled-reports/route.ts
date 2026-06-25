@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { secureCompare } from "@/lib/crypto";
 
 /**
@@ -11,21 +11,20 @@ import { secureCompare } from "@/lib/crypto";
  * Schedule: Monday 8:00 AM UTC (configure in vercel.json)
  */
 export async function GET(req: Request) {
-  // Verify cron secret using constant-time comparison to prevent timing attacks
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  return withErrorHandler(req, async () => {
+    const authHeader = req.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
 
-  if (
-    !cronSecret ||
-    !authHeader?.startsWith("Bearer ") ||
-    !secureCompare(authHeader.slice(7), cronSecret)
-  ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    if (
+      !cronSecret ||
+      !authHeader?.startsWith("Bearer ") ||
+      !secureCompare(authHeader.slice(7), cronSecret)
+    ) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  try {
     const MS_PER_DAY = 86400000;
-    const RISK_THRESHOLD = 2; // Flag students with 2+ risk factors
+    const RISK_THRESHOLD = 2;
     const LOW_SCORE_THRESHOLD = 50;
     const MIN_ATTEMPTS_FOR_ACTIVE = 3;
 
@@ -33,7 +32,6 @@ export async function GET(req: Request) {
     const sevenDaysAgo = new Date(now.getTime() - 7 * MS_PER_DAY);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * MS_PER_DAY);
 
-    // Gather summary data
     const [totalStudents, totalTeachers, totalGroups, totalAttempts, activeStudents30d] =
       await Promise.all([
         db.user.count({ where: { role: "STUDENT", deletedAt: null } }),
@@ -54,7 +52,6 @@ export async function GET(req: Request) {
 
     const activeRate = totalStudents > 0 ? Math.round((activeStudents30d / totalStudents) * 100) : 0;
 
-    // At-risk count
     const students = await db.user.findMany({
       where: { role: "STUDENT", deletedAt: null },
       select: {
@@ -84,7 +81,6 @@ export async function GET(req: Request) {
       if (riskScore >= RISK_THRESHOLD) highRiskCount++;
     }
 
-    // Get admin emails
     const admins = await db.user.findMany({
       where: { role: "ADMIN", deletedAt: null },
       select: { email: true, name: true },
@@ -94,7 +90,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ skipped: true, reason: "No admin users found" });
     }
 
-    // Generate HTML email body
     const html = `
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #333; border-bottom: 2px solid #10b981; padding-bottom: 8px;">Еженедельный отчёт платформы</h1>
@@ -117,7 +112,6 @@ export async function GET(req: Request) {
       </div>
     `;
 
-    // Send emails
     let sentCount = 0;
     for (const admin of admins) {
       if (!admin.email) continue;
@@ -128,12 +122,11 @@ export async function GET(req: Request) {
           html,
         });
         sentCount++;
-      } catch (err) {
-        logger.error(`Failed to send report email to ${admin.email}`, err instanceof Error ? err : undefined);
+      } catch {
+        // skip failed email sends
       }
     }
 
-    // Create notification
     await db.notification.create({
       data: {
         type: "SCHEDULED_REPORT",
@@ -145,7 +138,6 @@ export async function GET(req: Request) {
       },
     });
 
-    // Log activity
     await db.activityLog.create({
       data: {
         action: "CRON_SCHEDULED_REPORT",
@@ -161,8 +153,5 @@ export async function GET(req: Request) {
       avgScore,
       highRiskCount,
     });
-  } catch (error) {
-    logger.error("Scheduled report cron failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Scheduled report failed" }, { status: 500 });
-  }
+  });
 }

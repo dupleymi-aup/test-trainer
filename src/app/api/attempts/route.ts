@@ -3,9 +3,8 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
-import { logger } from "@/lib/logger";
+import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
 
 const createAttemptSchema = z.object({
   taskId: z.string().min(1, "Task ID обязателен").max(100, "Task ID слишком длинный"),
@@ -26,7 +25,7 @@ const createAttemptSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
 
@@ -88,14 +87,11 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, attemptId: attempt.id }, { status: 201 });
-  } catch (error) {
-    logger.error("Failed to save attempt", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
 
@@ -123,8 +119,5 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({ attempts }, { status: 200 });
-  } catch (error) {
-    logger.error("Failed to fetch attempts", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }

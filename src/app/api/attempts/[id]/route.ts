@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth, getTeacherGroupIds } from "@/lib/admin-guard";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
 
@@ -44,8 +44,5 @@ export async function GET(
     }
 
     return NextResponse.json({ attempt });
-  } catch (error) {
-    logger.error("Failed to fetch attempt", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }

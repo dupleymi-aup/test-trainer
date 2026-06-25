@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 /**
@@ -12,7 +12,7 @@ import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from
  * Callable by admin UI or cron job.
  */
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -168,8 +168,5 @@ export async function POST(req: Request) {
       notificationsCreated: created,
       stats: { highRiskCount, inactiveGroupCount, scoreDrop: Math.round(drop) },
     });
-  } catch (error) {
-    logger.error("Threshold check failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Threshold check failed" }, { status: 500 });
-  }
+  });
 }

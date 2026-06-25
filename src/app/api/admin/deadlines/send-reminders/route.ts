@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
 import { secureCompare } from "@/lib/crypto";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
@@ -16,7 +16,7 @@ const sendRemindersParamsSchema = z.object({
 
 // Send reminders for deadlines approaching within the specified hours
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     // Support both admin session (manual trigger) and cron secret (automated)
     let userId: string | null = null;
 
@@ -71,10 +71,7 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("Failed to send reminders", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to send reminders" }, { status: 500 });
-  }
+  });
 }
 
 /**

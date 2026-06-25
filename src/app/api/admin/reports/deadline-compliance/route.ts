@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { MS_PER_DAY } from "@/lib/time-constants";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -103,8 +103,5 @@ export async function GET() {
 
     setCache(cacheKey, result, DEFAULT_TTL.medium);
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("Failed to fetch deadline compliance", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch deadline compliance" }, { status: 500 });
-  }
+  });
 }

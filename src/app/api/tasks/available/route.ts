@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const session = await getServerSession(authOptions);
 
     // No session — return all tasks (unrestricted for non-authenticated)
@@ -44,8 +44,5 @@ export async function GET() {
     // Return union of all assigned task IDs (whitelist)
     const allowedTaskIds = [...new Set(groupTasks.map((gt) => gt.taskId))];
     return NextResponse.json({ taskIds: allowedTaskIds });
-  } catch (error) {
-    logger.error("Failed to fetch available tasks", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch available tasks" }, { status: 500 });
-  }
+  });
 }

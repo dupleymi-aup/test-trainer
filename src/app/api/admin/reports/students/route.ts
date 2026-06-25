@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { parseSearchParams } from "@/lib/api-error-handler";
 import { paginationSchema, searchParamsSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
@@ -14,7 +14,7 @@ const studentsParamsSchema = paginationSchema.merge(searchParamsSchema).extend({
 });
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -89,8 +89,5 @@ export async function GET(req: Request) {
     students: paginated,
     pagination: { page, limit, total, totalPages },
   });
-  } catch (error) {
-    logger.error("students-report-route failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }

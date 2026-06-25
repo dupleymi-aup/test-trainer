@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { parseSearchParams } from "@/lib/api-error-handler";
 import { z } from "zod";
 
@@ -58,7 +58,7 @@ function calculateMetrics(attempts: { userId: string; taskId: string; score: num
 }
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -148,8 +148,5 @@ export async function GET(req: Request) {
     const result = { period1: { start: period1Start, end: period1End }, period2: { start: period2Start, end: period2End }, period1Metrics, period2Metrics, comparison };
     setCache(cacheKey, result, DEFAULT_TTL.expensive);
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("compare-periods failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }

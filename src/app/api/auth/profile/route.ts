@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { formatZodError } from "@/lib/api-error-handler";
 
 const profileUpdateSchema = z.object({
@@ -17,7 +17,7 @@ const profileUpdateSchema = z.object({
 });
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const auth = await requireAuth();
     if ("response" in auth) return auth.response;
 
@@ -43,10 +43,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ user }, { status: 200 });
-  } catch (error) {
-    logger.error("Get profile error", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
-  }
+  });
 }
 
 export async function PUT(req: Request) {
@@ -140,8 +137,5 @@ export async function PUT(req: Request) {
       }
       throw updateError;
     }
-  } catch (error) {
-    logger.error("Update profile error", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
-  }
+  });
 }

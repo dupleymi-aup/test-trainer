@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { parseSearchParams } from "@/lib/api-error-handler";
 import { dateRangeSchema, groupFilterSchema } from "@/lib/shared-schemas";
 
 const universityParamsSchema = dateRangeSchema.merge(groupFilterSchema);
 
 export async function GET(request: Request) {
-  try {
+  return withErrorHandler(request, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -168,8 +168,5 @@ export async function GET(request: Request) {
     const result = { universities: universityComparison };
     setCache(cacheKey, result, DEFAULT_TTL.expensive);
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("university-comparison analytics failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }

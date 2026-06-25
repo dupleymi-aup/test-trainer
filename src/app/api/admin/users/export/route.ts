@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, getClientIp, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
@@ -84,8 +84,5 @@ export async function GET(req: Request) {
         "Content-Disposition": `attachment; filename="users-export-${timestamp}.csv"`,
       },
     });
-  } catch (error) {
-    logger.error("Failed to export users", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to export users" }, { status: 500 });
-  }
+  });
 }

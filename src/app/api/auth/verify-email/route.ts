@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
-import { logger } from "@/lib/logger";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const verifyEmailSchema = z.object({
@@ -10,7 +9,7 @@ const verifyEmailSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const ip = getClientIp(req);
     const rl = checkRateLimit("verifyEmail:" + ip, rateLimits.verifyEmail);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
@@ -63,11 +62,5 @@ export async function POST(req: Request) {
     ]);
 
     return NextResponse.json({ message: "Email verified" }, { status: 200 });
-  } catch (error) {
-    logger.error("Verify email error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Failed to verify email" },
-      { status: 500 }
-    );
-  }
+  });
 }

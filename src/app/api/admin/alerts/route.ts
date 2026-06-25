@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { MS_PER_DAY } from "@/lib/time-constants";
 
 export interface SystemAlert {
@@ -18,7 +18,7 @@ export interface SystemAlert {
 }
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -366,8 +366,5 @@ export async function GET() {
   };
 
   return NextResponse.json({ alerts, summary }, { status: 200 });
-  } catch (error) {
-    logger.error("alerts-route failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  });
 }

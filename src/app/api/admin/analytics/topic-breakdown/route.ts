@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(req: NextRequest) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -117,10 +117,7 @@ export async function GET(req: NextRequest) {
     const result = { topics, subtopics, timePerTopic };
     setCache(cacheKey, result, DEFAULT_TTL.medium);
     return NextResponse.json(result);
-  } catch (error) {
-    logger.error("Failed to fetch topic breakdown", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch topic breakdown" }, { status: 500 });
-  }
+  });
 }
 
 function computeTrend(scores: number[]): "improving" | "declining" | "stable" {

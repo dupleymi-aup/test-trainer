@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
-import { logger } from "@/lib/logger";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
@@ -15,7 +15,7 @@ const importSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const { session } = guard;
@@ -150,8 +150,5 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ created, skipped, results });
-  } catch (error) {
-    logger.error("Failed to import users", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to import users" }, { status: 500 });
-  }
+  });
 }
