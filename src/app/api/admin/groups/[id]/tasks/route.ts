@@ -4,15 +4,14 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -39,10 +38,7 @@ export async function GET(
     }));
 
     return NextResponse.json({ tasks: allTasks });
-  } catch (error) {
-    logger.error("Admin group tasks GET failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch group tasks" }, { status: 500 });
-  }
+  });
 }
 
 const assignTasksSchema = z.object({
@@ -53,7 +49,7 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -106,17 +102,14 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error("Admin group tasks POST failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to assign tasks" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const ip = getClientIp(req);
@@ -180,8 +173,5 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error("Admin group tasks DELETE failed", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to remove tasks" }, { status: 500 });
-  }
+  });
 }
