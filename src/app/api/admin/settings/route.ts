@@ -3,9 +3,8 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
 import { z } from "zod";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const validSettingKeys = [
   "maxLoginAttempts",
@@ -24,7 +23,7 @@ const updateSettingSchema = z.object({
 });
 
 export async function GET() {
-  try {
+  return withErrorHandler(new Request("http://localhost"), async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -65,14 +64,11 @@ export async function GET() {
         };
       }),
     });
-  } catch (error) {
-    logger.error("Failed to fetch settings", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
-  }
+  });
 }
 
 export async function PATCH(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -130,8 +126,5 @@ export async function PATCH(req: Request) {
       parsedValue = setting.value;
     }
     return NextResponse.json({ setting: { key: setting.key, value: parsedValue } });
-  } catch (error) {
-    logger.error("Failed to update settings", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
-  }
+  });
 }

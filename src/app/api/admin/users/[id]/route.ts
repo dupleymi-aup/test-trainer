@@ -4,14 +4,13 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { logger } from "@/lib/logger";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -47,10 +46,7 @@ export async function GET(
     }
 
     return NextResponse.json({ user });
-  } catch (error) {
-    logger.error("Failed to fetch user", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
-  }
+  });
 }
 
 const updateUserSchema = z.object({
@@ -67,7 +63,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(req);
@@ -147,17 +143,14 @@ export async function PATCH(
     });
 
     return NextResponse.json({ user });
-  } catch (error) {
-    logger.error("Failed to update user", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
-  }
+  });
 }
 
 export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
+  return withErrorHandler(_req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
     const csrf = await requireCSRF(_req);
@@ -202,8 +195,5 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error("Failed to delete user", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
-  }
+  });
 }

@@ -4,104 +4,100 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
-import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { parsePositiveInt } from "@/lib/validate";
 
 const RoleSchema = z.nativeEnum(Role);
 
 export async function GET(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
-  const { searchParams } = new URL(req.url);
-  const rawRole = searchParams.get("role");
-  const role = rawRole && rawRole !== "ALL" ? RoleSchema.safeParse(rawRole) : undefined;
-  const search = searchParams.get("search");
-  const page = parsePositiveInt(searchParams.get("page"), 1);
-  const limit = Math.min(200, parsePositiveInt(searchParams.get("limit"), 20));
-  const showDeleted = searchParams.get("showDeleted") === "true";
-  const allowedSortBy = ["createdAt", "name", "attempts"] as const;
-  const rawSortBy = searchParams.get("sortBy") || "createdAt";
-  const sortBy: (typeof allowedSortBy)[number] = allowedSortBy.includes(rawSortBy as (typeof allowedSortBy)[number])
-    ? (rawSortBy as (typeof allowedSortBy)[number])
-    : "createdAt";
-  const sortDir: "asc" | "desc" = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
-  const skip = (page - 1) * limit;
+    const { searchParams } = new URL(req.url);
+    const rawRole = searchParams.get("role");
+    const role = rawRole && rawRole !== "ALL" ? RoleSchema.safeParse(rawRole) : undefined;
+    const search = searchParams.get("search");
+    const page = parsePositiveInt(searchParams.get("page"), 1);
+    const limit = Math.min(200, parsePositiveInt(searchParams.get("limit"), 20));
+    const showDeleted = searchParams.get("showDeleted") === "true";
+    const allowedSortBy = ["createdAt", "name", "attempts"] as const;
+    const rawSortBy = searchParams.get("sortBy") || "createdAt";
+    const sortBy: (typeof allowedSortBy)[number] = allowedSortBy.includes(rawSortBy as (typeof allowedSortBy)[number])
+      ? (rawSortBy as (typeof allowedSortBy)[number])
+      : "createdAt";
+    const sortDir: "asc" | "desc" = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
+    const skip = (page - 1) * limit;
 
-  const where: Prisma.UserWhereInput = {};
+    const where: Prisma.UserWhereInput = {};
 
-  if (!showDeleted) {
-    where.deletedAt = null;
-  }
+    if (!showDeleted) {
+      where.deletedAt = null;
+    }
 
-  if (role?.success) {
-    where.role = role.data;
-  } else if (rawRole && rawRole !== "ALL" && !role?.success) {
-    return NextResponse.json({ error: `Invalid role: ${rawRole}` }, { status: 400 });
-  }
+    if (role?.success) {
+      where.role = role.data;
+    } else if (rawRole && rawRole !== "ALL" && !role?.success) {
+      return NextResponse.json({ error: `Invalid role: ${rawRole}` }, { status: 400 });
+    }
 
-  if (search) {
-    where.OR = [
-      { name: { contains: search } },
-      { email: { contains: search } },
-      { phone: { contains: search } },
-    ];
-  }
+    if (search) {
+      where.OR = [
+        { name: { contains: search } },
+        { email: { contains: search } },
+        { phone: { contains: search } },
+      ];
+    }
 
-  // Build sort order
-  const orderBy: Prisma.UserOrderByWithRelationInput = {};
-  if (sortBy === "attempts") {
-    orderBy.attempts = { _count: sortDir };
-  } else if (sortBy === "name") {
-    orderBy.name = { sort: sortDir, nulls: "last" };
-  } else {
-    orderBy.createdAt = sortDir;
-  }
+    // Build sort order
+    const orderBy: Prisma.UserOrderByWithRelationInput = {};
+    if (sortBy === "attempts") {
+      orderBy.attempts = { _count: sortDir };
+    } else if (sortBy === "name") {
+      orderBy.name = { sort: sortDir, nulls: "last" };
+    } else {
+      orderBy.createdAt = sortDir;
+    }
 
-  const [users, total] = await Promise.all([
-    db.user.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        isActive: true,
-        avatar: true,
-        university: true,
-        group: true,
-        createdAt: true,
-        _count: {
-          select: {
-            attempts: true,
-            groups: true,
+    const [users, total] = await Promise.all([
+      db.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          avatar: true,
+          university: true,
+          group: true,
+          createdAt: true,
+          _count: {
+            select: {
+              attempts: true,
+              groups: true,
+            },
           },
         },
-      },
-    }),
-    db.user.count({ where }),
-  ]);
+      }),
+      db.user.count({ where }),
+    ]);
 
-  return NextResponse.json({
-    users,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+    return NextResponse.json({
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
   });
-  } catch (error) {
-    logger.error("Failed to fetch users", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
-  }
 }
 
 const createUserSchema = z.object({
@@ -115,7 +111,7 @@ const createUserSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  try {
+  return withErrorHandler(req, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
@@ -203,8 +199,5 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ user }, { status: 201 });
-  } catch (error) {
-    logger.error("Failed to create user", error instanceof Error ? error : undefined);
-    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
-  }
+  });
 }
