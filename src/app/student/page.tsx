@@ -68,6 +68,7 @@ export default function StudentDashboardPage() {
   const [lastTaskId, setLastTaskId] = useState<number | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (status === "unauthenticated") {
       router.push("/login?callbackUrl=/student");
       return;
@@ -78,6 +79,7 @@ export default function StudentDashboardPage() {
       return;
     }
     if (status === "authenticated") {
+      const controller = new AbortController();
       const progressData = loadProgress();
       const attempts = loadAttemptHistory();
       const streakData = loadStreak();
@@ -99,10 +101,10 @@ export default function StudentDashboardPage() {
       });
 
       // Fetch announcements
-      fetch("/api/student/announcements")
+      fetch("/api/student/announcements", { signal: controller.signal })
         .then((r) => r.ok ? r.json() : { announcements: [] })
         .then((d) => setAnnouncements(d.announcements || []))
-        .catch((e) => { logger.warn("Failed to fetch announcements", { error: e }); setAnnouncements([]); });
+        .catch((e) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch announcements", { error: e }); setAnnouncements([]); });
 
       // Find last attempted task for "resume" feature
       if (attempts.length > 0) {
@@ -111,11 +113,14 @@ export default function StudentDashboardPage() {
       }
 
       // Fetch unread messages count
-      fetch("/api/student/messages?limit=1")
+      fetch("/api/student/messages?limit=1", { signal: controller.signal })
         .then((r) => r.ok ? r.json() : { unreadCount: 0 })
         .then((d) => setUnreadMessages(d.unreadCount || 0))
-        .catch(() => {});
+        .catch((e) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch unread messages count", { error: e }); });
     }
+    return () => {
+      if (typeof controller !== "undefined") controller.abort();
+    };
   }, [status, session, router]);
 
   if (status === "loading" || !stats) {

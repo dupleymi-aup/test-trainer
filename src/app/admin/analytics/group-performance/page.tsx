@@ -43,13 +43,15 @@ export default function AdminGroupPerformancePage() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/admin/analytics/group-performance")
+    const controller = new AbortController();
+    fetch("/api/admin/analytics/group-performance", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((data) => { setGroups(data.groups || []); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
+      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   const toggleGroup = (groupName: string) => {

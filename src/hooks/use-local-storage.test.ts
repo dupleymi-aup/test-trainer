@@ -41,10 +41,10 @@ describe("useLocalStorage", () => {
   });
 
   it("handles complex objects", () => {
-    const { result } = renderHook(() => useLocalStorage("obj", { a: 1 }));
+    const { result } = renderHook(() => useLocalStorage("obj", { a: 1 } as Record<string, number>));
 
     act(() => {
-      result.current[1]({ b: 2 });
+      result.current[1]({ b: 2 } as Record<string, number>);
     });
 
     expect(result.current[0]).toEqual({ b: 2 });

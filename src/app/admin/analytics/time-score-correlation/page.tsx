@@ -87,11 +87,13 @@ export default function TimeScoreCorrelationPage() {
   const [showAllTasks, setShowAllTasks] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     setError(null);
-    fetch("/api/admin/analytics/time-score-correlation")
+    fetch("/api/admin/analytics/time-score-correlation", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;

@@ -20,15 +20,8 @@ describe("useEventListener", () => {
     const div = document.createElement("div");
     document.body.appendChild(div);
 
-    const { result } = renderHook(() => {
-      const ref = useRef<HTMLDivElement>(null);
-      useEventListener("click", handler, ref);
-      return ref;
-    });
-
-    act(() => {
-      (result.current as React.MutableRefObject<HTMLDivElement | null>).current = div;
-    });
+    const ref = { current: div } as React.MutableRefObject<HTMLElement>;
+    renderHook(() => useEventListener("click", handler as any, ref));
 
     act(() => {
       div.dispatchEvent(new MouseEvent("click", { bubbles: true }));

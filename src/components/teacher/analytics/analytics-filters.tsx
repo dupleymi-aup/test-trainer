@@ -30,15 +30,18 @@ export function AnalyticsFilters({ onFilterChange }: AnalyticsFiltersProps) {
   const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
-    fetch("/api/teacher/groups")
+    const controller = new AbortController();
+    fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((data) => setGroups(data.groups || []))
       .catch((err) => {
+        if (controller.signal.aborted) return;
         logger.warn("Failed to fetch teacher groups", { error: err instanceof Error ? err.message : String(err) });
       });
+    return () => controller.abort();
   }, []);
 
   const handleApply = () => {

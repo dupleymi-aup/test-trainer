@@ -89,10 +89,12 @@ export default function StudentHistoryPage() {
       return;
     }
     if (status === "authenticated") {
-      fetch("/api/student/history")
+      const controller = new AbortController();
+      fetch("/api/student/history", { signal: controller.signal })
         .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((d) => { setTaskHistory(d.taskHistory || []); setLoading(false); })
-        .catch(() => setLoading(false));
+        .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      return () => controller.abort();
     }
   }, [status, session, router]);
 

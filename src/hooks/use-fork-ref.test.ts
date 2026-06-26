@@ -18,9 +18,9 @@ describe("useForkRef", () => {
   });
 
   it("sets object ref when invoked", () => {
-    const objectRef = { current: null };
+    const objectRef = { current: null } as React.MutableRefObject<HTMLSpanElement | null>;
     const { result } = renderHook(() => useForkRef(null, objectRef));
-    const mockNode = document.createElement("span");
+    const mockNode = document.createElement("span") as HTMLSpanElement;
     result.current(mockNode);
     expect(objectRef.current).toBe(mockNode);
   });

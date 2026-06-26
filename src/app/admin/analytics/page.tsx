@@ -119,10 +119,12 @@ export default function AdminAnalyticsHubPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/analytics")
+    const controller = new AbortController();
+    fetch("/api/admin/analytics", { signal: controller.signal })
       .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;

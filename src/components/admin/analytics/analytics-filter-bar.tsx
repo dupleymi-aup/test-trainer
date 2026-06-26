@@ -48,19 +48,22 @@ export function AnalyticsFilterBar({
 
   useEffect(() => {
     if (showGroupFilter) {
-      fetch("/api/admin/groups")
+      const controller = new AbortController();
+      fetch("/api/admin/groups", { signal: controller.signal })
         .then(async (r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
         })
         .then((d) => setGroups(d.groups || []))
-        .catch((err) => logger.warn("Failed to fetch admin groups", { error: err instanceof Error ? err.message : String(err) }));
+        .catch((err) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch admin groups", { error: err instanceof Error ? err.message : String(err) }); });
+      return () => controller.abort();
     }
   }, [showGroupFilter]);
 
   useEffect(() => {
     if (showUniversityFilter) {
-      fetch("/api/admin/analytics/comprehensive")
+      const controller = new AbortController();
+      fetch("/api/admin/analytics/comprehensive", { signal: controller.signal })
         .then(async (r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
@@ -73,7 +76,8 @@ export function AnalyticsFilterBar({
             setUniversities([...new Set(unis)].filter(Boolean) as string[]);
           }
         })
-        .catch((err) => logger.warn("Failed to fetch university performance", { error: err instanceof Error ? err.message : String(err) }));
+        .catch((err) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch university performance", { error: err instanceof Error ? err.message : String(err) }); });
+      return () => controller.abort();
     }
   }, [showUniversityFilter]);
 

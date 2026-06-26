@@ -49,19 +49,21 @@ export default function UniversityComparisonPage() {
   const [filters, setFilters] = useState<FilterState | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const params = new URLSearchParams();
     if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
     if (filters?.dateTo) params.set("dateTo", filters.dateTo);
     if (filters?.groupId) params.set("groupId", filters.groupId);
     const qs = params.toString();
     setError(null);
-    fetch(`/api/admin/analytics/university-comparison${qs ? `?${qs}` : ""}`)
+    fetch(`/api/admin/analytics/university-comparison${qs ? `?${qs}` : ""}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+    return () => controller.abort();
   }, [filters]);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;

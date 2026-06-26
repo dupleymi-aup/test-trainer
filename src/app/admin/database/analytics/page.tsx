@@ -63,7 +63,8 @@ export default function AdminDatabaseAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/database/analytics")
+    const controller = new AbortController();
+    fetch("/api/admin/database/analytics", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -72,7 +73,8 @@ export default function AdminDatabaseAnalyticsPage() {
         setData(d);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   if (loading)

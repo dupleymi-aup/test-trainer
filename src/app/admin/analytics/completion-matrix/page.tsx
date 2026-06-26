@@ -54,28 +54,33 @@ export default function AdminCompletionMatrixPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/groups")
+    const controller = new AbortController();
+    fetch("/api/admin/groups", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => setGroups(d.groups || []))
       .catch((err) => {
+        if (controller.signal.aborted) return;
         logger.warn("Failed to fetch groups (non-critical)", { error: err instanceof Error ? err.message : String(err) });
       });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
     if (!selectedGroup) { setData(null); return; }
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(`/api/admin/analytics/completion-matrix?groupId=${selectedGroup}`)
+    fetch(`/api/admin/analytics/completion-matrix?groupId=${selectedGroup}`, { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
+    return () => controller.abort();
   }, [selectedGroup]);
 
   const getCellContent = (cell: MatrixCell | undefined) => {

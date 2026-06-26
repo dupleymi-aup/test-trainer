@@ -23,6 +23,7 @@ function VerifyEmailContent() {
   );
 
   useEffect(() => {
+    const controller = new AbortController();
     const token = searchParams.get("token");
     if (!token) {
       setStatus("error");
@@ -34,6 +35,7 @@ function VerifyEmailContent() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
+      signal: controller.signal,
     })
       .then(async (res) => {
         const json = await res.json();
@@ -46,9 +48,11 @@ function VerifyEmailContent() {
         }
       })
       .catch(() => {
+        if (controller.signal.aborted) return;
         setStatus("error");
         toast.error("Ошибка при подтверждении email");
       });
+    return () => controller.abort();
   }, [searchParams]);
 
   return (

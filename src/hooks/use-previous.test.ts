@@ -37,8 +37,8 @@ describe("usePrevious", () => {
   });
 
   it("handles object values", () => {
-    const obj1 = { a: 1 };
-    const obj2 = { b: 2 };
+    const obj1 = { a: 1 } as Record<string, number>;
+    const obj2 = { b: 2 } as Record<string, number>;
 
     const { result, rerender } = renderHook(
       ({ value }) => usePrevious(value),

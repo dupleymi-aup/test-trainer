@@ -75,15 +75,18 @@ export default function ComparePeriodsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/groups")
+    const controller = new AbortController();
+    fetch("/api/admin/groups", { signal: controller.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((d) => setGroups(d.groups || []))
       .catch((err) => {
+        if (controller.signal.aborted) return;
         logger.warn("Failed to fetch groups (non-critical)", { error: err instanceof Error ? err.message : String(err) });
       });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {

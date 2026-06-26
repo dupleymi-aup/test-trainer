@@ -335,10 +335,12 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
   const [userCount, setUserCount] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/stats")
+    const controller = new AbortController();
+    fetch("/api/stats", { signal: controller.signal })
       .then((res) => res.ok ? res.json() : Promise.reject())
       .then((data) => setUserCount(data.userCount))
-      .catch(() => setUserCount(null));
+      .catch(() => { if (!controller.signal.aborted) setUserCount(null); });
+    return () => controller.abort();
   }, []);
 
   const demoTask = {
