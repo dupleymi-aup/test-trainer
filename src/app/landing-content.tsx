@@ -46,9 +46,9 @@ import {
 const TOTAL_TASKS = 30;
 
 const difficultyKeyMap: Record<string, string> = {
-  "Easy": "landing.easy",
-  "Medium": "landing.medium",
-  "Hard": "landing.hard",
+  "Easy": "easy",
+  "Medium": "medium",
+  "Hard": "hard",
 };
 
 const difficultyColor = (difficulty: string) => {
@@ -310,21 +310,21 @@ function UserCountStats({ count }: { count: number | null }) {
 }
 
 const methodsData = [
-  { icon: Target, titleKey: "landing.methodEquivalence" },
-  { icon: Layers, titleKey: "landing.methodBoundary" },
-  { icon: Layers, titleKey: "landing.methodCombinatorial" },
-  { icon: GitBranch, titleKey: "landing.methodDecisionTable" },
-  { icon: BookOpen, titleKey: "landing.methodStateTransition" },
-  { icon: TrendingUp, titleKey: "landing.methodPairwise" },
+  { icon: Target, titleKey: "methodEquivalence" },
+  { icon: Layers, titleKey: "methodBoundary" },
+  { icon: Layers, titleKey: "methodCombinatorial" },
+  { icon: GitBranch, titleKey: "methodDecisionTable" },
+  { icon: BookOpen, titleKey: "methodStateTransition" },
+  { icon: TrendingUp, titleKey: "methodPairwise" },
 ];
 
 const techData = [
-  { icon: Code2, titleKey: "landing.techNextJS", descKey: "landing.techNextJSDesc" },
-  { icon: FileCode2, titleKey: "landing.techTypeScript", descKey: "landing.techTypeScriptDesc" },
-  { icon: Database, titleKey: "landing.techPrisma", descKey: "landing.techPrismaDesc" },
-  { icon: Palette, titleKey: "landing.techTailwind", descKey: "landing.techTailwindDesc" },
-  { icon: Code2, titleKey: "landing.techShadcn", descKey: "landing.techShadcnDesc" },
-  { icon: Shield, titleKey: "landing.techNextAuth", descKey: "landing.techNextAuthDesc" },
+  { icon: Code2, titleKey: "techNextJS", descKey: "techNextJSDesc" },
+  { icon: FileCode2, titleKey: "techTypeScript", descKey: "techTypeScriptDesc" },
+  { icon: Database, titleKey: "techPrisma", descKey: "techPrismaDesc" },
+  { icon: Palette, titleKey: "techTailwind", descKey: "techTailwindDesc" },
+  { icon: Code2, titleKey: "techShadcn", descKey: "techShadcnDesc" },
+  { icon: Shield, titleKey: "techNextAuth", descKey: "techNextAuthDesc" },
 ];
 
 /* ═══════════════════════════════════════════════ */
