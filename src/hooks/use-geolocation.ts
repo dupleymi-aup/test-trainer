@@ -10,7 +10,10 @@ interface GeolocationState {
   error: GeolocationPositionError | null;
 }
 
-interface UseGeolocationOptions extends GeolocationOptions {
+interface UseGeolocationOptions {
+  enableHighAccuracy?: boolean;
+  timeout?: number;
+  maximumAge?: number;
   enableOnMount?: boolean;
 }
 

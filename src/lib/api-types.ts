@@ -1,3 +1,36 @@
+import { z } from "zod";
+
+export const healthResponseSchema = z.object({
+  status: z.string(),
+  version: z.string(),
+  uptime: z.number(),
+  timestamp: z.string(),
+  database: z.any(),
+  mongodb: z.any(),
+  memory: z.any(),
+});
+
+export const studentAnalyticsResponseSchema = z.object({
+  attempts: z.number(),
+  scoresOverTime: z.array(z.any()),
+  topicMastery: z.array(z.any()),
+  taskBreakdown: z.array(z.any()),
+  weakAreas: z.array(z.any()),
+  strongAreas: z.array(z.any()),
+  skillGaps: z.array(z.any()),
+  difficultyBreakdown: z.array(z.any()),
+});
+
+export const leaderboardResponseSchema = z.object({
+  leaderboard: z.array(z.any()),
+  totalParticipants: z.number(),
+  currentUser: z.any().nullable(),
+  period: z.string(),
+  page: z.number(),
+  totalPages: z.number(),
+  groupId: z.string().nullable().optional(),
+});
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;

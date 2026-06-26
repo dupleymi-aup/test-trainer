@@ -26,7 +26,7 @@ export { useLongPress } from "./use-long-press";
 export { useMap } from "./use-map";
 export { useMediaQuery } from "./use-media-query";
 export { useMergeState } from "./use-merge-state";
-export { useMobile } from "./use-mobile";
+export { useIsMobile as useMobile } from "./use-mobile";
 export { useMounted } from "./use-mounted";
 export { useNetwork } from "./use-network";
 export { useOnClickOutside } from "./use-on-click-outside";

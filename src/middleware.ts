@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { generateCSRFToken, verifyCSRFToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
 import { logger } from "@/lib/logger";
-import { randomUUID } from "crypto";
+function generateRequestId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
 
 const protectedRoutes = ["/profile", "/teacher", "/admin", "/student"];
 const authRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
@@ -80,7 +85,7 @@ function checkStudentAccess(
 }
 
 export async function middleware(request: NextRequest) {
-  const requestId = request.headers.get("x-request-id") ?? randomUUID();
+  const requestId = request.headers.get("x-request-id") ?? generateRequestId();
   const token = await getToken({ req: request });
   const pathname = request.nextUrl.pathname;
   const method = request.method;
