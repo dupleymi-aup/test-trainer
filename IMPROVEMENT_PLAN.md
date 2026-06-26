@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v11.0 (5 пунктов)
+# TestTrainer — План улучшений v12.0 (5 пунктов)
 
-## 1. Хук useUpdateEffect
-Создать `useUpdateEffect` хук — аналог `useEffect`, но пропускает первый render (вызывается только при обновлениях, не при монтировании).
+## 1. Хук useAsync
+Создать `useAsync` хук — обёртка над async функциями с自动 стейтом `{ data, loading, error, execute }`, поддержка abort и retry.
 
-## 2. Хук useThrottle
-Создать `useThrottle` хук — throttle значений с настраиваемым интервалом, возвращает последнее значение за период.
+## 2. Хук useControllableValue
+Создать `useControllableValue` хук — управляемый/uncontrolled паттерн для компонентов (аналог antd useControllableValue), поддержка controlled + uncontrolled modes.
 
-## 3. Хук useIntersectionObserver
-Создать `useIntersectionObserver` хук — обёртка над `IntersectionObserverAPI`, возвращает `{ ref, isIntersecting, entry }` для lazy loading и infinite scroll.
+## 3. Хук useUnmount
+Создать `useUnmount` хук — вызывает callback при unmount компонента (cleanup helper).
 
-## 4. Хук useWhyDidUpdate
-Создать `useWhyDidUpdate` хук — debugging хук, логирует какие props изменились между рендерами (только в dev mode).
+## 4. Хук useRenderCount
+Создать `useRenderCount` хук — возвращает количество рендеров компонента (debugging/performance tool).
 
-## 5. Хук useLatest
-Создать `useLatest` хук — возвращает ref, всегда содержащий последнее значение (полезен для callbacks без stale closure).
+## 5. Хук useSafeState
+Создать `useSafeState` хук — `useState` который не обновляет state после unmount (prevents memory leak warnings).
