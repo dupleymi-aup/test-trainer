@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v12.0 (5 пунктов)
+# TestTrainer — План улучшений v13.0 (5 пунктов)
 
-## 1. Хук useAsync
-Создать `useAsync` хук — обёртка над async функциями с自动 стейтом `{ data, loading, error, execute }`, поддержка abort и retry.
+## 1. Хук useRafLoop
+Создать `useRafLoop` хук — выполняет callback через requestAnimationFrame с автоматической очисткой при unmount и паузой.
 
-## 2. Хук useControllableValue
-Создать `useControllableValue` хук — управляемый/uncontrolled паттерн для компонентов (аналог antd useControllableValue), поддержка controlled + uncontrolled modes.
+## 2. Хук useUpdate
+Создать `useUpdate` хук — возвращает функцию, которая вызывает force update (rerender) компонента без изменения state.
 
-## 3. Хук useUnmount
-Создать `useUnmount` хук — вызывает callback при unmount компонента (cleanup helper).
+## 3. Хук useMergeState
+Создать `useMergeState` хук — `useState` с shallow merge при обновлении (аналог `Object.assign` для state).
 
-## 4. Хук useRenderCount
-Создать `useRenderCount` хук — возвращает количество рендеров компонента (debugging/performance tool).
+## 4. Хук useMap
+Создать `useMap` хук — управление Map-коллекцией с методами `set`, `remove`, `clear`, `get`.
 
-## 5. Хук useSafeState
-Создать `useSafeState` хук — `useState` который не обновляет state после unmount (prevents memory leak warnings).
+## 5. Хук useSet
+Создать `useSet` хук — управление Set-коллекцией с методами `add`, `remove`, `clear`, `has`.
