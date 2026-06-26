@@ -12,6 +12,9 @@ export default defineConfig({
       reporter: ["text", "html"],
       include: ["src/lib/**/*.ts"],
     },
+    environmentMatchGlobs: [
+      ["src/components/**/*.test.tsx", "jsdom"],
+    ],
   },
   resolve: {
     alias: {

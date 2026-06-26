@@ -1,3 +1,4 @@
+import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
@@ -16,6 +17,7 @@ export function LoadingSpinner({
 
   return (
     <div
+      role="status"
       className={cn(
         "flex flex-col items-center justify-center gap-3",
         className
