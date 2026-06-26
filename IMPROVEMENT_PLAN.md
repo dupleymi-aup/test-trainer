@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v15.0 (5 пунктов)
+# TestTrainer — План улучшений v16.0 (5 пунктов)
 
-## 1. Хук useGeolocation
-Создать `useGeolocation` хук — обёртка над Geolocation API, возвращает `{ latitude, longitude, accuracy, loading, error }` с авто-обновлением при `enableHighAccuracy`.
+## 1. Хук useDebouncedValue
+Создать `useDebouncedValue` хук — debounce значения с начальным значением и отменой. Возвращает `{ debouncedValue, cancel, isPending }`.
 
-## 2. Хук usePermission
-Создать `usePermission` хук — обёртка над Permissions API, возвращает `{ state, status }` для проверки разрешений (camera, microphone, notifications и т.д.).
+## 2. Хук useElementSize
+Создать `useElementSize` хук — возвращает `{ width, height }` элемента через ResizeObserver, с ref callback.
 
-## 3. Хук useQueue
-Создать `useQueue` хук — очередь с методами `enqueue`, `dequeue`, `peek`, `clear`, `size`. Полезно для обработки задач FIFO.
+## 3. Хук useIdle
+Создать `useIdle` хук — определяет idle состояние пользователя по активности мыши/клавиатуры с таймаутом.
 
-## 4. Хук useCounter с макс/мин
-Обновить существующий `useCounter` хук — добавить `min`, `max` опции для ограничения диапазона значений.
+## 4. Хук useEventListener на element
+Обновить `useEventListener` хук — добавить подушку `element` параметра для привязки к конкретному DOM-элементу, а не только window/document.
 
-## 5. Хук useVibrate
-Создать `useVibrate` хук — обёртка над Vibration API, возвращает `vibrate(pattern)` функцию с поддержкой паттернов и auto-stop при unmount.
+## 5. Хук useMap с immer-подобным API
+Создать `useImmerMap` хук — `useMap` с callback-обновлением `update(key, fn)` для удобного изменения значений без иммутабельного клонирования.
