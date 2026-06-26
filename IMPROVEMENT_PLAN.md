@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v13.0 (5 пунктов)
+# TestTrainer — План улучшений v14.0 (5 пунктов)
 
-## 1. Хук useRafLoop
-Создать `useRafLoop` хук — выполняет callback через requestAnimationFrame с автоматической очисткой при unmount и паузой.
+## 1. Хук useNetwork
+Создать `useNetwork` хук — расширенная версия useOnlineStatus: `{ online, offline, rtt, downlink, effectiveType, saveData }` через Network Information API.
 
-## 2. Хук useUpdate
-Создать `useUpdate` хук — возвращает функцию, которая вызывает force update (rerender) компонента без изменения state.
+## 2. Хук useDocumentTitle
+Создать `useDocumentTitle` хук — управление `document.title` с auto-restore при unmount.
 
-## 3. Хук useMergeState
-Создать `useMergeState` хук — `useState` с shallow merge при обновлении (аналог `Object.assign` для state).
+## 3. Хук useForkRef
+Создать `useForkRef` хук — объединение нескольких `ref` callback/objects в один (полезно для forwarding refs в компонентах).
 
-## 4. Хук useMap
-Создать `useMap` хук — управление Map-коллекцией с методами `set`, `remove`, `clear`, `get`.
+## 4. Хук useClickAnyWhere
+Создать `useClickAnyWhere` хук — вызывает callback при клике в любом месте страницы (расширенная версия useOnClickOutside, работает и с кликами внутри).
 
-## 5. Хук useSet
-Создать `useSet` хук — управление Set-коллекцией с методами `add`, `remove`, `clear`, `has`.
+## 5. Хук useDoubleClick
+Создать `useDoubleClick` хук — детектирует двойной клик с настраиваемым `delay` для различия single и double click.
