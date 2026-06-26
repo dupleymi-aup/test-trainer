@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { logger } from "./logger";
 import { z, type ZodError, type ZodSchema } from "zod";
+import { randomUUID } from "crypto";
 
 /**
  * Formats a Zod v4 error into a human-readable string.
@@ -182,23 +183,35 @@ export class AppError extends Error {
  * All other errors return 500 with the error message.
  */
 export async function withErrorHandler(
-  _req: Request,
+  req: Request,
   handler: () => Promise<Response>
 ): Promise<Response> {
+  const startTime = Date.now();
+  const requestId = req.headers.get("x-request-id") ?? randomUUID();
+  const method = req.method;
+  const path = new URL(req.url).pathname;
+
   try {
-    return await handler();
+    const response = await handler();
+    const duration = Date.now() - startTime;
+    logger.info("API response", { method, path, status: response.status, duration, requestId });
+    return response;
   } catch (error) {
+    const duration = Date.now() - startTime;
     const message = error instanceof Error ? error.message : "Internal server error";
+    const status = error instanceof AppError ? error.statusCode : 500;
+
+    logger.error("API response error", { method, path, status, duration, requestId, message });
 
     if (error instanceof AppError) {
-      return NextResponse.json({ error: message }, { status: error.statusCode });
+      return NextResponse.json({ error: message }, { status });
     }
 
     logger.error("[API Error]", error instanceof Error ? error : undefined);
 
     return NextResponse.json(
       { error: "Internal server error", details: process.env.NODE_ENV === "development" ? message : undefined },
-      { status: 500 }
+      { status }
     );
   }
 }

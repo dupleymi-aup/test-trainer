@@ -41,6 +41,9 @@ vi.mock("@/lib/crypto", () => ({
 
 vi.mock("@/lib/logger", () => ({
   logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
     error: mocks.loggerError,
   },
 }));
