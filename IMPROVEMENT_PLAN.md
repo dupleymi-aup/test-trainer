@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v4.0 (5 пунктов)
+# TestTrainer — План улучшений v5.0 (5 пунктов)
 
-## 1. ✅ Unit-тесты для useApiQuery hook
-Добавить тесты для `useApiQuery` хука с моками fetch.
+## 1. ✅ Unit-тесты для useDebounce hook
+Добавить тесты для `useDebounce` хука с проверкой debounce логики.
 
-## 2. ✅ Хук useDebounce
-Создать `useDebounce` хук для debounce поисковых запросов.
+## 2. ✅ Unit-тесты для useLocalStorage hook
+Добавить тесты для `useLocalStorage` хука с моками localStorage.
 
-## 3. ✅ Unit-тесты для LoadingButton
-Добавить тесты для `LoadingButton` компонента.
+## 3. ✅ Хук useMediaQuery
+Создать `useMediaQuery` хук для адаптивного дизайна.
 
-## 4. ✅ Хук useLocalStorage
-Создать `useLocalStorage` хук для персистентного хранения данных.
+## 4. ✅ Unit-тесты для EmptyState компонента
+Добавить тесты для `EmptyState` компонента.
 
-## 5. ✅ Компонент EmptyState
-Создать переиспользуемый компонент `EmptyState` для пустых списков.
+## 5. ✅ Хук usePrevious
+Создать `usePrevious` хук для доступа к предыдущему значению.
