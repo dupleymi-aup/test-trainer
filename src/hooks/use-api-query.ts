@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { APIError, apiFetchJson } from "./api-client";
+import { APIError, apiFetchJson } from "@/lib/api-client";
 
 interface UseApiQueryOptions<T> {
   url: string | null;
