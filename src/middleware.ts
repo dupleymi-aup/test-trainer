@@ -3,11 +3,18 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { generateCSRFToken, verifyCSRFToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
 import { logger } from "@/lib/logger";
+import { buildCSP } from "@/lib/csp";
+
 function generateRequestId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
   }
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function setSecurityHeaders(res: NextResponse, nonce: string): void {
+  res.headers.set("x-nonce", nonce);
+  res.headers.set("Content-Security-Policy", buildCSP(nonce, process.env.NODE_ENV === "development"));
 }
 
 const protectedRoutes = ["/profile", "/teacher", "/admin", "/student"];
@@ -24,7 +31,8 @@ function checkRoleAccess(
   token: { role?: string } | null,
   routeConfig: { paths: string[]; requiredRoles: string[] },
   pathname: string,
-  requestId: string
+  requestId: string,
+  nonce: string
 ): NextResponse | null {
   const isMatch = routeConfig.paths.some(
     (p) => pathname === p || pathname.startsWith(p + "/")
@@ -47,11 +55,13 @@ function checkRoleAccess(
       { status: 403 }
     );
     res.headers.set("X-Request-Id", requestId);
+    setSecurityHeaders(res, nonce);
     return res;
   }
 
   const res = NextResponse.redirect(new URL("/", pathname));
   res.headers.set("X-Request-Id", requestId);
+  setSecurityHeaders(res, nonce);
   return res;
 }
 
@@ -59,7 +69,8 @@ function checkStudentAccess(
   token: { role?: string } | null,
   pathname: string,
   requestUrl: string,
-  requestId: string
+  requestId: string,
+  nonce: string
 ): NextResponse | null {
   const isStudentRoute = pathname === "/student" || pathname.startsWith("/student/");
   if (!isStudentRoute) return null;
@@ -69,6 +80,7 @@ function checkStudentAccess(
     redirectUrl.searchParams.set("callbackUrl", pathname);
     const res = NextResponse.redirect(redirectUrl);
     res.headers.set("X-Request-Id", requestId);
+    setSecurityHeaders(res, nonce);
     return res;
   }
 
@@ -81,11 +93,13 @@ function checkStudentAccess(
   const target = redirectMap[token.role ?? ""] ?? "/";
   const res = NextResponse.redirect(new URL(target, requestUrl));
   res.headers.set("X-Request-Id", requestId);
+  setSecurityHeaders(res, nonce);
   return res;
 }
 
 export async function middleware(request: NextRequest) {
   const requestId = request.headers.get("x-request-id") ?? generateRequestId();
+  const nonce = generateRequestId();
   const token = await getToken({ req: request });
   const pathname = request.nextUrl.pathname;
   const method = request.method;
@@ -126,6 +140,7 @@ export async function middleware(request: NextRequest) {
     if (!verifyCSRFToken(cookieToken, headerToken)) {
       const res = NextResponse.json({ error: "CSRF token missing or invalid" }, { status: 403 });
       res.headers.set("X-Request-Id", requestId);
+      setSecurityHeaders(res, nonce);
       return res;
     }
   }
@@ -138,15 +153,16 @@ export async function middleware(request: NextRequest) {
     redirectUrl.searchParams.set("callbackUrl", pathname);
     const res = NextResponse.redirect(redirectUrl);
     res.headers.set("X-Request-Id", requestId);
+    setSecurityHeaders(res, nonce);
     return res;
   }
 
   for (const [, config] of Object.entries(roleRoutes)) {
-    const roleResult = checkRoleAccess(token, config, pathname, requestId);
+    const roleResult = checkRoleAccess(token, config, pathname, requestId, nonce);
     if (roleResult) return roleResult;
   }
 
-  const studentResult = checkStudentAccess(token, pathname, request.url, requestId);
+  const studentResult = checkStudentAccess(token, pathname, request.url, requestId, nonce);
   if (studentResult) return studentResult;
 
   const isAuthRoute = authRoutes.some(
@@ -155,11 +171,13 @@ export async function middleware(request: NextRequest) {
   if (isAuthRoute && token) {
     const res = NextResponse.redirect(new URL("/", request.url));
     res.headers.set("X-Request-Id", requestId);
+    setSecurityHeaders(res, nonce);
     return res;
   }
 
   if (csrfResponse) {
     csrfResponse.headers.set("X-Request-Id", requestId);
+    setSecurityHeaders(csrfResponse, nonce);
     if (isApiRoute) {
       logger.info("API request start", { method, path: pathname, requestId, userId: token?.sub });
     }
@@ -170,6 +188,7 @@ export async function middleware(request: NextRequest) {
   }
   const res = NextResponse.next();
   res.headers.set("X-Request-Id", requestId);
+  setSecurityHeaders(res, nonce);
   return res;
 }
 
