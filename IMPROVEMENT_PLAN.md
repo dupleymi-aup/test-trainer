@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v2.0 (5 пунктов)
+# TestTrainer — План улучшений v3.0 (5 пунктов)
 
-## 1. ✅ Unit-тесты для React-компонентов
-Добавить тесты для критических компонентов: `LoadingSpinner`, `ErrorBoundary`, `TaskCard`.
+## 1. ✅ Unit-тесты для ErrorBoundary
+Добавить тесты для `ErrorBoundary` компонента.
 
-## 2. ✅ TypeScript интерфейсы для API ответов
-Создать `src/lib/api-types.ts` с типами для всех API endpoints.
+## 2. ✅ Custom hook для API вызовов с retry
+Создать `useApiQuery` хук с автоматическим retry и обработкой ошибок.
 
-## 3. ✅ Улучшение доступности (a11y)
-Добавить ARIA-метки и roles к интерактивным компонентам.
+## 3. ✅ TypeScript типы для Task
+Расширить тип `Task` в `src/lib/tasks.ts` с泛型 поддержкой.
 
-## 4. ✅ Динамические импорты тяжёлых библиотек
-Оптимизировать импорты recharts, jspdf, html2canvas через `next/dynamic`.
+## 4. ✅ Компонент LoadingButton
+Создать переиспользуемый компонент `LoadingButton` с состоянием загрузки.
 
-## 5. ✅ Мониторинг ошибок — интеграция Sentry
-Добавить конфигурацию Sentry для отслеживания ошибок в production.
+## 5. ✅ Unit-тесты для API клиента
+Добавить тесты для `apiFetch`, `apiFetchJson`, `apiFetchSafe` функций.
