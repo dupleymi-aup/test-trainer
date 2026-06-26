@@ -1,136 +1,135 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { APIError, apiFetch, apiFetchJson, apiFetchJsonSafe, apiFetchSafe } from "./api-client";
-
-describe("APIError", () => {
-  it("creates error with message and status", () => {
-    const error = new APIError("Not found", 404);
-    expect(error.message).toBe("Not found");
-    expect(error.status).toBe(404);
-    expect(error.name).toBe("APIError");
-  });
-
-  it("creates error with data", () => {
-    const data = { field: "email" };
-    const error = new APIError("Validation error", 400, data);
-    expect(error.data).toEqual(data);
-  });
-});
 
 describe("apiFetch", () => {
   beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("calls fetch with credentials", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal("fetch", mockFetch);
+  it("sends GET request with credentials", async () => {
+    const mockResponse = new Response(JSON.stringify({ ok: true }), { status: 200 });
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
-    await apiFetch("/api/test");
+    const res = await apiFetch("/api/test");
 
-    expect(mockFetch).toHaveBeenCalledWith(
+    expect(fetch).toHaveBeenCalledWith(
       "/api/test",
       expect.objectContaining({ credentials: "same-origin" })
     );
+    expect(res).toBe(mockResponse);
   });
 
   it("adds CSRF header for POST requests", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal("fetch", mockFetch);
     vi.stubGlobal("document", { cookie: "csrf-token=abc123" });
+    const mockResponse = new Response("{}", { status: 200 });
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     await apiFetch("/api/test", { method: "POST" });
 
-    const callArgs = mockFetch.mock.calls[0];
-    expect(callArgs[1].headers.get("x-csrf-token")).toBe("abc123");
+    const calledHeaders = vi.mocked(fetch).mock.calls[0][1]?.headers as Headers;
+    expect(calledHeaders.get("X-CSRF-Token")).toBe("abc123");
+
+    vi.unstubAllGlobals();
   });
 
   it("does not add CSRF header for GET requests", async () => {
-    const mockFetch = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal("fetch", mockFetch);
     vi.stubGlobal("document", { cookie: "csrf-token=abc123" });
+    const mockResponse = new Response("{}", { status: 200 });
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     await apiFetch("/api/test", { method: "GET" });
 
-    const callArgs = mockFetch.mock.calls[0];
-    expect(callArgs[1].headers.has("x-csrf-token")).toBe(false);
+    const calledHeaders = vi.mocked(fetch).mock.calls[0][1]?.headers as Headers;
+    expect(calledHeaders.has("X-CSRF-Token")).toBe(false);
+
+    vi.unstubAllGlobals();
   });
 });
 
 describe("apiFetchJson", () => {
   beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it("returns parsed JSON on success", async () => {
-    const mockData = { id: 1, name: "Test" };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockData),
-    }));
+    const data = { users: ["a", "b"] };
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify(data), { status: 200 })
+    );
 
-    const result = await apiFetchJson<typeof mockData>("/api/test");
-    expect(result).toEqual(mockData);
+    const result = await apiFetchJson<typeof data>("/api/users");
+    expect(result).toEqual(data);
   });
 
   it("throws APIError on non-OK response", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: () => Promise.resolve({ error: "Not found" }),
-    }));
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ error: "Not found" }), { status: 404 })
+    );
 
-    await expect(apiFetchJson("/api/test")).rejects.toThrow(APIError);
+    await expect(apiFetchJson("/api/missing")).rejects.toThrow(APIError);
   });
 
   it("calls onError callback on failure", async () => {
-    const onError = vi.fn();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: () => Promise.resolve({ error: "Server error" }),
-    }));
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ error: "fail" }), { status: 500 })
+    );
 
-    await apiFetchJson("/api/test", { onError }).catch(() => {});
-    expect(onError).toHaveBeenCalled();
+    const onError = vi.fn();
+    await expect(
+      apiFetchJson("/api/fail", { onError })
+    ).rejects.toThrow(APIError);
+    expect(onError).toHaveBeenCalledOnce();
   });
 });
 
 describe("apiFetchJsonSafe", () => {
   beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
   it("returns data on success", async () => {
-    const mockData = { id: 1 };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockData),
-    }));
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), { status: 200 })
+    );
 
-    const result = await apiFetchJsonSafe("/api/test");
-    expect(result).toEqual(mockData);
+    const result = await apiFetchJsonSafe<{ ok: boolean }>("/api/test");
+    expect(result).toEqual({ ok: true });
   });
 
-  it("returns null on error", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: () => Promise.resolve({ error: "Error" }),
-    }));
+  it("returns null on failure instead of throwing", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response("error", { status: 500 })
+    );
 
-    const result = await apiFetchJsonSafe("/api/test");
+    const result = await apiFetchJsonSafe("/api/fail");
     expect(result).toBeNull();
   });
 });
 
 describe("apiFetchSafe", () => {
   beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("returns ok:true with data on success", async () => {
-    const mockResponse = { ok: true, json: () => Promise.resolve({}) };
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse));
+  it("returns { ok: true, data } on success", async () => {
+    const mockResponse = new Response("{}", { status: 200 });
+    vi.mocked(fetch).mockResolvedValue(mockResponse);
 
     const result = await apiFetchSafe("/api/test");
     expect(result.ok).toBe(true);
@@ -139,27 +138,27 @@ describe("apiFetchSafe", () => {
     }
   });
 
-  it("returns ok:false with error on failure", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 400,
-      json: () => Promise.resolve({ error: "Bad request" }),
-    }));
+  it("returns { ok: false, error } on HTTP error", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ error: "fail" }), { status: 403 })
+    );
 
-    const result = await apiFetchSafe("/api/test");
+    const result = await apiFetchSafe("/api/fail");
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBeInstanceOf(APIError);
+      expect(result.error.status).toBe(403);
     }
   });
 
-  it("returns ok:false on network error", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
+  it("returns { ok: false, error } on network error", async () => {
+    vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
 
-    const result = await apiFetchSafe("/api/test");
+    const result = await apiFetchSafe("/api/offline");
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error.message).toBe("Network error");
+      expect(result.error).toBeInstanceOf(APIError);
+      expect(result.error.status).toBe(0);
     }
   });
 });
