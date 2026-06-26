@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v14.0 (5 пунктов)
+# TestTrainer — План улучшений v15.0 (5 пунктов)
 
-## 1. Хук useNetwork
-Создать `useNetwork` хук — расширенная версия useOnlineStatus: `{ online, offline, rtt, downlink, effectiveType, saveData }` через Network Information API.
+## 1. Хук useGeolocation
+Создать `useGeolocation` хук — обёртка над Geolocation API, возвращает `{ latitude, longitude, accuracy, loading, error }` с авто-обновлением при `enableHighAccuracy`.
 
-## 2. Хук useDocumentTitle
-Создать `useDocumentTitle` хук — управление `document.title` с auto-restore при unmount.
+## 2. Хук usePermission
+Создать `usePermission` хук — обёртка над Permissions API, возвращает `{ state, status }` для проверки разрешений (camera, microphone, notifications и т.д.).
 
-## 3. Хук useForkRef
-Создать `useForkRef` хук — объединение нескольких `ref` callback/objects в один (полезно для forwarding refs в компонентах).
+## 3. Хук useQueue
+Создать `useQueue` хук — очередь с методами `enqueue`, `dequeue`, `peek`, `clear`, `size`. Полезно для обработки задач FIFO.
 
-## 4. Хук useClickAnyWhere
-Создать `useClickAnyWhere` хук — вызывает callback при клике в любом месте страницы (расширенная версия useOnClickOutside, работает и с кликами внутри).
+## 4. Хук useCounter с макс/мин
+Обновить существующий `useCounter` хук — добавить `min`, `max` опции для ограничения диапазона значений.
 
-## 5. Хук useDoubleClick
-Создать `useDoubleClick` хук — детектирует двойной клик с настраиваемым `delay` для различия single и double click.
+## 5. Хук useVibrate
+Создать `useVibrate` хук — обёртка над Vibration API, возвращает `vibrate(pattern)` функцию с поддержкой паттернов и auto-stop при unmount.
