@@ -1,16 +1,16 @@
-# TestTrainer — План улучшений v10.0 (5 пунктов)
+# TestTrainer — План улучшений v11.0 (5 пунктов)
 
-## 1. Хук useFetch с кешированием
-Создать `useFetch` хук — обёртка над `useApiFetch` с клиентским кешем (TTL-based), автоматическая инвалидация по ключу.
+## 1. Хук useUpdateEffect
+Создать `useUpdateEffect` хук — аналог `useEffect`, но пропускает первый render (вызывается только при обновлениях, не при монтировании).
 
-## 2. Хук useOnlineStatus
-Создать `useOnlineStatus` хук — отслеживает `navigator.onLine` и события `online`/`offline`, возвращает `{ isOnline, isOffline }`.
+## 2. Хук useThrottle
+Создать `useThrottle` хук — throttle значений с настраиваемым интервалом, возвращает последнее значение за период.
 
-## 3. Хук useScrollPosition
-Создать `useScrollPosition` хук — возвращает текущую позицию скролла `{ x, y }` с throttle через `requestAnimationFrame`.
+## 3. Хук useIntersectionObserver
+Создать `useIntersectionObserver` хук — обёртка над `IntersectionObserverAPI`, возвращает `{ ref, isIntersecting, entry }` для lazy loading и infinite scroll.
 
-## 4. Хук useClipboard
-Создать `useClipboard` хук — обёртка над `navigator.clipboard.writeText()` с `copied` state и `timeout` сброса.
+## 4. Хук useWhyDidUpdate
+Создать `useWhyDidUpdate` хук — debugging хук, логирует какие props изменились между рендерами (только в dev mode).
 
-## 5. Хук useLongPress
-Создать `useLongPress` хук — детектирует долгое нажатие (long press) на элемент с настройкой `delay` и `onLongPress` callback.
+## 5. Хук useLatest
+Создать `useLatest` хук — возвращает ref, всегда содержащий последнее значение (полезен для callbacks без stale closure).
