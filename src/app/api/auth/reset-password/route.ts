@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
       await tx.user.update({
         where: { id: userId },
-        data: { hashedPassword },
+        data: { hashedPassword, lastSessionInvalidation: new Date() },
       });
 
       await tx.verificationToken.delete({ where: { token } });

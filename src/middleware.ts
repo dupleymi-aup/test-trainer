@@ -103,8 +103,8 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const method = request.method;
 
-  // Skip auth for E2E tests via query parameter
-  const e2eMode = request.nextUrl.searchParams.get("e2e") === "true";
+  // Skip auth for E2E tests via query parameter (non-production only)
+  const e2eMode = process.env.NODE_ENV !== "production" && request.nextUrl.searchParams.get("e2e") === "true";
 
   let csrfResponse: NextResponse | null = null;
   let token = null;
