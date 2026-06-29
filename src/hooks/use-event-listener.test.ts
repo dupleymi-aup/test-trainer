@@ -1,6 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { useRef } from "react";
 import { useEventListener } from "./use-event-listener";
 
 describe("useEventListener", () => {
@@ -21,7 +20,7 @@ describe("useEventListener", () => {
     document.body.appendChild(div);
 
     const ref = { current: div } as React.MutableRefObject<HTMLElement>;
-    renderHook(() => useEventListener("click", handler as any, ref));
+    renderHook(() => useEventListener("click", handler as (e: Event) => void, ref));
 
     act(() => {
       div.dispatchEvent(new MouseEvent("click", { bubbles: true }));

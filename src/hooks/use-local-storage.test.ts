@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { useLocalStorage } from "./use-local-storage";
 
 describe("useLocalStorage", () => {
@@ -26,7 +26,7 @@ describe("useLocalStorage", () => {
     });
 
     expect(result.current[0]).toBe("new value");
-    expect(JSON.parse(localStorage.getItem("key")!)).toBe("new value");
+    expect(JSON.parse(localStorage.getItem("key") ?? "")).toBe("new value");
   });
 
   it("sets value using function updater", () => {
@@ -37,7 +37,7 @@ describe("useLocalStorage", () => {
     });
 
     expect(result.current[0]).toBe(1);
-    expect(JSON.parse(localStorage.getItem("count")!)).toBe(1);
+    expect(JSON.parse(localStorage.getItem("count") ?? "")).toBe(1);
   });
 
   it("handles complex objects", () => {
@@ -48,7 +48,7 @@ describe("useLocalStorage", () => {
     });
 
     expect(result.current[0]).toEqual({ b: 2 });
-    expect(JSON.parse(localStorage.getItem("obj")!)).toEqual({ b: 2 });
+    expect(JSON.parse(localStorage.getItem("obj") ?? "")).toEqual({ b: 2 });
   });
 
   it("handles invalid JSON gracefully", () => {
