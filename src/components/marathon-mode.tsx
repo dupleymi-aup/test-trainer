@@ -54,7 +54,11 @@ function loadMarathonSession(): { state: MarathonState | null; testCases: TestCa
 
 function saveMarathonSession(state: MarathonState, testCases: TestCase[]) {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(MARATHON_SESSION_KEY, JSON.stringify({ state, testCases }));
+  try {
+    sessionStorage.setItem(MARATHON_SESSION_KEY, JSON.stringify({ state, testCases }));
+  } catch {
+    // Safari private mode or storage full — silently ignore
+  }
 }
 
 function clearMarathonSession() {

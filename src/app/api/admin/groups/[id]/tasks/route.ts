@@ -83,12 +83,9 @@ export async function POST(
       return NextResponse.json({ error: "Invalid task IDs", invalidTaskIds }, { status: 400 });
     }
 
-    const uniquePairs = [...new Set(parsed.data.taskIds.map((taskId) => `${id}-${taskId}`))];
+    const uniqueTaskIds = [...new Set(parsed.data.taskIds)];
     await db.groupTask.createMany({
-      data: uniquePairs.map((key) => {
-        const [groupId, taskId] = key.split('-');
-        return { groupId, taskId: parseInt(taskId) };
-      }),
+      data: uniqueTaskIds.map((taskId) => ({ groupId: id, taskId })),
     });
 
     await db.activityLog.create({
@@ -130,9 +127,13 @@ export async function DELETE(
     const taskId = searchParams.get("taskId");
 
     if (taskId) {
+      const parsedTaskId = parseInt(taskId);
+      if (!Number.isFinite(parsedTaskId)) {
+        return NextResponse.json({ error: "Invalid taskId" }, { status: 400 });
+      }
       // Remove single task
       await db.groupTask.deleteMany({
-        where: { groupId: id, taskId: parseInt(taskId) },
+        where: { groupId: id, taskId: parsedTaskId },
       });
 
       await db.activityLog.create({
@@ -141,7 +142,7 @@ export async function DELETE(
           action: "GROUP_TASKS_REMOVE",
           entity: "Group",
           entityId: id,
-          details: JSON.stringify({ taskIds: [parseInt(taskId)] }),
+          details: JSON.stringify({ taskIds: [parsedTaskId] }),
         },
       });
     } else {

@@ -31,6 +31,6 @@
 - [x] 5. Добавить 15 unit-тестов для parseInputValue в utils.test.ts
 - [x] 6. Все 658 тестов проходят (26 test files)
 - [x] 7. TypeScript компиляция без ошибок в изменённых файлах
-- [ ] 8. Исправить UUID split bug в admin/groups/[id]/tasks/route.ts (key.split('-') ломается с UUID groupIds)
-- [ ] 9. Добавить NaN- guard к parseInt в admin/groups/[id]/tasks/route.ts и attempts/route.ts
-- [ ] 10. Исправить marathon-mode.tsx: обернуть sessionStorage.setItem в try/catch (Safari private mode)
+- [x] 8. Исправить UUID split bug в admin/groups/[id]/tasks/route.ts (key.split('-') ломается с UUID groupIds)
+- [x] 9. Добавить NaN- guard к parseInt в admin/groups/[id]/tasks/route.ts и attempts/route.ts
+- [x] 10. Исправить marathon-mode.tsx: обернуть sessionStorage.setItem в try/catch (Safari private mode)
