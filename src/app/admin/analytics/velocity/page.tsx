@@ -7,11 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import { Zap } from "lucide-react";
+
+const WeeklyActivityChart = dynamic(
+  () => import("@/components/admin/analytics/charts/weekly-activity-chart").then((m) => m.WeeklyActivityChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
 
 interface VelocityData {
   studentVelocity: { studentId: string; name: string; group: string | null; attemptsPerWeek: number; totalAttempts: number; weeksActive: number; avgScore: number; trend: "improving" | "stable" | "declining" }[];
@@ -57,24 +60,7 @@ export default function VelocityPage() {
         </div>
 
         {/* Weekly trend chart */}
-        {data.weeklyTrend.length > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-sm">Активность по неделям</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={data.weeklyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="week" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="attemptsCount" fill="hsl(var(--primary))" name="Попытки" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="avgScore" fill="#10b981" name="Ср. балл" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
+        <WeeklyActivityChart data={data.weeklyTrend} />
 
         {/* Student velocity table */}
         <Card>

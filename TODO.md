@@ -17,7 +17,7 @@
 - [x] 2. Исправить silent catch в student/page.tsx — добавить логирование
 - [x] 3. Исправить variable scope для AbortController в student/page.tsx
 - [x] 4. Все 828 тестов проходят, TypeScript компиляция без ошибок
-- [ ] 5. Добавить dynamic import для recharts в ключевых страницах (bundle optimization)
+- [x] 5. Добавить dynamic import для recharts в ключевых страницах (bundle optimization)
 - [ ] 6. Добавить E2E тесты для teacher workflow (создание группы → назначение студентов → аналитика → экспорт)
-- [ ] 7. Добавить bundle analyzer для оптимизации размера бандла
-- [ ] 8. Добавить GitHub Actions workflow для CI/CD
+- [x] 7. Добавить bundle analyzer для оптимизации размера бандла
+- [x] 8. Добавить GitHub Actions workflow для CI/CD (уже существовал)

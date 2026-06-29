@@ -6,16 +6,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScoreBadge } from "@/components/admin/analytics/score-badge";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   Table,
   TableBody,
@@ -36,6 +27,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
+
+const ScoreTrendsChart = dynamic(
+  () => import("@/components/admin/analytics/charts/score-trends-chart").then((m) => m.ScoreTrendsChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
 
 interface ComprehensiveData {
   kpi: {
@@ -135,23 +131,7 @@ export default function ComprehensiveAnalyticsPage() {
         </div>
 
         {/* Score Trends */}
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Тренды баллов (12 месяцев)</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={data.scoreTrends}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis domain={[0, 100]} className="text-xs" />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="avgScore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} name="Балл" />
-                <Area type="monotone" dataKey="avgEc" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.1} name="EC" strokeDasharray="5 5" />
-                <Area type="monotone" dataKey="avgBv" stroke="hsl(var(--chart-3))" fill="hsl(var(--chart-3))" fillOpacity={0.1} name="BV" strokeDasharray="5 5" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <ScoreTrendsChart data={data.scoreTrends} />
 
         {/* University + Teacher Leaderboard */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

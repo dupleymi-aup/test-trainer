@@ -6,17 +6,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   Table,
   TableBody,
@@ -57,6 +47,16 @@ import {
   Brain,
   RotateCcw,
 } from "lucide-react";
+
+const AttemptVolumeChart = dynamic(
+  () => import("@/components/admin/analytics/charts/attempt-volume-chart").then((m) => m.AttemptVolumeChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
+
+const ScoreDistributionChart = dynamic(
+  () => import("@/components/admin/analytics/charts/score-distribution-chart").then((m) => m.ScoreDistributionChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
 
 interface AnalyticsData {
   platformEngagement: { dau: number; wau: number; mau: number; newUsersWeek: number; newUsersMonth: number };
@@ -199,37 +199,11 @@ export default function AdminAnalyticsHubPage() {
         </div>
 
         {/* Attempt Volume Chart */}
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Объём попыток (30 дней)</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={data.attemptVolume}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis allowDecimals={false} className="text-xs" />
-                <Tooltip />
-                <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} name="Попытки" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <AttemptVolumeChart data={data.attemptVolume} />
 
         {/* Performance Distribution + Group Comparison */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader><CardTitle className="text-sm">Распределение баллов</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={Object.entries(data.performanceDistribution).map(([range, count]) => ({ range, count }))}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="range" className="text-xs" />
-                  <YAxis allowDecimals={false} className="text-xs" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <ScoreDistributionChart data={data.performanceDistribution} />
 
           <Card>
             <CardHeader><CardTitle className="text-sm">Сравнение групп</CardTitle></CardHeader>
