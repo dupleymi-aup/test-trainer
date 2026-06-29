@@ -12,7 +12,6 @@ export default function AnalyticsError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // eslint-disable-next-line no-console
     console.error("[AnalyticsError]", error);
   }, [error]);
 

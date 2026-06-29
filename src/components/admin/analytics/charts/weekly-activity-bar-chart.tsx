@@ -12,8 +12,13 @@ import {
 } from "recharts";
 
 interface WeeklyActivityBarChartProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any[];
+  data: Array<{
+    week: string;
+    activeStudents: number;
+    attempts: number;
+    avgScore: number;
+    newStudents: number;
+  }>;
 }
 
 export function WeeklyActivityBarChart({ data }: WeeklyActivityBarChartProps) {

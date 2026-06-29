@@ -12,8 +12,7 @@ import {
 } from "recharts";
 
 interface TeacherActivityChartProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any[];
+  data: Array<{ name: string; avgScore: number; attempts: number }>;
 }
 
 export function TeacherActivityChart({ data }: TeacherActivityChartProps) {
@@ -32,7 +31,7 @@ export function TeacherActivityChart({ data }: TeacherActivityChartProps) {
             <YAxis className="text-xs" />
             <Tooltip />
             <Bar dataKey="avgScore" fill="hsl(var(--primary))" name="Ср. балл" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="totalAttempts" fill="#10b981" name="Попытки" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="attempts" fill="#10b981" name="Попытки" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
