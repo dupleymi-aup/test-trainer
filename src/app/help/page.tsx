@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function HelpPage() {
   const t = useTranslations("help");
-  const tc = useTranslations("common");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
