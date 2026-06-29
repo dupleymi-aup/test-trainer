@@ -50,7 +50,6 @@ export function loadConfig() {
 
   const data = parsed.data
 
-
   return data
 }
 

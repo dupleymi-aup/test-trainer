@@ -1,50 +1,31 @@
 import { test, expect, type BrowserContext } from "@playwright/test";
 
 test.describe("Teacher Workflow", () => {
-  // Login via E2E helper API and set session cookie
   async function loginTeacher(context: BrowserContext): Promise<void> {
-    // Check if already logged in by looking for session cookies
-    const cookies = await context.cookies("http://localhost:3000");
-    const hasSessionCookie = cookies.some(c => 
-      c.name.includes("next-auth.session-token") || 
-      c.name.includes("session-token")
-    );
+    const page = await context.newPage();
     
-    if (hasSessionCookie) {
-      return; // Already logged in
+    try {
+      const response = await page.request.post("http://localhost:3000/api/auth/e2e-login", {
+        data: {
+          email: "teacher@testtrainer.local",
+          password: "teacher123",
+        },
+      });
+
+      if (!response.ok()) {
+        const error = await response.json();
+        throw new Error(`E2E login failed: ${response.status()} - ${JSON.stringify(error)}`);
+      }
+
+      const data = await response.json() as { sessionToken: string };
+      
+      await page.evaluate((token) => {
+        localStorage.setItem('e2e-session-token', token);
+      }, data.sessionToken);
+      
+    } finally {
+      await page.close();
     }
-
-    // Call E2E login API
-    const response = await fetch("http://localhost:3000/api/auth/e2e-login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: "teacher@testtrainer.local",
-        password: "teacher123",
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`E2E login failed: ${response.status}`);
-    }
-
-    const data = await response.json() as { sessionToken: string };
-    
-    // Set the session cookie in the browser context
-    await context.addInitScript(() => {
-      // This runs in the browser - we'll use addCookies instead
-    });
-
-    // Add cookie to context
-    await context.addCookies([{
-      name: "next-auth.session-token",
-      value: data.sessionToken,
-      domain: "localhost",
-      path: "/",
-      httpOnly: false, // Allow Playwright to access it
-      secure: false,
-      sameSite: "Lax",
-    }]);
   }
 
   test.beforeEach(async ({ context }) => {
