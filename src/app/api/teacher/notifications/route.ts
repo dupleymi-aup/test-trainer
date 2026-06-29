@@ -18,7 +18,7 @@ const updateNotificationSchema = z.object({
 });
 
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
 

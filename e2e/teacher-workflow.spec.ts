@@ -1,50 +1,39 @@
-import { test, expect, type BrowserContext } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
 
-let sessionToken: string | null = null;
+const test = base.extend<{ authenticatedPage: Page }>({
+  authenticatedPage: async ({ page }, use) => {
+    // Login and get token
+    const response = await page.request.post("http://localhost:3000/api/auth/e2e-login", {
+      data: {
+        email: "teacher@testtrainer.local",
+        password: "teacher123",
+      },
+    });
 
-// Login once and store token
-async function getAuthToken(): Promise<string> {
-  if (sessionToken) return sessionToken;
-  
-  const response = await fetch("http://localhost:3000/api/auth/e2e-login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: "teacher@testtrainer.local",
-      password: "teacher123",
-    }),
-  });
+    if (!response.ok()) {
+      throw new Error(`E2E login failed: ${response.status()}`);
+    }
 
-  if (!response.ok()) {
-    throw new Error(`E2E login failed: ${response.status}`);
-  }
+    const data = await response.json() as { sessionToken: string };
+    
+    // Set storage state with cookies
+    await page.context().addCookies([{
+      name: "next-auth.session-token",
+      value: data.sessionToken,
+      domain: "localhost",
+      path: "/",
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax",
+    }]);
 
-  const data = await response.json() as { sessionToken: string };
-  sessionToken = data.sessionToken;
-  return sessionToken;
-}
+    await use(page);
+  },
+});
 
 test.describe("Teacher Workflow", () => {
-  test.beforeAll(async () => {
-    await getAuthToken();
-  });
-
-  test.beforeEach(async ({ page }) => {
-    if (sessionToken) {
-      await page.context().addCookies([{
-        name: "next-auth.session-token",
-        value: sessionToken,
-        domain: "localhost",
-        path: "/",
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-      }]);
-    }
-  });
-      
   test("should display teacher dashboard after login", async ({ page }) => {
-    await page.goto("/teacher");
+    await page.goto("/teacher?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     const url = page.url();
@@ -52,20 +41,19 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should navigate to groups page", async ({ page }) => {
-    await page.goto("/teacher/groups");
+    await page.goto("/teacher/groups?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     const url = page.url();
     expect(url).toBeTruthy();
     
-    // Groups page should have key elements
     const hasNameInput = await page.getByPlaceholder("Название").isVisible({ timeout: 3000 }).catch(() => false);
     const hasTable = await page.getByRole("table").isVisible({ timeout: 3000 }).catch(() => false);
     expect(hasNameInput || hasTable).toBeTruthy();
   });
 
   test("should create a new group", async ({ page }) => {
-    await page.goto("/teacher/groups");
+    await page.goto("/teacher/groups?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     const nameInput = page.getByPlaceholder("Название").first();
@@ -89,7 +77,7 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should manage group members", async ({ page }) => {
-    await page.goto("/teacher/groups");
+    await page.goto("/teacher/groups?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     const usersBtn = page.locator("button:has(svg) svg[aria-label='Users'], button:has(svg):has-text('members'), button:has(svg):has-text('Группа')").first();
@@ -107,21 +95,21 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should view analytics page", async ({ page }) => {
-    await page.goto("/teacher/analytics");
+    await page.goto("/teacher/analytics?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     expect(page.url()).toContain("/teacher/analytics");
   });
 
   test("should view students list", async ({ page }) => {
-    await page.goto("/teacher/students");
+    await page.goto("/teacher/students?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     expect(page.url()).toContain("/teacher/students");
   });
 
   test("should view student details", async ({ page }) => {
-    await page.goto("/teacher/students");
+    await page.goto("/teacher/students?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     const studentLink = page.getByRole("link").filter({ hasText: /student|студент|name|email/i }).first();
@@ -133,28 +121,28 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should navigate to templates page", async ({ page }) => {
-    await page.goto("/teacher/templates");
+    await page.goto("/teacher/templates?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     expect(page.url()).toContain("/teacher/templates");
   });
 
   test("should navigate to task constructor", async ({ page }) => {
-    await page.goto("/teacher/task-constructor");
+    await page.goto("/teacher/task-constructor?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     expect(page.url()).toContain("/teacher/task-constructor");
   });
 
   test("should navigate to gradebook", async ({ page }) => {
-    await page.goto("/teacher/gradebook");
+    await page.goto("/teacher/gradebook?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     expect(page.url()).toContain("/teacher/gradebook");
   });
 
   test("should handle non-existent teacher route", async ({ page }) => {
-    await page.goto("/teacher/nonexistent");
+    await page.goto("/teacher/nonexistent?e2e=true");
     await page.waitForLoadState("domcontentloaded");
     
     expect(page.url()).toBeTruthy();

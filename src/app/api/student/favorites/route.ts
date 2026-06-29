@@ -7,7 +7,7 @@ import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const auth = await requireStudent();
     if ("response" in auth) return auth.response;
 

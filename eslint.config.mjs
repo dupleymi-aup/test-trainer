@@ -103,6 +103,13 @@ const eslintConfig = [
   },
 
   {
+    files: ["e2e/**/*.ts"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+    },
+  },
+
+  {
     ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills", "*.js", "scripts/**", "next.config.ts", "tailwind.config.ts"],
   },
 ];

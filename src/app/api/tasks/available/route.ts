@@ -6,7 +6,7 @@ import { tasks } from "@/lib/tasks";
 import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const session = await getServerSession(authOptions);
 
     // No session — return all tasks (unrestricted for non-authenticated)

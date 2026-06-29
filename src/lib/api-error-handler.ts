@@ -182,13 +182,13 @@ export class AppError extends Error {
  * All other errors return 500 with the error message.
  */
 export async function withErrorHandler(
-  req: Request,
+  req: Request | undefined,
   handler: () => Promise<Response>
 ): Promise<Response> {
   const startTime = Date.now();
-  const requestId = req.headers.get("x-request-id") ?? randomUUID();
-  const method = req.method;
-  const path = new URL(req.url).pathname;
+  const requestId = req?.headers.get("x-request-id") ?? randomUUID();
+  const method = req?.method ?? "GET";
+  const path = req ? new URL(req.url).pathname : "unknown";
 
   try {
     const response = await handler();

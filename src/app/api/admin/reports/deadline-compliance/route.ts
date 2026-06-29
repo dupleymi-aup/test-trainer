@@ -6,7 +6,7 @@ import { withErrorHandler } from "@/lib/api-error-handler";
 import { MS_PER_DAY } from "@/lib/time-constants";
 
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 

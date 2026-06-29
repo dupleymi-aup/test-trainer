@@ -41,7 +41,7 @@ function parsePreferences(raw: string | null): NotificationPreferences {
 }
 
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const guard = await requireStudent();
     if ("response" in guard) return guard.response;
     const { session } = guard;

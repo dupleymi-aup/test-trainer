@@ -18,7 +18,7 @@ export interface SystemAlert {
 }
 
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 

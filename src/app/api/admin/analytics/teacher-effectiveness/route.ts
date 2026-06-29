@@ -15,7 +15,7 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
  * - Teacher composite score
  */
 export async function GET() {
-  return withErrorHandler(new Request("http://localhost"), async () => {
+  return withErrorHandler(undefined, async () => {
     const guard = await requireAdmin();
     if ("response" in guard) return guard.response;
 
