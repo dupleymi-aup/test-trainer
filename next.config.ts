@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
+            value: "private, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=30, stale-while-revalidate=120",
+            value: "private, s-maxage=30, stale-while-revalidate=120",
           },
         ],
       },
@@ -42,7 +42,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
+            value: "private, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, s-maxage=60, stale-while-revalidate=300",
+            value: "private, s-maxage=60, stale-while-revalidate=300",
           },
         ],
       },
@@ -115,7 +115,6 @@ const nextConfig: NextConfig = {
             value:
               "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()",
           },
-
         ],
       },
     ];
