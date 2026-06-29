@@ -1,37 +1,48 @@
 import { test, expect, type BrowserContext } from "@playwright/test";
 
-test.describe("Teacher Workflow", () => {
-  async function loginTeacher(context: BrowserContext): Promise<void> {
-    const page = await context.newPage();
-    
-    try {
-      const response = await page.request.post("http://localhost:3000/api/auth/e2e-login", {
-        data: {
-          email: "teacher@testtrainer.local",
-          password: "teacher123",
-        },
-      });
+let sessionToken: string | null = null;
 
-      if (!response.ok()) {
-        const error = await response.json();
-        throw new Error(`E2E login failed: ${response.status()} - ${JSON.stringify(error)}`);
-      }
-
-      const data = await response.json() as { sessionToken: string };
-      
-      await page.evaluate((token) => {
-        localStorage.setItem('e2e-session-token', token);
-      }, data.sessionToken);
-      
-    } finally {
-      await page.close();
-    }
-  }
-
-  test.beforeEach(async ({ context }) => {
-    await loginTeacher(context);
+// Login once and store token
+async function getAuthToken(): Promise<string> {
+  if (sessionToken) return sessionToken;
+  
+  const response = await fetch("http://localhost:3000/api/auth/e2e-login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: "teacher@testtrainer.local",
+      password: "teacher123",
+    }),
   });
 
+  if (!response.ok()) {
+    throw new Error(`E2E login failed: ${response.status}`);
+  }
+
+  const data = await response.json() as { sessionToken: string };
+  sessionToken = data.sessionToken;
+  return sessionToken;
+}
+
+test.describe("Teacher Workflow", () => {
+  test.beforeAll(async () => {
+    await getAuthToken();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    if (sessionToken) {
+      await page.context().addCookies([{
+        name: "next-auth.session-token",
+        value: sessionToken,
+        domain: "localhost",
+        path: "/",
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+      }]);
+    }
+  });
+      
   test("should display teacher dashboard after login", async ({ page }) => {
     await page.goto("/teacher");
     await page.waitForLoadState("domcontentloaded");
