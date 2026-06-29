@@ -178,10 +178,10 @@ export async function DELETE(
       return NextResponse.json({ error: "User is already deleted" }, { status: 400 });
     }
 
-    // Soft delete
+    // Soft delete — also invalidate active sessions immediately
     await db.user.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: { deletedAt: new Date(), lastSessionInvalidation: new Date() },
     });
 
     await db.activityLog.create({

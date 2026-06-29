@@ -39,7 +39,7 @@ export async function PATCH(
 
     await db.user.update({
       where: { id },
-      data: { deletedAt: null },
+      data: { deletedAt: null, lastSessionInvalidation: new Date() },
     });
 
     await db.activityLog.create({
