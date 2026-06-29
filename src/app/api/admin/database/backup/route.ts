@@ -45,6 +45,14 @@ export async function GET(req: Request) {
     }
 
     if (table) {
+      const allowedTables = [
+        "user", "group", "attempt", "notification", "deadline",
+        "reminder", "message", "activityLog", "grade", "favoriteTask",
+        "verificationToken", "account", "session",
+      ];
+      if (!allowedTables.includes(table)) {
+        return NextResponse.json({ error: `Unknown table: ${table}` }, { status: 400 });
+      }
       const dbAny = db as unknown as Record<string, unknown>;
       const model = dbAny[table] as { findMany: (args: Record<string, unknown>) => Promise<unknown[]> } | undefined;
       if (!model || typeof model.findMany !== "function") {
