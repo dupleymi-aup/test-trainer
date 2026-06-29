@@ -3,6 +3,7 @@ import {
   type TestCaseCategory,
   runReferenceFunction,
 } from "./tasks";
+import { parseInputValue } from "./utils";
 
 /** Weights for the overall score formula */
 const EC_COVERAGE_WEIGHT = 0.4;
@@ -64,40 +65,6 @@ function normalizeValue(val: unknown): string {
   if (val === undefined) return "undefined";
   if (typeof val === "object") return JSON.stringify(val);
   return String(val);
-}
-
-function parseInputValue(raw: string): unknown {
-  const trimmed = raw.trim();
-
-  // Handle special strings
-  if (trimmed === "null") return null;
-  if (trimmed === "undefined") return undefined;
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-
-  // Handle Russian boolean words
-  if (trimmed === "да" || trimmed === "верно") return true;
-  if (trimmed === "нет" || trimmed === "неверно") return false;
-
-  // Try parsing as number — improved to handle decimals and negatives better
-  const num = Number(trimmed);
-  if (trimmed !== "" && !isNaN(num)) {
-    // Check that it looks like a number (allow negatives, decimals)
-    if (/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(trimmed)) {
-      return num;
-    }
-  }
-
-  // Try parsing as JSON (for objects, arrays)
-  try {
-    const parsed = JSON.parse(trimmed);
-    if (typeof parsed === "object" || Array.isArray(parsed)) return parsed;
-  } catch {
-    // Not JSON
-  }
-
-  // Return as string
-  return trimmed;
 }
 
 function matchBoundaryValue(

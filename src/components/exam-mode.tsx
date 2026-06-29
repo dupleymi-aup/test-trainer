@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { saveAttempt } from "@/lib/storage";
 import { apiFetch } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
+import { parseInputValue } from "@/lib/utils";
 import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
 
@@ -319,29 +320,13 @@ export function ExamMode() {
     toast.success("Тест-кейс добавлен");
   }, [examTasks, currentTaskIndex, examInputs, examExpected, examCategory]);
 
-  const parseInputForRef = useCallback((v: string) => {
-    const trimmed = v.trim();
-    if (trimmed === "true" || trimmed === "да" || trimmed === "верно") return true;
-    if (trimmed === "false" || trimmed === "нет" || trimmed === "неверно") return false;
-    if (trimmed === "null") return null;
-    const num = Number(trimmed);
-    if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
-    try {
-      const p = JSON.parse(trimmed);
-      if (typeof p === "object") return p;
-    } catch {
-      if (process.env.NODE_ENV === "development") logger.debug("parseInputForRef: JSON.parse failed", { input: trimmed });
-    }
-    return trimmed;
-  }, []);
-
   const handleCalculate = useCallback(() => {
     const task = examTasks[currentTaskIndex];
     if (!task || examInputs.some((v) => v.trim() === "")) return;
     setIsCalculating(true);
     requestAnimationFrame(() => {
       try {
-        const parsedInputs = examInputs.map(parseInputForRef);
+        const parsedInputs = examInputs.map(parseInputValue);
         const { result, error } = runReferenceFunction(task.id, parsedInputs);
         if (error) {
           setExamExpected(`Ошибка: ${error}`);
@@ -355,7 +340,7 @@ export function ExamMode() {
         setIsCalculating(false);
       }
     });
-  }, [examTasks, currentTaskIndex, examInputs, parseInputForRef]);
+  }, [examTasks, currentTaskIndex, examInputs, parseInputValue]);
 
   const handleExamKeyDown = (e: React.KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {

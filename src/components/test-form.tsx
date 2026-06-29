@@ -24,6 +24,7 @@ import type { Task, TestCaseCategory } from "@/lib/tasks";
 import { runReferenceFunction } from "@/lib/tasks";
 import { categories } from "@/lib/constants";
 import { logger } from "@/lib/logger";
+import { parseInputValue } from "@/lib/utils";
 
 interface TestFormProps {
   task: Task;
@@ -49,25 +50,13 @@ export function TestForm({ task, onAdd }: TestFormProps) {
     setComment("");
   };
 
-  // Parse input string to typed value (same logic as evaluator)
-  const parseInputForRef = useCallback((v: string) => {
-    const trimmed = v.trim();
-    if (trimmed === "true" || trimmed === "да" || trimmed === "верно") return true;
-    if (trimmed === "false" || trimmed === "нет" || trimmed === "неверно") return false;
-    if (trimmed === "null") return null;
-    const num = Number(trimmed);
-    if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
-    try { const p = JSON.parse(trimmed); if (typeof p === "object") return p; } catch { if (process.env.NODE_ENV === "development") logger.debug("parseInputForRef: JSON.parse failed", { input: trimmed }); }
-    return trimmed;
-  }, []);
-
   const handleCalculate = useCallback(() => {
     if (inputs.some((v) => v.trim() === "")) return;
     setIsCalculating(true);
     // Use requestAnimationFrame so the button shows loading state
     requestAnimationFrame(() => {
       try {
-        const parsedInputs = inputs.map(parseInputForRef);
+        const parsedInputs = inputs.map(parseInputValue);
         const { result, error } = runReferenceFunction(task.id, parsedInputs);
         if (error) {
           setExpected(`${t("error")} ${error}`);
@@ -81,7 +70,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
         setIsCalculating(false);
       }
     });
-  }, [inputs, task.id, parseInputForRef, t]);
+  }, [inputs, task.id, parseInputValue, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Allow Ctrl+Enter or Cmd+Enter to submit from any input

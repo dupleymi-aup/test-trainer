@@ -9,6 +9,7 @@ import { evaluateTestCases } from "@/lib/evaluator";
 import { UndoStack } from "@/lib/undo-stack";
 import { apiFetch } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
+import { parseInputValue } from "@/lib/utils";
 import {
   saveProgress,
   loadProgress,
@@ -377,24 +378,6 @@ export function useTrainerState() {
     [selectedTask, pushUndoSnapshot]
   );
 
-  // Parse input for reference function
-  const parseInputForRef = useCallback((v: string) => {
-    const trimmed = v.trim();
-    if (trimmed === "true" || trimmed === "да" || trimmed === "верно") return true;
-    if (trimmed === "false" || trimmed === "нет" || trimmed === "неверно") return false;
-    if (trimmed === "null") return null;
-    if (trimmed === "undefined") return undefined;
-    const num = Number(trimmed);
-    if (trimmed !== "" && !isNaN(num) && /^-?\d+(\.\d+)?$/.test(trimmed)) return num;
-    try {
-      const p = JSON.parse(trimmed);
-      if (typeof p === "object") return p;
-    } catch {
-      if (process.env.NODE_ENV === "development") logger.debug("parseInputForRef: JSON.parse failed", { input: trimmed });
-    }
-    return trimmed;
-  }, []);
-
   // Generate test case from equivalence class
   const generateTestCaseFromEc = useCallback(
     (ec: { id: string; name: string; description: string; exampleValues: unknown[] }) => {
@@ -402,7 +385,7 @@ export function useTrainerState() {
 
       const exampleValue = ec.exampleValues[0];
       const inputs = Array.isArray(exampleValue) ? exampleValue.map(String) : [String(exampleValue)];
-      const parsedInputs = inputs.map(parseInputForRef);
+      const parsedInputs = inputs.map(parseInputValue);
 
       const { result: fnResult, error: fnError } = runReferenceFunction(selectedTask.id, parsedInputs);
 
@@ -434,7 +417,7 @@ export function useTrainerState() {
         comment: `Подсказка: ${ec.name}`,
       };
     },
-    [selectedTask, parseInputForRef]
+    [selectedTask, parseInputValue]
   );
 
   const handleShowHint = useCallback(() => {
@@ -519,7 +502,7 @@ export function useTrainerState() {
       if (!bv) continue;
 
       const inputValues = Array.isArray(bv.value) ? bv.value.map(String) : [String(bv.value)];
-      const parsedInputs = inputValues.map(parseInputForRef);
+      const parsedInputs = inputValues.map(parseInputValue);
       const { result: fnResult, error: fnError } = runReferenceFunction(selectedTask.id, parsedInputs);
 
       const expectedOutput = fnError
@@ -552,7 +535,7 @@ export function useTrainerState() {
     });
 
     toast.success(`Добавлено ${newCases.length} тест-кейс(ов) для покрытия всех BV`);
-  }, [selectedTask, testCases, pushUndoSnapshot, parseInputForRef]);
+  }, [selectedTask, testCases, pushUndoSnapshot, parseInputValue]);
 
   // Submit evaluation
   const handleSubmit = useCallback(async () => {
