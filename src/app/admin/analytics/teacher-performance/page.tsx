@@ -5,15 +5,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   Table,
   TableBody,
@@ -34,6 +26,11 @@ import {
 } from "lucide-react";
 import { AnalyticsFilterBar, FilterState } from "@/components/admin/analytics/analytics-filter-bar";
 import { ScoreBadge } from "@/components/admin/analytics/score-badge";
+
+const TeacherActivityChart = dynamic(
+  () => import("@/components/admin/analytics/charts/teacher-activity-chart").then((m) => m.TeacherActivityChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
 
 interface TeacherData {
   teachers: Array<{
@@ -165,20 +162,7 @@ export default function TeacherPerformancePage() {
 
         {/* Chart */}
         {chartData.length > 0 && (
-          <Card>
-            <CardHeader><CardTitle className="text-sm">Средний балл по преподавателям (топ-10)</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis domain={[0, 100]} className="text-xs" />
-                  <Tooltip />
-                  <Bar dataKey="avgScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Ср. балл" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <TeacherActivityChart data={chartData} />
         )}
 
         {/* Teacher List */}

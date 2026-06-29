@@ -5,18 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  BarChart,
-  Bar,
-} from "recharts";
+import dynamic from "next/dynamic";
 import {
   Table,
   TableBody,
@@ -26,6 +15,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Users, TrendingUp, UserCheck, UserX } from "lucide-react";
+
+const CohortRetentionChart = dynamic(
+  () => import("@/components/admin/analytics/charts/cohort-retention-chart").then((m) => m.CohortRetentionChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
+
+const WeeklyActivityBarChart = dynamic(
+  () => import("@/components/admin/analytics/charts/weekly-activity-bar-chart").then((m) => m.WeeklyActivityBarChart),
+  { ssr: false, loading: () => <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Загрузка графика...</CardContent></Card> }
+);
 
 interface CohortData {
   cohort: string;
@@ -170,20 +169,7 @@ export default function AdminCohortRetentionPage() {
             <CardDescription>Количество активных студентов через 1, 7, 30 и 90 дней</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={retentionCurves}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="cohort" className="text-xs" />
-                <YAxis allowDecimals={false} className="text-xs" />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Регистрация" stroke="hsl(var(--primary))" strokeWidth={2} />
-                <Line type="monotone" dataKey="День 1" stroke="#22c55e" strokeWidth={2} />
-                <Line type="monotone" dataKey="День 7" stroke="#eab308" strokeWidth={2} />
-                <Line type="monotone" dataKey="День 30" stroke="#f97316" strokeWidth={2} />
-                <Line type="monotone" dataKey="День 90" stroke="#ef4444" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
+            <CohortRetentionChart data={retentionCurves} />
           </CardContent>
         </Card>
 
@@ -226,17 +212,7 @@ export default function AdminCohortRetentionPage() {
             <CardTitle className="text-sm">Еженедельная активность (12 недель)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={weeklyTrends}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="week" className="text-xs" />
-                <YAxis allowDecimals={false} className="text-xs" />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="activeStudents" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Активные студенты" />
-                <Bar dataKey="newStudents" fill="#22c55e" radius={[2, 2, 0, 0]} name="Новые студенты" />
-              </BarChart>
-            </ResponsiveContainer>
+            <WeeklyActivityBarChart data={weeklyTrends} />
           </CardContent>
         </Card>
 
