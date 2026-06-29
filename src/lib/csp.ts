@@ -18,7 +18,7 @@ export function buildCSP(nonce: string, isDev: boolean): string {
 
   return [
     "default-src 'self'",
-    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline' 'self'`,
+    `script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",

@@ -63,13 +63,8 @@ export async function requireAuth(): Promise<
   return { session: { userId: result.user.id, role: result.user.role } };
 }
 
-export interface AdminSession {
-  userId: string;
-  role: string;
-}
-
 export async function requireAdmin(): Promise<
-  { session: AdminSession } | { response: NextResponse }
+  { session: AuthSession } | { response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -86,13 +81,8 @@ export async function requireAdmin(): Promise<
   return { session: { userId: result.user.id, role: result.user.role } };
 }
 
-export interface TeacherSession {
-  userId: string;
-  role: string;
-}
-
 export async function requireTeacherOrAdmin(): Promise<
-  { session: TeacherSession } | { response: NextResponse }
+  { session: AuthSession } | { response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -154,16 +144,11 @@ export async function getTeacherGroupIds(userId: string, role: string): Promise<
   return groups.map((g) => g.id);
 }
 
-export interface StudentSession {
-  userId: string;
-  role: string;
-}
-
 /**
  * Require STUDENT role. Use this for student-only API endpoints.
  */
 export async function requireStudent(): Promise<
-  { session: StudentSession } | { response: NextResponse }
+  { session: AuthSession } | { response: NextResponse }
 > {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {

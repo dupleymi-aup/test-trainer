@@ -1,59 +1,65 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type BrowserContext } from "@playwright/test";
 
 test.describe("Teacher Workflow", () => {
-  async function ensureLoggedIn(page: Page): Promise<void> {
-    const url = page.url();
+  // Login via E2E helper API and set session cookie
+  async function loginTeacher(context: BrowserContext): Promise<void> {
+    // Check if already logged in by looking for session cookies
+    const cookies = await context.cookies("http://localhost:3000");
+    const hasSessionCookie = cookies.some(c => 
+      c.name.includes("next-auth.session-token") || 
+      c.name.includes("session-token")
+    );
     
-    // Already on protected page
-    if (url.includes("/teacher/") || url.includes("/student/") || url.includes("/admin/")) {
-      return;
+    if (hasSessionCookie) {
+      return; // Already logged in
     }
-    
-    // Already on home page with logout button = logged in
-    if (url.includes("localhost:3000") && !url.includes("/login")) {
-      const hasLogout = await page.getByRole("link", { name: /Выйти|Logout/i }).first().isVisible({ timeout: 1000 }).catch(() => false);
-      if (hasLogout) return;
+
+    // Call E2E login API
+    const response = await fetch("http://localhost:3000/api/auth/e2e-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "teacher@testtrainer.local",
+        password: "teacher123",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`E2E login failed: ${response.status}`);
     }
+
+    const data = await response.json() as { sessionToken: string };
     
-    // Need to login
-    await page.goto("/login");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(500);
-    
-    const emailInput = page.locator("input[type='email'], input[name='email'], input[placeholder*='Email'], input[placeholder*='Телефон']").first();
-    if (await emailInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await emailInput.fill("teacher@testtrainer.local");
-    }
-    
-    const passwordInput = page.locator("input[type='password']").first();
-    if (await passwordInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await passwordInput.fill("teacher123");
-    }
-    
-    // Submit the form
-    const loginBtn = page.getByRole("button", { name: /Войти|Login|Sign/i }).first();
-    if (await loginBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await loginBtn.click();
-    } else {
-      const form = page.locator("form").first();
-      if (await form.isVisible()) {
-        await form.press("Enter");
-      }
-    }
-    
-    // Wait for redirect
-    await page.waitForLoadState("domcontentloaded").catch(() => {});
-    await page.waitForTimeout(2000);
+    // Set the session cookie in the browser context
+    await context.addInitScript(() => {
+      // This runs in the browser - we'll use addCookies instead
+    });
+
+    // Add cookie to context
+    await context.addCookies([{
+      name: "next-auth.session-token",
+      value: data.sessionToken,
+      domain: "localhost",
+      path: "/",
+      httpOnly: false, // Allow Playwright to access it
+      secure: false,
+      sameSite: "Lax",
+    }]);
   }
 
+  test.beforeEach(async ({ context }) => {
+    await loginTeacher(context);
+  });
+
   test("should display teacher dashboard after login", async ({ page }) => {
-    await ensureLoggedIn(page);
+    await page.goto("/teacher");
+    await page.waitForLoadState("domcontentloaded");
+    
     const url = page.url();
     expect(url).toContain("localhost:3000");
   });
 
   test("should navigate to groups page", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/groups");
     await page.waitForLoadState("domcontentloaded");
     
@@ -67,7 +73,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should create a new group", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/groups");
     await page.waitForLoadState("domcontentloaded");
     
@@ -92,7 +97,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should manage group members", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/groups");
     await page.waitForLoadState("domcontentloaded");
     
@@ -111,7 +115,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should view analytics page", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/analytics");
     await page.waitForLoadState("domcontentloaded");
     
@@ -119,7 +122,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should view students list", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/students");
     await page.waitForLoadState("domcontentloaded");
     
@@ -127,7 +129,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should view student details", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/students");
     await page.waitForLoadState("domcontentloaded");
     
@@ -140,7 +141,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should navigate to templates page", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/templates");
     await page.waitForLoadState("domcontentloaded");
     
@@ -148,7 +148,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should navigate to task constructor", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/task-constructor");
     await page.waitForLoadState("domcontentloaded");
     
@@ -156,7 +155,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should navigate to gradebook", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/gradebook");
     await page.waitForLoadState("domcontentloaded");
     
@@ -164,7 +162,6 @@ test.describe("Teacher Workflow", () => {
   });
 
   test("should handle non-existent teacher route", async ({ page }) => {
-    await ensureLoggedIn(page);
     await page.goto("/teacher/nonexistent");
     await page.waitForLoadState("domcontentloaded");
     

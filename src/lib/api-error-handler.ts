@@ -52,8 +52,7 @@ export function validateApiResponse<T>(
   const result = schema.safeParse(data);
   if (!result.success) {
     const issues = result.error.issues
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((issue: any) => `${String(issue.path?.join(".") ?? "")}: ${issue.message}`)
+      .map((issue) => `${String(issue.path?.join(".") ?? "")}: ${issue.message}`)
       .join("; ");
     const msg = `API response validation failed: ${issues}`;
     if (process.env.NODE_ENV === "development") {
