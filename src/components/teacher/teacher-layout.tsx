@@ -22,6 +22,7 @@ function useTeacherNavItems() {
     { href: "/teacher/messages", label: t("messages"), icon: Mail },
     { href: "/teacher/templates", label: t("templates"), icon: BookTemplate },
     { href: "/teacher/settings", label: t("settings"), icon: Settings },
+    { href: "/help", label: t("help"), icon: BookOpen },
   ];
 }
 

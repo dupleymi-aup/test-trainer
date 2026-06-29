@@ -133,6 +133,7 @@ function useNavGroups(): NavGroup[] {
         { href: "/admin/cache", label: t("cache"), icon: Zap },
         { href: "/admin/activity", label: t("activityLog"), icon: ScrollText },
         { href: "/admin/settings", label: t("settings"), icon: Settings },
+        { href: "/help", label: t("help"), icon: BookOpen },
       ],
     },
   ];
