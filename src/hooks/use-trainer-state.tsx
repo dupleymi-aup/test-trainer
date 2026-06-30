@@ -417,7 +417,7 @@ export function useTrainerState() {
         comment: `Подсказка: ${ec.name}`,
       };
     },
-    [selectedTask, parseInputValue]
+    [selectedTask]
   );
 
   const handleShowHint = useCallback(() => {
@@ -535,7 +535,7 @@ export function useTrainerState() {
     });
 
     toast.success(`Добавлено ${newCases.length} тест-кейс(ов) для покрытия всех BV`);
-  }, [selectedTask, testCases, pushUndoSnapshot, parseInputValue]);
+  }, [selectedTask, testCases, pushUndoSnapshot]);
 
   // Submit evaluation
   const handleSubmit = useCallback(async () => {

@@ -29,7 +29,6 @@ import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { toast } from "sonner";
 import { saveAttempt } from "@/lib/storage";
 import { apiFetch } from "@/lib/api-client";
-import { logger } from "@/lib/logger";
 import { parseInputValue } from "@/lib/utils";
 import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
@@ -340,7 +339,7 @@ export function ExamMode() {
         setIsCalculating(false);
       }
     });
-  }, [examTasks, currentTaskIndex, examInputs, parseInputValue]);
+  }, [examTasks, currentTaskIndex, examInputs]);
 
   const handleExamKeyDown = (e: React.KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {

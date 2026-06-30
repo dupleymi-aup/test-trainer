@@ -23,7 +23,6 @@ import { Plus, Calculator, HelpCircle } from "lucide-react";
 import type { Task, TestCaseCategory } from "@/lib/tasks";
 import { runReferenceFunction } from "@/lib/tasks";
 import { categories } from "@/lib/constants";
-import { logger } from "@/lib/logger";
 import { parseInputValue } from "@/lib/utils";
 
 interface TestFormProps {
@@ -70,7 +69,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
         setIsCalculating(false);
       }
     });
-  }, [inputs, task.id, parseInputValue, t]);
+  }, [inputs, task.id, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Allow Ctrl+Enter or Cmd+Enter to submit from any input
