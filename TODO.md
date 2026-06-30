@@ -57,3 +57,11 @@
 - [x] 2. Объединить split-imports в 8 файлах (withErrorHandler + parseSearchParams/formatZodError)
 - [x] 3. Добавить prisma migrate deploy + seed в CI workflow (unit-tests, e2e-tests)
 - [x] 4. TypeScript 0 ошибок, ESLint 0 предупреждений
+
+# Plan — v12: Seed, trainer refactor, auth boundaries, env docs
+
+- [x] 1. Добавить студента (student@testtrainer.local) в prisma/seed.ts с привязкой к группе преподавателя
+- [x] 2. Извлечь дублированный footer в trainer/page.tsx в компонент Footer
+- [x] 3. Добавить loading.tsx + error.tsx для 5 auth sub-routes (login, register, forgot-password, reset-password, verify-email)
+- [x] 4. Добавить NODE_ENV и LOG_LEVEL в .env.example
+- [x] 5. ESLint 0 предупреждений, TypeScript 0 ошибок

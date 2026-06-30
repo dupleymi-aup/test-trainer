@@ -16,6 +16,7 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash("admin123", 12);
   const teacherPassword = await bcrypt.hash("teacher123", 12);
+  const studentPassword = await bcrypt.hash("student123", 12);
 
   // Create admin user
   const admin = await prisma.user.upsert({
@@ -43,6 +44,19 @@ async function main() {
   });
   console.log(`Created teacher: ${teacher.email}`);
 
+  // Create student user
+  const student = await prisma.user.upsert({
+    where: { email: "student@testtrainer.local" },
+    update: {},
+    create: {
+      name: "Студент",
+      email: "student@testtrainer.local",
+      hashedPassword: studentPassword,
+      role: Role.STUDENT,
+    },
+  });
+  console.log(`Created student: ${student.email}`);
+
   // Create sample groups
   const group1 = await prisma.group.create({
     data: {
@@ -61,6 +75,18 @@ async function main() {
     },
   });
   console.log(`Created group: ${group2.name}`);
+
+  // Assign student to teacher's group
+  await prisma.userGroup.upsert({
+    where: { userId_groupId: { userId: student.id, groupId: group2.id } },
+    update: {},
+    create: {
+      userId: student.id,
+      groupId: group2.id,
+      assignedByUserId: teacher.id,
+    },
+  });
+  console.log(`Assigned ${student.email} to ${group2.name}`);
 
   // Create system settings
   const settings = [

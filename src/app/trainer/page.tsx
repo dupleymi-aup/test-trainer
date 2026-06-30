@@ -20,6 +20,16 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 
 const TOTAL_TASKS = tasks.length;
 
+function Footer() {
+  return (
+    <footer className="border-t bg-white/50 dark:bg-zinc-900/50 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
+        Тренажёр тестирования • Генератор тест-кейсов • Методы чёрного ящика
+      </div>
+    </footer>
+  );
+}
+
 export default function TrainerPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -70,11 +80,7 @@ export default function TrainerPage() {
         <main id="main-content" className="flex-1 max-w-7xl mx-auto w-full px-4 py-4 sm:py-6">
           <MarathonMode onExit={() => setMarathonActive(false)} />
         </main>
-        <footer className="border-t bg-white/50 dark:bg-zinc-900/50 mt-auto">
-          <div className="max-w-7xl mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
-            Тренажёр тестирования • Генератор тест-кейсов • Методы чёрного ящика
-          </div>
-        </footer>
+        <Footer />
         <KeyboardShortcutsDialog open={state.showShortcuts} onOpenChange={state.setShowShortcuts} />
       </div>
     );
@@ -137,11 +143,7 @@ export default function TrainerPage() {
         />
       </main>
 
-      <footer className="border-t bg-white/50 dark:bg-zinc-900/50 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
-          Тренажёр тестирования • Генератор тест-кейсов • Методы чёрного ящика
-        </div>
-      </footer>
+      <Footer />
 
       <KeyboardShortcutsDialog open={state.showShortcuts} onOpenChange={state.setShowShortcuts} />
       <Confetti active={state.showConfetti} />
