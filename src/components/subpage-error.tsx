@@ -9,12 +9,13 @@ interface SubpageErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
   pageName: string;
-  role: "student" | "teacher";
+  role: "student" | "teacher" | "admin";
 }
 
 export function SubpageError({ error, reset, pageName, role }: SubpageErrorProps) {
   useEffect(() => {
-    logger.error(`[${role === "student" ? "StudentError" : "TeacherError"}:${pageName}]`, { error: error.message });
+    const roleLabel = role === "admin" ? "AdminError" : role === "teacher" ? "TeacherError" : "StudentError";
+    logger.error(`[${roleLabel}:${pageName}]`, { error: error.message });
   }, [error, pageName, role]);
 
   return (
@@ -53,4 +54,8 @@ export function StudentSubpageError(props: Omit<SubpageErrorProps, "role">) {
 
 export function TeacherSubpageError(props: Omit<SubpageErrorProps, "role">) {
   return <SubpageError {...props} role="teacher" />;
+}
+
+export function AdminSubpageError(props: Omit<SubpageErrorProps, "role">) {
+  return <SubpageError {...props} role="admin" />;
 }

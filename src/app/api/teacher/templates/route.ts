@@ -32,7 +32,7 @@ export async function GET() {
 const createTemplateSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
-  taskIds: z.array(z.number().int().positive()).min(1, "Укажите хотя бы одно задание"),
+  taskIds: z.array(z.number().int().positive()).min(1, "At least one task is required"),
   topics: z.array(z.string()).optional(),
   estimatedHours: z.number().int().min(1).max(500).optional(),
 });
