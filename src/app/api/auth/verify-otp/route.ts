@@ -3,8 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { formatZodError } from "@/lib/api-error-handler";
-import { logger } from "@/lib/logger";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const verifyOtpSchema = z.object({
   phone: z.string().min(1, "Phone is required").max(20, "Phone number is too long"),
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
     return createRateLimitResponse(result.resetAt);
   }
 
-  try {
+  return withErrorHandler(req, async () => {
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -76,11 +75,5 @@ export async function POST(req: Request) {
       message: "Code verified",
       token: resetToken,
     });
-  } catch (error) {
-    logger.error("Verify OTP error", error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: "Failed to verify code" },
-      { status: 500 }
-    );
-  }
+  });
 }
