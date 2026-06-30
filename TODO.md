@@ -50,3 +50,10 @@
 - [x] 3. Добавить loading.tsx + error.tsx для 3 admin reports sub-routes (deadline-compliance, export, students)
 - [x] 4. Заменить 41 дублированный inline error.tsx в admin/analytics на shared AdminSubpageError
 - [x] 5. ESLint 0 предупреждений, TypeScript 0 ошибок
+
+# Plan — v11: Оптимизация кода и CI
+
+- [x] 1. Удалить 3 неиспользуемые переменные (`_year`, `_sevenDaysAgo`, `_scoreThreshold`) в API routes
+- [x] 2. Объединить split-imports в 8 файлах (withErrorHandler + parseSearchParams/formatZodError)
+- [x] 3. Добавить prisma migrate deploy + seed в CI workflow (unit-tests, e2e-tests)
+- [x] 4. TypeScript 0 ошибок, ESLint 0 предупреждений

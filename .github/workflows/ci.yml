@@ -53,6 +53,12 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        run: npx prisma db seed
+
       - name: Run unit tests with coverage
         run: npm test
         env:
@@ -104,6 +110,12 @@ jobs:
 
       - name: Generate Prisma client
         run: npx prisma generate
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        run: npx prisma db seed
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

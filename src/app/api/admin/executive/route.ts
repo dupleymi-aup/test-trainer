@@ -15,7 +15,6 @@ export async function GET() {
     if (cached) return NextResponse.json(cached);
 
     const now = new Date();
-    const _sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
 
     // KPIs via count() — no full table scans

@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
-import { withErrorHandler } from "@/lib/api-error-handler";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { paginationSchema, searchParamsSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
 

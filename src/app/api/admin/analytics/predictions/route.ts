@@ -4,8 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { computeStudentRisk, computeStudentStats } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { withErrorHandler } from "@/lib/api-error-handler";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { analyticsParamsSchema } from "@/lib/shared-schemas";
 
 export async function GET(request: Request) {

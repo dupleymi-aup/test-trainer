@@ -153,7 +153,6 @@ export async function GET(req: Request) {
   > = {};
   attempts.forEach((a) => {
     const date = new Date(a.createdAt);
-    const _year = date.getFullYear();
     const week = date.toLocaleDateString("en-CA", { timeZone: "UTC" }).slice(0, 7); // YYYY-MM
     const key = week;
 

@@ -3,8 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { withErrorHandler } from "@/lib/api-error-handler";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const comparePeriodsParamsSchema = z.object({

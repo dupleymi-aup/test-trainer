@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { batchComputeStudentRisk, AttemptData } from "@/lib/risk-analysis";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { AttemptData, batchComputeStudentRisk } from "@/lib/risk-analysis";
 import { z } from "zod";
 
 const dashboardParamsSchema = z.object({

@@ -5,9 +5,8 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
 import { secureCompare } from "@/lib/crypto";
-import { withErrorHandler } from "@/lib/api-error-handler";
-import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
+import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { z } from "zod";
 
 const sendRemindersParamsSchema = z.object({

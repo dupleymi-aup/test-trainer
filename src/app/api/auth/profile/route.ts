@@ -4,8 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
-import { formatZodError } from "@/lib/api-error-handler";
+import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const profileUpdateSchema = z.object({
   name: z.string().max(100).optional().nullable(),

@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { withErrorHandler } from "@/lib/api-error-handler";
-import { parseSearchParams } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { dateRangeSchema, groupFilterSchema } from "@/lib/shared-schemas";
 
 const timeTrendsParamsSchema = dateRangeSchema.merge(groupFilterSchema);
