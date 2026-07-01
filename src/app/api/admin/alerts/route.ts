@@ -181,30 +181,28 @@ export async function GET() {
     }
   }
 
-  // 3. Tasks with high fail rate
-  const allAttempts = await db.attempt.findMany({
-    select: { taskId: true, score: true },
-    take: 10_000,
-    orderBy: { createdAt: "desc" },
-  });
+  // 3. Tasks with high fail rate — compute in DB to avoid fetching 10k rows
+  const taskFailStats = await db.$queryRaw<
+    Array<{ taskId: string; total: bigint; fails: bigint }>
+  >`
+    SELECT "taskId",
+           COUNT(*)::int::bigint AS total,
+           COUNT(*) FILTER (WHERE "score" < 50)::int::bigint AS fails
+    FROM "Attempt"
+    GROUP BY "taskId"
+    HAVING COUNT(*) >= 5
+  `;
 
-  const taskScores: Record<string, number[]> = {};
-  for (const a of allAttempts) {
-    if (!taskScores[a.taskId]) taskScores[a.taskId] = [];
-    taskScores[a.taskId].push(a.score);
-  }
-
-  for (const [taskId, scores] of Object.entries(taskScores)) {
-    if (scores.length < 5) continue; // need minimum sample
-    const failRate = Math.round((scores.filter((s) => s < 50).length / scores.length) * 100);
+  for (const row of taskFailStats) {
+    const failRate = Math.round((Number(row.fails) / Number(row.total)) * 100);
     if (failRate >= 60) {
       alerts.push({
-        id: `high-fail-task-${taskId}`,
+        id: `high-fail-task-${row.taskId}`,
         severity: "warning",
         category: "TASK_DIFFICULTY",
-        title: `Задание #${taskId} — высокий процент неудач`,
-        description: `${failRate}% попыток с баллом < 50% (всего попыток: ${scores.length}). Возможно, задание слишком сложное`,
-        entity: { type: "task", id: taskId, name: `Задание #${taskId}` },
+        title: `Задание #${row.taskId} — высокий процент неудач`,
+        description: `${failRate}% попыток с баллом < 50% (всего попыток: ${row.total}). Возможно, задание слишком сложное`,
+        entity: { type: "task", id: row.taskId, name: `Задание #${row.taskId}` },
         createdAt: now.toISOString(),
         actionable: false,
       });
