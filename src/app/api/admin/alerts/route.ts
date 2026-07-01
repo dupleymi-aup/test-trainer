@@ -33,8 +33,17 @@ export async function GET() {
   const alerts: SystemAlert[] = [];
 
   // 1. At-risk students (high dropout risk)
+  // Only fetch students registered >7 days ago (needed for no-attempts alert)
+  // or students who have attempts (needed for risk analysis)
   const students = await db.user.findMany({
-    where: { role: "STUDENT", deletedAt: null },
+    where: {
+      role: "STUDENT",
+      deletedAt: null,
+      OR: [
+        { createdAt: { lt: sevenDaysAgo } },
+        { attempts: { some: {} } },
+      ],
+    },
     select: {
       id: true,
       name: true,
@@ -109,8 +118,11 @@ export async function GET() {
     }
   }
 
-  // 2. Groups with low performance
+  // 2. Groups with low performance — only groups with members
   const groups = await db.group.findMany({
+    where: {
+      members: { some: {} },
+    },
     select: {
       id: true,
       name: true,
