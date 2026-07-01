@@ -6,6 +6,11 @@ import { z } from "zod";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
+function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) return fallback;
+  try { return JSON.parse(raw) as T; } catch { return fallback; }
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -105,7 +110,7 @@ export async function PATCH(
           update: {},
         });
         // Also assign template tasks to the group
-        const taskIds = updateData.taskIds || (template.taskIds ? JSON.parse(template.taskIds) : []);
+        const taskIds = updateData.taskIds || safeJsonParse(template.taskIds, []);
         for (const taskId of taskIds) {
           await db.groupTask.upsert({
             where: { groupId_taskId: { groupId: assignToGroupId, taskId } },
