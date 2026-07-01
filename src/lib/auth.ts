@@ -195,7 +195,7 @@ export const authOptions: NextAuthOptions = {
     sessionToken: {
       name: `next-auth.session-token`,
       options: {
-        httpOnly: process.env.NODE_ENV === "production",
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
@@ -212,7 +212,7 @@ export const authOptions: NextAuthOptions = {
     csrfToken: {
       name: `next-auth.csrf-token`,
       options: {
-        httpOnly: process.env.NODE_ENV === "production",
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",

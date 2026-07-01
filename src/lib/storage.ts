@@ -433,13 +433,3 @@ export function clearTheoryProgress(): void {
   }
 }
 
-/**
- * Reset marathon progress
- */
-export function clearMarathonProgress(): void {
-  try {
-    localStorage.removeItem(MARATHON_KEY);
-  } catch {
-    // ignore
-  }
-}

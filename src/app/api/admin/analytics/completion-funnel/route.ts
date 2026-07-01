@@ -31,6 +31,7 @@ export async function GET() {
         createdAt: true,
       },
       orderBy: { createdAt: "asc" },
+      take: 100000,
     });
 
     const taskMap = new Map(

@@ -38,6 +38,7 @@ export async function GET() {
           orderBy: { createdAt: "asc" },
         },
       },
+      take: 10000,
     });
 
     // Group by cohort (registration month)

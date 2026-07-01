@@ -211,7 +211,7 @@ describe("POST /api/auth/change-password", () => {
       mocks.mockUserFindUnique.mockResolvedValue(mockUser);
       mocks.bcryptCompare.mockResolvedValue(true);
 
-      const req = makeRequest({ ...validChangePayload, newPassword: "12345678" });
+      const req = makeRequest({ ...validChangePayload, newPassword: "Str0ng!12" });
       const res = await POST(req);
 
       expect(res.status).toBe(200);

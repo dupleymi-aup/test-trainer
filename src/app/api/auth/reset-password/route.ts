@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { AppError, formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { passwordSchema } from "@/lib/shared-schemas";
 
 const resetPasswordSchema = z.object({
-  token: z.string().min(1, "Token is required"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
+  token: z.string().optional(),
+  newPassword: passwordSchema,
 });
 
 export async function POST(req: Request) {
@@ -31,7 +33,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const { token, newPassword } = parsed.data;
+    const { newPassword } = parsed.data;
+    let token = parsed.data.token;
+    // Fall back to httpOnly cookie if token not in body
+    if (!token) {
+      try {
+        token = (await cookies()).get("reset_token")?.value;
+      } catch {
+        // cookies() unavailable (e.g. test environment)
+      }
+    }
+    if (!token) {
+      return NextResponse.json(
+        { error: "Token is required" },
+        { status: 400 }
+      );
+    }
 
     // Use transaction to atomically validate, delete token, and update password
     // This prevents race conditions where concurrent requests could both validate

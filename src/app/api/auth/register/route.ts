@@ -8,12 +8,13 @@ import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { passwordSchema } from "@/lib/shared-schemas";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name is too long").optional(),
   email: z.string().email("Invalid email format").max(255, "Email is too long"),
   phone: z.string().max(20, "Phone number is too long").optional().nullable(),
-  password: z.string().min(8, "Password must be at least 8 characters").max(128, "Password is too long"),
+  password: passwordSchema,
   role: z.enum(["STUDENT", "TEACHER"]).optional(),
 });
 

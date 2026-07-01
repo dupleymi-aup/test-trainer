@@ -7,6 +7,7 @@ import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 import { parsePositiveInt } from "@/lib/validate";
+import { passwordSchema } from "@/lib/shared-schemas";
 
 const RoleSchema = z.nativeEnum(Role);
 
@@ -104,7 +105,7 @@ const createUserSchema = z.object({
   name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
   email: z.string().email("Неверный формат email").max(255, "Email слишком длинный").optional().nullable(),
   phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
-  password: z.string().min(8, "Пароль должен быть не менее 8 символов").max(128, "Пароль слишком длинный"),
+  password: passwordSchema,
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
   university: z.string().max(200, "Название университета слишком длинное").optional().nullable(),
   group: z.string().max(100, "Название группы слишком длинное").optional().nullable(),

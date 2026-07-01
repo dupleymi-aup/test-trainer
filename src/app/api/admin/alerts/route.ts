@@ -51,6 +51,7 @@ export async function GET() {
         orderBy: { createdAt: "asc" },
       },
     },
+    take: 10000,
   });
 
   for (const s of students) {
@@ -125,6 +126,7 @@ export async function GET() {
         },
       },
     },
+    take: 5000,
   });
 
   for (const g of groups) {
@@ -309,6 +311,7 @@ export async function GET() {
         },
       },
     },
+    take: 500,
   });
 
   for (const t of teachers) {

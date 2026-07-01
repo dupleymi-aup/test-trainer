@@ -11,13 +11,13 @@ const verifyOtpSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const ip = getClientIp(req);
-  const result = checkRateLimit(`verify-otp:${ip}`, rateLimits.verifyOtp);
-  if (result.limited) {
-    return createRateLimitResponse(result.resetAt);
-  }
-
   return withErrorHandler(req, async () => {
+    const ip = getClientIp(req);
+    const result = checkRateLimit(`verify-otp:${ip}`, rateLimits.verifyOtp);
+    if (result.limited) {
+      return createRateLimitResponse(result.resetAt);
+    }
+
     const body = await req.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -71,9 +71,16 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: "Code verified",
-      token: resetToken,
     });
+    response.cookies.set("reset_token", resetToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/api/auth/reset-password",
+      maxAge: 30 * 60, // 30 minutes
+    });
+    return response;
   });
 }

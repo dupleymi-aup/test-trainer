@@ -27,64 +27,9 @@ interface SMSProviderResult {
   error?: string;
 }
 
-// Rate limiting: track last OTP send per phone (in-memory, use Redis in production)
-const otpSendLog = new Map<string, number>();
-const OTP_COOLDOWN_MS = 60_000; // 1 minute between OTPs
-const OTP_MAX_AGE_MS = 15 * 60_000; // 15 minutes — OTP expiry
-const OTP_CLEANUP_INTERVAL_MS = 5 * 60_000; // 5 minutes between cleanups
-
-// Periodic cleanup of stale entries to prevent unbounded growth
-function startOtpCleanup() {
-  if (typeof global === "undefined") return;
-
-  const timerSymbol = Symbol.for("sms-otp-cleanup-interval");
-  const globalThis_ = global as Record<symbol, unknown>;
-  const existing = globalThis_[timerSymbol] as ReturnType<typeof setInterval> | undefined;
-  if (existing) clearInterval(existing);
-
-  globalThis_[timerSymbol] = setInterval(() => {
-    const now = Date.now();
-    for (const [phone, ts] of otpSendLog.entries()) {
-      if (now - ts > OTP_MAX_AGE_MS) {
-        otpSendLog.delete(phone);
-      }
-    }
-    if (otpSendLog.size === 0) {
-      clearInterval(globalThis_[timerSymbol] as ReturnType<typeof setInterval>);
-      delete globalThis_[timerSymbol];
-    }
-  }, OTP_CLEANUP_INTERVAL_MS);
-
-  (globalThis_[timerSymbol] as ReturnType<typeof setInterval>).unref?.();
-}
-
-function _purgeOtpSendLog() {
-  otpSendLog.clear();
-  if (typeof global !== "undefined") {
-    const timerSymbol = Symbol.for("sms-otp-cleanup-interval");
-    const globalThis_ = global as Record<symbol, unknown>;
-    const existing = globalThis_[timerSymbol] as ReturnType<typeof setInterval> | undefined;
-    if (existing) {
-      clearInterval(existing);
-      delete globalThis_[timerSymbol];
-    }
-  }
-}
-
 function validatePhone(phone: string): boolean {
   // Accept international format: +79991234567, 89991234567, etc.
   return /^\+?\d{10,15}$/.test(phone.replace(/[\s()-]/g, ""));
-}
-
-function checkRateLimit(phone: string): { allowed: boolean; retryAfter?: number } {
-  const lastSent = otpSendLog.get(phone);
-  if (!lastSent) return { allowed: true };
-
-  const elapsed = Date.now() - lastSent;
-  if (elapsed < OTP_COOLDOWN_MS) {
-    return { allowed: false, retryAfter: Math.ceil((OTP_COOLDOWN_MS - elapsed) / 1000) };
-  }
-  return { allowed: true };
 }
 
 async function sendViaTwilio({ phone, message }: SendSMSOptions): Promise<SMSProviderResult> {
@@ -178,30 +123,6 @@ export async function sendSMS({ phone, message }: SendSMSOptions): Promise<SMSPr
         error: `SMS provider "${provider}" not configured. Set SMS_PROVIDER=twilio|smsru and required env vars.`,
       };
   }
-}
-
-export async function sendOTP(phone: string): Promise<{
-  success: boolean;
-  error?: string;
-  retryAfter?: number;
-}> {
-  const rateLimit = checkRateLimit(phone);
-  if (!rateLimit.allowed) {
-    return { success: false, retryAfter: rateLimit.retryAfter, error: `Please wait ${rateLimit.retryAfter}s before requesting another code` };
-  }
-
-  const code = generateSecureOTP();
-  const message = `Ваш код для восстановления пароля: ${code}. Действует 15 минут. Тренажёр тестирования.`;
-
-  const result = await sendSMS({ phone, message });
-
-  if (result.success) {
-    otpSendLog.set(phone, Date.now());
-    startOtpCleanup();
-    return { success: true };
-  }
-
-  return { success: false, error: result.error };
 }
 
 export function generateOTPCode(): string {

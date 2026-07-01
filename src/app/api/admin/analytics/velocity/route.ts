@@ -16,6 +16,7 @@ export async function GET() {
     const attempts = await db.attempt.findMany({
       select: { userId: true, createdAt: true, taskId: true, score: true },
       orderBy: { createdAt: "asc" },
+      take: 100000,
     });
 
     // Get student info

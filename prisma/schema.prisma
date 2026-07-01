@@ -79,6 +79,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -97,6 +98,7 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@index([identifier])
 }
 
 model VerificationCode {
@@ -109,6 +111,8 @@ model VerificationCode {
 
   @@index([code])
   @@index([expires])
+  @@index([phone])
+  @@index([email])
 }
 
 model Group {
@@ -263,6 +267,7 @@ model Deadline {
   @@index([groupId])
   @@index([type])
   @@index([taskId])
+  @@index([createdBy])
 }
 
 model Reminder {

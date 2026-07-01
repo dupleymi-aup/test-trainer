@@ -5,33 +5,30 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { logger } from "@/lib/logger";
 
-interface SubpageErrorProps {
+export default function HelpError({
+  error,
+  reset,
+}: {
   error: Error & { digest?: string };
   reset: () => void;
-  pageName: string;
-  role: "student" | "teacher" | "admin";
-}
-
-export function SubpageError({ error, reset, pageName, role }: SubpageErrorProps) {
+}) {
   useEffect(() => {
-    const roleLabel = role === "admin" ? "AdminError" : role === "teacher" ? "TeacherError" : "StudentError";
-    logger.error(`[${roleLabel}:${pageName}]`, { error: error.message });
-  }, [error, pageName, role]);
+    logger.error("[HelpError]", { error: error.message });
+  }, [error]);
 
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-destructive/20 bg-destructive/5 p-8 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gradient-to-b from-background to-muted/20 p-8 text-center">
       <AlertTriangle className="h-10 w-10 text-destructive" />
       <div>
         <h3 className="text-lg font-semibold text-destructive">
-          Ошибка загрузки: {pageName}
+          Ошибка загрузки справки
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Не удалось загрузить данные. Попробуйте обновить страницу.
+          Не удалось загрузить страницу. Попробуйте обновить.
         </p>
         {process.env.NODE_ENV === "development" && error.message && (
           <pre className="mt-3 max-w-full overflow-auto rounded bg-muted p-3 text-left text-xs text-muted-foreground">
             {error.message}
-            {error.digest && `\n\nDigest: ${error.digest}`}
           </pre>
         )}
       </div>
@@ -46,8 +43,4 @@ export function SubpageError({ error, reset, pageName, role }: SubpageErrorProps
       </div>
     </div>
   );
-}
-
-export function AdminSubpageError(props: Omit<SubpageErrorProps, "role">) {
-  return <SubpageError {...props} role="admin" />;
 }

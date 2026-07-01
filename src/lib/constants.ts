@@ -1,7 +1,15 @@
 import type { TestCaseCategory } from "./tasks";
 
-/** Default app URL used as fallback when NEXTAUTH_URL is not set */
-export const DEFAULT_APP_URL = "http://localhost:3000";
+import { logger } from "./logger";
+
+/** Default app URL: uses NEXTAUTH_URL if set, otherwise warns and falls back to localhost */
+export const DEFAULT_APP_URL = (() => {
+  const url = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === "production") {
+    logger.warn("[config] NEXTAUTH_URL is not set — production emails will contain broken links");
+  }
+  return url;
+})();
 
 export const categories: TestCaseCategory[] = [
   "Нормальное значение",

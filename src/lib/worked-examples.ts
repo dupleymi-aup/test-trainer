@@ -1858,7 +1858,3 @@ export const workedExamples: WorkedExample[] = [
 export function getWorkedExample(taskId: number): WorkedExample | undefined {
   return workedExamples.find((ex) => ex.taskId === taskId);
 }
-
-export function getAvailableWorkedExamples(): { taskId: number; taskName: string }[] {
-  return workedExamples.map((ex) => ({ taskId: ex.taskId, taskName: ex.taskName }));
-}

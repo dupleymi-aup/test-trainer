@@ -18,6 +18,7 @@ export async function GET() {
 
   const attempts = await db.attempt.findMany({
     select: { userId: true, taskId: true, score: true, coveredEcIds: true, coveredBvDescriptions: true },
+    take: 100000,
   });
 
   const taskMap = new Map(tasks.map((t) => [String(t.id), t]));

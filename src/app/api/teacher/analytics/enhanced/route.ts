@@ -55,6 +55,7 @@ export async function GET(req: Request) {
       testCases: true,
     },
     orderBy: { createdAt: "asc" },
+    take: 50000,
   });
 
   // Build task metadata map

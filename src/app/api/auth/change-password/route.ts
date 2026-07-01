@@ -6,10 +6,11 @@ import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { passwordSchema } from "@/lib/shared-schemas";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "New password must be at least 8 characters").max(128, "Password is too long"),
+  newPassword: passwordSchema,
 });
 
 export async function POST(req: Request) {

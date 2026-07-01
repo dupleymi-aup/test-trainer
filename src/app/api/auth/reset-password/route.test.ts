@@ -243,7 +243,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toBe("Token is required");
     });
 
     it("rejects empty token with 400", async () => {
@@ -252,7 +252,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toBe("Token is required");
     });
 
     it("rejects missing newPassword with 400", async () => {
@@ -301,7 +301,7 @@ describe("POST /api/auth/reset-password", () => {
     it("accepts newPassword of exactly 8 characters", async () => {
       mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
 
-      const req = makeRequest({ ...validResetPayload, newPassword: "12345678" });
+      const req = makeRequest({ ...validResetPayload, newPassword: "Str0ng!12" });
       const res = await POST(req);
 
       expect(res.status).toBe(200);

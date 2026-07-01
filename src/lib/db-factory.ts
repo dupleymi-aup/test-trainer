@@ -1,6 +1,6 @@
 import { config } from './config'
 import { db as prismaDb } from './db'
-import { db as mongoDb, connectMongo, checkMongoConnection } from './mongodb'
+import { db as mongoDb, connectMongo } from './mongodb'
 
 export type DbType = 'sqlite' | 'postgres' | 'mongodb'
 
@@ -9,52 +9,6 @@ export interface DBInfo {
   prisma: typeof prismaDb | null
   mongo: typeof mongoDb | null
   url: string
-}
-
-export async function checkPostgresConnection(host = '127.0.0.1', port = 5432): Promise<boolean> {
-  try {
-    // Dynamic import to avoid Edge Runtime compatibility issues
-    const net = await import('net')
-    return new Promise((resolve) => {
-      const socket = net.default.createConnection({ host, port }, () => {
-        socket.destroy()
-        resolve(true)
-      })
-      socket.on('error', () => {
-        resolve(false)
-      })
-      socket.setTimeout(2000, () => {
-        socket.destroy()
-        resolve(false)
-      })
-    })
-  } catch {
-    return false
-  }
-}
-
-export async function checkSQLiteConnection(): Promise<boolean> {
-  try {
-    await prismaDb.$queryRaw`SELECT 1`
-    return true
-  } catch {
-    return false
-  }
-}
-
-export async function detectDbType(): Promise<DbType> {
-  // Use config which validates DB_TYPE via Zod — no unsafe cast needed
-  if (config.dbType) {
-    return config.dbType;
-  }
-
-  const pgAvailable = await checkPostgresConnection()
-  if (pgAvailable) return 'postgres'
-
-  const mongoAvailable = await checkMongoConnection()
-  if (mongoAvailable) return 'mongodb'
-
-  return 'sqlite'
 }
 
 export async function getDbInfo(): Promise<DBInfo> {
