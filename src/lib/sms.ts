@@ -13,7 +13,6 @@
  *   SMSRU_API_KEY=...
  */
 
-import { generateSecureOTP } from "@/lib/crypto";
 import { logger } from "@/lib/logger";
 
 interface SendSMSOptions {
@@ -123,12 +122,4 @@ export async function sendSMS({ phone, message }: SendSMSOptions): Promise<SMSPr
         error: `SMS provider "${provider}" not configured. Set SMS_PROVIDER=twilio|smsru and required env vars.`,
       };
   }
-}
-
-export function generateOTPCode(): string {
-  return generateSecureOTP();
-}
-
-export function generatePasswordResetSMS(code: string): string {
-  return `Ваш код для восстановления пароля: ${code}. Действует 15 минут. Тренажёр тестирования.`;
 }

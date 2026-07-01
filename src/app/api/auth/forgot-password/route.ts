@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { sendEmail, generatePasswordResetEmail } from "@/lib/email";
-import { sendSMS, generateOTPCode, generatePasswordResetSMS } from "@/lib/sms";
-import { generateSecureToken } from "@/lib/crypto";
+import { sendSMS } from "@/lib/sms";
+import { generateSecureOTP, generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
@@ -96,7 +96,7 @@ export async function POST(req: Request) {
 
       // Always perform the same work (OTP gen + DB write) regardless of
       // whether the user exists, preventing timing-based phone enumeration.
-      const code = generateOTPCode();
+      const code = generateSecureOTP();
 
       if (user) {
         await db.verificationCode.create({
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
           },
         });
 
-        const smsMessage = generatePasswordResetSMS(code);
+        const smsMessage = `Ваш код для восстановления пароля: ${code}. Действует 15 минут. Тренажёр тестирования.`;
         const smsResult = await sendSMS({ phone: trimmedPhone, message: smsMessage });
         if (!smsResult.success) {
           await db.verificationCode.deleteMany({

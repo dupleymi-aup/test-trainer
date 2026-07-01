@@ -15,8 +15,7 @@ const { mocks } = vi.hoisted(() => ({
     sendEmail: vi.fn().mockResolvedValue(undefined),
     sendSMS: vi.fn().mockResolvedValue({ success: true }),
     generatePasswordResetEmail: vi.fn().mockReturnValue({ subject: "Reset", html: "<html>" }),
-    generatePasswordResetSMS: vi.fn().mockReturnValue("Your reset code: 123456"),
-    generateOTPCode: vi.fn().mockReturnValue("123456"),
+    generateSecureOTP: vi.fn().mockReturnValue("123456"),
     generateSecureToken: vi.fn().mockReturnValue("test-reset-token-123"),
     loggerError: vi.fn(),
     rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 3600000 },
@@ -46,12 +45,11 @@ vi.mock("@/lib/email", () => ({
 
 vi.mock("@/lib/sms", () => ({
   sendSMS: mocks.sendSMS,
-  generateOTPCode: mocks.generateOTPCode,
-  generatePasswordResetSMS: mocks.generatePasswordResetSMS,
 }));
 
 vi.mock("@/lib/crypto", () => ({
   generateSecureToken: mocks.generateSecureToken,
+  generateSecureOTP: mocks.generateSecureOTP,
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -206,7 +204,7 @@ describe("POST /api/auth/forgot-password", () => {
       expect(res.status).toBe(200);
       expect(json.message).toBe("If account exists, code sent via SMS");
       expect(json.method).toBe("phone");
-      expect(mocks.generateOTPCode).toHaveBeenCalled();
+      expect(mocks.generateSecureOTP).toHaveBeenCalled();
       expect(mocks.sendSMS).toHaveBeenCalled();
     });
 
