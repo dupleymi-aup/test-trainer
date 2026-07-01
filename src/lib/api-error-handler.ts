@@ -193,7 +193,12 @@ export async function withErrorHandler(
   try {
     const response = await handler();
     const duration = Date.now() - startTime;
-    logger.info("API response", { method, path, status: response.status, duration, requestId });
+    const logCtx = { method, path, status: response.status, duration, requestId };
+    if (duration > 2000) {
+      logger.warn("Slow API response", logCtx);
+    } else {
+      logger.info("API response", logCtx);
+    }
     return response;
   } catch (error) {
     const duration = Date.now() - startTime;

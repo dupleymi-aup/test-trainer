@@ -6,7 +6,7 @@ import { sendSMS } from "@/lib/sms";
 import { generateSecureOTP, generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 const forgotPasswordSchema = z.object({
@@ -24,20 +24,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(result.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = forgotPasswordSchema.safeParse(body);
+    const body = await parseRequestBody(req, forgotPasswordSchema);
+    if (!body.success) return body.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { email, phone } = parsed.data;
+    const { email, phone } = body.data;
 
     const baseUrl = process.env.NEXTAUTH_URL || DEFAULT_APP_URL;
 

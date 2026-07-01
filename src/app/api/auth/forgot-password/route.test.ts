@@ -256,7 +256,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("required");
     });
 
     it("rejects invalid email format with 400", async () => {
@@ -265,7 +265,8 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects phone that is too long with 400", async () => {
@@ -274,7 +275,7 @@ describe("POST /api/auth/forgot-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("too long");
     });
   });
 
