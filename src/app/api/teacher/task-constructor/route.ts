@@ -6,6 +6,11 @@ import { z } from "zod";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
+function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) return fallback;
+  try { return JSON.parse(raw) as T; } catch { return fallback; }
+}
+
 const paramSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.string().min(1).max(30),
@@ -74,11 +79,11 @@ export async function GET(req: Request) {
     return NextResponse.json({
       tasks: tasks.map((t) => ({
         id: t.id, name: t.name, difficulty: t.difficulty, signature: t.signature,
-        description: t.description, returnType: t.returnType, topics: JSON.parse(t.topics),
-        parameters: JSON.parse(t.parameters),
-        ecClasses: JSON.parse(t.ecClasses),
-        bvValues: JSON.parse(t.bvValues),
-        code: t.code, commonMistakes: t.commonMistakes ? JSON.parse(t.commonMistakes) : [],
+        description: t.description, returnType: t.returnType, topics: safeJsonParse(t.topics, []),
+        parameters: safeJsonParse(t.parameters, []),
+        ecClasses: safeJsonParse(t.ecClasses, []),
+        bvValues: safeJsonParse(t.bvValues, []),
+        code: t.code, commonMistakes: safeJsonParse(t.commonMistakes, []),
         createdBy: t.createdBy, createdAt: t.createdAt, updatedAt: t.updatedAt,
       })),
       groupIds: groupIds.map((g) => g.id),
@@ -138,7 +143,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ task: { ...task, topics: JSON.parse(task.topics), parameters: JSON.parse(task.parameters), ecClasses: JSON.parse(task.ecClasses), bvValues: JSON.parse(task.bvValues), commonMistakes: task.commonMistakes ? JSON.parse(task.commonMistakes) : [] } }, { status: 201 });
+    return NextResponse.json({ task: { ...task, topics: safeJsonParse(task.topics, []), parameters: safeJsonParse(task.parameters, []), ecClasses: safeJsonParse(task.ecClasses, []), bvValues: safeJsonParse(task.bvValues, []), commonMistakes: safeJsonParse(task.commonMistakes, []) } }, { status: 201 });
   });
 }
 
