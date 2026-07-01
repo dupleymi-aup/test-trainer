@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { secureCompare } from "@/lib/crypto";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/cron/scheduled-reports
@@ -122,8 +123,8 @@ export async function GET(req: Request) {
           html,
         });
         sentCount++;
-      } catch {
-        // skip failed email sends
+      } catch (emailErr) {
+        logger.error("Scheduled report email failed", emailErr instanceof Error ? emailErr : undefined);
       }
     }
 

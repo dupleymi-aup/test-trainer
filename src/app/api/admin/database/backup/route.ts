@@ -71,7 +71,7 @@ export async function GET(req: Request) {
         const stats = (await import("fs")).statSync(filePath);
         dbSize = stats.size;
       }
-    } catch { /* ignore */ }
+    } catch { /* dbSize stays null — non-critical */ }
 
     const [users, groups, attempts, notifications, deadlines, messages] = await Promise.all([
       db.user.count({ where: { deletedAt: null } }),

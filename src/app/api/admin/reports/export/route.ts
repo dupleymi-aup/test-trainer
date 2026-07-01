@@ -43,8 +43,8 @@ async function logExport(userId: string, reportType: string, format: string, det
         details: JSON.stringify({ reportType, format, ...details }),
       },
     });
-  } catch {
-    // Silently fail — export should not be blocked by logging errors
+  } catch (err) {
+    logger.warn("Activity log write failed", { error: err instanceof Error ? err.message : String(err) });
   }
 }
 
