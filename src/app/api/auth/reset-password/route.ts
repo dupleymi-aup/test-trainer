@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { AppError, formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { AppError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { passwordSchema } from "@/lib/shared-schemas";
 
 const resetPasswordSchema = z.object({
@@ -20,21 +20,11 @@ export async function POST(req: Request) {
       return createRateLimitResponse(result.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = resetPasswordSchema.safeParse(body);
+    const body = await parseRequestBody(req, resetPasswordSchema);
+    if (!body.success) return body.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { newPassword } = parsed.data;
-    let token = parsed.data.token;
+    const { newPassword } = body.data;
+    let token = body.data.token;
     // Fall back to httpOnly cookie if token not in body
     if (!token) {
       try {

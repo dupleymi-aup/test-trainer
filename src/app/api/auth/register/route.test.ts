@@ -253,7 +253,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects invalid email format with 400", async () => {
@@ -262,7 +263,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects password shorter than 8 characters with 400", async () => {
@@ -271,7 +273,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects missing password with 400", async () => {
@@ -281,7 +284,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects email that is too long with 400", async () => {
@@ -290,7 +294,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects password that is too long with 400", async () => {
@@ -299,7 +304,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects name that is too long with 400", async () => {
@@ -308,7 +314,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects phone that is too long with 400", async () => {
@@ -317,7 +324,8 @@ describe("POST /api/auth/register", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
   });
 

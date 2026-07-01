@@ -7,7 +7,7 @@ import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { passwordSchema } from "@/lib/shared-schemas";
 
 const registerSchema = z.object({
@@ -26,20 +26,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(result.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = registerSchema.safeParse(body);
+    const body = await parseRequestBody(req, registerSchema);
+    if (!body.success) return body.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { name, email, phone, password, role } = parsed.data;
+    const { name, email, phone, password, role } = body.data;
 
     // Default to STUDENT role; allow users to choose STUDENT or TEACHER during registration
     const userRole = role || "STUDENT";

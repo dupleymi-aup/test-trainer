@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { passwordSchema } from "@/lib/shared-schemas";
 
 const changePasswordSchema = z.object({
@@ -26,20 +26,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(result.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = changePasswordSchema.safeParse(body);
+    const body = await parseRequestBody(req, changePasswordSchema);
+    if (!body.success) return body.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { currentPassword, newPassword } = parsed.data;
+    const { currentPassword, newPassword } = body.data;
 
     const user = await db.user.findUnique({
       where: { id: auth.session.userId },

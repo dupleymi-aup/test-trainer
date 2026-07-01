@@ -195,7 +195,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("at least 8 characters");
     });
 
     it("rejects newPassword of exactly 7 characters with 400", async () => {
@@ -204,7 +204,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("at least 8 characters");
     });
 
     it("accepts newPassword of exactly 8 characters", async () => {
@@ -229,7 +229,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("too long");
     });
   });
 
@@ -245,7 +245,8 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects empty currentPassword with 400", async () => {
@@ -254,7 +255,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("required");
     });
 
     it("rejects missing newPassword with 400", async () => {
@@ -264,7 +265,8 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects empty newPassword with 400", async () => {
@@ -273,7 +275,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toContain("at least 8 characters");
     });
   });
 
