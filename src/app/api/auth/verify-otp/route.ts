@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { generateSecureToken } from "@/lib/crypto";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const verifyOtpSchema = z.object({
   phone: z.string().min(1, "Phone is required").max(20, "Phone number is too long"),
@@ -18,20 +18,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(result.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = verifyOtpSchema.safeParse(body);
+    const body = await parseRequestBody(req, verifyOtpSchema);
+    if (!body.success) return body.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Provide phone and code", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { phone, code } = parsed.data;
+    const { phone, code } = body.data;
 
     const verificationCode = await db.verificationCode.findFirst({
       where: {
