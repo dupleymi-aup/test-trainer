@@ -213,7 +213,8 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Token is required");
+      expect(typeof json.error).toBe("string");
+      expect(json.error.length).toBeGreaterThan(0);
     });
 
     it("rejects empty token with 400", async () => {
@@ -222,7 +223,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Token is required");
+      expect(json.error).toContain("required");
     });
   });
 

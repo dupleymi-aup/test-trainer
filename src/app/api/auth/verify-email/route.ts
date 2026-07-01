@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const verifyEmailSchema = z.object({
@@ -14,20 +14,10 @@ export async function POST(req: Request) {
     const rl = checkRateLimit("verifyEmail:" + ip, rateLimits.verifyEmail);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = verifyEmailSchema.safeParse(body);
+    const body = await parseRequestBody(req, verifyEmailSchema);
+    if (!body.success) return body.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Token is required", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { token } = parsed.data;
+    const { token } = body.data;
 
     const verificationToken = await db.verificationToken.findUnique({
       where: { token },
