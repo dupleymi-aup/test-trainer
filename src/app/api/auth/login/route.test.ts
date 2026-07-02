@@ -69,7 +69,7 @@ describe("POST /api/auth/login", () => {
   });
 
   it("logs in with phone successfully", async () => {
-    mocks.userFindFirst.mockImplementation(async ({ where }: { where: any }) => {
+    mocks.userFindFirst.mockImplementation(async ({ where }: { where: Record<string, string | undefined> }) => {
       if (where.phone === "+1234567890") return activeUser;
       if (where.email === "john@test.com") return activeUser;
       return null;

@@ -22,19 +22,28 @@ export class APIError extends Error {
 }
 
 /**
- * Base fetch wrapper that automatically includes CSRF tokens.
+ * Base fetch wrapper that:
+ * - Includes credentials (cookies) for all requests
+ * - Adds X-CSRF-Token header for POST/PUT/DELETE/PATCH
  */
 export async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
-  const headers = new Headers(init?.headers);
+  const headers = new Headers(init?.headers || {});
 
-  if (typeof document !== "undefined") {
-    const csrfToken = getCSRFCookie();
-    if (csrfToken) {
-      headers.set(CSRF_HEADER_NAME, csrfToken);
+  const fetchInit: RequestInit = {
+    ...init,
+    headers,
+    credentials: "same-origin",
+  };
+
+  const method = (init?.method || "GET").toUpperCase();
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
+    const token = getCSRFCookie();
+    if (token) {
+      headers.set(CSRF_HEADER_NAME, token);
     }
   }
 
-  return fetch(url, { ...init, headers });
+  return fetch(url, fetchInit);
 }
 
 /**
@@ -137,6 +146,7 @@ export async function apiFetchWithRetry(
       if (isRetryableStatus(response.status, config) && attempt < config.maxRetries) {
         lastError = new APIError(`HTTP ${response.status}`, response.status);
         const delay = calculateRetryDelay(attempt + 1, config);
+        // eslint-disable-next-line no-console
         console.debug(`[apiFetchWithRetry] Retrying after ${delay}ms (attempt ${attempt + 1}/${config.maxRetries})`, { url, status: response.status });
         await sleep(delay);
         continue;
@@ -153,6 +163,7 @@ export async function apiFetchWithRetry(
       if (isNetworkError && config.retryOnNetworkError && attempt < config.maxRetries) {
         lastError = err instanceof Error ? err : new Error(String(err));
         const delay = calculateRetryDelay(attempt + 1, config);
+        // eslint-disable-next-line no-console
         console.debug(`[apiFetchWithRetry] Network error, retrying after ${delay}ms (attempt ${attempt + 1}/${config.maxRetries})`, { url });
         await sleep(delay);
         continue;
