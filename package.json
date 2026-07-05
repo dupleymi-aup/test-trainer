@@ -101,7 +101,8 @@
     "zod": "^4.0.2"
   },
   "overrides": {
-    "prismjs": "1.30.0"
+    "prismjs": "1.30.0",
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@eslint-react/eslint-plugin": "^5.9.2",

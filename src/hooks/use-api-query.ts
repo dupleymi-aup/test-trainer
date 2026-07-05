@@ -32,6 +32,7 @@ export function useApiQuery<T>({
   const [isLoading, setIsLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!url || !enabled) return;
@@ -58,7 +59,7 @@ export function useApiQuery<T>({
 
       if (retryCountRef.current < retries) {
         retryCountRef.current++;
-        setTimeout(fetchData, retryDelay * retryCountRef.current);
+        retryTimerRef.current = setTimeout(fetchData, retryDelay * retryCountRef.current);
         return;
       }
 
@@ -73,6 +74,10 @@ export function useApiQuery<T>({
     fetchData();
     return () => {
       abortControllerRef.current?.abort();
+      if (retryTimerRef.current !== null) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
     };
   }, [fetchData]);
 

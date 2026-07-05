@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 interface UseDebouncedValueReturn<T> {
   debouncedValue: T;
@@ -12,7 +12,7 @@ export function useDebouncedValue<T>(value: T, delay = 300): UseDebouncedValueRe
   const [debouncedValue, setDebouncedValue] = useState(value);
   const [isPending, setIsPending] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelledRef = useRef(false);
+  const debouncedRef = useRef(value);
 
   const cancel = useCallback(() => {
     if (timerRef.current !== null) {
@@ -20,21 +20,30 @@ export function useDebouncedValue<T>(value: T, delay = 300): UseDebouncedValueRe
       timerRef.current = null;
     }
     setIsPending(false);
-    cancelledRef.current = true;
   }, []);
 
-  if (value !== debouncedValue && !timerRef.current && !cancelledRef.current) {
-    setIsPending(true);
-    timerRef.current = setTimeout(() => {
-      setDebouncedValue(value);
+  useEffect(() => {
+    if (value === debouncedRef.current) {
       setIsPending(false);
-      timerRef.current = null;
-    }, delay);
-  }
+      return;
+    }
 
-  if (cancelledRef.current && value === debouncedValue) {
-    cancelledRef.current = false;
-  }
+    setIsPending(true);
+
+    timerRef.current = setTimeout(() => {
+      debouncedRef.current = value;
+      setDebouncedValue(value);
+      timerRef.current = null;
+      setIsPending(false);
+    }, delay);
+
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [value, delay]);
 
   return { debouncedValue, cancel, isPending };
 }

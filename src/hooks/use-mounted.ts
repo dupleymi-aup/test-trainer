@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function useMounted(): boolean {
   const [mounted, setMounted] = useState(false);
 
-  if (!mounted && typeof window !== "undefined") {
+  useEffect(() => {
     setMounted(true);
-  }
+  }, []);
 
   return mounted;
 }

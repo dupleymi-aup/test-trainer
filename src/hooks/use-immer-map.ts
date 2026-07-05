@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 interface UseImmerMapReturn<K, V> {
   map: Map<K, V>;
@@ -14,6 +14,8 @@ interface UseImmerMapReturn<K, V> {
 
 export function useImmerMap<K, V>(initialEntries?: [K, V][]): UseImmerMapReturn<K, V> {
   const [map, setMap] = useState(() => new Map<K, V>(initialEntries));
+  const mapRef = useRef(map);
+  mapRef.current = map;
 
   const set = useCallback((key: K, value: V) => {
     setMap((prev) => {
@@ -46,8 +48,8 @@ export function useImmerMap<K, V>(initialEntries?: [K, V][]): UseImmerMapReturn<
     setMap(new Map());
   }, []);
 
-  const get = useCallback((key: K) => map.get(key), [map]);
-  const has = useCallback((key: K) => map.has(key), [map]);
+  const get = useCallback((key: K) => mapRef.current.get(key), []);
+  const has = useCallback((key: K) => mapRef.current.has(key), []);
 
   return { map, set, update, remove, clear, get, has };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useRouter, usePathname, useSearchParams as useNextSearchParams } from "next/navigation";
 
 interface UseSearchParamsOptions {
@@ -29,25 +29,28 @@ export function useSearchParams(
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useNextSearchParams();
-  const { defaults = {} } = options || {};
+  const defaultsRef = useRef(options?.defaults);
+  defaultsRef.current = options?.defaults;
 
   const params = useMemo(() => searchParams, [searchParams]);
 
   const get = useCallback(
     (key: string): string | null => {
+      const defaults = defaultsRef.current;
       const value = params.get(key);
-      return value ?? (key in defaults ? defaults[key] : null);
+      return value ?? (defaults && key in defaults ? defaults[key] : null);
     },
-    [params, defaults]
+    [params]
   );
 
   const getAll = useCallback((): Record<string, string> => {
+    const defaults = defaultsRef.current;
     const result: Record<string, string> = { ...defaults };
     params.forEach((value, key) => {
       result[key] = value;
     });
     return result;
-  }, [params, defaults]);
+  }, [params]);
 
   const set = useCallback(
     (updates: Record<string, string | null>) => {
@@ -78,9 +81,10 @@ export function useSearchParams(
 
   const has = useCallback(
     (key: string): boolean => {
-      return params.has(key) || key in defaults;
+      const defaults = defaultsRef.current;
+      return params.has(key) || (defaults ? key in defaults : false);
     },
-    [params, defaults]
+    [params]
   );
 
   return { get, getAll, set, remove, has, params };
