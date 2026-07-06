@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, parseInputValue } from "./utils";
+import { cn, parseInputValue, safeJsonParse } from "./utils";
 
 describe("cn", () => {
   it("merges multiple class strings", () => {
@@ -116,5 +116,52 @@ describe("parseInputValue", () => {
   it("does not parse non-numeric strings as numbers", () => {
     expect(parseInputValue("abc")).toBe("abc");
     expect(parseInputValue("12abc")).toBe("12abc");
+  });
+});
+
+describe("safeJsonParse", () => {
+  it("parses valid JSON string", () => {
+    expect(safeJsonParse("[1,2,3]", [])).toEqual([1, 2, 3]);
+  });
+
+  it("parses JSON object", () => {
+    expect(safeJsonParse('{"key":"value"}', {})).toEqual({ key: "value" });
+  });
+
+  it("returns fallback for null input", () => {
+    expect(safeJsonParse(null, [1, 2])).toEqual([1, 2]);
+  });
+
+  it("returns fallback for undefined input", () => {
+    expect(safeJsonParse(undefined, "default")).toBe("default");
+  });
+
+  it("returns fallback for empty string", () => {
+    expect(safeJsonParse("", "fallback")).toBe("fallback");
+  });
+
+  it("returns fallback for invalid JSON", () => {
+    expect(safeJsonParse("not-json", [])).toEqual([]);
+  });
+
+  it("returns fallback for malformed JSON", () => {
+    expect(safeJsonParse('{"incomplete":', null)).toBeNull();
+  });
+
+  it("parses nested JSON structures", () => {
+    const nested = '{"a":{"b":[1,2,3]}}';
+    expect(safeJsonParse(nested, {})).toEqual({ a: { b: [1, 2, 3] } });
+  });
+
+  it("handles JSON primitives", () => {
+    expect(safeJsonParse('"hello"', "")).toBe("hello");
+    expect(safeJsonParse("42", 0)).toBe(42);
+    expect(safeJsonParse("true", false)).toBe(true);
+  });
+
+  it("returns fallback when parsed result is not object or array (primitives)", () => {
+    // JSON.parse can return primitives; safeJsonParse should still return them
+    expect(safeJsonParse("null", "fallback")).toBeNull();
+    expect(safeJsonParse("42", "fallback")).toBe(42);
   });
 });

@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added 10 unit tests for `safeJsonParse` utility function covering valid JSON, null/undefined inputs, invalid JSON, nested structures, and primitive values
+
 ### Fixed
 - Translated error-boundary component text to English ("Something went wrong", "Try again", "Reload page")
-- Translated loading component text to English ("Loading...", aria-labels)
+- Translated loading component text and aria-labels to English ("Loading...")
 - Translated password-strength-indicator labels to English ("Weak", "Fair", "Good", "Strong", check labels)
 - Standardized Zod validation error format across 11 API routes to use `formatZodError()` instead of raw `parsed.error.issues`
 - Replaced Russian-language Zod validation messages with English in teacher/groups, teacher/announcements, teacher/task-constructor, teacher/templates, admin/users, admin/deadlines routes
@@ -17,9 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated subpage-error component to display English error messages
 - Updated keyboard-shortcuts component to display English shortcut descriptions
 - Updated subpage-loading component to display English loading text
-
-### Added
-- Added `safeJsonParse` utility function to `src/lib/utils.ts` for consistent JSON parsing with fallback
 
 ### Changed
 - Replaced duplicate `safeJsonParse` definitions in teacher/templates/[id] and teacher/task-constructor routes with shared import from `src/lib/utils.ts`
