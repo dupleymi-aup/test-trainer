@@ -11,7 +11,7 @@ describe("parsePositiveInt", () => {
   });
 
   it("returns default for undefined", () => {
-    expect(parsePositiveInt(undefined, 10)).toBe(10);
+    expect(parsePositiveInt(undefined as unknown as string, 10)).toBe(10);
   });
 
   it("returns default for empty string", () => {

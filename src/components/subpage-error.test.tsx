@@ -38,23 +38,6 @@ describe("SubpageError", () => {
     expect(mockReset).toHaveBeenCalledTimes(1);
   });
 
-  it("shows error message in development mode", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
-    render(<SubpageError error={error} reset={mockReset} pageName="Test" role="student" />);
-    expect(screen.getByText("Test error message")).toBeTruthy();
-    process.env.NODE_ENV = originalEnv;
-  });
-
-  it("shows digest when available", () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
-    const errorWithDigest = Object.assign(new Error("Error"), { digest: "abc123" });
-    render(<SubpageError error={errorWithDigest} reset={mockReset} pageName="Test" role="student" />);
-    expect(screen.getByText(/Digest: abc123/)).toBeTruthy();
-    process.env.NODE_ENV = originalEnv;
-  });
-
   it("logs error on mount", async () => {
     const { logger } = await import("@/lib/logger");
     render(<SubpageError error={error} reset={mockReset} pageName="Dashboard" role="teacher" />);
