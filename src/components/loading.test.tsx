@@ -16,8 +16,8 @@ describe("LoadingSpinner", () => {
   });
 
   it("renders with text", () => {
-    render(<LoadingSpinner text="Загрузка..." />);
-    expect(screen.getByText("Загрузка...")).toBeInTheDocument();
+    render(<LoadingSpinner text="Loading..." />);
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 });
 
@@ -34,7 +34,7 @@ describe("LoadingSkeleton", () => {
 
   it("has aria-label", () => {
     render(<LoadingSkeleton />);
-    expect(screen.getByRole("status")).toHaveAttribute("aria-label", "Загрузка...");
+    expect(screen.getByRole("status")).toHaveAttribute("aria-label", "Loading...");
   });
 });
 
@@ -45,7 +45,7 @@ describe("PageLoadingSkeleton", () => {
   });
 
   it("renders with custom text", () => {
-    render(<PageLoadingSkeleton text="Загрузка страницы..." />);
-    expect(screen.getByRole("status", { name: "Загрузка страницы..." })).toBeInTheDocument();
+    render(<PageLoadingSkeleton text="Loading page..." />);
+    expect(screen.getByRole("status", { name: "Loading page..." })).toBeInTheDocument();
   });
 });

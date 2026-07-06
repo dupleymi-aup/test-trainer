@@ -12,11 +12,11 @@ interface PasswordStrengthResult {
 
 export function getPasswordStrength(password: string): PasswordStrengthResult {
   const checks = [
-    { label: "Минимум 8 символов", passed: password.length >= 8 },
-    { label: "Заглавная буква", passed: /[A-ZА-ЯЁ]/.test(password) },
-    { label: "Строчная буква", passed: /[a-zа-яё]/.test(password) },
-    { label: "Цифра", passed: /\d/.test(password) },
-    { label: "Спецсимвол", passed: /[!@#$%^&*()_+\-=\]{};':"\\|,.<>/?]/.test(password) },
+    { label: "At least 8 characters", passed: password.length >= 8 },
+    { label: "Uppercase letter", passed: /[A-ZА-ЯЁ]/.test(password) },
+    { label: "Lowercase letter", passed: /[a-zа-яё]/.test(password) },
+    { label: "Digit", passed: /\d/.test(password) },
+    { label: "Special character", passed: /[!@#$%^&*()_+\-=\]{};':"\\|,.<>/?]/.test(password) },
   ];
 
   const passedCount = checks.filter((c) => c.passed).length;
@@ -26,15 +26,15 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
   }
 
   if (passedCount <= 1) {
-    return { score: 1, label: "Слабый", color: "text-red-500 dark:text-red-400", checks };
+    return { score: 1, label: "Weak", color: "text-red-500 dark:text-red-400", checks };
   }
   if (passedCount === 2) {
-    return { score: 2, label: "Средний", color: "text-orange-500 dark:text-orange-400", checks };
+    return { score: 2, label: "Fair", color: "text-orange-500 dark:text-orange-400", checks };
   }
   if (passedCount === 3 || passedCount === 4) {
-    return { score: 3, label: "Хороший", color: "text-yellow-500 dark:text-yellow-400", checks };
+    return { score: 3, label: "Good", color: "text-yellow-500 dark:text-yellow-400", checks };
   }
-  return { score: 4, label: "Надёжный", color: "text-emerald-500 dark:text-emerald-400", checks };
+  return { score: 4, label: "Strong", color: "text-emerald-500 dark:text-emerald-400", checks };
 }
 
 const barColorMap: Record<number, string> = {

@@ -13,42 +13,42 @@ describe("getPasswordStrength", () => {
   it("returns score 1 (weak) for single check", () => {
     const result = getPasswordStrength("short");
     expect(result.score).toBe(1);
-    expect(result.label).toBe("Слабый");
+    expect(result.label).toBe("Weak");
   });
 
   it("returns score 2 (medium) for two checks", () => {
     const result = getPasswordStrength("longer!");
     expect(result.score).toBe(2);
-    expect(result.label).toBe("Средний");
+    expect(result.label).toBe("Fair");
   });
 
   it("returns score 3 (good) for three checks", () => {
     const result = getPasswordStrength("Good1pass");
     expect(result.score).toBe(3);
-    expect(result.label).toBe("Хороший");
+    expect(result.label).toBe("Good");
   });
 
   it("returns score 3 (good) for four checks", () => {
     const result = getPasswordStrength("Goodpass1");
     expect(result.score).toBe(3);
-    expect(result.label).toBe("Хороший");
+    expect(result.label).toBe("Good");
   });
 
   it("returns score 4 (strong) for all five checks", () => {
     const result = getPasswordStrength("Str0ng!Pass");
     expect(result.score).toBe(4);
-    expect(result.label).toBe("Надёжный");
+    expect(result.label).toBe("Strong");
   });
 
   it("includes all 5 check results", () => {
     const result = getPasswordStrength("test");
     expect(result.checks).toHaveLength(5);
     expect(result.checks.map((c) => c.label)).toEqual([
-      "Минимум 8 символов",
-      "Заглавная буква",
-      "Строчная буква",
-      "Цифра",
-      "Спецсимвол",
+      "At least 8 characters",
+      "Uppercase letter",
+      "Lowercase letter",
+      "Digit",
+      "Special character",
     ]);
   });
 
@@ -75,20 +75,20 @@ describe("PasswordStrengthIndicator", () => {
 
   it("renders strength label for non-empty password", () => {
     render(<PasswordStrengthIndicator password="test" />);
-    expect(screen.getByText("Слабый")).toBeTruthy();
+    expect(screen.getByText("Weak")).toBeTruthy();
   });
 
   it("renders all check items", () => {
     render(<PasswordStrengthIndicator password="test" />);
-    expect(screen.getByText("Минимум 8 символов")).toBeTruthy();
-    expect(screen.getByText("Заглавная буква")).toBeTruthy();
-    expect(screen.getByText("Строчная буква")).toBeTruthy();
-    expect(screen.getByText("Цифра")).toBeTruthy();
-    expect(screen.getByText("Спецсимвол")).toBeTruthy();
+    expect(screen.getByText("At least 8 characters")).toBeTruthy();
+    expect(screen.getByText("Uppercase letter")).toBeTruthy();
+    expect(screen.getByText("Lowercase letter")).toBeTruthy();
+    expect(screen.getByText("Digit")).toBeTruthy();
+    expect(screen.getByText("Special character")).toBeTruthy();
   });
 
   it("renders strong label for strong password", () => {
     render(<PasswordStrengthIndicator password="Str0ng!Pass" />);
-    expect(screen.getByText("Надёжный")).toBeTruthy();
+    expect(screen.getByText("Strong")).toBeTruthy();
   });
 });

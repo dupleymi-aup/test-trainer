@@ -37,7 +37,7 @@ export function LoadingSkeleton({
   lines?: number;
 }) {
   return (
-    <div className={cn("animate-pulse space-y-3", className)} role="status" aria-label="Загрузка...">
+    <div className={cn("animate-pulse space-y-3", className)} role="status" aria-label="Loading...">
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
@@ -53,7 +53,7 @@ export function LoadingSkeleton({
 
 /** Full-page loading state with spinner and skeleton cards */
 export function PageLoadingSkeleton({
-  text = "Загрузка...",
+  text = "Loading...",
 }: {
   text?: string;
 }) {

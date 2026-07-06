@@ -47,10 +47,10 @@ export class ErrorBoundary extends Component<Props, State> {
           <AlertTriangle className="h-10 w-10 text-destructive" />
           <div>
             <h3 className="text-lg font-semibold text-destructive">
-              Что-то пошло не так
+              Something went wrong
             </h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Произошла непредвиденная ошибка. Попробуйте обновить страницу.
+              An unexpected error occurred. Please try refreshing the page.
             </p>
             {process.env.NODE_ENV === "development" && this.state.error && (
               <pre className="mt-3 max-w-full overflow-auto rounded bg-muted p-3 text-left text-xs text-muted-foreground">
@@ -64,11 +64,11 @@ export class ErrorBoundary extends Component<Props, State> {
               size="sm"
               onClick={() => this.setState({ hasError: false, error: null })}
             >
-              Попробовать снова
+              Try again
             </Button>
             <Button variant="destructive" size="sm" onClick={this.handleReset}>
               <RefreshCw className="mr-1 h-3 w-3" />
-              Обновить страницу
+              Reload page
             </Button>
           </div>
         </div>

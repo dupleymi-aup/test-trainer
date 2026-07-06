@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Translated error-boundary component text to English ("Something went wrong", "Try again", "Reload page")
+- Translated loading component text to English ("Loading...", aria-labels)
+- Translated password-strength-indicator labels to English ("Weak", "Fair", "Good", "Strong", check labels)
 - Standardized Zod validation error format across 11 API routes to use `formatZodError()` instead of raw `parsed.error.issues`
 - Replaced Russian-language Zod validation messages with English in teacher/groups, teacher/announcements, teacher/task-constructor, teacher/templates, admin/users, admin/deadlines routes
 - Replaced Russian error messages with English in auth/reset-password route

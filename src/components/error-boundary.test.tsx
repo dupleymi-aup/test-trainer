@@ -39,7 +39,7 @@ describe("ErrorBoundary", () => {
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.getByText("Что-то пошло не так")).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
   });
 
   it("renders custom fallback when provided", () => {
@@ -67,7 +67,7 @@ describe("ErrorBoundary", () => {
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.getByText("Попробовать снова")).toBeInTheDocument();
+    expect(screen.getByText("Try again")).toBeInTheDocument();
   });
 
   it("shows reload button", () => {
@@ -76,6 +76,6 @@ describe("ErrorBoundary", () => {
         <ThrowingComponent />
       </ErrorBoundary>
     );
-    expect(screen.getByText("Обновить страницу")).toBeInTheDocument();
+    expect(screen.getByText("Reload page")).toBeInTheDocument();
   });
 });
