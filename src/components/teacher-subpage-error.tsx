@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { SubpageError } from "@/components/subpage-error";
 
 export function TeacherSubpageError({
