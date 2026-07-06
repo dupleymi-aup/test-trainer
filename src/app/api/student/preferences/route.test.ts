@@ -156,6 +156,7 @@ describe("PATCH /api/student/preferences", () => {
     const rateLimit = await import("@/lib/rate-limit");
     vi.mocked(rateLimit.checkRateLimit).mockReturnValueOnce({
       limited: true,
+      remaining: 0,
       resetAt: Date.now() + 60000,
     });
     const res = await PATCH(makeRequest("PATCH", { email: false }));

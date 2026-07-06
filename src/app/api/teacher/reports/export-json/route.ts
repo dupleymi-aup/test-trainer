@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { formatZodError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const exportJsonSchema = z.object({
   groupId: z.string().optional(),
@@ -27,22 +27,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, exportJsonSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = exportJsonSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { groupId, startDate, endDate } = parsed.data;
+    const { groupId, startDate, endDate } = bodyResult.data;
 
     // Require groupId to prevent teachers from exporting all students on the platform
     if (!groupId) {

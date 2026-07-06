@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { formatZodError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
@@ -47,19 +47,11 @@ export async function POST(
     const { session } = guard;
 
     const { id } = await params;
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = addMemberSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, addMemberSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const existing = await db.userGroup.findUnique({
-      where: { userId_groupId: { userId: parsed.data.userId, groupId: id } },
+      where: { userId_groupId: { userId: bodyResult.data.userId, groupId: id } },
     });
 
     if (existing) {
@@ -69,7 +61,7 @@ export async function POST(
     try {
       await db.userGroup.create({
         data: {
-          userId: parsed.data.userId,
+          userId: bodyResult.data.userId,
           groupId: id,
           assignedByUserId: session.userId,
         },

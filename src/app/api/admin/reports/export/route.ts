@@ -6,7 +6,7 @@ import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { formatZodError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { sanitizeCSVValue, sanitizeFilename } from "@/lib/csv-utils";
 
@@ -61,22 +61,10 @@ export async function POST(req: Request) {
     return createRateLimitResponse(rateLimit.resetAt);
   }
 
-  let body: Record<string, unknown>;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+  const bodyResult = await parseRequestBody(req, exportReportSchema);
+  if (!bodyResult.success) return bodyResult.errorResponse;
 
-  const parsed = exportReportSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid data", details: formatZodError(parsed.error) },
-      { status: 400 }
-    );
-  }
-
-  const { reportType, startDate, endDate, format, groupId } = parsed.data;
+  const { reportType, startDate, endDate, format, groupId } = bodyResult.data;
 
   const userId = guard.session.userId;
 

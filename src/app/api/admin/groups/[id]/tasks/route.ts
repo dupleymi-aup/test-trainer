@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { tasks } from "@/lib/tasks";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { formatZodError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
@@ -66,24 +66,16 @@ export async function POST(
       return NextResponse.json({ error: "Group not found" }, { status: 404 });
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = assignTasksSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, assignTasksSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const validTaskIds = new Set(tasks.map((t) => t.id));
-    const invalidTaskIds = parsed.data.taskIds.filter((tid) => !validTaskIds.has(tid));
+    const invalidTaskIds = bodyResult.data.taskIds.filter((tid) => !validTaskIds.has(tid));
     if (invalidTaskIds.length > 0) {
       return NextResponse.json({ error: "Invalid task IDs", invalidTaskIds }, { status: 400 });
     }
 
-    const uniqueTaskIds = [...new Set(parsed.data.taskIds)];
+    const uniqueTaskIds = [...new Set(bodyResult.data.taskIds)];
     await db.groupTask.createMany({
       data: uniqueTaskIds.map((taskId) => ({ groupId: id, taskId })),
     });
@@ -94,7 +86,7 @@ export async function POST(
         action: "GROUP_TASKS_ASSIGN",
         entity: "Group",
         entityId: id,
-        details: JSON.stringify({ taskIds: parsed.data.taskIds }),
+        details: JSON.stringify({ taskIds: bodyResult.data.taskIds }),
       },
     });
 
@@ -147,19 +139,11 @@ export async function DELETE(
       });
     } else {
       // Remove multiple from body
-      let body: Record<string, unknown>;
-      try {
-        body = await req.json();
-      } catch {
-        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-      }
-      const parsed = assignTasksSchema.safeParse(body);
-      if (!parsed.success) {
-        return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
-      }
+      const bodyResult = await parseRequestBody(req, assignTasksSchema);
+      if (!bodyResult.success) return bodyResult.errorResponse;
 
       await db.groupTask.deleteMany({
-        where: { groupId: id, taskId: { in: parsed.data.taskIds } },
+        where: { groupId: id, taskId: { in: bodyResult.data.taskIds } },
       });
 
       await db.activityLog.create({
@@ -168,7 +152,7 @@ export async function DELETE(
           action: "GROUP_TASKS_REMOVE",
           entity: "Group",
           entityId: id,
-          details: JSON.stringify({ taskIds: parsed.data.taskIds }),
+          details: JSON.stringify({ taskIds: bodyResult.data.taskIds }),
         },
       });
     }

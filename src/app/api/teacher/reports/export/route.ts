@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { formatZodError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
@@ -29,22 +29,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, exportSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = exportSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { groupId, startDate, endDate, exportType } = parsed.data;
+    const { groupId, startDate, endDate, exportType } = bodyResult.data;
 
     // Require groupId to prevent teachers from exporting all students on the platform
     if (!groupId) {
