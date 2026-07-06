@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added 10 unit tests for `safeJsonParse` utility function covering edge cases
 
 ### Fixed
+- Translated reminder-templates (email/SMS) to English: type labels, greetings, time texts, subjects, and body content
+- Updated reminder-templates tests to match new English content
 - Translated email templates (password reset, verification) and sender name to English
 - Updated email test assertions to match new English content
 - Translated JSDoc comments in `storage.ts` to English (15 comments)

@@ -3,11 +3,11 @@
  */
 
 const typeLabels: Record<string, string> = {
-  EXAM: "Экзамен",
-  TEST: "Зачёт",
-  ASSIGNMENT: "Задание",
-  COURSE_END: "Окончание курса",
-  REGISTRATION_END: "Окончание регистрации",
+  EXAM: "Exam",
+  TEST: "Test",
+  ASSIGNMENT: "Assignment",
+  COURSE_END: "Course End",
+  REGISTRATION_END: "Registration End",
 };
 
 const typeColors: Record<string, string> = {
@@ -51,7 +51,7 @@ interface OverdueSMSOptions {
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleString("ru-RU", {
+  return date.toLocaleString("en-US", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -68,18 +68,18 @@ export function generateDeadlineReminderEmail({
 }: ReminderEmailOptions): { subject: string; html: string; text: string } {
   const typeLabel = typeLabels[deadline.type] || deadline.type;
   const color = typeColors[deadline.type] || "#2563eb";
-  const greeting = userName ? `Здравствуйте, ${userName}!` : "Здравствуйте!";
+  const greeting = userName ? `Hello ${userName}!` : "Hello!";
 
   let timeText: string;
   if (daysRemaining === 0) {
-    timeText = "Сегодня последний день!";
+    timeText = "Today is the last day!";
   } else if (daysRemaining === 1) {
-    timeText = "Остался 1 день";
+    timeText = "1 day remaining";
   } else {
-    timeText = `Осталось ${daysRemaining} дн.`;
+    timeText = `${daysRemaining} days remaining`;
   }
 
-  const subject = `Напоминание: ${deadline.title} — ${timeText}`;
+  const subject = `Reminder: ${deadline.title} — ${timeText}`;
 
   const html = `
     <div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
@@ -92,20 +92,20 @@ export function generateDeadlineReminderEmail({
         </div>
         <h3 style="margin:0 0 8px;font-size:20px;">${deadline.title}</h3>
         ${deadline.description ? `<p style="color:#6b7280;margin:0 0 16px;font-size:14px;">${deadline.description}</p>` : ""}
-        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Группа: ${deadline.groupName}</p>` : ""}
+        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Group: ${deadline.groupName}</p>` : ""}
         <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;">
-          <p style="margin:0 0 4px;font-size:14px;color:#374151;"><strong>Срок:</strong> ${formatDate(deadline.dueDate)}</p>
+          <p style="margin:0 0 4px;font-size:14px;color:#374151;"><strong>Due:</strong> ${formatDate(deadline.dueDate)}</p>
           <p style="margin:0;font-size:18px;font-weight:700;color:${color};">${timeText}</p>
         </div>
         <a href="${baseUrl}/student/reminders" style="display:inline-block;padding:12px 24px;background:${color};color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">
-          Перейти к напоминаниям
+          View Reminders
         </a>
-        <p style="margin-top:24px;font-size:12px;color:#9ca3af;">Тренажёр тестирования — автоматическое напоминание</p>
+        <p style="margin-top:24px;font-size:12px;color:#9ca3af;">Test Trainer — automatic reminder</p>
       </div>
     </div>
   `;
 
-  const text = `${greeting}\n\nНапоминание: ${deadline.title} (${typeLabel})\nСрок: ${formatDate(deadline.dueDate)}\n${timeText}\n\nПерейти: ${baseUrl}/student/reminders`;
+  const text = `${greeting}\n\nReminder: ${deadline.title} (${typeLabel})\nDue: ${formatDate(deadline.dueDate)}\n${timeText}\n\nView: ${baseUrl}/student/reminders`;
 
   return { subject, html, text };
 }
@@ -117,9 +117,9 @@ export function generateDeadlineOverdueEmail({
   baseUrl,
 }: OverdueEmailOptions): { subject: string; html: string; text: string } {
   const typeLabel = typeLabels[deadline.type] || deadline.type;
-  const greeting = userName ? `Здравствуйте, ${userName}!` : "Здравствуйте!";
+  const greeting = userName ? `Hello ${userName}!` : "Hello!";
 
-  const subject = `СРОЧНО: ${deadline.title} — дедлайн просрочен!`;
+  const subject = `URGENT: ${deadline.title} — deadline overdue!`;
 
   const html = `
     <div style="font-family:system-ui,-apple-system,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
@@ -128,25 +128,25 @@ export function generateDeadlineOverdueEmail({
       </div>
       <div style="border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;padding:24px;">
         <div style="display:inline-block;padding:4px 12px;background:#dc262615;color:#dc2626;border-radius:4px;font-size:12px;font-weight:600;margin-bottom:12px;">
-          ${typeLabel} — ПРОСРОЧЕН
+          ${typeLabel} — OVERDUE
         </div>
         <h3 style="margin:0 0 8px;font-size:20px;">${deadline.title}</h3>
         ${deadline.description ? `<p style="color:#6b7280;margin:0 0 16px;font-size:14px;">${deadline.description}</p>` : ""}
-        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Группа: ${deadline.groupName}</p>` : ""}
+        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Group: ${deadline.groupName}</p>` : ""}
         <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:16px 0;">
-          <p style="margin:0 0 4px;font-size:14px;color:#374151;"><strong>Срок был:</strong> ${formatDate(deadline.dueDate)}</p>
-          <p style="margin:0;font-size:18px;font-weight:700;color:#dc2626;">Просрочен на ${daysOverdue} дн.</p>
+          <p style="margin:0 0 4px;font-size:14px;color:#374151;"><strong>Was due:</strong> ${formatDate(deadline.dueDate)}</p>
+          <p style="margin:0;font-size:18px;font-weight:700;color:#dc2626;">Overdue by ${daysOverdue} days</p>
         </div>
-        <p style="color:#6b7280;font-size:14px;margin:0 0 16px;">Пожалуйста, обратитесь к преподавателю для уточнения ситуации.</p>
+        <p style="color:#6b7280;font-size:14px;margin:0 0 16px;">Please contact your instructor for clarification.</p>
         <a href="${baseUrl}/student/reminders" style="display:inline-block;padding:12px 24px;background:#dc2626;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;">
-          Перейти к напоминаниям
+          View Reminders
         </a>
-        <p style="margin-top:24px;font-size:12px;color:#9ca3af;">Тренажёр тестирования — автоматическое напоминание</p>
+        <p style="margin-top:24px;font-size:12px;color:#9ca3af;">Test Trainer — automatic reminder</p>
       </div>
     </div>
   `;
 
-  const text = `${greeting}\n\nСРОЧНО: ${deadline.title} (${typeLabel}) — ПРОСРОЧЕН!\nСрок был: ${formatDate(deadline.dueDate)}\nПросрочен на ${daysOverdue} дн.\n\nОбратитесь к преподавателю.\nПерейти: ${baseUrl}/student/reminders`;
+  const text = `${greeting}\n\nURGENT: ${deadline.title} (${typeLabel}) — OVERDUE!\nWas due: ${formatDate(deadline.dueDate)}\nOverdue by ${daysOverdue} days\n\nContact your instructor.\nView: ${baseUrl}/student/reminders`;
 
   return { subject, html, text };
 }
@@ -157,19 +157,19 @@ export function generateDeadlineReminderSMS({
 }: ReminderSMSOptions): string {
   let timeText: string;
   if (daysRemaining === 0) {
-    timeText = "Сегодня последний день!";
+    timeText = "Today is the last day!";
   } else if (daysRemaining === 1) {
-    timeText = "Остался 1 день";
+    timeText = "1 day remaining";
   } else {
-    timeText = `Осталось ${daysRemaining} дн.`;
+    timeText = `${daysRemaining} days remaining`;
   }
 
-  return `Напоминание: ${deadline.title} до ${formatDate(deadline.dueDate)}. ${timeText}. Тренажёр тестирования.`;
+  return `Reminder: ${deadline.title} due ${formatDate(deadline.dueDate)}. ${timeText}. Test Trainer.`;
 }
 
 export function generateDeadlineOverdueSMS({
   deadline,
   daysOverdue,
 }: OverdueSMSOptions): string {
-  return `СРОЧНО: ${deadline.title} просрочен на ${daysOverdue} дн.! Обратитесь к преподавателю. Тренажёр тестирования.`;
+  return `URGENT: ${deadline.title} overdue by ${daysOverdue} days! Contact your instructor. Test Trainer.`;
 }
