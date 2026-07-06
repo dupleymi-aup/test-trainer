@@ -29,8 +29,8 @@ export async function GET() {
 }
 
 const createGroupSchema = z.object({
-  name: z.string().min(1, "Название обязательно").max(200, "Название слишком длинное"),
-  description: z.string().max(1000, "Описание слишком длинное").optional(),
+  name: z.string().min(1, "Name is required").max(200, "Name is too long"),
+  description: z.string().max(1000, "Description is too long").optional(),
 });
 
 export async function POST(req: Request) {

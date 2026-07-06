@@ -7,9 +7,9 @@ import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from
 import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
 
 const deadlineSchema = z.object({
-  title: z.string().min(1, "Название обязательно").max(200, "Название слишком длинное"),
-  description: z.string().max(2000, "Описание слишком длинное").optional().nullable(),
-  dueDate: z.string().datetime({ message: "Неверный формат даты" }),
+  title: z.string().min(1, "Title is required").max(200, "Title is too long"),
+  description: z.string().max(2000, "Description is too long").optional().nullable(),
+  dueDate: z.string().datetime({ message: "Invalid date format" }),
   type: z.enum(["EXAM", "TEST", "ASSIGNMENT", "COURSE_END", "REGISTRATION_END"]),
   groupId: z.string().nullable().optional(),
   taskId: z.number().nullable().optional(),

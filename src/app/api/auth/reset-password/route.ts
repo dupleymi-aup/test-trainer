@@ -49,12 +49,12 @@ export async function POST(req: Request) {
       });
 
       if (!verificationToken || verificationToken.expires < new Date()) {
-        throw new AppError(400, "Неверный токен или срок его действия истёк");
+        throw new AppError(400, "Invalid or expired token");
       }
 
       // Ensure this is actually a password-reset token, not another token type
       if (!verificationToken.identifier.startsWith("password-reset:")) {
-        throw new AppError(400, "Неверный тип токена");
+        throw new AppError(400, "Invalid token type");
       }
 
       // Extract user ID from identifier (format: password-reset:userId)

@@ -11,16 +11,16 @@ describe("KeyboardShortcutsDialog", () => {
 
   it("renders all shortcut descriptions", () => {
     render(<KeyboardShortcutsDialog open={true} onOpenChange={vi.fn()} />);
-    expect(screen.getByText("Проверить тест-кейсы")).toBeTruthy();
-    expect(screen.getByText("Отменить (undo)")).toBeTruthy();
-    expect(screen.getByText("Вернуть (redo)")).toBeTruthy();
-    expect(screen.getByText("Подсказка (случайный непокрытый EC)")).toBeTruthy();
-    expect(screen.getByText("Заполнить все непокрытые EC")).toBeTruthy();
-    expect(screen.getByText("Заполнить все непокрытые BV")).toBeTruthy();
-    expect(screen.getByText("Случайное задание")).toBeTruthy();
-    expect(screen.getByText("Показать горячие клавиши")).toBeTruthy();
-    expect(screen.getByText("Быстрый выбор задания")).toBeTruthy();
-    expect(screen.getByText("Закрыть диалог")).toBeTruthy();
+    expect(screen.getByText("Check test cases")).toBeTruthy();
+    expect(screen.getByText("Undo")).toBeTruthy();
+    expect(screen.getByText("Redo")).toBeTruthy();
+    expect(screen.getByText("Hint (random uncovered EC)")).toBeTruthy();
+    expect(screen.getByText("Fill all uncovered ECs")).toBeTruthy();
+    expect(screen.getByText("Fill all uncovered BVs")).toBeTruthy();
+    expect(screen.getByText("Random task")).toBeTruthy();
+    expect(screen.getByText("Show keyboard shortcuts")).toBeTruthy();
+    expect(screen.getByText("Quick task selection")).toBeTruthy();
+    expect(screen.getByText("Close dialog")).toBeTruthy();
   });
 
   it("renders kbd elements for keyboard shortcuts", () => {

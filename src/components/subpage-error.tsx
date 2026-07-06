@@ -23,10 +23,10 @@ export function SubpageError({ error, reset, pageName, role }: SubpageErrorProps
       <AlertTriangle className="h-10 w-10 text-destructive" />
       <div>
         <h3 className="text-lg font-semibold text-destructive">
-          Ошибка загрузки: {pageName}
+          Error loading: {pageName}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Не удалось загрузить данные. Попробуйте обновить страницу.
+          Failed to load data. Please try refreshing the page.
         </p>
         {process.env.NODE_ENV === "development" && error.message && (
           <pre className="mt-3 max-w-full overflow-auto rounded bg-muted p-3 text-left text-xs text-muted-foreground">
@@ -37,11 +37,11 @@ export function SubpageError({ error, reset, pageName, role }: SubpageErrorProps
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={reset}>
-          Попробовать снова
+          Try again
         </Button>
         <Button variant="destructive" size="sm" onClick={() => window.location.reload()}>
           <RefreshCw className="mr-1 h-3 w-3" />
-          Обновить страницу
+          Reload page
         </Button>
       </div>
     </div>

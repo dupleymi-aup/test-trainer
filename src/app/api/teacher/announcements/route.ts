@@ -3,12 +3,12 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createAnnouncementSchema = z.object({
-  title: z.string().min(1, "Заголовок обязателен").max(200),
-  content: z.string().min(1, "Содержание обязательно").max(5000),
+  title: z.string().min(1, "Title is required").max(200),
+  content: z.string().min(1, "Content is required").max(5000),
   groupId: z.string().nullable().optional(),
   expiresAt: z.string().nullable().optional(),
 });
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
     const parsed = createAnnouncementSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.issues }, { status: 400 });
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const { title, content, groupId, expiresAt } = parsed.data;
@@ -180,7 +180,7 @@ export async function PATCH(req: Request) {
 
     const parsed = updateAnnouncementSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.issues }, { status: 400 });
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const { id, title, content, expiresAt } = parsed.data;

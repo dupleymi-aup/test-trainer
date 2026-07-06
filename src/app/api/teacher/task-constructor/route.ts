@@ -3,13 +3,9 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
+import { safeJsonParse } from "@/lib/utils";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-
-function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
-  if (!raw) return fallback;
-  try { return JSON.parse(raw) as T; } catch { return fallback; }
-}
 
 const paramSchema = z.object({
   name: z.string().min(1).max(100),
@@ -18,11 +14,11 @@ const paramSchema = z.object({
 });
 
 const taskSchema = z.object({
-  name: z.string().min(1, "Название обязательно").max(200),
-  difficulty: z.enum(["Легко", "Средне", "Сложно"]),
-  signature: z.string().min(1, "Сигнатура обязательна"),
-  description: z.string().min(1, "Описание обязательно").max(3000),
-  returnType: z.string().min(1, "Тип возврата обязателен"),
+  name: z.string().min(1, "Name is required").max(200),
+  difficulty: z.enum(["Easy", "Medium", "Hard"]),
+  signature: z.string().min(1, "Signature is required"),
+  description: z.string().min(1, "Description is required").max(3000),
+  returnType: z.string().min(1, "Return type is required"),
   topics: z.array(z.string()).min(1),
   parameters: z.array(paramSchema),
   ecClasses: z.array(z.object({
@@ -35,7 +31,7 @@ const taskSchema = z.object({
     value: z.string().min(1),
     description: z.string().max(300).optional(),
   })).min(1),
-  code: z.string().min(1, "Код обязателен"),
+  code: z.string().min(1, "Code is required"),
   commonMistakes: z.array(z.string()).optional(),
   groupId: z.string().optional(),
 });
@@ -111,7 +107,7 @@ export async function POST(req: Request) {
 
     const parsed = taskSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: parsed.error.issues }, { status: 400 });
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
     }
 
     const { groupId, ...taskData } = parsed.data;

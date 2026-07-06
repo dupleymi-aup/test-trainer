@@ -10,16 +10,16 @@ import {
 } from "@/components/ui/dialog";
 
 const shortcuts = [
-  { keys: ["Ctrl", "Enter"], description: "Проверить тест-кейсы" },
-  { keys: ["Ctrl", "Z"], description: "Отменить (undo)" },
-  { keys: ["Ctrl", "Shift", "Z"], description: "Вернуть (redo)" },
-  { keys: ["H"], description: "Подсказка (случайный непокрытый EC)" },
-  { keys: ["F"], description: "Заполнить все непокрытые EC" },
-  { keys: ["B"], description: "Заполнить все непокрытые BV" },
-  { keys: ["R"], description: "Случайное задание" },
-  { keys: ["?"], description: "Показать горячие клавиши" },
-  { keys: ["1", "–", "10"], description: "Быстрый выбор задания" },
-  { keys: ["Esc"], description: "Закрыть диалог" },
+  { keys: ["Ctrl", "Enter"], description: "Check test cases" },
+  { keys: ["Ctrl", "Z"], description: "Undo" },
+  { keys: ["Ctrl", "Shift", "Z"], description: "Redo" },
+  { keys: ["H"], description: "Hint (random uncovered EC)" },
+  { keys: ["F"], description: "Fill all uncovered ECs" },
+  { keys: ["B"], description: "Fill all uncovered BVs" },
+  { keys: ["R"], description: "Random task" },
+  { keys: ["?"], description: "Show keyboard shortcuts" },
+  { keys: ["1", "–", "10"], description: "Quick task selection" },
+  { keys: ["Esc"], description: "Close dialog" },
 ];
 
 export function KeyboardShortcutsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
@@ -28,10 +28,10 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: { open: boolean;
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            ⌨️ Горячие клавиши
+            Keyboard Shortcuts
           </DialogTitle>
           <DialogDescription>
-            Быстрые комбинации для работы с тренажёром
+            Quick combinations for the trainer
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 pt-2">

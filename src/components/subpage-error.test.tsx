@@ -19,22 +19,22 @@ describe("SubpageError", () => {
 
   it("renders page name in heading", () => {
     render(<SubpageError error={error} reset={mockReset} pageName="Dashboard" role="student" />);
-    expect(screen.getByText("Ошибка загрузки: Dashboard")).toBeTruthy();
+    expect(screen.getByText("Error loading: Dashboard")).toBeTruthy();
   });
 
   it("renders retry button", () => {
     render(<SubpageError error={error} reset={mockReset} pageName="Test" role="student" />);
-    expect(screen.getByText("Попробовать снова")).toBeTruthy();
+    expect(screen.getByText("Try again")).toBeTruthy();
   });
 
   it("renders reload button", () => {
     render(<SubpageError error={error} reset={mockReset} pageName="Test" role="student" />);
-    expect(screen.getByText("Обновить страницу")).toBeTruthy();
+    expect(screen.getByText("Reload page")).toBeTruthy();
   });
 
   it("calls reset when retry button is clicked", () => {
     render(<SubpageError error={error} reset={mockReset} pageName="Test" role="student" />);
-    fireEvent.click(screen.getByText("Попробовать снова"));
+    fireEvent.click(screen.getByText("Try again"));
     expect(mockReset).toHaveBeenCalledTimes(1);
   });
 
@@ -53,7 +53,7 @@ describe("AdminSubpageError", () => {
     const { logger } = await import("@/lib/logger");
     const error = new Error("Admin error");
     render(<AdminSubpageError error={error} reset={vi.fn()} pageName="Settings" />);
-    expect(screen.getByText("Ошибка загрузки: Settings")).toBeTruthy();
+    expect(screen.getByText("Error loading: Settings")).toBeTruthy();
     expect(logger.error).toHaveBeenCalledWith(
       "[AdminError:Settings]",
       { error: "Admin error" }
@@ -66,7 +66,7 @@ describe("StudentSubpageError", () => {
     const { logger } = await import("@/lib/logger");
     const error = new Error("Student error");
     render(<StudentSubpageError error={error} reset={vi.fn()} pageName="Profile" />);
-    expect(screen.getByText("Ошибка загрузки: Profile")).toBeTruthy();
+    expect(screen.getByText("Error loading: Profile")).toBeTruthy();
     expect(logger.error).toHaveBeenCalledWith(
       "[StudentError:Profile]",
       { error: "Student error" }
@@ -79,7 +79,7 @@ describe("TeacherSubpageError", () => {
     const { logger } = await import("@/lib/logger");
     const error = new Error("Teacher error");
     render(<TeacherSubpageError error={error} reset={vi.fn()} pageName="Gradebook" />);
-    expect(screen.getByText("Ошибка загрузки: Gradebook")).toBeTruthy();
+    expect(screen.getByText("Error loading: Gradebook")).toBeTruthy();
     expect(logger.error).toHaveBeenCalledWith(
       "[TeacherError:Gradebook]",
       { error: "Teacher error" }

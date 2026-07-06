@@ -8,18 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- Removed stray `"2"` dependency from package.json that caused npm resolution issues on Windows
-- Removed unused `twilio` from `serverExternalPackages` in next.config.ts
-- Removed `ignoreBuildErrors: true` workaround — builds now fail fast on TypeScript errors
-- Added missing React imports to progress-stats-bar, task-card, and results-panel components
-- Replaced non-existent Timeline icon with Route icon in admin navigation
+- Standardized Zod validation error format across 11 API routes to use `formatZodError()` instead of raw `parsed.error.issues`
+- Replaced Russian-language Zod validation messages with English in teacher/groups, teacher/announcements, teacher/task-constructor, teacher/templates, admin/users, admin/deadlines routes
+- Replaced Russian error messages with English in auth/reset-password route
+- Updated subpage-error component to display English error messages
+- Updated keyboard-shortcuts component to display English shortcut descriptions
+- Updated subpage-loading component to display English loading text
 
 ### Added
-- Expanded i18n translations from ~38 to 120+ keys covering navigation, trainer, auth, progress, onboarding, achievements, and UI components
-- Comprehensive CHANGELOG.md
+- Added `safeJsonParse` utility function to `src/lib/utils.ts` for consistent JSON parsing with fallback
 
 ### Changed
-- Cleaned up next.config.ts by removing Windows/WSL-specific workarounds
+- Replaced duplicate `safeJsonParse` definitions in teacher/templates/[id] and teacher/task-constructor routes with shared import from `src/lib/utils.ts`
 
 ## [0.2.0] — 2025-05-21
 

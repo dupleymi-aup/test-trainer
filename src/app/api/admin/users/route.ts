@@ -102,13 +102,13 @@ export async function GET(req: Request) {
 }
 
 const createUserSchema = z.object({
-  name: z.string().min(1, "Имя обязательно").max(100, "Имя слишком длинное").optional(),
-  email: z.string().email("Неверный формат email").max(255, "Email слишком длинный").optional().nullable(),
-  phone: z.string().max(20, "Номер телефона слишком длинный").optional().nullable(),
+  name: z.string().min(1, "Name is required").max(100, "Name is too long").optional(),
+  email: z.string().email("Invalid email format").max(255, "Email is too long").optional().nullable(),
+  phone: z.string().max(20, "Phone number is too long").optional().nullable(),
   password: passwordSchema,
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
-  university: z.string().max(200, "Название университета слишком длинное").optional().nullable(),
-  group: z.string().max(100, "Название группы слишком длинное").optional().nullable(),
+  university: z.string().max(200, "University name is too long").optional().nullable(),
+  group: z.string().max(100, "Group name is too long").optional().nullable(),
 });
 
 export async function POST(req: Request) {

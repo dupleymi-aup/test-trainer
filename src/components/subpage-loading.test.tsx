@@ -6,12 +6,12 @@ import { SubpageLoading } from "./subpage-loading";
 describe("SubpageLoading", () => {
   it("renders loading spinner with page name", () => {
     render(<SubpageLoading pageName="Dashboard" />);
-    expect(screen.getByText("Загрузка: Dashboard...")).toBeTruthy();
+    expect(screen.getByText("Loading: Dashboard...")).toBeTruthy();
   });
 
   it("renders with different page name", () => {
     render(<SubpageLoading pageName="Analytics" />);
-    expect(screen.getByText("Загрузка: Analytics...")).toBeTruthy();
+    expect(screen.getByText("Loading: Analytics...")).toBeTruthy();
   });
 
   it("has min-height container", () => {

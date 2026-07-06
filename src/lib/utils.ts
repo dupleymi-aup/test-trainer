@@ -6,6 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Safely parse a JSON string, returning the fallback on failure.
+ * Useful for deserializing Prisma JSON columns stored as strings.
+ */
+export function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) return fallback;
+  try { return JSON.parse(raw) as T; } catch { return fallback; }
+}
+
+/**
  * Parse a user-input string into a typed JavaScript value.
  * Handles: booleans (EN/RU), null, undefined, numbers (incl. scientific notation), JSON objects/arrays.
  * Falls back to the trimmed string.
