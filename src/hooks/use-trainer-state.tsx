@@ -7,9 +7,9 @@ import type { Task, Difficulty, TestCaseCategory } from "@/lib/tasks";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { evaluateTestCases } from "@/lib/evaluator";
 import { UndoStack } from "@/lib/undo-stack";
-import { apiFetch } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
 import { parseInputValue } from "@/lib/utils";
+import { syncAttemptToServer } from "@/lib/attempt-sync";
 import {
   saveProgress,
   loadProgress,
@@ -30,33 +30,6 @@ import {
 } from "@/lib/storage";
 import { checkAndUnlockAchievements, achievements as allAchievements } from "@/lib/achievements";
 import { AchievementToast } from "@/components/achievements-panel";
-
-// Sync attempt to server (non-blocking, fire-and-forget)
-async function syncAttemptToServer(payload: {
-  taskId: string;
-  testCases: { id: string; inputs: unknown[]; expectedOutput: string; category: string; comment?: string }[];
-  score: number;
-  ecCoverage: number;
-  bvCoverage: number;
-  correctness: number;
-  coveredEcIds: string[];
-  coveredBvDescriptions: string[];
-  timeSpent: number;
-}) {
-  try {
-    const res = await apiFetch("/api/attempts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      logger.warn("Failed to sync attempt to server", { status: res.status });
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.warn("Failed to sync attempt to server", { error: message });
-  }
-}
 
 export type TabValue = "tasks" | "trainer" | "results" | "statistics" | "exam" | "theory" | "quiz";
 export type SortMode = "По номеру" | "По имени" | "По сложности";

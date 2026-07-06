@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Extracted `syncAttemptToServer` from `use-trainer-state` hook into dedicated `src/lib/attempt-sync.ts` module with `AttemptSyncPayload` interface
+- Added 4 unit tests for `attempt-sync` module covering success, server error, network error, and non-Error cases
 - Added 16 unit tests for `logger` module: debug/info/warn/error levels, LOG_LEVEL filtering, JSON formatting, Error context extraction
 - Added 5 unit tests for `useFetch` hook: `onSuccess` callback, `onError` callback, `invalidateFetchCache` with pattern matching and void return
 - Added 10 unit tests for `safeJsonParse` utility function covering edge cases
