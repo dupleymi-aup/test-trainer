@@ -41,7 +41,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
 
   try {
     await transporter.sendMail({
-      from: `"Тренажёр тестирования" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+      from: `"Test Trainer" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
       to,
       subject,
       html,
@@ -57,26 +57,26 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
 export function generatePasswordResetEmail(token: string, baseUrl: string): { subject: string; html: string; text: string } {
   const url = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
   return {
-    subject: "Восстановление пароля — Тренажёр тестирования",
+    subject: "Password Reset — Test Trainer",
     html: `
-      <h2>Восстановление пароля</h2>
-      <p>Вы запросили восстановление пароля. Нажмите на ссылку ниже, чтобы установить новый пароль:</p>
-      <a href="${url}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:6px;">Восстановить пароль</a>
-      <p style="margin-top:16px;color:#666;font-size:12px;">Ссылка действительна 1 час.</p>
+      <h2>Password Reset</h2>
+      <p>You requested a password reset. Click the link below to set a new password:</p>
+      <a href="${url}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:6px;">Reset Password</a>
+      <p style="margin-top:16px;color:#666;font-size:12px;">This link is valid for 1 hour.</p>
     `,
-    text: `Восстановление пароля. Перейдите по ссылке: ${url}`,
+    text: `Password reset. Follow this link: ${url}`,
   };
 }
 
 export function generateVerificationEmail(token: string, baseUrl: string): { subject: string; html: string; text: string } {
   const url = `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
   return {
-    subject: "Подтверждение email — Тренажёр тестирования",
+    subject: "Email Verification — Test Trainer",
     html: `
-      <h2>Подтверждение email</h2>
-      <p>Спасибо за регистрацию! Нажмите на ссылку ниже, чтобы подтвердить ваш email:</p>
-      <a href="${url}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:6px;">Подтвердить email</a>
+      <h2>Email Verification</h2>
+      <p>Thank you for registering! Click the link below to verify your email:</p>
+      <a href="${url}" style="display:inline-block;padding:12px 24px;background:#059669;color:#fff;text-decoration:none;border-radius:6px;">Verify Email</a>
     `,
-    text: `Подтвердите email: ${url}`,
+    text: `Verify your email: ${url}`,
   };
 }

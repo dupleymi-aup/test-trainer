@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added 10 unit tests for `safeJsonParse` utility function covering edge cases
 
 ### Fixed
+- Translated email templates (password reset, verification) and sender name to English
+- Updated email test assertions to match new English content
 - Translated JSDoc comments in `storage.ts` to English (15 comments)
 - Updated AppError JSDoc usage example to English
 - Translated error-boundary component text to English ("Something went wrong", "Try again", "Reload page")

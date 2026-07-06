@@ -26,7 +26,7 @@ beforeEach(() => {
 describe("generatePasswordResetEmail", () => {
   it("generates email with reset link", () => {
     const result = generatePasswordResetEmail("tok123", "http://localhost:3000");
-    expect(result.subject).toContain("Восстановление пароля");
+    expect(result.subject).toContain("Password Reset");
     expect(result.html).toContain("reset-password?token=tok123");
     expect(result.text).toContain("http://localhost:3000/reset-password?token=tok123");
   });
@@ -40,7 +40,7 @@ describe("generatePasswordResetEmail", () => {
 describe("generateVerificationEmail", () => {
   it("generates email with verification link", () => {
     const result = generateVerificationEmail("tok456", "http://localhost:3000");
-    expect(result.subject).toContain("Подтверждение email");
+    expect(result.subject).toContain("Email Verification");
     expect(result.html).toContain("verify-email?token=tok456");
     expect(result.text).toContain("http://localhost:3000/verify-email?token=tok456");
   });
