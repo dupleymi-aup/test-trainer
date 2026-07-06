@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added 10 unit tests for `safeJsonParse` utility function covering valid JSON, null/undefined inputs, invalid JSON, nested structures, and primitive values
+- Added 5 unit tests for `useFetch` hook: `onSuccess` callback, `onError` callback, `invalidateFetchCache` with pattern matching and void return
+- Added 10 unit tests for `safeJsonParse` utility function covering edge cases
 
 ### Fixed
 - Translated error-boundary component text to English ("Something went wrong", "Try again", "Reload page")

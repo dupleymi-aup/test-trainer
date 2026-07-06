@@ -75,4 +75,60 @@ describe("useFetch", () => {
     result.current.refetch();
     await waitFor(() => expect(result.current.data).toEqual({ v: 2 }));
   });
+
+  it("calls onSuccess callback on successful fetch", async () => {
+    const onSuccess = vi.fn();
+    const mockData = { ok: true };
+    mockFetchJson.mockResolvedValue(mockData);
+
+    renderHook(() => useFetch("/api/success", { onSuccess }));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(mockData));
+  });
+
+  it("calls onError callback on failed fetch", async () => {
+    const onError = vi.fn();
+    const err = new Error("fail");
+    (err as Error & { name: string }).name = "APIError";
+    (err as Error & { status: number }).status = 500;
+    mockFetchJson.mockRejectedValue(err);
+
+    renderHook(() => useFetch("/api/error-cb", { onError }));
+    await waitFor(() => expect(onError).toHaveBeenCalled());
+  });
+});
+
+describe("invalidateFetchCache", () => {
+  it("clears entire cache when called without pattern", async () => {
+    mockFetchJson.mockResolvedValue({ cached: true });
+
+    const { result } = renderHook(() => useFetch("/api/cache-clear"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    invalidateFetchCache();
+
+    mockFetchJson.mockResolvedValue({ cached: false });
+    result.current.refetch();
+    await waitFor(() => expect(result.current.data).toEqual({ cached: false }));
+  });
+
+  it("clears matching entries when called with pattern", async () => {
+    mockFetchJson.mockResolvedValue({ v: 1 });
+
+    renderHook(() => useFetch("/api/analytics-students"));
+    await waitFor(() => expect(mockFetchJson).toHaveBeenCalled());
+
+    // Should not throw
+    invalidateFetchCache("analytics");
+
+    // Subsequent fetch should re-fetch (not from cache)
+    mockFetchJson.mockClear();
+    mockFetchJson.mockResolvedValue({ v: 2 });
+    renderHook(() => useFetch("/api/analytics-students"));
+    await waitFor(() => expect(mockFetchJson).toHaveBeenCalled());
+  });
+
+  it("returns undefined", () => {
+    const result = invalidateFetchCache("nonexistent-pattern-xyz");
+    expect(result).toBeUndefined();
+  });
 });
