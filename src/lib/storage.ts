@@ -11,7 +11,7 @@ const MAX_HISTORY_ENTRIES = 50;
 const MAX_MARATHON_RECORDS = 20;
 
 /**
- * Сохраняет глобальные заметки
+ * Save global notes
  */
 export function saveGlobalNotes(content: string): void {
   try {
@@ -22,7 +22,7 @@ export function saveGlobalNotes(content: string): void {
 }
 
 /**
- * Загружает глобальные заметки
+ * Load global notes
  */
 export function loadGlobalNotes(): string {
   try {
@@ -44,7 +44,7 @@ export interface TaskProgress {
 }
 
 /**
- * Сохраняет лучший результат для задачи
+ * Save best score for a task
  */
 export function saveProgress(
   taskId: number,
@@ -54,18 +54,18 @@ export function saveProgress(
   try {
     const progress = loadProgress();
     const existing = progress[String(taskId)];
-    // Сохраняем только если результат лучше
+    // Only save if the score is better
     if (!existing || score >= existing.score) {
       progress[String(taskId)] = { score, testCases };
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
     }
   } catch {
-    // localStorage недоступен
+    // localStorage unavailable
   }
 }
 
 /**
- * Загружает все сохранённые результаты
+ * Load all saved progress
  */
 export function loadProgress(): Record<string, TaskProgress> {
   try {
@@ -78,7 +78,7 @@ export function loadProgress(): Record<string, TaskProgress> {
 }
 
 /**
- * Сохраняет текущую сессию работы над задачей
+ * Save current working session for a task
  */
 export function saveCurrentSession(
   taskId: number,
@@ -90,12 +90,12 @@ export function saveCurrentSession(
       JSON.stringify(testCases)
     );
   } catch {
-    // localStorage недоступен
+    // localStorage unavailable
   }
 }
 
 /**
- * Загружает сохранённую сессию для задачи
+ * Load saved session for a task
  */
 export function loadCurrentSession(taskId: number): TestCase[] | null {
   try {
@@ -108,7 +108,7 @@ export function loadCurrentSession(taskId: number): TestCase[] | null {
 }
 
 /**
- * Экспортирует весь прогресс как JSON-строку
+ * Export all progress as JSON string
  */
 export function exportAllProgress(): string {
   try {
@@ -126,7 +126,7 @@ export function exportAllProgress(): string {
 }
 
 /**
- * Импортирует прогресс из JSON-строки
+ * Import progress from JSON string
  */
 export function importAllProgress(jsonString: string): boolean {
   try {
@@ -145,7 +145,7 @@ export function importAllProgress(jsonString: string): boolean {
 }
 
 /**
- * Полностью очищает весь прогресс
+ * Clear all progress
  */
 export function clearAllProgress(): void {
   try {
@@ -177,7 +177,7 @@ export interface AttemptRecord {
 }
 
 /**
- * Сохраняет попытку в историю
+ * Save an attempt to history
  */
 export function saveAttempt(record: AttemptRecord): void {
   try {
@@ -192,7 +192,7 @@ export function saveAttempt(record: AttemptRecord): void {
 }
 
 /**
- * Загружает историю попыток
+ * Load attempt history
  */
 export function loadAttemptHistory(): AttemptRecord[] {
   try {
@@ -205,14 +205,14 @@ export function loadAttemptHistory(): AttemptRecord[] {
 }
 
 /**
- * Получает историю для конкретного задания
+ * Get history for a specific task
  */
 export function getTaskHistory(taskId: number): AttemptRecord[] {
   return loadAttemptHistory().filter((r) => r.taskId === taskId);
 }
 
 /**
- * Получает лучшие покрытия EC и BV для конкретного задания из истории
+ * Get best EC and BV coverage for a specific task from history
  */
 export function getTaskBestCoverage(taskId: number): { bestEc: number; bestBv: number } {
   const history = getTaskHistory(taskId);
@@ -223,18 +223,18 @@ export function getTaskBestCoverage(taskId: number): { bestEc: number; bestBv: n
 }
 
 /**
- * Сохраняет заметку для задания
+ * Save a note for a task
  */
 export function saveTaskNote(taskId: number, note: string): void {
   try {
     localStorage.setItem(NOTE_PREFIX + taskId, note);
   } catch {
-    // localStorage недоступен
+    // localStorage unavailable
   }
 }
 
 /**
- * Загружает заметку для задания
+ * Load a note for a task
  */
 export function loadTaskNote(taskId: number): string {
   try {

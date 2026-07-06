@@ -154,7 +154,7 @@ export function parseSearchParams<T>(
  * Throw this from within a withErrorHandler to get a non-500 response.
  *
  * Usage:
- *   throw new AppError(400, "Неверный токен или срок его действия истёк");
+ *   throw new AppError(400, "Invalid or expired token");
  */
 export class AppError extends Error {
   public readonly statusCode: number;
