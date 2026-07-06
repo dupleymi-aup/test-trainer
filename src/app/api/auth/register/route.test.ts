@@ -36,11 +36,11 @@ vi.mock("@/lib/email", () => ({
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
-  checkRateLimit: vi.fn().mockReturnValue({ limited: false, resetAt: Date.now() + 60000 }),
+  checkRateLimit: vi.fn().mockReturnValue({ limited: false, remaining: 5, resetAt: Date.now() + 60000 }),
   createRateLimitResponse: vi.fn().mockReturnValue(
     NextResponse.json({ error: "Too many requests" }, { status: 429 })
   ),
-  rateLimits: { register: { window: 60000, max: 5 } },
+  rateLimits: { register: { windowMs: 60000, max: 5 } },
   getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
 }));
 
@@ -150,6 +150,7 @@ describe("POST /api/auth/register", () => {
     const rateLimit = await import("@/lib/rate-limit");
     vi.mocked(rateLimit.checkRateLimit).mockReturnValueOnce({
       limited: true,
+      remaining: 0,
       resetAt: Date.now() + 60000,
     });
     const res = await POST(makeRequest(validBody));
