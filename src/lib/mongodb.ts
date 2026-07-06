@@ -1,5 +1,5 @@
 import { MongoClient, type Db } from 'mongodb'
-import { config } from './config'
+import { getConfig } from './config'
 import { logger } from './logger'
 
 const globalForMongo = globalThis as unknown as {
@@ -10,7 +10,6 @@ const globalForMongo = globalThis as unknown as {
 let client: MongoClient | undefined
 let db: Db | undefined
 
-// Connection options for production resilience
 const MONGO_OPTIONS = {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 10000,
@@ -19,17 +18,19 @@ const MONGO_OPTIONS = {
   retryReads: true,
 }
 
-if (config.dbType === 'mongodb') {
-  if (!config.mongodbUri) {
+function initMongo() {
+  const cfg = getConfig()
+  if (cfg.dbType !== 'mongodb') return
+  if (!cfg.mongodbUri) {
     throw new Error('MONGODB_URI is required when DB_TYPE=mongodb')
   }
 
   if (process.env.NODE_ENV === 'production') {
-    client = new MongoClient(config.mongodbUri, MONGO_OPTIONS)
+    client = new MongoClient(cfg.mongodbUri, MONGO_OPTIONS)
     db = client.db()
   } else {
     if (!globalForMongo.client) {
-      globalForMongo.client = new MongoClient(config.mongodbUri, MONGO_OPTIONS)
+      globalForMongo.client = new MongoClient(cfg.mongodbUri, MONGO_OPTIONS)
     }
     client = globalForMongo.client
     if (!globalForMongo.db) {
@@ -42,6 +43,7 @@ if (config.dbType === 'mongodb') {
 export { client, db }
 
 export async function connectMongo() {
+  const cfg = getConfig()
   if (client && db) {
     try {
       await client.db().command({ ping: 1 })
@@ -50,10 +52,10 @@ export async function connectMongo() {
       logger.warn('MongoDB ping failed, reconnecting', { err: err instanceof Error ? err.message : String(err) })
     }
   }
-  if (!config.mongodbUri) {
+  if (!cfg.mongodbUri) {
     throw new Error('MONGODB_URI is required')
   }
-  client = new MongoClient(config.mongodbUri, MONGO_OPTIONS)
+  client = new MongoClient(cfg.mongodbUri, MONGO_OPTIONS)
   await client.connect()
   db = client.db()
   if (process.env.NODE_ENV !== 'production') {
@@ -64,9 +66,6 @@ export async function connectMongo() {
   return db
 }
 
-/**
- * Gracefully close MongoDB connection (call on process shutdown).
- */
 export async function disconnectMongo(): Promise<void> {
   if (client) {
     try {
@@ -84,19 +83,9 @@ export async function disconnectMongo(): Promise<void> {
   }
 }
 
-// Register graceful shutdown handlers
-if (typeof process !== 'undefined' && config.dbType === 'mongodb') {
-  const shutdown = async (signal: string) => {
-    logger.info(`Received ${signal}, closing MongoDB connection...`)
-    await disconnectMongo()
-    process.exit(0)
-  }
-  process.on('SIGTERM', () => shutdown('SIGTERM'))
-  process.on('SIGINT', () => shutdown('SIGINT'))
-}
-
 export async function checkMongoConnection(uri?: string): Promise<boolean> {
-  const testUri = uri || config.mongodbUri
+  const cfg = getConfig()
+  const testUri = uri || cfg.mongodbUri
   if (!testUri) return false
   const testClient = new MongoClient(testUri, {
     serverSelectionTimeoutMS: 2000,
@@ -113,4 +102,16 @@ export async function checkMongoConnection(uri?: string): Promise<boolean> {
       logger.warn('MongoDB test client close error', { err: err instanceof Error ? err.message : String(err) })
     })
   }
+}
+
+initMongo()
+
+if (typeof process !== 'undefined' && getConfig().dbType === 'mongodb') {
+  const shutdown = async (signal: string) => {
+    logger.info(`Received ${signal}, closing MongoDB connection...`)
+    await disconnectMongo()
+    process.exit(0)
+  }
+  process.on('SIGTERM', () => shutdown('SIGTERM'))
+  process.on('SIGINT', () => shutdown('SIGINT'))
 }

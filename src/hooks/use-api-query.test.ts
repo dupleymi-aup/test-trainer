@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useApiQuery } from "./use-api-query";
 
@@ -116,7 +116,7 @@ describe("useApiQuery", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    await result.current.refetch();
+    act(() => { result.current.refetch(); });
 
     expect(result.current.data).toEqual(mockData);
   });

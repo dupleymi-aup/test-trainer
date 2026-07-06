@@ -1,4 +1,4 @@
-import { config } from './config'
+import { getConfig } from './config'
 import { db as prismaDb } from './db'
 import { db as mongoDb, connectMongo } from './mongodb'
 
@@ -12,30 +12,31 @@ export interface DBInfo {
 }
 
 export async function getDbInfo(): Promise<DBInfo> {
-  const type = config.dbType
+  const cfg = getConfig()
 
-  if (type === 'mongodb') {
+  if (cfg.dbType === 'mongodb') {
     if (!mongoDb) {
       await connectMongo()
     }
     return {
-      type,
+      type: cfg.dbType,
       prisma: null,
       mongo: mongoDb,
-      url: config.mongodbUri || '',
+      url: cfg.mongodbUri || '',
     }
   }
 
   return {
-    type,
+    type: cfg.dbType,
     prisma: prismaDb,
     mongo: null,
-    url: config.databaseUrl,
+    url: cfg.databaseUrl,
   }
 }
 
 export async function checkMongoHealth(): Promise<{ ok: boolean; details: string }> {
-  if (!config.mongodbUri) {
+  const cfg = getConfig()
+  if (!cfg.mongodbUri) {
     return { ok: false, details: 'MONGODB_URI not configured' }
   }
   try {
@@ -66,7 +67,7 @@ export async function healthCheck(): Promise<{ ok: boolean; type: DbType; detail
   } catch (error) {
     return {
       ok: false,
-      type: config.dbType,
+      type: getConfig().dbType,
       details: error instanceof Error ? error.message : 'Unknown error',
     }
   }

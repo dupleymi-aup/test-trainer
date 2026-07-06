@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { useFetch, invalidateFetchCache } from "./use-fetch";
 
 const mockFetchJson = vi.fn();
@@ -72,7 +72,7 @@ describe("useFetch", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     mockFetchJson.mockResolvedValue({ v: 2 });
-    result.current.refetch();
+    act(() => { result.current.refetch(); });
     await waitFor(() => expect(result.current.data).toEqual({ v: 2 }));
   });
 

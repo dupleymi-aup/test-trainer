@@ -19,7 +19,9 @@ const configSchema = z.object({
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
 })
 
-export function loadConfig() {
+let _config: z.infer<typeof configSchema> | null = null
+
+function loadConfig() {
   const raw = {
     dbType: process.env.DB_TYPE,
     databaseUrl: process.env.DATABASE_URL,
@@ -48,11 +50,12 @@ export function loadConfig() {
     throw new Error(`Invalid configuration:\n${messages}`)
   }
 
-  const data = parsed.data
-
-  return data
+  return parsed.data
 }
 
-export const config = loadConfig()
+export function getConfig(): Config {
+  if (!_config) _config = loadConfig()
+  return _config
+}
 
-export type Config = ReturnType<typeof loadConfig>
+export type Config = z.infer<typeof configSchema>

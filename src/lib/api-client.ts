@@ -5,6 +5,7 @@
 
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "./csrf";
 import { API_TIMEOUT_MS } from "./time-constants";
+import { logger } from "./logger";
 
 export class APIError extends Error {
   public readonly requestId?: string;
@@ -146,8 +147,7 @@ export async function apiFetchWithRetry(
       if (isRetryableStatus(response.status, config) && attempt < config.maxRetries) {
         lastError = new APIError(`HTTP ${response.status}`, response.status);
         const delay = calculateRetryDelay(attempt + 1, config);
-        // eslint-disable-next-line no-console
-        console.debug(`[apiFetchWithRetry] Retrying after ${delay}ms (attempt ${attempt + 1}/${config.maxRetries})`, { url, status: response.status });
+        logger.debug(`[apiFetchWithRetry] Retrying attempt ${attempt + 1}/${config.maxRetries}`, { url, status: response.status, delay });
         await sleep(delay);
         continue;
       }
@@ -163,8 +163,7 @@ export async function apiFetchWithRetry(
       if (isNetworkError && config.retryOnNetworkError && attempt < config.maxRetries) {
         lastError = err instanceof Error ? err : new Error(String(err));
         const delay = calculateRetryDelay(attempt + 1, config);
-        // eslint-disable-next-line no-console
-        console.debug(`[apiFetchWithRetry] Network error, retrying after ${delay}ms (attempt ${attempt + 1}/${config.maxRetries})`, { url });
+        logger.debug(`[apiFetchWithRetry] Network error, retrying attempt ${attempt + 1}/${config.maxRetries}`, { url, delay });
         await sleep(delay);
         continue;
       }
@@ -203,16 +202,14 @@ export async function apiFetchJson<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  const abortHandler = () => controller.abort();
   if (externalSignal) {
-    externalSignal.addEventListener("abort", () => {
-      controller.abort();
-    }, { once: true });
+    externalSignal.addEventListener("abort", abortHandler, { once: true });
   }
 
   try {
-    const { signal: _, ...initWithoutSignal } = (init as RequestInit & { signal?: AbortSignal }) || {};
+    const { signal: _signal, ...initWithoutSignal } = (init as RequestInit & { signal?: AbortSignal }) || {};
     
-    // Use apiFetchWithRetry if retryConfig is provided, otherwise use apiFetch
     const fetchFn = retryConfig ? apiFetchWithRetry : apiFetch;
     const res = await fetchFn(url, { ...initWithoutSignal, signal: controller.signal }, retryConfig);
 
@@ -232,6 +229,9 @@ export async function apiFetchJson<T>(
     throw apiError;
   } finally {
     clearTimeout(timeoutId);
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", abortHandler);
+    }
   }
 }
 
