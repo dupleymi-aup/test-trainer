@@ -72,7 +72,6 @@ const accountTypeKeys = [
 export default function RegisterPage() {
   const router = useRouter();
   const t = useTranslations("auth");
-  const tCommon = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -137,36 +136,35 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Account Type Selector */}
-          <div className="mb-6">
-            <FormLabel className="mb-3 block">{t("accountType")}</FormLabel>
-            <div className="grid grid-cols-2 gap-3">
-              {accountTypeKeys.map((type) => {
-                const Icon = type.icon;
-                const isActive = accountType === type.value;
-                return (
-                  <button
-                    key={type.value}
-                    type="button"
-                    className={`p-4 rounded-lg border-2 transition-all text-left ${
-                      isActive ? type.activeColor : `${type.color} opacity-70 hover:opacity-100`
-                    }`}
-                    onClick={() => form.setValue("accountType", type.value)}
-                  >
-                    <Icon className={`h-5 w-5 mb-2 ${type.textColor}`} />
-                    <div className={`font-semibold text-sm ${type.textColor}`}>
-                      {t(type.titleKey)}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {t(type.descKey)}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <Form {...form}>
+            {/* Account Type Selector */}
+            <div className="mb-6">
+              <FormLabel className="mb-3 block">{t("accountType")}</FormLabel>
+              <div className="grid grid-cols-2 gap-3">
+                {accountTypeKeys.map((type) => {
+                  const Icon = type.icon;
+                  const isActive = accountType === type.value;
+                  return (
+                    <button
+                      key={type.value}
+                      type="button"
+                      className={`p-4 rounded-lg border-2 transition-all text-left ${
+                        isActive ? type.activeColor : `${type.color} opacity-70 hover:opacity-100`
+                      }`}
+                      onClick={() => form.setValue("accountType", type.value)}
+                    >
+                      <Icon className={`h-5 w-5 mb-2 ${type.textColor}`} />
+                      <div className={`font-semibold text-sm ${type.textColor}`}>
+                        {t(type.titleKey)}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {t(type.descKey)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
@@ -186,7 +184,7 @@ export default function RegisterPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tCommon("email")}</FormLabel>
+                    <FormLabel>{t("email")}</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -204,7 +202,7 @@ export default function RegisterPage() {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tCommon("phone")} <span className="text-muted-foreground">({t("optional")})</span></FormLabel>
+                    <FormLabel>{t("phone")} <span className="text-muted-foreground">({t("optional")})</span></FormLabel>
                     <FormControl>
                       <Input
                         {...field}

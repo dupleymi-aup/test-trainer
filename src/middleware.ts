@@ -1,9 +1,11 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import createMiddleware from "next-intl/middleware";
 import { generateCSRFToken, verifyCSRFToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "@/lib/csrf";
 import { logger } from "@/lib/logger";
 import { buildCSP } from "@/lib/csp";
+import { routing } from "@/i18n/routing";
 
 function generateRequestId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -26,6 +28,8 @@ const roleRoutes: Record<string, { paths: string[]; requiredRoles: string[] }> =
 };
 
 const stateChangingMethods = ["POST", "PUT", "DELETE", "PATCH"];
+
+const handleI18nRouting = createMiddleware(routing);
 
 function checkRoleAccess(
   token: { role?: string } | null,
@@ -103,6 +107,17 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const method = request.method;
 
+  // Handle i18n routing for non-API page routes
+  const isApiRoute = pathname.startsWith("/api/");
+  if (!isApiRoute) {
+    const i18nResponse = handleI18nRouting(request);
+    if (i18nResponse) {
+      i18nResponse.headers.set("X-Request-Id", requestId);
+      setSecurityHeaders(i18nResponse, nonce);
+      return i18nResponse;
+    }
+  }
+
   // Skip auth for E2E tests via query parameter (non-production only)
   const e2eMode = process.env.NODE_ENV !== "production" && request.nextUrl.searchParams.get("e2e") === "true";
 
@@ -128,7 +143,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const isApiRoute = pathname.startsWith("/api/");
   const preAuthRoutes = [
     "/api/auth/login",
     "/api/auth/register",

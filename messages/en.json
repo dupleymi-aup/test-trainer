@@ -77,6 +77,8 @@
     "passwordsMismatch": "Passwords do not match",
     "studentDescription": "Complete tasks, track progress, and analytics",
     "teacherDescription": "Create groups, manage students, and grade",
+    "student": "Student",
+    "teacher": "Teacher",
     "registerTitle": "Registration",
     "registerSubtitle": "Create an account to save your progress",
     "accountType": "Account type",

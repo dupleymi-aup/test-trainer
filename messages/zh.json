@@ -77,6 +77,8 @@
     "passwordsMismatch": "密码不匹配",
     "studentDescription": "完成任务、跟踪进度和分析数据",
     "teacherDescription": "创建群组、管理学生和评分",
+    "student": "学生",
+    "teacher": "教师",
     "registerTitle": "注册",
     "registerSubtitle": "创建账号以保存您的进度",
     "accountType": "账号类型",
