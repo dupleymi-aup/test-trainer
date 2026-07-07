@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/resizable";
 import type { TestCase } from "@/lib/evaluator";
 import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
+import { formatTimer } from "@/lib/format-time";
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
@@ -55,12 +56,6 @@ export function TrainerTab({
   onBulkRemove,
   onClearAll,
 }: TrainerTabProps) {
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
-
   return (
     <motion.div
       key="trainer"
@@ -80,7 +75,7 @@ export function TrainerTab({
         </div>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
           <Clock className="h-3.5 w-3.5" />
-          <span className="font-mono">{formatTime(elapsedTime)}</span>
+          <span className="font-mono">{formatTimer(elapsedTime)}</span>
         </div>
       </div>
 

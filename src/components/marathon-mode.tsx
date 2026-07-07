@@ -21,6 +21,7 @@ import { evaluateTestCases } from "@/lib/evaluator";
 import { TestForm } from "@/components/test-form";
 import { ResultsPanel } from "@/components/results-panel";
 import { saveMarathonRecord } from "@/lib/storage";
+import { formatTimer } from "@/lib/format-time";
 
 const MARATHON_SESSION_KEY = "test-trainer-marathon-session";
 
@@ -155,14 +156,6 @@ export function MarathonMode({
     return () => clearInterval(interval);
   }, [state.started, state.finished, startTime]);
 
-  const formatTime = (sec: number) => {
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = sec % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-    return `${m}:${String(s).padStart(2, "0")}`;
-  };
-
   const handleStart = useCallback(() => {
     setState({
       started: true,
@@ -291,7 +284,7 @@ export function MarathonMode({
             <Flag className="h-16 w-16 text-emerald-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-emerald-600 mb-1">Марафон завершён!</h2>
             <p className="text-muted-foreground mb-4">
-              Время: {formatTime(elapsed)}
+              Время: {formatTimer(elapsed)}
             </p>
 
             <div className="relative w-32 h-32 mx-auto mb-6">
@@ -384,7 +377,7 @@ export function MarathonMode({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-sm">
                 <Timer className="h-4 w-4 text-muted-foreground" />
-                <span className="font-mono text-sm">{formatTime(elapsed)}</span>
+                <span className="font-mono text-sm">{formatTimer(elapsed)}</span>
               </div>
               <div className="text-sm text-muted-foreground">
                 Общий: <span className="font-bold text-emerald-600">{overallPct}%</span>

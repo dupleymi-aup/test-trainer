@@ -27,6 +27,7 @@ import type { Task } from "@/lib/tasks";
 import { evaluateTestCases } from "@/lib/evaluator";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { toast } from "sonner";
+import { formatTimer } from "@/lib/format-time";
 import { saveAttempt } from "@/lib/storage";
 import { apiFetch } from "@/lib/api-client";
 import { parseInputValue } from "@/lib/utils";
@@ -432,12 +433,6 @@ export function ExamMode() {
     }
   }, [currentTaskIndex, examTasks, examResults, triggerConfetti]);
 
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
-
   const avgScore = examResults.length > 0
     ? Math.round(examResults.reduce((s, r) => s + r.overallScore, 0) / examResults.length)
     : 0;
@@ -769,7 +764,7 @@ export function ExamMode() {
             <div className="flex items-center gap-2">
               <Timer className={`h-4 w-4 ${isTimeLow ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`} />
               <span className={`font-mono text-lg font-bold ${isTimeLow ? "text-rose-600 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400"}`}>
-                {formatTime(timeRemaining)}
+                {formatTimer(timeRemaining)}
               </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
