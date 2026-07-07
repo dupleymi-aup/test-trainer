@@ -18,14 +18,14 @@ Content-Security-Policy заголовки добавлены для dev и prod
 ## 6. ~~API response types~~ ✅
 Создать `src/lib/api-types.ts` с Zod-схемами для всех API responses и валидировать ответы через middleware.
 
-## 7. E2E тесты для teacher workflow
-Добавить Playwright spec для teacher: создание группы → назначение студентов → просмотр аналитики → экспорт отчёта.
+## 7. ~~E2E тесты для teacher workflow~~ ✅
+Playwright spec для teacher: создание группы → назначение студентов → просмотр аналитики → экспорт отчёта.
 
-## 8. Bundle analysis
-Добавить `@next/bundle-analyzer` и оптимизировать тяжёлые импорты (recharts, jspdf, html2canvas) через dynamic import.
+## 8. ~~Bundle analysis~~ ✅
+`@next/bundle-analyzer` настроен. Тяжёлые импорты (recharts) оптимизированы через `next/dynamic` с `ssr: false`.
 
 ## 9. Error monitoring (Sentry)
 Интегрировать `@sentry/nextjs` для отслеживания ошибок в production. Настроить source maps для фронтенда.
 
-## 10. Database migration CI
-Добавить GitHub Actions workflow для автоматического запуска `prisma migrate deploy` при деплое на Vercel.
+## 10. ~~Database migration CI~~ ✅
+`prisma migrate deploy` + seed добавлены в CI workflow (lint-and-typecheck job).
