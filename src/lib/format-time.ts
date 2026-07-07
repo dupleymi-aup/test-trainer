@@ -8,13 +8,16 @@ export function formatDurationShort(seconds: number): string {
 }
 
 /**
- * Format a duration in seconds into a verbose Russian string with minutes and seconds.
- * Examples: 45 → "45с", 125 → "2м 5с", 3661 → "61м 1с"
+ * Format a duration in seconds into a verbose Russian string with hours, minutes and seconds.
+ * Examples: 45 → "45с", 125 → "2м 5с", 3661 → "1ч 1м 1с"
  */
 export function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  return m > 0 ? `${m}м ${s}с` : `${s}с`;
+  if (h > 0) return `${h}ч ${m}м ${s}с`;
+  if (m > 0) return `${m}м ${s}с`;
+  return `${s}с`;
 }
 
 /**

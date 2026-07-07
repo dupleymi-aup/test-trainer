@@ -16,6 +16,7 @@ import {
   FileText,
   Trophy,
 } from "lucide-react";
+import { formatDuration } from "@/lib/format-time";
 
 interface TaskHistoryItem {
   taskId: string;
@@ -54,12 +55,6 @@ const difficultyBg: Record<string, string> = {
   Средне: "bg-amber-100 dark:bg-amber-900/30",
   Сложно: "bg-rose-100 dark:bg-rose-900/30",
 };
-
-function formatTime(seconds: number) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}м ${secs}с`;
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleString("ru-RU", {
@@ -188,7 +183,7 @@ export default function StudentHistoryPage() {
                       </div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
-                        {formatTime(attempt.timeSpent)}
+                        {formatDuration(attempt.timeSpent)}
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-sm">

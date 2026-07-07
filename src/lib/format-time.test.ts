@@ -36,8 +36,12 @@ describe("formatDuration", () => {
     expect(formatDuration(60)).toBe("1м 0с");
   });
 
-  it("formats large duration", () => {
-    expect(formatDuration(3661)).toBe("61м 1с");
+  it("formats large duration with hours", () => {
+    expect(formatDuration(3661)).toBe("1ч 1м 1с");
+  });
+
+  it("formats exact hour", () => {
+    expect(formatDuration(3600)).toBe("1ч 0м 0с");
   });
 });
 

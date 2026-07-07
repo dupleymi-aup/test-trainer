@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
 import type { TestCase } from "@/lib/evaluator";
 import { getTaskHistory } from "@/lib/storage";
+import { formatDuration } from "@/lib/format-time";
 import { CoverageMatrix } from "@/components/coverage-matrix";
 
 interface ResultsPanelProps {
@@ -159,15 +160,6 @@ function formatResultsAsText(result: EvaluationResult): string {
   }
 
   return lines.join("\n");
-}
-
-function formatTime(ms: number): string {
-  const totalSec = Math.round(ms / 1000);
-  const min = Math.floor(totalSec / 60);
-  const sec = totalSec % 60;
-  if (min >= 60) return `${Math.floor(min / 60)}ч ${min % 60}м`;
-  if (min > 0) return `${min}м ${sec}с`;
-  return `${sec}с`;
 }
 
 export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [], onReset, bestScore, elapsedTime }: ResultsPanelProps) {
@@ -426,7 +418,7 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
             )}
             {elapsedTime !== undefined && elapsedTime > 0 && (
               <div className="mt-1 text-xs text-muted-foreground">
-                Время: {formatTime(elapsedTime * 1000)}
+                Время: {formatDuration(elapsedTime)}
               </div>
             )}
           </div>
