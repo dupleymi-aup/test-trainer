@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const updateReminderSchema = z.object({
   reminderId: z.string().optional(),
@@ -80,20 +80,10 @@ export async function PATCH(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = updateReminderSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, updateReminderSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { reminderId, action } = parsed.data;
+    const { reminderId, action } = bodyResult.data;
 
     if (action === "mark_read") {
       await db.reminder.updateMany({

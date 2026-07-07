@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -52,21 +52,16 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-
-    const parsed = createTemplateSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, createTemplateSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const template = await db.courseTemplate.create({
       data: {
-        name: parsed.data.name,
-        description: parsed.data.description || null,
-        taskIds: JSON.stringify(parsed.data.taskIds),
-        topics: parsed.data.topics ? JSON.stringify(parsed.data.topics) : null,
-        estimatedHours: parsed.data.estimatedHours || null,
+        name: bodyResult.data.name,
+        description: bodyResult.data.description || null,
+        taskIds: JSON.stringify(bodyResult.data.taskIds),
+        topics: bodyResult.data.topics ? JSON.stringify(bodyResult.data.topics) : null,
+        estimatedHours: bodyResult.data.estimatedHours || null,
         createdByUserId: session.userId,
       },
     });

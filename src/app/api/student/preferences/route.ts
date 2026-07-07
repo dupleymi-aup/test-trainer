@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const preferencesSchema = z.object({
   email: z.boolean().optional(),
@@ -73,14 +73,8 @@ export async function PATCH(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = preferencesSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, preferencesSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const user = await db.user.findUnique({
       where: { id: session.userId },
@@ -89,9 +83,9 @@ export async function PATCH(req: Request) {
 
     const current = parsePreferences(user?.notificationPreferences || null);
     const updated = {
-      email: parsed.data.email ?? current.email,
-      sms: parsed.data.sms ?? current.sms,
-      inApp: parsed.data.inApp ?? current.inApp,
+      email: bodyResult.data.email ?? current.email,
+      sms: bodyResult.data.sms ?? current.sms,
+      inApp: bodyResult.data.inApp ?? current.inApp,
     };
 
     await db.user.update({

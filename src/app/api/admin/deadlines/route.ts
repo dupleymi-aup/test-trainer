@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const deadlineSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title is too long"),
@@ -61,16 +61,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = deadlineSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, deadlineSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds, reminderSchedule } = parsed.data;
+    const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds, reminderSchedule } = bodyResult.data;
 
     const deadline = await db.deadline.create({
       data: {
@@ -149,17 +143,11 @@ export async function PATCH(req: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = deadlineSchema.partial().safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, deadlineSchema.partial());
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const updateData: Record<string, unknown> = { ...parsed.data };
-    if (parsed.data.dueDate) updateData.dueDate = new Date(parsed.data.dueDate);
+    const updateData: Record<string, unknown> = { ...bodyResult.data };
+    if (bodyResult.data.dueDate) updateData.dueDate = new Date(bodyResult.data.dueDate);
     if (updateData.groupId === undefined) delete updateData.groupId;
     if (updateData.taskId === undefined) delete updateData.taskId;
     if (updateData.targetUsers === undefined) delete updateData.targetUsers;
@@ -176,7 +164,7 @@ export async function PATCH(req: Request) {
         action: "DEADLINE_UPDATE",
         entity: "Deadline",
         entityId: id,
-        details: JSON.stringify(parsed.data),
+        details: JSON.stringify(bodyResult.data),
       },
     });
 

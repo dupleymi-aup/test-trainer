@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const changeRoleSchema = z.object({
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
@@ -28,14 +28,8 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = changeRoleSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid role", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, changeRoleSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const user = await db.user.findUnique({ where: { id } });
     if (!user) {
@@ -44,7 +38,7 @@ export async function PATCH(
 
     const updated = await db.user.update({
       where: { id },
-      data: { role: parsed.data.role, lastSessionInvalidation: new Date() },
+      data: { role: bodyResult.data.role, lastSessionInvalidation: new Date() },
       select: { id: true, name: true, email: true, role: true },
     });
 
@@ -54,7 +48,7 @@ export async function PATCH(
         action: "ROLE_CHANGE",
         entity: "User",
         entityId: id,
-        details: JSON.stringify({ from: user.role, to: parsed.data.role }),
+        details: JSON.stringify({ from: user.role, to: bodyResult.data.role }),
       },
     });
 

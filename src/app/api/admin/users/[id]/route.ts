@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET(
   _req: Request,
@@ -77,14 +77,8 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = updateUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, updateUserSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const existing = await db.user.findUnique({ where: { id } });
     if (!existing) {
@@ -95,7 +89,7 @@ export async function PATCH(
     }
 
     // Check email/phone uniqueness if being changed
-    const updateData = parsed.data as Record<string, unknown>;
+    const updateData = bodyResult.data as Record<string, unknown>;
     if (updateData.email && updateData.email !== existing.email) {
       const emailTaken = await db.user.findFirst({
         where: { email: (updateData.email as string).toLowerCase().trim(), id: { not: id } },
@@ -120,7 +114,7 @@ export async function PATCH(
 
     const user = await db.user.update({
       where: { id },
-      data: parsed.data,
+      data: bodyResult.data,
       select: {
         id: true,
         name: true,
@@ -138,7 +132,7 @@ export async function PATCH(
         action: "USER_UPDATE",
         entity: "User",
         entityId: id,
-        details: JSON.stringify(parsed.data),
+        details: JSON.stringify(bodyResult.data),
       },
     });
 

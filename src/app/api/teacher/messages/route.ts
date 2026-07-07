@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin, getTeacherGroupIds } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
@@ -65,15 +65,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const bodyResult = await parseRequestBody(req, sendMessageSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = sendMessageSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
-
-    const { toUserId, subject, content, replyToId } = parsed.data;
+    const { toUserId, subject, content, replyToId } = bodyResult.data;
 
     // Verify the recipient is in one of the teacher's groups (unless admin)
     if (session.role !== "ADMIN") {
@@ -132,16 +127,11 @@ export async function PATCH(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-
-    const parsed = markReadSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, markReadSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     await db.message.updateMany({
-      where: { id: { in: parsed.data.messageIds }, toUserId: auth.session.userId },
+      where: { id: { in: bodyResult.data.messageIds }, toUserId: auth.session.userId },
       data: { read: true, readAt: new Date() },
     });
 

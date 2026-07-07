@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const loginSchema = z.object({
   login: z.string().min(1, "Email or phone is required").max(255, "Email or phone is too long"),
@@ -21,20 +21,10 @@ export async function POST(req: Request) {
     // Account-level rate limiting (by email/phone) is handled via
     // isLoginRateLimited in NextAuth authorize — both layers work together.
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = loginSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, loginSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { login: loginInput, password } = parsed.data;
+    const { login: loginInput, password } = bodyResult.data;
 
     const trimmedLogin = loginInput.trim();
     const isPhone = /^\+?\d{10,15}$/.test(trimmedLogin.replace(/[\s()-]/g, ""));

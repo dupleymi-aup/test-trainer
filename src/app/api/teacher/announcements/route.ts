@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createAnnouncementSchema = z.object({
@@ -62,15 +62,10 @@ export async function POST(req: Request) {
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const bodyResult = await parseRequestBody(req, createAnnouncementSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = createAnnouncementSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
-
-    const { title, content, groupId, expiresAt } = parsed.data;
+    const { title, content, groupId, expiresAt } = bodyResult.data;
 
     // Verify teacher owns the group (admins can post to any group)
     if (groupId && session.role !== "ADMIN") {
@@ -175,15 +170,10 @@ export async function PATCH(req: Request) {
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const bodyResult = await parseRequestBody(req, updateAnnouncementSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = updateAnnouncementSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
-
-    const { id, title, content, expiresAt } = parsed.data;
+    const { id, title, content, expiresAt } = bodyResult.data;
 
     const announcement = await db.announcement.findUnique({
       where: { id },

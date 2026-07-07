@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const createAttemptSchema = z.object({
@@ -38,16 +38,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = createAttemptSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, createAttemptSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const { taskId, testCases, score, ecCoverage, bvCoverage, correctness, coveredEcIds, coveredBvDescriptions, timeSpent } = parsed.data;
+    const { taskId, testCases, score, ecCoverage, bvCoverage, correctness, coveredEcIds, coveredBvDescriptions, timeSpent } = bodyResult.data;
 
     // Check group-based task permissions
     const userGroups = await db.userGroup.findMany({

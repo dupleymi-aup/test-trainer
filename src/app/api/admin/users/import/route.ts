@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
@@ -30,15 +30,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const bodyResult = await parseRequestBody(req, importSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = importSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
-
-    const { csv, defaultRole: role, defaultPassword: password } = parsed.data;
+    const { csv, defaultRole: role, defaultPassword: password } = bodyResult.data;
 
     // Parse CSV (expecting: name,email,phone,group,university or just name,email)
     const lines = csv.trim().split("\n");

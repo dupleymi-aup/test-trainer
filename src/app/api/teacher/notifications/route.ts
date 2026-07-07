@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const notificationSchema = z.object({
   type: z.string().max(50).regex(/^[A-Z_]+$/, "Type must be uppercase letters and underscores only"),
@@ -70,20 +70,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(result.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = notificationSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, notificationSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { type, message, studentId } = parsed.data;
+    const { type, message, studentId } = bodyResult.data;
 
     // Create notification
     const notification = await db.activityLog.create({
@@ -109,20 +99,10 @@ export async function PATCH(req: Request) {
 
     const { session } = guard;
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = updateNotificationSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, updateNotificationSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { notificationId, read } = parsed.data;
+    const { notificationId, read } = bodyResult.data;
 
     if (!read) {
       return NextResponse.json({ error: "Only mark-as-read is supported" }, { status: 400 });

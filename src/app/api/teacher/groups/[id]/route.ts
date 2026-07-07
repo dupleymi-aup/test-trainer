@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const updateGroupSchema = z.object({
@@ -26,14 +26,8 @@ export async function PATCH(
     const { session } = guard;
 
     const { id } = await params;
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = updateGroupSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, updateGroupSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const group = await db.group.findUnique({ where: { id }, select: { createdByUserId: true } });
     if (!group) {
@@ -47,7 +41,7 @@ export async function PATCH(
 
     const updated = await db.group.update({
       where: { id },
-      data: parsed.data,
+      data: bodyResult.data,
       include: { _count: { select: { members: true } } },
     });
 

@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { safeJsonParse } from "@/lib/utils";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
@@ -76,15 +76,10 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    const bodyResult = await parseRequestBody(req, updateTemplateSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const parsed = updateTemplateSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
-
-    const { assignToGroupId, ...updateData } = parsed.data;
+    const { assignToGroupId, ...updateData } = bodyResult.data;
 
     const data: Record<string, unknown> = {};
     if (updateData.name !== undefined) data.name = updateData.name;

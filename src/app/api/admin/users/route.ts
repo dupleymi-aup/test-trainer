@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { parsePositiveInt } from "@/lib/validate";
 import { passwordSchema } from "@/lib/shared-schemas";
 
@@ -126,16 +126,10 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = createUserSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, createUserSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const { name, email, phone, password, role, university, group } = parsed.data;
+    const { name, email, phone, password, role, university, group } = bodyResult.data;
 
     // Check for existing user — build OR conditions safely
     const orConditions: Array<{ email?: string; phone?: string }> = [];

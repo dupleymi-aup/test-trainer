@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -39,16 +39,11 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-
-    const parsed = favoriteSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, favoriteSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const existing = await db.favoriteTask.findUnique({
-      where: { userId_taskId: { userId: auth.session.userId, taskId: parsed.data.taskId } },
+      where: { userId_taskId: { userId: auth.session.userId, taskId: bodyResult.data.taskId } },
     });
 
     if (existing) {
@@ -58,7 +53,7 @@ export async function POST(req: Request) {
     const favorite = await db.favoriteTask.create({
       data: {
         userId: auth.session.userId,
-        taskId: parsed.data.taskId,
+        taskId: bodyResult.data.taskId,
       },
     });
 

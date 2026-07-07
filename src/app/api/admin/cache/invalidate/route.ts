@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { invalidateCache, clearCache, getCacheStats } from "@/lib/analytics-cache";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const invalidateCacheSchema = z.object({
   pattern: z.string().max(200).regex(/^[a-zA-Z0-9\-_.*:]*$/).optional(),
@@ -23,20 +23,10 @@ export async function POST(req: NextRequest) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = invalidateCacheSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, invalidateCacheSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { pattern } = parsed.data;
+    const { pattern } = bodyResult.data;
 
     if (pattern) {
       const count = invalidateCache(pattern);

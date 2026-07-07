@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const saveExamSchema = z.object({
@@ -67,28 +67,23 @@ export async function POST(req: Request) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-
-    const parsed = saveExamSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, saveExamSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
     const exam = await db.studentExam.create({
       data: {
         userId: auth.session.userId,
-        taskIds: JSON.stringify(parsed.data.taskIds),
-        timeLimit: parsed.data.timeLimit,
-        mode: parsed.data.mode,
-        avgScore: parsed.data.avgScore,
-        bestTaskId: parsed.data.bestTaskId ?? null,
-        bestTaskScore: parsed.data.bestTaskScore,
-        worstTaskId: parsed.data.worstTaskId ?? null,
-        worstTaskScore: parsed.data.worstTaskScore,
-        totalCorrectness: parsed.data.totalCorrectness,
-        timeSpent: parsed.data.timeSpent,
-        results: JSON.stringify(parsed.data.results),
+        taskIds: JSON.stringify(bodyResult.data.taskIds),
+        timeLimit: bodyResult.data.timeLimit,
+        mode: bodyResult.data.mode,
+        avgScore: bodyResult.data.avgScore,
+        bestTaskId: bodyResult.data.bestTaskId ?? null,
+        bestTaskScore: bodyResult.data.bestTaskScore,
+        worstTaskId: bodyResult.data.worstTaskId ?? null,
+        worstTaskScore: bodyResult.data.worstTaskScore,
+        totalCorrectness: bodyResult.data.totalCorrectness,
+        timeSpent: bodyResult.data.timeSpent,
+        results: JSON.stringify(bodyResult.data.results),
       },
     });
 

@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const validSettingKeys = [
   "maxLoginAttempts",
@@ -81,20 +81,10 @@ export async function PATCH(req: Request) {
       return createRateLimitResponse(rateResult.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = updateSettingSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, updateSettingSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { key, value } = parsed.data;
+    const { key, value } = bodyResult.data;
 
     const setting = await db.systemSetting.upsert({
       where: { key },

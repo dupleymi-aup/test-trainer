@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 
 const profileUpdateSchema = z.object({
   name: z.string().max(100).optional().nullable(),
@@ -58,20 +58,10 @@ export async function PUT(req: Request) {
       return createRateLimitResponse(rateResult.resetAt);
     }
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = profileUpdateSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, profileUpdateSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { name, phone, bio, university, group, avatar } = parsed.data;
+    const { name, phone, bio, university, group, avatar } = bodyResult.data;
 
     const updateData: Record<string, string | null> = {};
     if (name !== undefined) updateData.name = name?.trim() || null;

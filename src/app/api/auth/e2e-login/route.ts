@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { z } from "zod";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+
+const e2eLoginSchema = z.object({
+  email: z.string().min(1, "Email is required"),
+  password: z.string().optional(),
+});
 
 export async function POST(req: Request) {
   if (process.env.NODE_ENV === "production") {
@@ -8,12 +14,10 @@ export async function POST(req: Request) {
   }
 
   return withErrorHandler(req, async () => {
-    const body = await req.json().catch(() => null);
-    if (!body?.email) {
-      return NextResponse.json({ error: "Email required" }, { status: 400 });
-    }
+    const bodyResult = await parseRequestBody(req, e2eLoginSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    const { email, password } = body;
+    const { email, password } = bodyResult.data;
 
     const isTeacher = email === "teacher@testtrainer.local" && password === "teacher123";
     const isStudent = email === "student@testtrainer.local" && password === "student123";

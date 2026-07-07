@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createNotificationSchema = z.object({
@@ -79,20 +79,10 @@ export async function PATCH(req: NextRequest) {
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = markReadSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, markReadSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { ids } = parsed.data;
+    const { ids } = bodyResult.data;
 
     if (ids && ids.length > 0) {
       await db.notification.updateMany({
@@ -124,20 +114,10 @@ export async function POST(req: NextRequest) {
     const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
-    const body = await req.json().catch(() => null);
-    if (!body) {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const parsed = createNotificationSchema.safeParse(body);
+    const bodyResult = await parseRequestBody(req, createNotificationSchema);
+    if (!bodyResult.success) return bodyResult.errorResponse;
 
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid data", details:(parsed.error) },
-        { status: 400 }
-      );
-    }
-
-    const { type, severity, title, message, entity, entityId, actionUrl } = parsed.data;
+    const { type, severity, title, message, entity, entityId, actionUrl } = bodyResult.data;
 
     const notification = await db.notification.create({
       data: {
