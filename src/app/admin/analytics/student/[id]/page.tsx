@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import { ScoreBadge } from "@/components/admin/analytics/score-badge";
+import { formatDuration } from "@/lib/format-time";
 
 // Print styles
 const printStyles = `
@@ -81,12 +82,6 @@ export default function AdminStudentReportPage() {
 
   const { student, stats, scoresOverTime, taskPerformance, weakAreas, strongAreas, groupPercentile, groupRanking, timeAnalysis, recommendations, attempts } = data;
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return m > 0 ? `${m}м ${s}с` : `${s}с`;
-  };
-
   return (
     <AdminLayout>
       <style>{printStyles}</style>
@@ -116,7 +111,7 @@ export default function AdminStudentReportPage() {
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Лучший балл</div><div className="text-2xl font-bold"><ScoreBadge score={stats.bestScore} /></div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Средний балл</div><div className="text-2xl font-bold"><ScoreBadge score={stats.avgScore} /></div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><BarChart3 className="h-3 w-3" /> Попыток</div><div className="text-2xl font-bold">{stats.totalAttempts}</div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> Ср. время</div><div className="text-2xl font-bold">{formatTime(stats.avgTimeSpent)}</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> Ср. время</div><div className="text-2xl font-bold">{formatDuration(stats.avgTimeSpent)}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> Перцентиль</div><div className="text-2xl font-bold">{groupPercentile}%</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> Скорость</div><div className="text-2xl font-bold">{stats.velocity}/день</div></CardContent></Card>
         </div>
@@ -167,7 +162,7 @@ export default function AdminStudentReportPage() {
                       <TableCell className="text-right"><ScoreBadge score={tp.bestScore} /></TableCell>
                       <TableCell className="text-right">{tp.attemptsCount}</TableCell>
                       <TableCell className="text-right"><TrendIcon trend={tp.trend} /></TableCell>
-                      <TableCell className="text-right text-sm">{formatTime(tp.avgTimeSpent)}</TableCell>
+                      <TableCell className="text-right text-sm">{formatDuration(tp.avgTimeSpent)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -222,7 +217,7 @@ export default function AdminStudentReportPage() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="taskName" className="text-xs" tick={{ fontSize: 10 }} />
                   <YAxis className="text-xs" />
-                  <Tooltip formatter={(v: number) => formatTime(v)} />
+                  <Tooltip formatter={(v: number) => formatDuration(v)} />
                   <Bar dataKey="avgTimeSpent" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -250,7 +245,7 @@ export default function AdminStudentReportPage() {
               </div>
               <div className="pt-2 border-t">
                 <div className="text-xs text-muted-foreground">Общее время</div>
-                <div className="text-xl font-bold">{formatTime(timeAnalysis.totalTimeSpent)}</div>
+                <div className="text-xl font-bold">{formatDuration(timeAnalysis.totalTimeSpent)}</div>
               </div>
             </CardContent>
           </Card>
@@ -299,7 +294,7 @@ export default function AdminStudentReportPage() {
                         <TableCell className="text-right text-sm">{a.ecCoverage}%</TableCell>
                         <TableCell className="text-right text-sm">{a.bvCoverage}%</TableCell>
                         <TableCell className="text-right text-sm">{a.correctness}%</TableCell>
-                        <TableCell className="text-right text-sm">{formatTime(a.timeSpent)}</TableCell>
+                        <TableCell className="text-right text-sm">{formatDuration(a.timeSpent)}</TableCell>
                       </TableRow>
                     );
                   })}

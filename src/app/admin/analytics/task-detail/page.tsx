@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
+import { formatDurationShort } from "@/lib/format-time";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line,
@@ -59,11 +60,6 @@ export default function TaskDetailPage() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
-  };
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    return m > 0 ? `${m}м` : `${seconds}с`;
   };
 
   return (
@@ -135,7 +131,7 @@ export default function TaskDetailPage() {
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Max</div><div className="font-bold">{t.metrics.maxScore}%</div></div>
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. EC</div><div className="font-bold">{t.metrics.avgEc}%</div></div>
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. BV</div><div className="font-bold">{t.metrics.avgBv}%</div></div>
-                          <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. время</div><div className="font-bold">{formatTime(t.metrics.avgTime)}</div></div>
+                          <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. время</div><div className="font-bold">{formatDurationShort(t.metrics.avgTime)}</div></div>
                         </div>
 
                         {/* Distribution Chart */}

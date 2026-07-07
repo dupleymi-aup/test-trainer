@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Star, Award } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import { AnalyticsFilterBar } from "@/components/admin/analytics/analytics-filter-bar";
+import { formatDurationShort } from "@/lib/format-time";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from "recharts";
@@ -50,11 +51,6 @@ export default function StudentTimelinePage() {
   useEffect(() => {
     if (preselectedStudent) fetchTimeline(preselectedStudent);
   }, [preselectedStudent]);
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    return m > 0 ? `${m}м` : `${seconds}с`;
-  };
 
   return (
     <AdminLayout>
@@ -182,7 +178,7 @@ export default function StudentTimelinePage() {
                           </td>
                           <td className="p-2 text-right">{a.ecCoverage}%</td>
                           <td className="p-2 text-right">{a.bvCoverage}%</td>
-                          <td className="p-2 text-right">{formatTime(a.timeSpent)}</td>
+                          <td className="p-2 text-right">{formatDurationShort(a.timeSpent)}</td>
                         </tr>
                       ))}
                     </tbody>

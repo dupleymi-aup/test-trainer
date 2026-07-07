@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { PrintButton } from "@/components/admin/analytics/print-button";
 import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
+import { formatDurationShort } from "@/lib/format-time";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -49,11 +50,6 @@ export default function StudentComparisonPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    return m > 0 ? `${m}м` : `${seconds}с`;
   };
 
   const fullRadarData = [
@@ -136,7 +132,7 @@ export default function StudentComparisonPage() {
                       { label: "Ср. EC", fn: (s: StudentData) => <span>{s.metrics.avgEc}%</span> },
                       { label: "Ср. BV", fn: (s: StudentData) => <span>{s.metrics.avgBv}%</span> },
                       { label: "Корректность", fn: (s: StudentData) => <span>{s.metrics.avgCorrectness}%</span> },
-                      { label: "Ср. время", fn: (s: StudentData) => <span>{formatTime(s.metrics.avgTime)}</span> },
+                      { label: "Ср. время", fn: (s: StudentData) => <span>{formatDurationShort(s.metrics.avgTime)}</span> },
                       { label: "Попытки", fn: (s: StudentData) => <span>{s.metrics.totalAttempts}</span> },
                       { label: "Тренд", fn: (s: StudentData) => <TrendIndicator trend={s.metrics.trend} compact /> },
                     ].map((row) => (
