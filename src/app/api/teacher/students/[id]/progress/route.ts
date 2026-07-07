@@ -3,6 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { withErrorHandler } from "@/lib/api-error-handler";
+import { safeJsonParse } from "@/lib/utils";
 
 export async function GET(
   _req: Request,
@@ -51,17 +52,12 @@ export async function GET(
       take: 100,
     });
 
-    // Parse testCases from JSON for each attempt — handle corrupted data gracefully
-    const safeParse = (json: string, fallback: unknown[] = []) => {
-      try { return JSON.parse(json); }
-      catch { return fallback; }
-    };
-
+    // Parse testCases from JSON for each attempt
     const parsedAttempts = attempts.map((a) => ({
       ...a,
-      testCases: safeParse(a.testCases, []),
-      coveredEcIds: safeParse(a.coveredEcIds, []),
-      coveredBvDescriptions: safeParse(a.coveredBvDescriptions, []),
+      testCases: safeJsonParse(a.testCases, []),
+      coveredEcIds: safeJsonParse(a.coveredEcIds, []),
+      coveredBvDescriptions: safeJsonParse(a.coveredBvDescriptions, []),
     }));
 
     // Compute stats

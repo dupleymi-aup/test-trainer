@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { safeJsonParse } from "@/lib/utils";
 
 /**
  * POST /api/admin/alerts/check-thresholds
@@ -36,12 +37,8 @@ export async function POST(req: Request) {
     const settings = await db.systemSetting.findMany({
       where: { key: { in: ["risk_student_threshold", "inactive_group_threshold", "avg_score_drop_threshold"] } },
     });
-    const safeParse = (json: string) => {
-      try { return JSON.parse(json); }
-      catch { return json; }
-    };
     const settingsMap: Record<string, unknown> = {};
-    for (const s of settings) settingsMap[s.key] = safeParse(s.value);
+    for (const s of settings) settingsMap[s.key] = safeJsonParse(s.value, s.value);
 
     const riskThreshold = Number(settingsMap["risk_student_threshold"] ?? 5);
     const inactiveGroupThreshold = Number(settingsMap["inactive_group_threshold"] ?? 2);
