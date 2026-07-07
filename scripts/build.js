@@ -15,6 +15,21 @@ const STATIC_DST = path.join(STANDALONE, ".next", "static");
 const PUBLIC_SRC = "public";
 const PUBLIC_DST = path.join(STANDALONE, "public");
 
+// Generate Prisma client before build (needed for type generation)
+const dbType = process.env.DB_TYPE || "sqlite";
+if (dbType !== "mongodb") {
+  console.log(`[build] Generating Prisma client for ${dbType}...`);
+  try {
+    execSync(`node ${path.join(__dirname, "generate-schema.js")} --generate`, {
+      stdio: "inherit",
+      env: process.env,
+    });
+  } catch (e) {
+    console.error("[build] Failed to generate Prisma client");
+    process.exit(1);
+  }
+}
+
 // Run Next.js build
 // Use npx for cross-platform compatibility (Windows doesn't have 'next' in PATH)
 console.log("[build] Running next build...");
