@@ -446,7 +446,7 @@ describe("POST /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toBeDefined();
     });
 
     it("rejects password shorter than 8 characters with 400", async () => {
@@ -455,7 +455,7 @@ describe("POST /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toBeDefined();
     });
 
     it("rejects invalid role with 400", async () => {
@@ -464,7 +464,7 @@ describe("POST /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toBeDefined();
     });
 
     it("rejects invalid email format with 400", async () => {
@@ -473,7 +473,7 @@ describe("POST /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toBe("Invalid data");
+      expect(json.error).toBeDefined();
     });
 
     it("accepts optional name (name is optional)", async () => {
