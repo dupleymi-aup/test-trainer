@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createNotificationSchema = z.object({
@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details:(parsed.error) },
         { status: 400 }
       );
     }
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details:(parsed.error) },
         { status: 400 }
       );
     }

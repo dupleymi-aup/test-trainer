@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
-import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const createAttemptSchema = z.object({
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     }
     const parsed = createAttemptSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
     }
 
     const { taskId, testCases, score, ecCoverage, bvCoverage, correctness, coveredEcIds, coveredBvDescriptions, timeSpent } = parsed.data;

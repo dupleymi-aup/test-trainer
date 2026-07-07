@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 const loginSchema = z.object({
   login: z.string().min(1, "Email or phone is required").max(255, "Email or phone is too long"),
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details:(parsed.error) },
         { status: 400 }
       );
     }

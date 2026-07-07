@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 const deadlineSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title is too long"),
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     }
     const parsed = deadlineSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
     }
 
     const { title, description, dueDate, type, groupId, taskId, targetUsers, specificUserIds, reminderSchedule } = parsed.data;
@@ -155,7 +155,7 @@ export async function PATCH(req: Request) {
     }
     const parsed = deadlineSchema.partial().safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
     }
 
     const updateData: Record<string, unknown> = { ...parsed.data };

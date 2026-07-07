@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 const preferencesSchema = z.object({
   email: z.boolean().optional(),
@@ -79,7 +79,7 @@ export async function PATCH(req: Request) {
     }
     const parsed = preferencesSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
     }
 
     const user = await db.user.findUnique({

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { parsePositiveInt } from "@/lib/validate";
 import { passwordSchema } from "@/lib/shared-schemas";
 
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
     }
     const parsed = createUserSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid data", details: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error: "Invalid data", details:(parsed.error) }, { status: 400 });
     }
 
     const { name, email, phone, password, role, university, group } = parsed.data;

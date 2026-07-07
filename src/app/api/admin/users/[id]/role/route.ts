@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 const changeRoleSchema = z.object({
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
@@ -34,7 +34,7 @@ export async function PATCH(
     }
     const parsed = changeRoleSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid role", details: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error: "Invalid role", details:(parsed.error) }, { status: 400 });
     }
 
     const user = await db.user.findUnique({ where: { id } });

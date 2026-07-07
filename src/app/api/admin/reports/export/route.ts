@@ -6,7 +6,7 @@ import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
-import { formatZodError, parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { sanitizeCSVValue, sanitizeFilename } from "@/lib/csv-utils";
 

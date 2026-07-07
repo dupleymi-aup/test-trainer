@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const gradeSchema = z.object({
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
 
     const parsed = gradeSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
     }
 
     const { userId, taskId, score, comment } = parsed.data;

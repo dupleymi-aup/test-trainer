@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,14 +10,27 @@ import { useTrainerState } from "@/hooks/use-trainer-state";
 import { AppHeader } from "@/components/app-header";
 import { ProgressStatsBar } from "@/components/progress-stats-bar";
 import { TabContent } from "@/components/tab-content";
-import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts";
-import { Confetti } from "@/components/confetti";
-import { Onboarding } from "@/components/onboarding";
-import { HintDialog } from "@/components/hint-dialog";
-import { MarathonMode } from "@/components/marathon-mode";
-import { CommandPalette } from "@/components/command-palette";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
+
+const KeyboardShortcutsDialog = dynamic(() =>
+  import("@/components/keyboard-shortcuts").then((m) => ({ default: m.KeyboardShortcutsDialog }))
+);
+const Confetti = dynamic(() =>
+  import("@/components/confetti").then((m) => ({ default: m.Confetti }))
+);
+const Onboarding = dynamic(() =>
+  import("@/components/onboarding").then((m) => ({ default: m.Onboarding }))
+);
+const HintDialog = dynamic(() =>
+  import("@/components/hint-dialog").then((m) => ({ default: m.HintDialog }))
+);
+const MarathonMode = dynamic(() =>
+  import("@/components/marathon-mode").then((m) => ({ default: m.MarathonMode }))
+);
+const CommandPalette = dynamic(() =>
+  import("@/components/command-palette").then((m) => ({ default: m.CommandPalette }))
+);
 
 const TOTAL_TASKS = tasks.length;
 

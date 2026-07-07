@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { safeJsonParse } from "@/lib/utils";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
 
     const parsed = taskSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
     }
 
     const { groupId, ...taskData } = parsed.data;

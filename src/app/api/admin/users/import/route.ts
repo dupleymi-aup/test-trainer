@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
-import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     const parsed = importSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
     }
 
     const { csv, defaultRole: role, defaultPassword: password } = parsed.data;

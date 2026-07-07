@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { withErrorHandler, formatZodError } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
@@ -58,7 +58,7 @@ export async function PATCH(req: Request) {
 
     const parsed = markReadSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+      return NextResponse.json({ error:(parsed.error) }, { status: 400 });
     }
 
     await db.message.updateMany({

@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { formatZodError, withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler } from "@/lib/api-error-handler";
 
 const validSettingKeys = [
   "maxLoginAttempts",
@@ -89,7 +89,7 @@ export async function PATCH(req: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid data", details: formatZodError(parsed.error) },
+        { error: "Invalid data", details:(parsed.error) },
         { status: 400 }
       );
     }
