@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { workedExamples } from "./worked-examples";
-import type { WorkedExample, WorkedStep } from "./worked-examples";
 
 describe("workedExamples", () => {
   it("exports a non-empty array", () => {
@@ -69,26 +68,26 @@ describe("workedExamples", () => {
   it("contains factorial example (taskId 1)", () => {
     const factorial = workedExamples.find((e) => e.taskId === 1);
     expect(factorial).toBeDefined();
-    expect(factorial!.taskName).toContain("Факториал");
-    expect(factorial!.steps.length).toBeGreaterThanOrEqual(7);
+    expect(factorial?.taskName).toContain("Факториал");
+    expect(factorial?.steps.length).toBeGreaterThanOrEqual(7);
   });
 
   it("contains prime example (taskId 2)", () => {
     const prime = workedExamples.find((e) => e.taskId === 2);
     expect(prime).toBeDefined();
-    expect(prime!.taskName).toContain("Простое число");
+    expect(prime?.taskName).toContain("Простое число");
   });
 
   it("contains leap year example (taskId 4)", () => {
     const leapYear = workedExamples.find((e) => e.taskId === 4);
     expect(leapYear).toBeDefined();
-    expect(leapYear!.taskName).toContain("Високосный год");
+    expect(leapYear?.taskName).toContain("Високосный год");
   });
 
   it("contains triangle example (taskId 5)", () => {
     const triangle = workedExamples.find((e) => e.taskId === 5);
     expect(triangle).toBeDefined();
-    expect(triangle!.taskName).toContain("Треугольник");
+    expect(triangle?.taskName).toContain("Треугольник");
   });
 
   it("all taskIds are unique", () => {

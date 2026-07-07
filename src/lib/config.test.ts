@@ -1,29 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 describe("config", () => {
-  const envBackup: Record<string, string | undefined> = {};
-
-  beforeEach(() => {
-    vi.restoreAllMocks();
-    // Backup and set required env vars
-    envBackup.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
-    envBackup.DB_TYPE = process.env.DB_TYPE;
-    envBackup.DATABASE_URL = process.env.DATABASE_URL;
-    envBackup.NODE_ENV = process.env.NODE_ENV;
-    envBackup.SMTP_HOST = process.env.SMTP_HOST;
-
-    process.env.NEXTAUTH_SECRET = "test-secret-key";
-    process.env.NODE_ENV = "test";
-  });
-
   afterEach(() => {
+    vi.restoreAllMocks();
     delete process.env.SMTP_HOST;
+    delete process.env.SMTP_PORT;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    delete process.env.SMTP_FROM;
   });
-
-  function resetConfigCache() {
-    // Dynamic import to get a fresh module each time
-    // We use vi.resetModules() to clear the singleton cache
-  }
 
   it("loads config with required fields", async () => {
     vi.resetModules();
@@ -89,7 +74,7 @@ describe("config", () => {
     vi.resetModules();
     process.env.NEXTAUTH_SECRET = "secret";
     process.env.DB_TYPE = "sqlite";
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
     const { getConfig } = await import("./config");
     const config = getConfig();
     expect(config.nodeEnv).toBe("development");
@@ -118,10 +103,6 @@ describe("config", () => {
     process.env.NEXTAUTH_SECRET = "secret";
     process.env.DB_TYPE = "sqlite";
     delete process.env.SMTP_HOST;
-    delete process.env.SMTP_PORT;
-    delete process.env.SMTP_USER;
-    delete process.env.SMTP_PASS;
-    delete process.env.SMTP_FROM;
     delete process.env.CRON_SECRET;
     delete process.env.MONGODB_URI;
     const { getConfig } = await import("./config");

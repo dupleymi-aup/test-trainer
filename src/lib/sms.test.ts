@@ -1,21 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { sendSMS } from "./sms";
 
 describe("sendSMS", () => {
-  const originalEnv = process.env.NODE_ENV;
-  const originalSmsProvider = process.env.SMS_PROVIDER;
-
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
-    if (originalSmsProvider === undefined) {
-      delete process.env.SMS_PROVIDER;
-    } else {
-      process.env.SMS_PROVIDER = originalSmsProvider;
-    }
+    vi.restoreAllMocks();
   });
 
   describe("input validation", () => {
@@ -38,25 +26,25 @@ describe("sendSMS", () => {
     });
 
     it("accepts international format +7XXXXXXXXXX", async () => {
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
       const result = await sendSMS({ phone: "+79991234567", message: "test" });
       expect(result.success).toBe(true);
     });
 
     it("accepts 10-digit number without prefix", async () => {
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
       const result = await sendSMS({ phone: "9991234567", message: "test" });
       expect(result.success).toBe(true);
     });
 
     it("accepts phone with dashes and spaces", async () => {
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
       const result = await sendSMS({ phone: "+7 (999) 123-45-67", message: "test" });
       expect(result.success).toBe(true);
     });
 
     it("accepts 15-digit phone number", async () => {
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
       const result = await sendSMS({ phone: "+123456789012345", message: "test" });
       expect(result.success).toBe(true);
     });
@@ -70,7 +58,7 @@ describe("sendSMS", () => {
 
   describe("development mode", () => {
     it("returns success in development mode without calling provider", async () => {
-      process.env.NODE_ENV = "development";
+      vi.stubEnv("NODE_ENV", "development");
       const result = await sendSMS({ phone: "+79991234567", message: "hello" });
       expect(result.success).toBe(true);
     });
@@ -78,7 +66,7 @@ describe("sendSMS", () => {
 
   describe("provider routing", () => {
     it("returns error when no provider configured", async () => {
-      process.env.NODE_ENV = "production";
+      vi.stubEnv("NODE_ENV", "production");
       delete process.env.SMS_PROVIDER;
       const result = await sendSMS({ phone: "+79991234567", message: "test" });
       expect(result.success).toBe(false);
@@ -86,7 +74,7 @@ describe("sendSMS", () => {
     });
 
     it("returns error for unknown provider", async () => {
-      process.env.NODE_ENV = "production";
+      vi.stubEnv("NODE_ENV", "production");
       process.env.SMS_PROVIDER = "unknown";
       const result = await sendSMS({ phone: "+79991234567", message: "test" });
       expect(result.success).toBe(false);
