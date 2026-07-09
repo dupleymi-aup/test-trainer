@@ -196,7 +196,6 @@ describe("POST /api/auth/verify-otp", () => {
       mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
 
       const res = await POST(makeRequest({ phone: "+1234567890", code: "123456" }));
-      const json = await res.json();
 
       expect(res.status).toBe(429);
     });

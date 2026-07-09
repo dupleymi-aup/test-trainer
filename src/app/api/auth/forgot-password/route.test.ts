@@ -273,7 +273,6 @@ describe("POST /api/auth/forgot-password", () => {
       mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
 
       const res = await POST(makeRequest({ email: "user@test.com" }));
-      const json = await res.json();
 
       expect(res.status).toBe(429);
     });

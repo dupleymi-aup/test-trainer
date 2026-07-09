@@ -245,7 +245,6 @@ describe("POST /api/auth/change-password", () => {
         currentPassword: "OldPass123!",
         newPassword: "NewPass456!",
       }));
-      const json = await res.json();
 
       expect(res.status).toBe(429);
     });

@@ -244,7 +244,6 @@ describe("PUT /api/auth/profile", () => {
     mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 3600000 };
 
     const res = await PUT(makePutRequest({ name: "New Name" }));
-    const json = await res.json();
 
     expect(res.status).toBe(429);
   });

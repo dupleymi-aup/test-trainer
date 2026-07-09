@@ -211,7 +211,6 @@ describe("POST /api/auth/resend-verification", () => {
       mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 3600000 };
 
       const res = await POST(makeRequest());
-      const json = await res.json();
 
       expect(res.status).toBe(429);
     });
