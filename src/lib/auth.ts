@@ -5,57 +5,9 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import { db } from "@/lib/db";
+import { isEmailRateLimited } from "@/lib/email-rate-limit";
 import { isLoginRateLimited } from "@/lib/login-rate-limit";
-import { rateLimits } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-
-// In-memory store for email rate limiting (keyed by email address)
-const emailRateLimitStore = new Map<string, { count: number; resetAt: number }>();
-const EMAIL_RATE_LIMIT_MAX_SIZE = 10_000;
-
-function isEmailRateLimited(email: string): boolean {
-  const now = Date.now();
-  const key = `email:${email.toLowerCase().trim()}`;
-  const entry = emailRateLimitStore.get(key);
-
-  if (!entry || entry.resetAt <= now) {
-    emailRateLimitStore.delete(key);
-    emailRateLimitStore.set(key, { count: 1, resetAt: now + rateLimits.forgotPassword.windowMs });
-    return false;
-  }
-
-  if (entry.count >= rateLimits.forgotPassword.max) {
-    return true;
-  }
-
-  entry.count += 1;
-  return false;
-}
-
-// Auto-cleanup for email rate limit store — singleton guard to prevent HMR leaks
-if (typeof global !== "undefined") {
-  const emailRateLimitCleanupSymbol = Symbol.for("email-rate-limit-cleanup-interval");
-  const existingInterval = (global as Record<symbol, unknown>)[emailRateLimitCleanupSymbol] as ReturnType<typeof setInterval> | undefined;
-  if (existingInterval) clearInterval(existingInterval);
-  (global as Record<symbol, unknown>)[emailRateLimitCleanupSymbol] = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of emailRateLimitStore) {
-      if (entry.resetAt <= now) {
-        emailRateLimitStore.delete(key);
-      }
-    }
-    // LRU-style eviction if over capacity
-    if (emailRateLimitStore.size > EMAIL_RATE_LIMIT_MAX_SIZE) {
-      const iterator = emailRateLimitStore.keys();
-      const evictCount = Math.min(500, emailRateLimitStore.size - EMAIL_RATE_LIMIT_MAX_SIZE);
-      for (let i = 0; i < evictCount; i++) {
-        const result = iterator.next();
-        if (result.done) break;
-        emailRateLimitStore.delete(result.value);
-      }
-    }
-  }, 60 * 1000);
-}
 
 // Extend next-auth types
 declare module "next-auth" {
@@ -142,6 +94,7 @@ export const authOptions: NextAuthOptions = {
 
         const nodemailer = await import("nodemailer");
 
+        const serverConfig = provider.server as Record<string, string> | undefined;
         const server = typeof provider.server === "string"
           ? (() => {
               try {
@@ -158,11 +111,11 @@ export const authOptions: NextAuthOptions = {
               }
             })()
           : {
-              host: (provider.server as Record<string, string>).host,
-              port: Number((provider.server as Record<string, string>).port) || 587,
-              secure: Number((provider.server as Record<string, string>).port) === 465,
-              user: (provider.server as Record<string, string>).user,
-              password: (provider.server as Record<string, string>).password,
+              host: serverConfig?.host ?? "localhost",
+              port: Number(serverConfig?.port) || 587,
+              secure: Number(serverConfig?.port) === 465,
+              user: serverConfig?.user,
+              password: serverConfig?.password,
             };
 
         const transporter = nodemailer.createTransport({
@@ -248,12 +201,12 @@ export const authOptions: NextAuthOptions = {
             token.isActive = dbUser.isActive;
             // If user was deleted, invalidate token immediately
             if (dbUser.deletedAt) {
-              token.id = "" as string;
+              token.id = "";
             }
             // If token was issued before session invalidation, force re-auth
             if (dbUser.lastSessionInvalidation && (!token.tokenIssuedAt || dbUser.lastSessionInvalidation.getTime() > token.tokenIssuedAt)) {
               // Clear token id — next request will be unauthorized, forcing re-login
-              token.id = "" as string;
+              token.id = "";
             }
           }
           token.lastRoleCheck = Date.now();

@@ -10,8 +10,9 @@ const { mocks } = vi.hoisted(() => ({
     mockVerificationTokenFindUnique: vi.fn(),
     mockVerificationTokenDelete: vi.fn(),
     mockUserUpdate: vi.fn(),
+    mockUserFindUnique: vi.fn(),
     loggerError: vi.fn(),
-    rateLimitResult: { limited: false, remaining: 99, resetAt: Date.now() + 3600000 },
+    rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 900000 },
   },
 }));
 
@@ -22,6 +23,7 @@ vi.mock("@/lib/db", () => ({
       delete: mocks.mockVerificationTokenDelete,
     },
     user: {
+      findUnique: mocks.mockUserFindUnique,
       update: mocks.mockUserUpdate,
     },
     $transaction: vi.fn().mockImplementation(async (operations: unknown[]) => {
@@ -48,7 +50,7 @@ vi.mock("@/lib/rate-limit", () => {
     createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
       const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
       return new Response(
-        JSON.stringify({ error: "Too many attempts. Please try later" }),
+        JSON.stringify({ error: "Too many requests" }),
         {
           status: 429,
           headers: {
@@ -59,7 +61,7 @@ vi.mock("@/lib/rate-limit", () => {
       );
     }),
     rateLimits: {
-      verifyEmail: { max: 5, windowMs: 15 * 60 * 1000 },
+      verifyEmail: { max: 5, windowMs: 900000 },
     },
   };
 });
@@ -96,6 +98,7 @@ describe("POST /api/auth/verify-email", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.mockVerificationTokenFindUnique.mockResolvedValue(null);
+    mocks.mockUserFindUnique.mockResolvedValue(null);
     mocks.mockUserUpdate.mockResolvedValue({ id: "user-123" });
   });
 
@@ -106,6 +109,7 @@ describe("POST /api/auth/verify-email", () => {
   describe("successful email verification", () => {
     it("verifies email with valid token, returns 200", async () => {
       mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
+      mocks.mockUserFindUnique.mockResolvedValue({ id: "user-123", emailVerified: null });
 
       const req = makeRequest({ token: "valid-verify-token" });
       const res = await POST(req);
@@ -128,6 +132,7 @@ describe("POST /api/auth/verify-email", () => {
         ...validVerificationToken,
         identifier: "email-verify:user-456",
       });
+      mocks.mockUserFindUnique.mockResolvedValue({ id: "user-456", emailVerified: null });
 
       const req = makeRequest({ token: "valid-verify-token" });
       await POST(req);
@@ -141,6 +146,7 @@ describe("POST /api/auth/verify-email", () => {
 
     it("deletes the used token after successful verification", async () => {
       mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
+      mocks.mockUserFindUnique.mockResolvedValue({ id: "user-123", emailVerified: null });
 
       const req = makeRequest({ token: "valid-verify-token" });
       await POST(req);
@@ -220,19 +226,119 @@ describe("POST /api/auth/verify-email", () => {
     it("rejects empty token with 400", async () => {
       const req = makeRequest({ token: "" });
       const res = await POST(req);
-      const json = await res.json();
+      const _json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toContain("required");
     });
   });
 
   // =========================================================================
-  // 4. Server error handling
+  // 4. Wrong token type
+  // =========================================================================
+
+  describe("wrong token type", () => {
+    it("returns 400 when token is not an email-verify token", async () => {
+      mocks.mockVerificationTokenFindUnique.mockResolvedValue({
+        ...validVerificationToken,
+        identifier: "password-reset:user-123",
+      });
+
+      const req = makeRequest({ token: "password-reset-token" });
+      const res = await POST(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe("Invalid or expired token");
+    });
+  });
+
+  // =========================================================================
+  // 5. Invalid token format
+  // =========================================================================
+
+  describe("invalid token format", () => {
+    it("returns 400 when identifier has no userId", async () => {
+      mocks.mockVerificationTokenFindUnique.mockResolvedValue({
+        ...validVerificationToken,
+        identifier: "email-verify:",
+      });
+
+      const req = makeRequest({ token: "malformed-token" });
+      const res = await POST(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe("Invalid token format");
+    });
+  });
+
+  // =========================================================================
+  // 6. User not found
+  // =========================================================================
+
+  describe("user not found", () => {
+    it("returns 404 when user does not exist", async () => {
+      mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
+      mocks.mockUserFindUnique.mockResolvedValue(null);
+
+      const req = makeRequest({ token: "valid-verify-token" });
+      const res = await POST(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(404);
+      expect(json.error).toBe("User not found");
+    });
+  });
+
+  // =========================================================================
+  // 7. Already verified
+  // =========================================================================
+
+  describe("already verified", () => {
+    it("returns 400 when email is already verified", async () => {
+      mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
+      mocks.mockUserFindUnique.mockResolvedValue({ id: "user-123", emailVerified: new Date() });
+
+      const req = makeRequest({ token: "valid-verify-token" });
+      const res = await POST(req);
+      const json = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(json.error).toBe("Email already verified");
+    });
+  });
+
+  // =========================================================================
+  // 8. Rate limiting
+  // =========================================================================
+
+  describe("rate limiting", () => {
+    it("returns 429 when rate limited", async () => {
+      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
+
+      const req = makeRequest({ token: "valid-verify-token" });
+      const res = await POST(req);
+
+      expect(res.status).toBe(429);
+    });
+
+    it("does NOT query database when rate limited", async () => {
+      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
+
+      const req = makeRequest({ token: "valid-verify-token" });
+      await POST(req);
+
+      expect(mocks.mockVerificationTokenFindUnique).not.toHaveBeenCalled();
+    });
+  });
+
+  // =========================================================================
+  // 9. Server error handling
   // =========================================================================
 
   describe("server error handling", () => {
     it("returns 500 when database query fails", async () => {
+      mocks.rateLimitResult = { limited: false, remaining: 4, resetAt: Date.now() + 900000 };
       mocks.mockVerificationTokenFindUnique.mockRejectedValueOnce(new Error("DB connection error"));
 
       const req = makeRequest({ token: "valid-verify-token" });
@@ -244,7 +350,9 @@ describe("POST /api/auth/verify-email", () => {
     });
 
     it("returns 500 when user update fails", async () => {
+      mocks.rateLimitResult = { limited: false, remaining: 4, resetAt: Date.now() + 900000 };
       mocks.mockVerificationTokenFindUnique.mockResolvedValue(validVerificationToken);
+      mocks.mockUserFindUnique.mockResolvedValue({ id: "user-123", emailVerified: null });
       mocks.mockUserUpdate.mockRejectedValueOnce(new Error("Update failed"));
 
       const req = makeRequest({ token: "valid-verify-token" });

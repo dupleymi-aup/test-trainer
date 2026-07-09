@@ -42,6 +42,33 @@ export async function POST(req: Request) {
     const identifierParts = verificationToken.identifier.split(":");
     const userId = identifierParts[identifierParts.length - 1];
 
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Invalid token format" },
+        { status: 400 }
+      );
+    }
+
+    // Verify user exists before updating
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, emailVerified: true },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    if (user.emailVerified) {
+      return NextResponse.json(
+        { error: "Email already verified" },
+        { status: 400 }
+      );
+    }
+
     // Perform both operations in a transaction to prevent race conditions
     await db.$transaction([
       db.user.update({
