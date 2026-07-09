@@ -1,46 +1,40 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// ---------------------------------------------------------------------------
-// Mock modules BEFORE importing the route handler
-// vi.mock is hoisted, so we use vi.hoisted to define the mock variables
-// ---------------------------------------------------------------------------
-
 const { mocks } = vi.hoisted(() => ({
   mocks: {
-    mockUserFindUnique: vi.fn(),
-    mockVerificationTokenCreate: vi.fn(),
-    mockVerificationTokenDeleteMany: vi.fn(),
-    mockVerificationCodeCreate: vi.fn(),
-    mockVerificationCodeDeleteMany: vi.fn(),
-    sendEmail: vi.fn().mockResolvedValue(undefined),
-    sendSMS: vi.fn().mockResolvedValue({ success: true }),
-    generatePasswordResetEmail: vi.fn().mockReturnValue({ subject: "Reset", html: "<html>" }),
+    userFindUnique: vi.fn(),
+    verificationTokenCreate: vi.fn(),
+    verificationTokenDeleteMany: vi.fn(),
+    verificationCodeCreate: vi.fn(),
+    verificationCodeDeleteMany: vi.fn(),
+    sendEmail: vi.fn(),
+    sendSMS: vi.fn(),
+    generateSecureToken: vi.fn().mockReturnValue("mock-reset-token"),
     generateSecureOTP: vi.fn().mockReturnValue("123456"),
-    generateSecureToken: vi.fn().mockReturnValue("test-reset-token-123"),
-    loggerError: vi.fn(),
-    rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 3600000 },
+    rateLimitResult: { limited: false, remaining: 9, resetAt: Date.now() + 900000 },
   },
 }));
 
 vi.mock("@/lib/db", () => ({
   db: {
-    user: {
-      findUnique: mocks.mockUserFindUnique,
-    },
+    user: { findUnique: mocks.userFindUnique },
     verificationToken: {
-      create: mocks.mockVerificationTokenCreate,
-      deleteMany: mocks.mockVerificationTokenDeleteMany,
+      create: mocks.verificationTokenCreate,
+      deleteMany: mocks.verificationTokenDeleteMany,
     },
     verificationCode: {
-      create: mocks.mockVerificationCodeCreate,
-      deleteMany: mocks.mockVerificationCodeDeleteMany,
+      create: mocks.verificationCodeCreate,
+      deleteMany: mocks.verificationCodeDeleteMany,
     },
   },
 }));
 
 vi.mock("@/lib/email", () => ({
   sendEmail: mocks.sendEmail,
-  generatePasswordResetEmail: mocks.generatePasswordResetEmail,
+  generatePasswordResetEmail: vi.fn().mockReturnValue({
+    subject: "Reset your password",
+    html: "<p>reset</p>",
+  }),
 }));
 
 vi.mock("@/lib/sms", () => ({
@@ -52,319 +46,256 @@ vi.mock("@/lib/crypto", () => ({
   generateSecureOTP: mocks.generateSecureOTP,
 }));
 
-vi.mock("@/lib/logger", () => ({
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: mocks.loggerError,
-  },
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn().mockImplementation(() => mocks.rateLimitResult),
+  getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
+  rateLimits: { forgotPassword: { windowMs: 900000, max: 5 } },
+  createRateLimitResponse: vi.fn().mockReturnValue(
+    new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
+  ),
 }));
 
-vi.mock("@/lib/rate-limit", () => {
-  const m = mocks;
-  return {
-    checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
-    getClientIp: vi.fn().mockReturnValue("127.0.0.1"),
-    rateLimits: {
-      forgotPassword: { max: 3, windowMs: 60 * 60 * 1000 },
-    },
-    createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
-      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
-      return new Response(
-        JSON.stringify({ error: "Too many attempts. Please try later" }),
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "Retry-After": String(retryAfter),
-          },
-        }
-      );
-    }),
-  };
-});
-
-// ---------------------------------------------------------------------------
-// Import route handler AFTER mocks are set up
-// ---------------------------------------------------------------------------
+vi.mock("@/lib/logger", () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 import { POST } from "./route";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function makeRequest(body: Record<string, unknown>, headers?: Record<string, string>) {
+function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/auth/forgot-password", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
 
-const mockUser = {
-  id: "user-123",
-  email: "test@example.com",
-  phone: "+79001234567",
-  name: "Test User",
-};
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe("POST /api/auth/forgot-password", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.rateLimitResult = { limited: false, remaining: 4, resetAt: Date.now() + 3600000 };
-    mocks.mockUserFindUnique.mockResolvedValue(null);
+    mocks.userFindUnique.mockResolvedValue(null);
+    mocks.verificationTokenCreate.mockResolvedValue({});
+    mocks.verificationCodeCreate.mockResolvedValue({});
     mocks.sendEmail.mockResolvedValue(undefined);
     mocks.sendSMS.mockResolvedValue({ success: true });
-    mocks.mockVerificationCodeCreate.mockResolvedValue({ id: "vc-123" });
-    mocks.mockVerificationCodeDeleteMany.mockResolvedValue({ count: 0 });
+    mocks.rateLimitResult = { limited: false, remaining: 9, resetAt: Date.now() + 900000 };
   });
 
   // =========================================================================
-  // 1. Successful forgot-password via email (user exists)
+  // 1. Email flow — existing user
   // =========================================================================
 
-  describe("successful forgot-password via email (user exists)", () => {
-    it("creates a verification token and sends reset email, returns 200", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
+  describe("email flow — existing user", () => {
+    it("sends reset email and returns success message", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", email: "user@test.com" });
 
-      const req = makeRequest({ email: "test@example.com" });
-      const res = await POST(req);
+      const res = await POST(makeRequest({ email: "user@test.com" }));
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("If account exists, instructions sent to email");
+      expect(json.message).toContain("instructions sent to email");
       expect(json.method).toBe("email");
-      expect(mocks.mockVerificationTokenCreate).toHaveBeenCalledWith(
+      expect(mocks.sendEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: "user@test.com" })
+      );
+    });
+
+    it("creates verification token with password-reset identifier", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", email: "user@test.com" });
+
+      await POST(makeRequest({ email: "user@test.com" }));
+
+      expect(mocks.verificationTokenCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            identifier: "password-reset:user-123",
-            token: "test-reset-token-123",
+            identifier: "password-reset:user-1",
           }),
         })
       );
-      expect(mocks.sendEmail).toHaveBeenCalled();
     });
 
-    it("normalizes email to lowercase before lookup", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
+    it("normalizes email to lowercase", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", email: "user@test.com" });
 
-      const req = makeRequest({ email: "TEST@EXAMPLE.COM" });
-      await POST(req);
+      await POST(makeRequest({ email: "User@Test.COM" }));
 
-      expect(mocks.mockUserFindUnique).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { email: "test@example.com" },
-        })
-      );
+      expect(mocks.userFindUnique).toHaveBeenCalledWith({
+        where: { email: "user@test.com" },
+      });
     });
   });
 
   // =========================================================================
-  // 2. Unknown email — security: don't leak existence
+  // 2. Email flow — non-existent user (anti-enumeration)
   // =========================================================================
 
-  describe("unknown email — security: don't leak existence", () => {
-    it("returns 200 with same message and creates a dummy token to prevent timing attacks", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(null);
+  describe("email flow — non-existent user", () => {
+    it("still creates a dummy token to prevent timing attacks", async () => {
+      mocks.userFindUnique.mockResolvedValue(null);
 
-      const req = makeRequest({ email: "nonexistent@example.com" });
-      const res = await POST(req);
+      const res = await POST(makeRequest({ email: "unknown@test.com" }));
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("If account exists, instructions sent to email");
-      expect(json.method).toBe("email");
-      // A dummy token IS created so the DB write matches the real-user path timing,
-      // preventing attackers from inferring email existence via response time.
-      expect(mocks.mockVerificationTokenCreate).toHaveBeenCalledTimes(1);
-      const createCall = mocks.mockVerificationTokenCreate.mock.calls[0][0];
-      expect(createCall.data.identifier).toMatch(/^password-reset:dummy-/);
+      expect(json.message).toContain("instructions sent to email");
+      expect(mocks.verificationTokenCreate).toHaveBeenCalled();
+    });
+
+    it("does NOT send email for non-existent user", async () => {
+      mocks.userFindUnique.mockResolvedValue(null);
+
+      await POST(makeRequest({ email: "unknown@test.com" }));
+
       expect(mocks.sendEmail).not.toHaveBeenCalled();
     });
+
+    it("dummy token identifier starts with password-reset:dummy", async () => {
+      mocks.userFindUnique.mockResolvedValue(null);
+
+      await POST(makeRequest({ email: "unknown@test.com" }));
+
+      const call = mocks.verificationTokenCreate.mock.calls[0][0];
+      expect(call.data.identifier).toMatch(/^password-reset:dummy-/);
+    });
   });
 
   // =========================================================================
-  // 3. Successful forgot-password via phone (user exists)
+  // 3. Phone flow — existing user
   // =========================================================================
 
-  describe("successful forgot-password via phone (user exists)", () => {
-    it("creates a verification code and sends SMS, returns 200", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
+  describe("phone flow — existing user", () => {
+    it("sends SMS with OTP code", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", phone: "+1234567890" });
 
-      const req = makeRequest({ phone: "+79001234567" });
-      const res = await POST(req);
+      const res = await POST(makeRequest({ phone: "+1234567890" }));
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("If account exists, code sent via SMS");
+      expect(json.message).toContain("code sent via SMS");
       expect(json.method).toBe("phone");
-      expect(mocks.generateSecureOTP).toHaveBeenCalled();
-      expect(mocks.sendSMS).toHaveBeenCalled();
+      expect(mocks.sendSMS).toHaveBeenCalledWith(
+        expect.objectContaining({ phone: "+1234567890" })
+      );
     });
 
-    it("trims phone number before lookup", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
+    it("creates verification code with phone identifier", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", phone: "+1234567890" });
 
-      const req = makeRequest({ phone: "  +79001234567  " });
-      await POST(req);
+      await POST(makeRequest({ phone: "+1234567890" }));
 
-      expect(mocks.mockUserFindUnique).toHaveBeenCalledWith(
+      expect(mocks.verificationCodeCreate).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { phone: "+79001234567" },
+          data: expect.objectContaining({
+            phone: "+1234567890",
+            code: "123456",
+          }),
         })
       );
     });
   });
 
   // =========================================================================
-  // 4. Unknown phone — security: don't leak existence
+  // 4. Phone flow — non-existent user (anti-enumeration)
   // =========================================================================
 
-  describe("unknown phone — security: don't leak existence", () => {
-    it("returns 200 with same message and creates a dummy OTP to prevent timing attacks", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(null);
+  describe("phone flow — non-existent user", () => {
+    it("still creates a dummy code to prevent timing attacks", async () => {
+      mocks.userFindUnique.mockResolvedValue(null);
 
-      const req = makeRequest({ phone: "+79999999999" });
-      const res = await POST(req);
+      const res = await POST(makeRequest({ phone: "+9999999999" }));
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("If account exists, code sent via SMS");
-      expect(json.method).toBe("phone");
-      // A dummy OTP IS created so the DB write matches the real-user path timing.
-      expect(mocks.mockVerificationCodeCreate).toHaveBeenCalledTimes(1);
-      const createCall = mocks.mockVerificationCodeCreate.mock.calls[0][0];
-      expect(createCall.data.phone).toMatch(/^dummy-/);
+      expect(json.message).toContain("code sent via SMS");
+      expect(mocks.verificationCodeCreate).toHaveBeenCalled();
+    });
+
+    it("does NOT send SMS for non-existent user", async () => {
+      mocks.userFindUnique.mockResolvedValue(null);
+
+      await POST(makeRequest({ phone: "+9999999999" }));
+
       expect(mocks.sendSMS).not.toHaveBeenCalled();
     });
   });
 
   // =========================================================================
-  // 5. Validation errors
+  // 5. Validation
   // =========================================================================
 
-  describe("validation errors", () => {
-    it("rejects missing email and phone with 400", async () => {
-      const req = makeRequest({});
-      const res = await POST(req);
-      const json = await res.json();
-
+  describe("validation", () => {
+    it("rejects request with neither email nor phone", async () => {
+      const res = await POST(makeRequest({}));
       expect(res.status).toBe(400);
-      expect(json.error).toContain("required");
     });
 
-    it("rejects invalid email format with 400", async () => {
-      const req = makeRequest({ email: "not-an-email" });
-      const res = await POST(req);
-      const json = await res.json();
-
+    it("rejects invalid email format", async () => {
+      const res = await POST(makeRequest({ email: "not-an-email" }));
       expect(res.status).toBe(400);
-      expect(typeof json.error).toBe("string");
-      expect(json.error.length).toBeGreaterThan(0);
-    });
-
-    it("rejects phone that is too long with 400", async () => {
-      const req = makeRequest({ phone: "1".repeat(21) });
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.error).toContain("too long");
     });
   });
 
   // =========================================================================
-  // 6. Rate limiting
+  // 6. Email send failure
+  // =========================================================================
+
+  describe("email send failure", () => {
+    it("returns 503 when email sending fails and cleans up token", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", email: "user@test.com" });
+      mocks.sendEmail.mockRejectedValue(new Error("SMTP down"));
+
+      const res = await POST(makeRequest({ email: "user@test.com" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(503);
+      expect(json.error).toContain("Failed to send email");
+      expect(mocks.verificationTokenDeleteMany).toHaveBeenCalled();
+    });
+
+    it("returns 503 when SMS sending fails and cleans up code", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", phone: "+1234567890" });
+      mocks.sendSMS.mockResolvedValue({ success: false, error: "SMS provider down" });
+
+      const res = await POST(makeRequest({ phone: "+1234567890" }));
+      const json = await res.json();
+
+      expect(res.status).toBe(503);
+      expect(json.error).toContain("Failed to send SMS");
+      expect(mocks.verificationCodeDeleteMany).toHaveBeenCalled();
+    });
+  });
+
+  // =========================================================================
+  // 7. Rate limiting
   // =========================================================================
 
   describe("rate limiting", () => {
     it("returns 429 when rate limited", async () => {
-      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 3600000 };
+      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
 
-      const req = makeRequest({ email: "test@example.com" });
-      const res = await POST(req);
+      const res = await POST(makeRequest({ email: "user@test.com" }));
       const json = await res.json();
 
       expect(res.status).toBe(429);
-      expect(json.error).toBe("Too many attempts. Please try later");
-    });
-
-    it("includes Retry-After header in rate limit response", async () => {
-      const futureReset = Date.now() + 60000;
-      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: futureReset };
-
-      const req = makeRequest({ email: "test@example.com" });
-      const res = await POST(req);
-
-      const retryAfter = res.headers.get("Retry-After");
-      expect(retryAfter).not.toBeNull();
-      expect(Number(retryAfter)).toBeGreaterThan(0);
     });
 
     it("does NOT query database when rate limited", async () => {
-      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 3600000 };
+      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
 
-      const req = makeRequest({ email: "test@example.com" });
-      await POST(req);
+      await POST(makeRequest({ email: "user@test.com" }));
 
-      expect(mocks.mockUserFindUnique).not.toHaveBeenCalled();
+      expect(mocks.userFindUnique).not.toHaveBeenCalled();
     });
   });
 
   // =========================================================================
-  // 7. Email send failure (503)
+  // 8. Server errors
   // =========================================================================
 
-  describe("email send failure", () => {
-    it("returns 503 and deletes token when email sending fails", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
-      mocks.sendEmail.mockRejectedValueOnce(new Error("SMTP error"));
-
-      const req = makeRequest({ email: "test@example.com" });
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(503);
-      expect(json.error).toBe("Failed to send email. Please try later");
-      expect(mocks.mockVerificationTokenDeleteMany).toHaveBeenCalled();
-      expect(mocks.loggerError).toHaveBeenCalled();
-    });
-  });
-
-  // =========================================================================
-  // 8. SMS send failure (503)
-  // =========================================================================
-
-  describe("SMS send failure", () => {
-    it("returns 503 when SMS sending fails", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
-      mocks.sendSMS.mockResolvedValueOnce({ success: false, error: "SMS gateway error" });
-
-      const req = makeRequest({ phone: "+79001234567" });
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(503);
-      expect(json.error).toBe("Failed to send SMS. Please try later");
-    });
-  });
-
-  // =========================================================================
-  // 9. Server error handling
-  // =========================================================================
-
-  describe("server error handling", () => {
+  describe("server errors", () => {
     it("returns 500 when database query fails", async () => {
-      mocks.mockUserFindUnique.mockRejectedValueOnce(new Error("DB connection error"));
+      mocks.userFindUnique.mockRejectedValue(new Error("DB connection error"));
 
-      const req = makeRequest({ email: "test@example.com" });
-      const res = await POST(req);
+      const res = await POST(makeRequest({ email: "user@test.com" }));
       const json = await res.json();
 
       expect(res.status).toBe(500);

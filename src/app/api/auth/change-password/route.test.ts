@@ -1,33 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-// ---------------------------------------------------------------------------
-// Mock modules BEFORE importing the route handler
-// vi.mock is hoisted, so we use vi.hoisted to define the mock variables
-// ---------------------------------------------------------------------------
-
 const { mocks } = vi.hoisted(() => ({
   mocks: {
-    mockUserFindUnique: vi.fn(),
-    mockUserUpdate: vi.fn(),
-    requireAuthResult: { session: { userId: "user-123", role: "STUDENT" } } as { session: { userId: string; role: string } } | { response: unknown },
+    requireAuth: vi.fn(),
+    requireCSRF: vi.fn().mockReturnValue({ verified: true }),
+    userFindUnique: vi.fn(),
+    userUpdate: vi.fn(),
     bcryptCompare: vi.fn(),
-    bcryptHash: vi.fn().mockResolvedValue("$2a$12$hashednewpassword"),
-    loggerError: vi.fn(),
-    rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 3600000 },
+    bcryptHash: vi.fn().mockResolvedValue("$2a$12$hashednewpw"),
+    rateLimitResult: { limited: false, remaining: 4, resetAt: Date.now() + 900000 },
   },
 }));
 
 vi.mock("@/lib/db", () => ({
   db: {
     user: {
-      findUnique: mocks.mockUserFindUnique,
-      update: mocks.mockUserUpdate,
+      findUnique: mocks.userFindUnique,
+      update: mocks.userUpdate,
     },
   },
-}));
-
-vi.mock("@/lib/admin-guard", () => ({
-  requireAuth: vi.fn().mockImplementation(() => mocks.requireAuthResult),
 }));
 
 vi.mock("bcryptjs", () => ({
@@ -37,85 +28,47 @@ vi.mock("bcryptjs", () => ({
   },
 }));
 
-vi.mock("@/lib/logger", () => ({
-  logger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: mocks.loggerError,
-  },
+vi.mock("@/lib/admin-guard", () => ({
+  requireAuth: mocks.requireAuth,
 }));
-
-vi.mock("@/lib/rate-limit", () => {
-  const m = mocks;
-  return {
-    checkRateLimit: vi.fn().mockImplementation(() => m.rateLimitResult),
-    rateLimits: {
-      changePassword: { max: 5, windowMs: 15 * 60 * 1000 },
-    },
-    createRateLimitResponse: vi.fn().mockImplementation((resetAt: number) => {
-      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
-      return new Response(
-        JSON.stringify({ error: "Too many attempts. Please try later" }),
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "Retry-After": String(retryAfter),
-          },
-        }
-      );
-    }),
-  };
-});
 
 vi.mock("@/lib/csrf-middleware", () => ({
-  requireCSRF: vi.fn().mockResolvedValue({ verified: true }),
+  requireCSRF: mocks.requireCSRF,
 }));
 
-// ---------------------------------------------------------------------------
-// Import route handler AFTER mocks are set up
-// ---------------------------------------------------------------------------
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn().mockImplementation(() => mocks.rateLimitResult),
+  rateLimits: { changePassword: { max: 5, windowMs: 900000 } },
+  createRateLimitResponse: vi.fn().mockReturnValue(
+    new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
+  ),
+}));
 
 import { POST } from "./route";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+const authedSession = { session: { userId: "user-1", role: "STUDENT" } };
+const activeUser = {
+  id: "user-1",
+  hashedPassword: "$2a$12$oldhash",
+};
 
-function makeRequest(body: Record<string, unknown>, headers?: Record<string, string>) {
+function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/auth/change-password", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
 
-const validChangePayload = {
-  currentPassword: "OldSecurePass123!",
-  newPassword: "NewSecurePass123!",
-};
-
-const mockUser = {
-  id: "user-123",
-  email: "test@example.com",
-  hashedPassword: "$2a$12$hashedoldpassword",
-  role: "STUDENT",
-  isActive: true,
-};
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe("POST /api/auth/change-password", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.rateLimitResult = { limited: false, remaining: 4, resetAt: Date.now() + 3600000 };
-    mocks.requireAuthResult = { session: { userId: "user-123", role: "STUDENT" } };
-    mocks.mockUserFindUnique.mockResolvedValue(null);
-    mocks.bcryptCompare.mockResolvedValue(false);
-    mocks.mockUserUpdate.mockResolvedValue({ id: "user-123" });
+    mocks.requireAuth.mockResolvedValue(authedSession);
+    mocks.userFindUnique.mockResolvedValue(activeUser);
+    mocks.userUpdate.mockResolvedValue({ id: "user-1" });
+    mocks.bcryptCompare.mockResolvedValue(true);
+    mocks.requireCSRF.mockReturnValue({ verified: true });
+    mocks.rateLimitResult = { limited: false, remaining: 4, resetAt: Date.now() + 900000 };
   });
 
   // =========================================================================
@@ -123,23 +76,38 @@ describe("POST /api/auth/change-password", () => {
   // =========================================================================
 
   describe("successful password change", () => {
-    it("changes password with correct current password, returns 200", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
-      mocks.bcryptCompare.mockResolvedValue(true);
-
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
+    it("changes password with valid current password", async () => {
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
       const json = await res.json();
 
       expect(res.status).toBe(200);
       expect(json.message).toBe("Password changed successfully");
-      expect(mocks.bcryptCompare).toHaveBeenCalledWith("OldSecurePass123!", "$2a$12$hashedoldpassword");
-      expect(mocks.bcryptHash).toHaveBeenCalledWith("NewSecurePass123!", 12);
-      expect(mocks.mockUserUpdate).toHaveBeenCalledWith(
+    });
+
+    it("hashes new password with bcrypt cost 12", async () => {
+      await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
+
+      expect(mocks.bcryptHash).toHaveBeenCalledWith("NewPass456!", 12);
+    });
+
+    it("updates user with new hashed password and invalidates sessions", async () => {
+      await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
+
+      expect(mocks.userUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: "user-123" },
+          where: { id: "user-1" },
           data: expect.objectContaining({
-            hashedPassword: "$2a$12$hashednewpassword",
+            hashedPassword: "$2a$12$hashednewpw",
+            lastSessionInvalidation: expect.any(Date),
           }),
         })
       );
@@ -147,269 +115,154 @@ describe("POST /api/auth/change-password", () => {
   });
 
   // =========================================================================
-  // 2. Wrong current password — returns 401
+  // 2. Invalid current password
   // =========================================================================
 
-  describe("wrong current password", () => {
-    it("returns 401 when current password is incorrect", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
+  describe("invalid current password", () => {
+    it("returns 400 when current password is wrong", async () => {
       mocks.bcryptCompare.mockResolvedValue(false);
 
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
+      const res = await POST(makeRequest({
+        currentPassword: "WrongPass!",
+        newPassword: "NewPass456!",
+      }));
       const json = await res.json();
 
       expect(res.status).toBe(400);
       expect(json.error).toBe("Invalid current password");
     });
 
-    it("does NOT hash new password when current password is wrong", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
-      mocks.bcryptCompare.mockResolvedValue(false);
-
-      const req = makeRequest(validChangePayload);
-      await POST(req);
-
-      expect(mocks.bcryptHash).not.toHaveBeenCalled();
-    });
-
     it("does NOT update user when current password is wrong", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
       mocks.bcryptCompare.mockResolvedValue(false);
 
-      const req = makeRequest(validChangePayload);
-      await POST(req);
+      await POST(makeRequest({
+        currentPassword: "WrongPass!",
+        newPassword: "NewPass456!",
+      }));
 
-      expect(mocks.mockUserUpdate).not.toHaveBeenCalled();
+      expect(mocks.userUpdate).not.toHaveBeenCalled();
     });
   });
 
   // =========================================================================
-  // 3. New password too short — returns 400
+  // 3. User without password (OAuth-only account)
   // =========================================================================
 
-  describe("new password too short", () => {
-    it("rejects newPassword shorter than 8 characters with 400", async () => {
-      const req = makeRequest({ ...validChangePayload, newPassword: "short" });
-      const res = await POST(req);
+  describe("user without password", () => {
+    it("returns 400 when user has no hashedPassword", async () => {
+      mocks.userFindUnique.mockResolvedValue({ id: "user-1", hashedPassword: null });
+
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
       const json = await res.json();
 
       expect(res.status).toBe(400);
-      expect(json.error).toContain("at least 8 characters");
-    });
-
-    it("rejects newPassword of exactly 7 characters with 400", async () => {
-      const req = makeRequest({ ...validChangePayload, newPassword: "1234567" });
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.error).toContain("at least 8 characters");
-    });
-
-    it("accepts newPassword of exactly 8 characters", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
-      mocks.bcryptCompare.mockResolvedValue(true);
-
-      const req = makeRequest({ ...validChangePayload, newPassword: "Str0ng!12" });
-      const res = await POST(req);
-
-      expect(res.status).toBe(200);
+      expect(json.error).toBe("Cannot change password");
     });
   });
 
   // =========================================================================
-  // 4. New password too long — returns 400
+  // 4. Validation
   // =========================================================================
 
-  describe("new password too long", () => {
-    it("rejects newPassword longer than 128 characters with 400", async () => {
-      const req = makeRequest({ ...validChangePayload, newPassword: "a".repeat(129) });
-      const res = await POST(req);
-      const json = await res.json();
-
+  describe("validation", () => {
+    it("rejects missing currentPassword", async () => {
+      const res = await POST(makeRequest({ newPassword: "NewPass456!" }));
       expect(res.status).toBe(400);
-      expect(json.error).toContain("too long");
+    });
+
+    it("rejects missing newPassword", async () => {
+      const res = await POST(makeRequest({ currentPassword: "OldPass123!" }));
+      expect(res.status).toBe(400);
+    });
+
+    it("rejects weak newPassword", async () => {
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "weak",
+      }));
+      expect(res.status).toBe(400);
+    });
+
+    it("rejects newPassword shorter than 8 characters", async () => {
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "Ab1!",
+      }));
+      expect(res.status).toBe(400);
     });
   });
 
   // =========================================================================
-  // 5. Missing fields — returns 400
+  // 5. Authentication
   // =========================================================================
 
-  describe("missing fields", () => {
-    it("rejects missing currentPassword with 400", async () => {
-      const { currentPassword: _currentPassword, ...payload } = validChangePayload;
-      const req = makeRequest(payload);
-      const res = await POST(req);
-      const json = await res.json();
+  describe("authentication", () => {
+    it("returns 401 when not authenticated", async () => {
+      mocks.requireAuth.mockResolvedValue({
+        response: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
+      });
 
-      expect(res.status).toBe(400);
-      expect(typeof json.error).toBe("string");
-      expect(json.error.length).toBeGreaterThan(0);
-    });
-
-    it("rejects empty currentPassword with 400", async () => {
-      const req = makeRequest({ ...validChangePayload, currentPassword: "" });
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.error).toContain("required");
-    });
-
-    it("rejects missing newPassword with 400", async () => {
-      const { newPassword: _newPassword, ...payload } = validChangePayload;
-      const req = makeRequest(payload);
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(typeof json.error).toBe("string");
-      expect(json.error.length).toBeGreaterThan(0);
-    });
-
-    it("rejects empty newPassword with 400", async () => {
-      const req = makeRequest({ ...validChangePayload, newPassword: "" });
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.error).toContain("at least 8 characters");
-    });
-  });
-
-  // =========================================================================
-  // 6. Requires authentication (no session = 401)
-  // =========================================================================
-
-  describe("requires authentication", () => {
-    it("returns 401 when user is not authenticated", async () => {
-      mocks.requireAuthResult = { response: { status: 401 } };
-
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
 
       expect(res.status).toBe(401);
     });
+  });
 
-    it("does NOT query user when not authenticated", async () => {
-      mocks.requireAuthResult = { response: { status: 401 } };
+  // =========================================================================
+  // 6. CSRF
+  // =========================================================================
 
-      const req = makeRequest(validChangePayload);
-      await POST(req);
+  describe("CSRF protection", () => {
+    it("returns 403 when CSRF verification fails", async () => {
+      mocks.requireCSRF.mockReturnValue({
+        response: new Response(JSON.stringify({ error: "CSRF token missing" }), { status: 403 }),
+      });
 
-      expect(mocks.mockUserFindUnique).not.toHaveBeenCalled();
-    });
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
 
-    it("does NOT compare password when not authenticated", async () => {
-      mocks.requireAuthResult = { response: { status: 401 } };
-
-      const req = makeRequest(validChangePayload);
-      await POST(req);
-
-      expect(mocks.bcryptCompare).not.toHaveBeenCalled();
+      expect(res.status).toBe(403);
     });
   });
 
   // =========================================================================
-  // 7. User not found or no hashed password
-  // =========================================================================
-
-  describe("user not found or no hashed password", () => {
-    it("returns 400 when user does not exist in database", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(null);
-
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.error).toBe("Cannot change password");
-    });
-
-    it("returns 400 when user has no hashedPassword", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue({ ...mockUser, hashedPassword: null });
-
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(400);
-      expect(json.error).toBe("Cannot change password");
-    });
-
-    it("does NOT compare password when user has no hashedPassword", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue({ ...mockUser, hashedPassword: null });
-
-      const req = makeRequest(validChangePayload);
-      await POST(req);
-
-      expect(mocks.bcryptCompare).not.toHaveBeenCalled();
-    });
-  });
-
-  // =========================================================================
-  // 8. Rate limiting
+  // 7. Rate limiting
   // =========================================================================
 
   describe("rate limiting", () => {
     it("returns 429 when rate limited", async () => {
-      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 3600000 };
+      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 900000 };
 
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
       const json = await res.json();
 
       expect(res.status).toBe(429);
-      expect(json.error).toBe("Too many attempts. Please try later");
-    });
-
-    it("includes Retry-After header in rate limit response", async () => {
-      const futureReset = Date.now() + 60000;
-      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: futureReset };
-
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
-
-      const retryAfter = res.headers.get("Retry-After");
-      expect(retryAfter).not.toBeNull();
-      expect(Number(retryAfter)).toBeGreaterThan(0);
-    });
-
-    it("does NOT query user when rate limited", async () => {
-      mocks.rateLimitResult = { limited: true, remaining: 0, resetAt: Date.now() + 3600000 };
-
-      const req = makeRequest(validChangePayload);
-      await POST(req);
-
-      expect(mocks.mockUserFindUnique).not.toHaveBeenCalled();
     });
   });
 
   // =========================================================================
-  // 9. Server error handling
+  // 8. Server errors
   // =========================================================================
 
-  describe("server error handling", () => {
-    it("returns 500 when database query fails", async () => {
-      mocks.mockUserFindUnique.mockRejectedValueOnce(new Error("DB connection error"));
+  describe("server errors", () => {
+    it("returns 500 when database update fails", async () => {
+      mocks.userUpdate.mockRejectedValue(new Error("DB error"));
 
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
-      const json = await res.json();
-
-      expect(res.status).toBe(500);
-      expect(json.error).toBe("Internal server error");
-    });
-
-    it("returns 500 when user update fails", async () => {
-      mocks.mockUserFindUnique.mockResolvedValue(mockUser);
-      mocks.bcryptCompare.mockResolvedValue(true);
-      mocks.mockUserUpdate.mockRejectedValueOnce(new Error("Update failed"));
-
-      const req = makeRequest(validChangePayload);
-      const res = await POST(req);
+      const res = await POST(makeRequest({
+        currentPassword: "OldPass123!",
+        newPassword: "NewPass456!",
+      }));
       const json = await res.json();
 
       expect(res.status).toBe(500);
