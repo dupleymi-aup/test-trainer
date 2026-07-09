@@ -42,20 +42,20 @@ const baseUser = {
   notificationPreferences: JSON.stringify({ email: true, sms: false, inApp: true }),
 };
 
-function makeReminder(overrides: Record<string, any> = {}) {
+interface ReminderShape {
+  id: string; offsetDays: number; sent: boolean; sentAt: Date | null;
+  userId: string; deadlineId: string; user: typeof baseUser;
+}
+
+function makeReminder(overrides: Partial<ReminderShape> = {}): ReminderShape {
   return {
-    id: "rem-1",
-    offsetDays: 1,
-    sent: false,
-    sentAt: null,
-    userId: "u-1",
-    deadlineId: "dl-1",
-    user: { ...baseUser },
+    id: "rem-1", offsetDays: 1, sent: false, sentAt: null,
+    userId: "u-1", deadlineId: "dl-1", user: { ...baseUser },
     ...overrides,
   };
 }
 
-function makeDeadline(overrides: Record<string, any> = {}) {
+function makeDeadline(overrides: Record<string, unknown> = {}) {
   return {
     id: "dl-1",
     title: "Math Exam",
@@ -88,7 +88,7 @@ describe("sendDeadlineReminders", () => {
     expect(result).toEqual({ sentCount: 0, failedCount: 0, errors: [] });
   });
 
-  function setupDeadline(reminder: any, dueDate: Date) {
+  function setupDeadline(reminder: ReminderShape, dueDate: Date) {
     mockDb.deadline.findMany
       .mockResolvedValueOnce([makeDeadline({ dueDate, reminders: [reminder] })])
       .mockResolvedValueOnce([]);

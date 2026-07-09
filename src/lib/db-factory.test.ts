@@ -4,7 +4,7 @@ const mockPrismaDb = vi.hoisted(() => ({
   $queryRaw: vi.fn(),
 }));
 
-const mockMongoRef = vi.hoisted(() => ({ db: null as any }));
+const mockMongoRef = vi.hoisted(() => ({ db: null as unknown as { command: ReturnType<typeof vi.fn> } | null }));
 const mockConnectMongo = vi.hoisted(() => vi.fn());
 const mockCheckMongoConnection = vi.hoisted(() => vi.fn());
 
@@ -63,7 +63,7 @@ describe("getDbInfo", () => {
   it("returns mongo db for mongodb type and connects if needed", async () => {
     mockConfig.dbType = "mongodb";
     mockConfig.mongodbUri = "mongodb://localhost/test";
-    mockMongoRef.db = null as any;
+    mockMongoRef.db = null;
     mockConnectMongo.mockImplementation(async () => {
       mockMongoRef.db = { command: vi.fn() };
     });
@@ -79,7 +79,7 @@ describe("getDbInfo", () => {
   it("does not call connectMongo if already connected", async () => {
     mockConfig.dbType = "mongodb";
     mockConfig.mongodbUri = "mongodb://localhost/test";
-    mockMongoRef.db = null as any;
+    mockMongoRef.db = null;
     mockConnectMongo.mockImplementation(async () => {
       mockMongoRef.db = { command: vi.fn() };
     });
@@ -94,7 +94,7 @@ describe("getDbInfo", () => {
   it("connects on first call when not connected and reuses on second", async () => {
     mockConfig.dbType = "mongodb";
     mockConfig.mongodbUri = "mongodb://localhost/test";
-    mockMongoRef.db = null as any;
+    mockMongoRef.db = null as unknown as { command: ReturnType<typeof vi.fn> };
     mockConnectMongo.mockImplementation(async () => {
       mockMongoRef.db = { command: vi.fn() };
     });

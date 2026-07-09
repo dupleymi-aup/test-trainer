@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { NextResponse } from "next/server";
 import { requireCSRF } from "./csrf-middleware";
 
-const mockSession = vi.hoisted(() => ({ user: { id: "user-1" } }));
+const mockSession = vi.hoisted(() => ({ user: { id: "user-1" } }) as { user: { id: string } | null });
 
 vi.mock("next-auth", () => ({
   getServerSession: vi.fn(() => Promise.resolve(mockSession)),
@@ -50,7 +49,7 @@ describe("requireCSRF", () => {
 
   describe("authenticated state-changing requests", () => {
     beforeEach(() => {
-      vi.mocked(getServerSession).mockResolvedValue(mockSession as any);
+      vi.mocked(getServerSession).mockResolvedValue(mockSession);
     });
 
     it("returns 403 when cookie token is missing", async () => {
