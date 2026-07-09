@@ -59,10 +59,22 @@ describe("logger", () => {
       expect(consoleInfoSpy).toHaveBeenCalledOnce();
     });
 
-    it("does not output when LOG_LEVEL is silent", () => {
-      process.env.LOG_LEVEL = "silent";
+    it("does not output when LOG_LEVEL is error", () => {
+      process.env.LOG_LEVEL = "error";
       logger.info("info message");
       expect(consoleInfoSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not output when LOG_LEVEL is warn", () => {
+      process.env.LOG_LEVEL = "warn";
+      logger.info("info message");
+      expect(consoleInfoSpy).not.toHaveBeenCalled();
+    });
+
+    it("outputs when LOG_LEVEL is info", () => {
+      process.env.LOG_LEVEL = "info";
+      logger.info("info message");
+      expect(consoleInfoSpy).toHaveBeenCalledOnce();
     });
 
     it("formats JSON with level info", () => {
@@ -78,12 +90,6 @@ describe("logger", () => {
     it("outputs by default", () => {
       logger.warn("warn message");
       expect(consoleWarnSpy).toHaveBeenCalledOnce();
-    });
-
-    it("does not output when LOG_LEVEL is silent", () => {
-      process.env.LOG_LEVEL = "silent";
-      logger.warn("warn message");
-      expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
 
     it("does not output when LOG_LEVEL is error", () => {
@@ -103,12 +109,6 @@ describe("logger", () => {
     it("outputs by default", () => {
       logger.error("error message");
       expect(consoleErrorSpy).toHaveBeenCalledOnce();
-    });
-
-    it("does not output when LOG_LEVEL is silent", () => {
-      process.env.LOG_LEVEL = "silent";
-      logger.error("error message");
-      expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
     it("extracts context from Error instance", () => {

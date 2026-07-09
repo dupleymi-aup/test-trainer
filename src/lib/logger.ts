@@ -20,6 +20,27 @@ interface LogEntry {
   context?: Record<string, unknown>;
 }
 
+const LOG_LEVELS: Record<LogLevel, number> = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+};
+
+function getLogLevel(): number {
+  switch (process.env.LOG_LEVEL) {
+    case "error": return LOG_LEVELS.error;
+    case "warn": return LOG_LEVELS.warn;
+    case "info": return LOG_LEVELS.info;
+    case "debug": return LOG_LEVELS.debug;
+    default: return LOG_LEVELS.info;
+  }
+}
+
+function shouldLog(level: LogLevel): boolean {
+  return LOG_LEVELS[level] >= getLogLevel();
+}
+
 function formatLog(level: LogLevel, message: string, context?: Record<string, unknown>): string {
   const entry: LogEntry = {
     timestamp: new Date().toISOString(),
@@ -43,22 +64,22 @@ function extractErrorContext(error: unknown): Record<string, unknown> {
 
 export const logger = {
   debug(message: string, context?: Record<string, unknown>) {
-    if (process.env.LOG_LEVEL !== "debug") return;
+    if (!shouldLog("debug")) return;
     console.debug(formatLog("debug", message, context));
   },
 
   info(message: string, context?: Record<string, unknown>) {
-    if (process.env.LOG_LEVEL === "silent") return;
+    if (!shouldLog("info")) return;
     console.info(formatLog("info", message, context));
   },
 
   warn(message: string, context?: Record<string, unknown>) {
-    if (process.env.LOG_LEVEL === "silent" || process.env.LOG_LEVEL === "error") return;
+    if (!shouldLog("warn")) return;
     console.warn(formatLog("warn", message, context));
   },
 
   error(message: string, errorOrContext?: Record<string, unknown> | Error) {
-    if (process.env.LOG_LEVEL === "silent") return;
+    if (!shouldLog("error")) return;
     const context =
       errorOrContext instanceof Error
         ? extractErrorContext(errorOrContext)
