@@ -37,7 +37,7 @@ const NOW = new Date("2026-07-09T12:00:00Z");
 const baseUser = {
   id: "u-1",
   name: "Alice",
-  email: "alice@test.com",
+  email: "alice@test.com" as string | null,
   phone: "+79991234567",
   notificationPreferences: JSON.stringify({ email: true, sms: false, inApp: true }),
 };

@@ -35,19 +35,24 @@ import { connectMongo, disconnectMongo, checkMongoConnection } from "./mongodb";
 import { MongoClient } from "mongodb";
 import { logger } from "./logger";
 
+function makeConfig(overrides: Partial<{ dbType: string; mongodbUri: string; databaseUrl: string; nextauthSecret: string; nextauthUrl: string; nodeEnv: string }> = {}) {
+  return {
+    dbType: "sqlite",
+    mongodbUri: "",
+    databaseUrl: "file:./dev.db",
+    nextauthSecret: "test",
+    nextauthUrl: "http://localhost:3000",
+    nodeEnv: "test",
+    ...overrides,
+  };
+}
+
 describe("mongodb", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
-    process.env.NODE_ENV = "test";
-    mockGetConfig.mockReturnValue({
-      dbType: "sqlite",
-      mongodbUri: "",
-      databaseUrl: "file:./dev.db",
-      nextauthSecret: "test",
-      nextauthUrl: "http://localhost:3000",
-      nodeEnv: "test",
-    });
+    vi.stubEnv("NODE_ENV", "test");
+    mockGetConfig.mockReturnValue(makeConfig());
   });
 
   afterEach(() => {
@@ -60,10 +65,10 @@ describe("mongodb", () => {
     });
 
     it("creates a new connection when not connected", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       mockClient.connect.mockResolvedValue(undefined);
 
       const result = await connectMongo();
@@ -74,10 +79,10 @@ describe("mongodb", () => {
     });
 
     it("reuses existing connection if ping succeeds", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       mockClient.connect.mockResolvedValue(undefined);
       mockClient.db.mockReturnValue(mockDb);
       mockDb.command.mockResolvedValue({ ok: 1 });
@@ -90,10 +95,10 @@ describe("mongodb", () => {
     });
 
     it("reconnects if ping fails", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       mockDb.command.mockRejectedValueOnce(new Error("ping failed"));
       mockClient.connect.mockResolvedValue(undefined);
 
@@ -104,10 +109,10 @@ describe("mongodb", () => {
     });
 
     it("throws when MONGODB_URI is not set", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         dbType: "mongodb",
         mongodbUri: "",
-      });
+      }));
 
       await expect(connectMongo()).rejects.toThrow("MONGODB_URI is required");
     });
@@ -115,10 +120,10 @@ describe("mongodb", () => {
 
   describe("disconnectMongo", () => {
     it("closes the client and clears references", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       mockClient.connect.mockResolvedValue(undefined);
       mockClient.close.mockResolvedValue(undefined);
 
@@ -129,10 +134,10 @@ describe("mongodb", () => {
     });
 
     it("handles close errors gracefully", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       mockClient.connect.mockResolvedValue(undefined);
       mockClient.close.mockRejectedValue(new Error("close failed"));
 
@@ -149,31 +154,31 @@ describe("mongodb", () => {
 
   describe("checkMongoConnection", () => {
     it("returns false when no URI provided", async () => {
-      mockGetConfig.mockReturnValue({ mongodbUri: "", dbType: "sqlite" });
+      mockGetConfig.mockReturnValue(makeConfig({ mongodbUri: "", dbType: "sqlite" }));
 
       const result = await checkMongoConnection();
       expect(result).toBe(false);
     });
 
     it("returns true when ping succeeds", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       const testClient = { connect: vi.fn().mockResolvedValue(undefined), db: vi.fn().mockReturnValue({ command: vi.fn().mockResolvedValue({ ok: 1 }) }), close: vi.fn().mockResolvedValue(undefined) };
-      vi.mocked(MongoClient).mockReturnValue(testClient as unknown as typeof mockClient);
+      vi.mocked(MongoClient).mockReturnValue(testClient as unknown as MongoClient);
 
       const result = await checkMongoConnection("mongodb://localhost/test");
       expect(result).toBe(true);
     });
 
     it("returns false when ping fails", async () => {
-      mockGetConfig.mockReturnValue({
+      mockGetConfig.mockReturnValue(makeConfig({
         mongodbUri: "mongodb://localhost/test",
         dbType: "mongodb",
-      });
+      }));
       const testClient = { connect: vi.fn().mockResolvedValue(undefined), db: vi.fn().mockReturnValue({ command: vi.fn().mockRejectedValue(new Error("timeout")) }), close: vi.fn().mockResolvedValue(undefined) };
-      vi.mocked(MongoClient).mockReturnValue(testClient as unknown as typeof mockClient);
+      vi.mocked(MongoClient).mockReturnValue(testClient as unknown as MongoClient);
 
       const result = await checkMongoConnection("mongodb://localhost/test");
       expect(result).toBe(false);
