@@ -60,6 +60,8 @@ model User {
   @@index([deletedAt])
   @@index([university])
   @@index([isActive])
+  @@index([emailVerified, isActive])
+  @@index([role, isActive])
 }
 
 model Account {
@@ -198,6 +200,7 @@ model Attempt {
   @@index([createdAt])
   @@index([userId, createdAt])
   @@index([userId, taskId])
+  @@index([userId, taskId, createdAt])
 }
 
 model ActivityLog {
@@ -217,6 +220,8 @@ model ActivityLog {
   @@index([createdAt])
   @@index([action])
   @@index([action, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, userId, createdAt])
 }
 
 model Notification {
@@ -237,6 +242,7 @@ model Notification {
   @@index([createdAt])
   @@index([type])
   @@index([read, createdAt])
+  @@index([severity, createdAt])
 }
 
 model SystemSetting {
@@ -290,6 +296,8 @@ model Reminder {
   @@index([read])
   @@index([offsetDays])
   @@index([deadlineId, userId])
+  @@index([deadlineId, sent, userId])
+  @@index([userId, sent, read])
 }
 
 model Announcement {
@@ -344,6 +352,8 @@ model Message {
   @@index([toUserId, read])
   @@index([createdAt])
   @@index([replyToId])
+  @@index([toUserId, createdAt])
+  @@index([fromUserId, createdAt])
 }
 
 model CourseTemplate {
@@ -399,6 +409,8 @@ model StudentExam {
   @@index([userId])
   @@index([createdAt])
   @@index([userId, createdAt])
+  @@index([userId, mode])
+  @@index([userId, avgScore])
 }
 
 model CustomTask {
