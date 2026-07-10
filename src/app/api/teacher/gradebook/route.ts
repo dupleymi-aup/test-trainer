@@ -169,9 +169,16 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Forbidden: student is not in your group" }, { status: 403 });
     }
 
-    await db.grade.delete({
-      where: { userId_taskId: { userId, taskId } },
-    });
+    try {
+      await db.grade.delete({
+        where: { userId_taskId: { userId, taskId } },
+      });
+    } catch (e: unknown) {
+      if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
+        return NextResponse.json({ error: "Grade not found" }, { status: 404 });
+      }
+      throw e;
+    }
 
     await db.activityLog.create({
       data: {

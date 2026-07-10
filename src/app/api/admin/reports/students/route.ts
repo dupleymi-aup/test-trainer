@@ -76,13 +76,17 @@ export async function GET(req: Request) {
 
   // Client-side risk filter (applied after DB pagination)
   let paginated = enriched;
+  let filteredTotal = total;
   if (riskLevel && riskLevel !== "none") {
     paginated = enriched.filter((s) => s.riskLevel === riskLevel);
+    // When filtering, total should reflect full dataset count (approximation since risk is computed client-side)
+    // Use enriched.length as a better approximation than the DB count
+    filteredTotal = enriched.length;
   } else if (riskLevel === "none") {
     paginated = enriched.filter((s) => s.riskLevel === "none");
+    filteredTotal = enriched.length;
   }
 
-  const filteredTotal = riskLevel ? paginated.length : total;
   const totalPages = Math.max(1, Math.ceil((riskLevel ? filteredTotal : total) / limit));
 
   return NextResponse.json({

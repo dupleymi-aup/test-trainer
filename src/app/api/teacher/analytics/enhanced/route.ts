@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { StoredTestCase } from "@/lib/evaluator";
-import { requireTeacherOrAdmin } from "@/lib/admin-guard";
+import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { withErrorHandler, parseSearchParams } from "@/lib/api-error-handler";
@@ -18,10 +18,17 @@ export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
     const guard = await requireTeacherOrAdmin();
     if ("response" in guard) return guard.response;
+    const { session } = guard;
 
     const params = parseSearchParams(req, enhancedParamsSchema);
     if (!params.success) return params.errorResponse;
     const { groupId, startDate, endDate, taskId } = params.data;
+
+  // Verify group ownership for teachers
+  if (groupId && session.role !== "ADMIN") {
+    const groupCheck = await requireTeacherGroup(groupId, session);
+    if ("response" in groupCheck) return groupCheck.response;
+  }
 
   // Build user filter
   let userIds: string[] | undefined;
@@ -55,7 +62,7 @@ export async function GET(req: Request) {
       testCases: true,
     },
     orderBy: { createdAt: "asc" },
-    take: 50000,
+    take: 10000,
   });
 
   // Build task metadata map

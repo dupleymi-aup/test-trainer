@@ -51,6 +51,7 @@ export async function GET(req: Request) {
         score: true,
         createdAt: true,
       },
+      take: 50000,
     });
 
     // Build matrix: studentId -> taskId -> { bestScore, attemptsCount, lastAttempt }

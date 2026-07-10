@@ -48,6 +48,7 @@ export async function GET(
     const attempts = await db.attempt.findMany({
       where: { userId: id },
       orderBy: { createdAt: "asc" },
+      take: 1000,
     });
 
     // Build task metadata map

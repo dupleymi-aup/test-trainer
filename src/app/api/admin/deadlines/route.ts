@@ -190,7 +190,14 @@ export async function DELETE(req: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    await db.deadline.delete({ where: { id } });
+    try {
+      await db.deadline.delete({ where: { id } });
+    } catch (e: unknown) {
+      if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
+        return NextResponse.json({ error: "Deadline not found" }, { status: 404 });
+      }
+      throw e;
+    }
 
     await db.activityLog.create({
       data: {

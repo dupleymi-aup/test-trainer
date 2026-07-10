@@ -170,13 +170,13 @@ export async function DELETE(req: Request) {
     const idsParam = searchParams.get("ids");
     if (idsParam) {
       const ids = idsParam.split(",");
-      await db.message.deleteMany({
+      const result = await db.message.deleteMany({
         where: {
           id: { in: ids },
           OR: [{ fromUserId: session.userId }, { toUserId: session.userId }],
         },
       });
-      return NextResponse.json({ success: true, deletedCount: ids.length });
+      return NextResponse.json({ success: true, deletedCount: result.count });
     }
 
     return NextResponse.json({ error: "Missing id or ids parameter" }, { status: 400 });
