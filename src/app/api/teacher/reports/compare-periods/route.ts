@@ -36,8 +36,7 @@ export async function GET(req: Request) {
       // Default: compare last 30 days vs previous 30 days
       const now = new Date();
       const period2EndDefault = new Date(now);
-      period2EndDefault.setDate(period2EndDefault.getDate() - 30);
-      const period2StartDefault = new Date(period2EndDefault);
+      const period2StartDefault = new Date(now);
       period2StartDefault.setDate(period2StartDefault.getDate() - 30);
 
       const period1EndDefault = new Date(period2StartDefault);

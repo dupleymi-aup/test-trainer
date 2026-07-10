@@ -40,9 +40,13 @@ export async function GET() {
         { key: "smsNotifications", value: "false" },
         { key: "rateLimitWindow", value: "900" },
       ];
-      await db.systemSetting.createMany({
-        data: defaults.map((d) => ({ key: d.key, value: d.value })),
-      });
+      try {
+        await db.systemSetting.createMany({
+          data: defaults.map((d) => ({ key: d.key, value: d.value })),
+        });
+      } catch {
+        // Another request already seeded — safe to ignore
+      }
     }
 
     const settings = await db.systemSetting.findMany({

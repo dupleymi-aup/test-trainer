@@ -225,6 +225,7 @@ export const achievements: Achievement[] = [
 ];
 
 export function loadUnlockedAchievements(): string[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(ACHIEVEMENTS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -235,6 +236,7 @@ export function loadUnlockedAchievements(): string[] {
 }
 
 export function saveUnlockedAchievements(ids: string[]): void {
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(ids));
   } catch (e) {

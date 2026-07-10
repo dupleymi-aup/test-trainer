@@ -26,7 +26,8 @@ export async function GET(req: Request) {
     if ("response" in auth) return auth.response;
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const rawPage = parseInt(searchParams.get("page") || "1", 10);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
 
     const [exams, total] = await Promise.all([
       db.studentExam.findMany({

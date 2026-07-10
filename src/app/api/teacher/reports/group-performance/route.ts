@@ -78,7 +78,8 @@ export async function GET(req: Request) {
     };
 
     // Build group response
-    const groupName = students[0]?.group || "Без группы";
+    const groupRecord = await db.group.findUnique({ where: { id: groupCheck.group.id }, select: { name: true } });
+    const groupName = groupRecord?.name || "Без группы";
     const activeThreshold = new Date();
     activeThreshold.setDate(activeThreshold.getDate() - 30);
 

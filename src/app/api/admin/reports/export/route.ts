@@ -310,14 +310,14 @@ export async function POST(req: Request) {
       });
     } else if (reportType === "completion-funnel") {
       const attempts = await db.attempt.findMany({ select: { taskId: true, userId: true, score: true } });
-      const studentsByTask: Record<string, number> = {};
+      const studentsByTask: Record<string, Set<string>> = {};
       for (const a of attempts) {
-        if (!studentsByTask[a.taskId]) studentsByTask[a.taskId] = 0;
-        studentsByTask[a.taskId]++;
+        if (!studentsByTask[a.taskId]) studentsByTask[a.taskId] = new Set();
+        studentsByTask[a.taskId].add(a.userId);
       }
-      result.funnel = Object.entries(studentsByTask).map(([taskId, count]) => {
+      result.funnel = Object.entries(studentsByTask).map(([taskId, studentSet]) => {
         const meta = taskMap.get(taskId);
-        return { taskId, taskName: meta?.name || `Задание ${taskId}`, uniqueStudents: count };
+        return { taskId, taskName: meta?.name || `Задание ${taskId}`, uniqueStudents: studentSet.size };
       }).sort((a, b) => Number(a.taskId) - Number(b.taskId));
     } else if (reportType === "error-patterns") {
       const attempts = await db.attempt.findMany({
@@ -346,6 +346,16 @@ export async function POST(req: Request) {
   }
 
   // CSV export (existing logic below)
+  const csvHandledTypes = new Set([
+    "comprehensive", "teacher-performance", "task-insights",
+    "predictions", "group-detailed", "student-list", "attempt-log",
+  ]);
+  if (format === "csv" && !csvHandledTypes.has(reportType)) {
+    return NextResponse.json(
+      { error: `CSV export not available for report type: ${reportType}` },
+      { status: 400 }
+    );
+  }
 
   if (reportType === "comprehensive") {
     // Comprehensive platform report
