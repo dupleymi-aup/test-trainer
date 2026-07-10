@@ -79,8 +79,13 @@ export async function DELETE(req: Request) {
     const taskId = searchParams.get("taskId");
     if (!taskId) return NextResponse.json({ error: "taskId is required" }, { status: 400 });
 
+    const parsedTaskId = parseInt(taskId, 10);
+    if (!Number.isFinite(parsedTaskId)) {
+      return NextResponse.json({ error: "Invalid taskId" }, { status: 400 });
+    }
+
     await db.favoriteTask.deleteMany({
-      where: { userId: auth.session.userId, taskId: parseInt(taskId, 10) },
+      where: { userId: auth.session.userId, taskId: parsedTaskId },
     });
 
     await db.activityLog.create({
@@ -88,7 +93,7 @@ export async function DELETE(req: Request) {
         userId: auth.session.userId,
         action: "FAVORITE_REMOVE",
         entity: "FavoriteTask",
-        details: JSON.stringify({ taskId: parseInt(taskId, 10) }),
+        details: JSON.stringify({ taskId: parsedTaskId }),
         ipAddress: getClientIp(req),
       },
     });

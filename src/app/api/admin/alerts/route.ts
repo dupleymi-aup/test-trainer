@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
+import { computeStudentRisk, batchComputeStudentRisk, AttemptData } from "@/lib/risk-analysis";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { MS_PER_DAY } from "@/lib/time-constants";
 
@@ -63,15 +63,21 @@ export async function GET() {
     take: 10000,
   });
 
-  for (const s of students) {
-    const attempts: AttemptData[] = s.attempts.map((a) => ({
+  // Batch compute risk for all students at once
+  const studentsWithAttempts = students.map((s) => ({
+    id: s.id,
+    createdAt: s.createdAt,
+    attempts: s.attempts.map((a) => ({
       score: a.score,
       ecCoverage: a.ecCoverage,
       bvCoverage: a.bvCoverage,
       createdAt: a.createdAt,
-    }));
+    })),
+  }));
+  const riskMap = batchComputeStudentRisk(studentsWithAttempts);
 
-    if (attempts.length === 0) {
+  for (const s of students) {
+    if (s.attempts.length === 0) {
       // Student registered but no attempts
       if (s.createdAt < sevenDaysAgo) {
         alerts.push({
@@ -89,7 +95,9 @@ export async function GET() {
       continue;
     }
 
-    const risk = computeStudentRisk(attempts, s.createdAt);
+    const riskData = riskMap.get(s.id);
+    if (!riskData) continue;
+    const risk = riskData.risk;
 
     if (risk.dropoutRisk === "high") {
       alerts.push({

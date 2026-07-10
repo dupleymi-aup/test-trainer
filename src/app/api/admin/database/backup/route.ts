@@ -48,7 +48,6 @@ export async function GET(req: Request) {
       const allowedTables = [
         "user", "group", "attempt", "notification", "deadline",
         "reminder", "message", "activityLog", "grade", "favoriteTask",
-        "verificationToken", "account", "session",
       ];
       if (!allowedTables.includes(table)) {
         return NextResponse.json({ error: `Unknown table: ${table}` }, { status: 400 });

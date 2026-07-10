@@ -82,11 +82,12 @@ export async function GET(req: Request) {
     paginated = enriched.filter((s) => s.riskLevel === "none");
   }
 
-  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const filteredTotal = riskLevel ? paginated.length : total;
+  const totalPages = Math.max(1, Math.ceil((riskLevel ? filteredTotal : total) / limit));
 
   return NextResponse.json({
     students: paginated,
-    pagination: { page, limit, total, totalPages },
+    pagination: { page, limit, total: riskLevel ? filteredTotal : total, totalPages },
   });
   });
 }

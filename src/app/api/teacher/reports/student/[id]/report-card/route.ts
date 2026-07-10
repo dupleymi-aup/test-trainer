@@ -21,6 +21,7 @@ export async function GET(
         userId: id,
         group: { createdByUserId: session.userId },
       },
+      select: { groupId: true },
     });
 
     // Admins can view any student; teachers can only view students in their groups
@@ -184,9 +185,10 @@ export async function GET(
 
     // Group percentile ranking
     let groupPercentile = 50; // default
-    if (student.group) {
+    const groupId = membership?.groupId ?? null;
+    if (groupId) {
       const groupMembers = await db.userGroup.findMany({
-        where: { groupId: student.group },
+        where: { groupId },
         select: {
           user: {
             select: {

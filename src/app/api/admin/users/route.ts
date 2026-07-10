@@ -109,6 +109,8 @@ const createUserSchema = z.object({
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
   university: z.string().max(200, "University name is too long").optional().nullable(),
   group: z.string().max(100, "Group name is too long").optional().nullable(),
+}).refine((data) => data.email || data.phone, {
+  message: "At least one of email or phone is required",
 });
 
 export async function POST(req: Request) {
