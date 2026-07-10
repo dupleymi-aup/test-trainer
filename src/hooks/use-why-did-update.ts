@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { logger } from "@/lib/logger";
 
 export function useWhyDidUpdate(name: string, props: Record<string, unknown>) {
   const prevProps = useRef<Record<string, unknown>>(props);
@@ -20,8 +21,7 @@ export function useWhyDidUpdate(name: string, props: Record<string, unknown>) {
     }
 
     if (changed.length > 0) {
-      // eslint-disable-next-line no-console
-      console.log(`[WhyDidUpdate:${name}]`, {
+      logger.debug(`[WhyDidUpdate:${name}]`, {
         changed,
         prev: changed.reduce((acc, k) => ({ ...acc, [k]: prevProps.current[k] }), {}),
         next: changed.reduce((acc, k) => ({ ...acc, [k]: props[k] }), {}),

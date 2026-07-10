@@ -14,16 +14,6 @@ export function safeJsonParse<T>(raw: string | null | undefined, fallback: T): T
   try { return JSON.parse(raw) as T; } catch { return fallback; }
 }
 
-export function parseStoredJSONArray(raw: string | null | undefined, fallback: string[] = []): string[] {
-  if (!raw) return fallback;
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 /**
  * Parse a user-input string into a typed JavaScript value.
  * Handles: booleans (EN/RU), null, undefined, numbers (incl. scientific notation), JSON objects/arrays.

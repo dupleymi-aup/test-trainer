@@ -68,7 +68,6 @@ export default function StudentDashboardPage() {
   const [lastTaskId, setLastTaskId] = useState<number | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
     if (status === "unauthenticated") {
       router.push("/login?callbackUrl=/student");
       return;
@@ -117,10 +116,11 @@ export default function StudentDashboardPage() {
         .then((r) => r.ok ? r.json() : { unreadCount: 0 })
         .then((d) => setUnreadMessages(d.unreadCount || 0))
         .catch((e) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch unread messages count", { error: e }); });
+
+      return () => {
+        controller.abort();
+      };
     }
-    return () => {
-      if (typeof controller !== "undefined") controller.abort();
-    };
   }, [status, session, router]);
 
   if (status === "loading" || !stats) {

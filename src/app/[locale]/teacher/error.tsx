@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export default function TeacherError({
   error,
@@ -12,7 +13,7 @@ export default function TeacherError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[TeacherError]", error);
+    logger.error("[TeacherError]", { error: error.message, digest: error.digest });
   }, [error]);
 
   return (

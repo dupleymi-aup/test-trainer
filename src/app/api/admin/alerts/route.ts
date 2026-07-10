@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { computeStudentRisk, batchComputeStudentRisk, AttemptData } from "@/lib/risk-analysis";
+import { batchComputeStudentRisk } from "@/lib/risk-analysis";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { MS_PER_DAY } from "@/lib/time-constants";
 

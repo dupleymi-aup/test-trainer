@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 export default function RootError({
   error,
@@ -12,7 +13,7 @@ export default function RootError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[RootError]", error);
+    logger.error("[RootError]", { error: error.message, digest: error.digest });
   }, [error]);
 
   return (

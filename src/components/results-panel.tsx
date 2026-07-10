@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import type { EvaluationResult } from "@/lib/evaluator";
 import type { TestCase } from "@/lib/evaluator";
 import { getTaskHistory } from "@/lib/storage";
+import { useLocale } from "next-intl";
 import { formatDuration } from "@/lib/format-time";
 import { CoverageMatrix } from "@/components/coverage-matrix";
 
@@ -163,6 +164,7 @@ function formatResultsAsText(result: EvaluationResult): string {
 }
 
 export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [], onReset, bestScore, elapsedTime }: ResultsPanelProps) {
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
@@ -418,7 +420,7 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
             )}
             {elapsedTime !== undefined && elapsedTime > 0 && (
               <div className="mt-1 text-xs text-muted-foreground">
-                Время: {formatDuration(elapsedTime)}
+                Время: {formatDuration(elapsedTime, locale)}
               </div>
             )}
           </div>
