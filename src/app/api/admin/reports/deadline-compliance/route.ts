@@ -37,33 +37,34 @@ export async function GET() {
       select: { id: true, name: true },
     });
 
-    const groupCompliance = await Promise.all(
-      groups.map(async (g) => {
-        const groupDeadlines = deadlines.filter(
-          (d) => d.group?.id === g.id
-        );
-        const groupOverdue = groupDeadlines.filter((d) => d.dueDate < now);
-        const onTime = groupDeadlines.length - groupOverdue.length;
-        const onTimeRate = groupDeadlines.length > 0
-          ? Math.round((onTime / groupDeadlines.length) * 100)
-          : null;
-
-        // Members with recent attempts (proxy for compliance)
-        const members = await db.userGroup.findMany({
-          where: { groupId: g.id },
-          select: { userId: true },
-        });
-
-        return {
-          groupId: g.id,
-          name: g.name,
-          totalDeadlines: groupDeadlines.length,
-          overdue: groupOverdue.length,
-          onTimeRate,
-          memberCount: members.length,
-        };
-      })
+    // Batch-fetch member counts for all groups (avoids N+1)
+    const allGroupMembers = await db.userGroup.groupBy({
+      by: ["groupId"],
+      _count: { userId: true },
+    });
+    const memberCountByGroup = new Map(
+      allGroupMembers.map((g) => [g.groupId, g._count.userId])
     );
+
+    const groupCompliance = groups.map((g) => {
+      const groupDeadlines = deadlines.filter(
+        (d) => d.group?.id === g.id
+      );
+      const groupOverdue = groupDeadlines.filter((d) => d.dueDate < now);
+      const onTime = groupDeadlines.length - groupOverdue.length;
+      const onTimeRate = groupDeadlines.length > 0
+        ? Math.round((onTime / groupDeadlines.length) * 100)
+        : null;
+
+      return {
+        groupId: g.id,
+        name: g.name,
+        totalDeadlines: groupDeadlines.length,
+        overdue: groupOverdue.length,
+        onTimeRate,
+        memberCount: memberCountByGroup.get(g.id) ?? 0,
+      };
+    });
 
     // Type breakdown
     const typeLabels: Record<string, string> = {
