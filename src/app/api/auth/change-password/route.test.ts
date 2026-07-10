@@ -119,7 +119,7 @@ describe("POST /api/auth/change-password", () => {
   // =========================================================================
 
   describe("invalid current password", () => {
-    it("returns 400 when current password is wrong", async () => {
+    it("returns 401 when current password is wrong", async () => {
       mocks.bcryptCompare.mockResolvedValue(false);
 
       const res = await POST(makeRequest({
@@ -128,7 +128,7 @@ describe("POST /api/auth/change-password", () => {
       }));
       const json = await res.json();
 
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(401);
       expect(json.error).toBe("Invalid current password");
     });
 

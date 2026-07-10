@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     if (!isValid) {
       return NextResponse.json(
         { error: "Invalid current password" },
-        { status: 400 }
+        { status: 401 }
       );
     }
 
