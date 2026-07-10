@@ -1,5 +1,5 @@
 export function buildCSP(nonce: string, isDev: boolean): string {
-  if (isDev) {
+  if (isDev && process.env.NODE_ENV !== "production") {
     return [
       "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: ws: wss: http: https:",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: http: https:",

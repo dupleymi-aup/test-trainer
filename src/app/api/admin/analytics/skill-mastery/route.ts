@@ -93,7 +93,7 @@ export async function GET(request: Request) {
   const bvTracker: Record<string, { scores: number[]; dates: string[]; coveredCount: number; totalAttempts: number; taskId: number }> = {};
 
   for (const a of attempts) {
-    const taskId = parseInt(a.taskId);
+    const taskId = parseInt(a.taskId, 10);
     const task = taskMap.get(taskId);
     if (!task) continue;
     const dateStr = a.createdAt.toISOString().split("T")[0];

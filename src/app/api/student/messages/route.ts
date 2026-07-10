@@ -12,8 +12,8 @@ export async function GET(req: Request) {
     if ("response" in auth) return auth.response;
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit = Math.min(parseInt(searchParams.get("limit") || "30"), 50);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const limit = Math.min(parseInt(searchParams.get("limit") || "30", 10), 50);
 
     const [messages, total, unreadCount] = await Promise.all([
       db.message.findMany({

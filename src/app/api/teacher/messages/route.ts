@@ -14,8 +14,8 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const folder = searchParams.get("folder") || "inbox"; // inbox | sent
-    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
-    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
 
     const where: Record<string, unknown> = folder === "sent"
       ? { fromUserId: session.userId }

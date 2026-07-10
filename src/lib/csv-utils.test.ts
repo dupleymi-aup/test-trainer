@@ -10,24 +10,24 @@ describe("sanitizeCSVValue", () => {
     expect(sanitizeCSVValue('say "hello"')).toBe('say ""hello""');
   });
 
-  it("prefixes formula-triggering = with single quote", () => {
-    expect(sanitizeCSVValue('=cmd|\'/etc/passwd')).toBe("'=cmd|'/etc/passwd");
+  it("prefixes formula-triggering = with tab to prevent CSV injection", () => {
+    expect(sanitizeCSVValue('=cmd|\'/etc/passwd')).toBe("\t=cmd|'/etc/passwd");
   });
 
-  it("prefixes formula-triggering + with single quote", () => {
-    expect(sanitizeCSVValue("+cmd")).toBe("'+cmd");
+  it("prefixes formula-triggering + with tab to prevent CSV injection", () => {
+    expect(sanitizeCSVValue("+cmd")).toBe("\t+cmd");
   });
 
-  it("prefixes formula-triggering - with single quote", () => {
-    expect(sanitizeCSVValue("-cmd")).toBe("'-cmd");
+  it("prefixes formula-triggering - with tab to prevent CSV injection", () => {
+    expect(sanitizeCSVValue("-cmd")).toBe("\t-cmd");
   });
 
-  it("prefixes formula-triggering @ with single quote", () => {
-    expect(sanitizeCSVValue("@SUM(A1)")).toBe("'@SUM(A1)");
+  it("prefixes formula-triggering @ with tab to prevent CSV injection", () => {
+    expect(sanitizeCSVValue("@SUM(A1)")).toBe("\t@SUM(A1)");
   });
 
   it("detects whitespace-prefixed formula attempts", () => {
-    expect(sanitizeCSVValue(" =cmd")).toBe("' =cmd");
+    expect(sanitizeCSVValue(" =cmd")).toBe("\t =cmd");
   });
 
   it("handles empty string", () => {

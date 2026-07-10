@@ -60,7 +60,7 @@ export function validateApiResponse<T>(
     }
     logger.warn(msg);
   }
-  return (result.success ? result.data : data) as T;
+  return result.data as T;
 }
 
 /**

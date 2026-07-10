@@ -1,10 +1,14 @@
 /**
  * Format a duration in seconds into a short human-readable Russian string.
- * Examples: 45 → "45с", 125 → "2м", 3661 → "61м"
+ * Examples: 45 → "45с", 125 → "2м 5с", 3661 → "1ч 1м"
  */
 export function formatDurationShort(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  return m > 0 ? `${m}м` : `${seconds}с`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}ч ${m}м`;
+  if (m > 0) return m > 0 && s > 0 ? `${m}м ${s}с` : `${m}м`;
+  return `${s}с`;
 }
 
 /**

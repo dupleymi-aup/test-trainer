@@ -17,7 +17,7 @@ export function sanitizeCSVValue(value: string): string {
     trimmed.startsWith("-") ||
     trimmed.startsWith("@")
   ) {
-    return "'" + escaped;
+    return "\t" + escaped;
   }
   return escaped;
 }

@@ -6,8 +6,8 @@ describe("formatDurationShort", () => {
     expect(formatDurationShort(45)).toBe("45с");
   });
 
-  it("formats minutes", () => {
-    expect(formatDurationShort(125)).toBe("2м");
+  it("formats minutes with remaining seconds", () => {
+    expect(formatDurationShort(125)).toBe("2м 5с");
   });
 
   it("formats zero", () => {

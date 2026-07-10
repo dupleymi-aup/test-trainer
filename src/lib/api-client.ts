@@ -156,8 +156,8 @@ export async function apiFetchWithRetry(
       throw await parseApiError(response);
     } catch (err) {
       // Network error / timeout — retry if configured
-      const isNetworkError = 
-        err instanceof DOMException && err.name === "AbortError" ||
+      const isNetworkError =
+        (err instanceof DOMException && err.name === "AbortError") ||
         (err instanceof APIError && err.status === 0);
 
       if (isNetworkError && config.retryOnNetworkError && attempt < config.maxRetries) {

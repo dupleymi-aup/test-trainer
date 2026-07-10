@@ -50,6 +50,15 @@ interface OverdueSMSOptions {
   daysOverdue: number;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function formatDate(date: Date): string {
   return date.toLocaleString("en-US", {
     day: "2-digit",
@@ -68,7 +77,7 @@ export function generateDeadlineReminderEmail({
 }: ReminderEmailOptions): { subject: string; html: string; text: string } {
   const typeLabel = typeLabels[deadline.type] || deadline.type;
   const color = typeColors[deadline.type] || "#2563eb";
-  const greeting = userName ? `Hello ${userName}!` : "Hello!";
+  const greeting = userName ? `Hello ${escapeHtml(userName)}!` : "Hello!";
 
   let timeText: string;
   if (daysRemaining === 0) {
@@ -90,9 +99,9 @@ export function generateDeadlineReminderEmail({
         <div style="display:inline-block;padding:4px 12px;background:${color}15;color:${color};border-radius:4px;font-size:12px;font-weight:600;margin-bottom:12px;">
           ${typeLabel}
         </div>
-        <h3 style="margin:0 0 8px;font-size:20px;">${deadline.title}</h3>
-        ${deadline.description ? `<p style="color:#6b7280;margin:0 0 16px;font-size:14px;">${deadline.description}</p>` : ""}
-        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Group: ${deadline.groupName}</p>` : ""}
+        <h3 style="margin:0 0 8px;font-size:20px;">${escapeHtml(deadline.title)}</h3>
+        ${deadline.description ? `<p style="color:#6b7280;margin:0 0 16px;font-size:14px;">${escapeHtml(deadline.description)}</p>` : ""}
+        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Group: ${escapeHtml(deadline.groupName)}</p>` : ""}
         <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;">
           <p style="margin:0 0 4px;font-size:14px;color:#374151;"><strong>Due:</strong> ${formatDate(deadline.dueDate)}</p>
           <p style="margin:0;font-size:18px;font-weight:700;color:${color};">${timeText}</p>
@@ -117,7 +126,7 @@ export function generateDeadlineOverdueEmail({
   baseUrl,
 }: OverdueEmailOptions): { subject: string; html: string; text: string } {
   const typeLabel = typeLabels[deadline.type] || deadline.type;
-  const greeting = userName ? `Hello ${userName}!` : "Hello!";
+  const greeting = userName ? `Hello ${escapeHtml(userName)}!` : "Hello!";
 
   const subject = `URGENT: ${deadline.title} — deadline overdue!`;
 
@@ -130,9 +139,9 @@ export function generateDeadlineOverdueEmail({
         <div style="display:inline-block;padding:4px 12px;background:#dc262615;color:#dc2626;border-radius:4px;font-size:12px;font-weight:600;margin-bottom:12px;">
           ${typeLabel} — OVERDUE
         </div>
-        <h3 style="margin:0 0 8px;font-size:20px;">${deadline.title}</h3>
-        ${deadline.description ? `<p style="color:#6b7280;margin:0 0 16px;font-size:14px;">${deadline.description}</p>` : ""}
-        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Group: ${deadline.groupName}</p>` : ""}
+        <h3 style="margin:0 0 8px;font-size:20px;">${escapeHtml(deadline.title)}</h3>
+        ${deadline.description ? `<p style="color:#6b7280;margin:0 0 16px;font-size:14px;">${escapeHtml(deadline.description)}</p>` : ""}
+        ${deadline.groupName ? `<p style="color:#6b7280;margin:0 0 8px;font-size:13px;">Group: ${escapeHtml(deadline.groupName)}</p>` : ""}
         <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:16px 0;">
           <p style="margin:0 0 4px;font-size:14px;color:#374151;"><strong>Was due:</strong> ${formatDate(deadline.dueDate)}</p>
           <p style="margin:0;font-size:18px;font-weight:700;color:#dc2626;">Overdue by ${daysOverdue} days</p>

@@ -47,7 +47,10 @@ function checkRoleAccess(
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.redirect(new URL("/", pathname));
+    const res = NextResponse.redirect(new URL("/", pathname));
+    res.headers.set("X-Request-Id", requestId);
+    setSecurityHeaders(res, nonce);
+    return res;
   }
 
   const hasAccess = routeConfig.requiredRoles.includes(token.role ?? "");

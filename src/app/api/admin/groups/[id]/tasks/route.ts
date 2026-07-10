@@ -119,7 +119,7 @@ export async function DELETE(
     const taskId = searchParams.get("taskId");
 
     if (taskId) {
-      const parsedTaskId = parseInt(taskId);
+      const parsedTaskId = parseInt(taskId, 10);
       if (!Number.isFinite(parsedTaskId)) {
         return NextResponse.json({ error: "Invalid taskId" }, { status: 400 });
       }

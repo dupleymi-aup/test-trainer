@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   const groupId = searchParams.get("groupId");
   const universityFilter = searchParams.get("university");
   const riskLevel = searchParams.get("riskLevel");
-  const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "50"), 200));
+  const limit = Math.max(1, Math.min(parseInt(searchParams.get("limit") || "50", 10), 200));
 
   // Check cache
   const cacheKey = makeCacheKey("recommendations", { groupId, universityFilter, riskLevel, limit });
@@ -118,7 +118,7 @@ export async function GET(request: Request) {
     const allCoveredBvs = new Set<string>();
 
     for (const a of attempts) {
-      const tid = parseInt(a.taskId);
+      const tid = parseInt(a.taskId, 10);
       if (!taskScores[tid]) {
         taskScores[tid] = [];
         taskEcCoverage[tid] = [];
@@ -155,7 +155,7 @@ export async function GET(request: Request) {
     // Find weak tasks (avg score < 60)
     const weakTasks = Object.entries(taskScores)
       .map(([tid, scores]) => ({
-        taskId: parseInt(tid),
+        taskId: parseInt(tid, 10),
         avgScore: Math.round(scores.reduce((s, v) => s + v, 0) / scores.length),
         avgEc: Math.round(taskEcCoverage[tid].reduce((s, v) => s + v, 0) / scores.length),
         avgBv: Math.round(taskBvCoverage[tid].reduce((s, v) => s + v, 0) / scores.length),

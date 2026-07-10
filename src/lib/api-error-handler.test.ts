@@ -290,12 +290,12 @@ describe("validateApiResponse", () => {
     vi.unstubAllEnvs();
   });
 
-  it("logs warning and returns raw data in production mode on invalid data", () => {
+  it("logs warning and returns undefined on invalid data in production", () => {
     vi.stubEnv("NODE_ENV", "production");
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const data = { attempts: "bad", name: 123 };
     const result = validateApiResponse(schema, data);
-    expect(result).toEqual(data);
+    expect(result).toBeUndefined();
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("API response validation failed"));
     vi.unstubAllEnvs();
   });
