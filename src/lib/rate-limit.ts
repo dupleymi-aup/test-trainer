@@ -200,7 +200,7 @@ export function cleanupExpiredEntries(): number {
 export function createRateLimitResponse(resetAt: number) {
   const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
   return new Response(
-    JSON.stringify({ error: "Слишком много попыток. Попробуйте позже" }),
+    JSON.stringify({ error: "Too many requests. Please try again later" }),
     {
       status: 429,
       headers: {

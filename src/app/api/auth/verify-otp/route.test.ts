@@ -20,8 +20,8 @@ vi.mock("@/lib/db", () => ({
     user: {
       findUnique: mocks.userFindUnique,
     },
-    $transaction: vi.fn(async (txns: any[]) => {
-      const results: any[] = [];
+    $transaction: vi.fn(async (txns: Parameters<typeof mocks.codeFindFirst>[]) => {
+      const results: Awaited<ReturnType<typeof mocks.codeFindFirst>>[] = [];
       for (const txn of txns) results.push(await txn);
       return results;
     }),

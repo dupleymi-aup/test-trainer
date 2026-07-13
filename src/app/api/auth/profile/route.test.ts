@@ -57,10 +57,6 @@ const testUser = {
   createdAt: new Date("2026-01-01"),
 };
 
-function makeGetRequest() {
-  return new Request("http://localhost:3000/api/auth/profile", { method: "GET" });
-}
-
 function makePutRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/auth/profile", {
     method: "PUT",
@@ -144,8 +140,6 @@ describe("PUT /api/auth/profile", () => {
   describe("success", () => {
     it("updates profile name", async () => {
       const res = await PUT(makePutRequest({ name: "Alice Updated" }));
-      const json = await res.json();
-
       expect(res.status).toBe(200);
       expect(mocks.userUpdate).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -1,22 +1,21 @@
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { withErrorHandler } from "@/lib/api-error-handler";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   return withErrorHandler(undefined, async () => {
-    const session = await getServerSession(authOptions);
+    const token = await getToken({ req });
 
     // No session — return all tasks (unrestricted for non-authenticated)
-    if (!session?.user?.id) {
+    if (!token?.sub) {
       return NextResponse.json({ taskIds: tasks.map((t) => t.id) });
     }
 
     // Get user's group memberships
     const userGroups = await db.userGroup.findMany({
-      where: { userId: session.user.id },
+      where: { userId: token.sub },
       select: { groupId: true },
     });
 
