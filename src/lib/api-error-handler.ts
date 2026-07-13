@@ -55,12 +55,9 @@ export function validateApiResponse<T>(
       .map((issue) => `${String(issue.path?.join(".") ?? "")}: ${issue.message}`)
       .join("; ");
     const msg = `API response validation failed: ${issues}`;
-    if (process.env.NODE_ENV === "development") {
-      throw new Error(msg);
-    }
-    logger.warn(msg);
+    throw new AppError(500, msg);
   }
-  return result.data as T;
+  return result.data;
 }
 
 /**
@@ -85,7 +82,7 @@ export async function parseRequestBody<T>(
 > {
   try {
     const contentLength = req.headers.get("content-length");
-    if (contentLength && parseInt(contentLength) > MAX_BODY_SIZE) {
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
       return {
         success: false,
         errorResponse: NextResponse.json(
