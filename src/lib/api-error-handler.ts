@@ -150,6 +150,26 @@ export function parseSearchParams<T>(
 }
 
 /**
+ * Unwrap a guard result (auth, CSRF, etc.) and throw AppError on failure.
+ * Use inside withErrorHandler to eliminate boilerplate:
+ *
+ *   const auth = unwrapGuard(await requireAuth());
+ *   // auth is AuthSession, use auth.userId instead of auth.session.userId
+ *
+ *   unwrapGuard(await requireCSRF(req), 403, "CSRF token missing or invalid");
+ *
+ * Throws AppError with the given status and message when "response" is present.
+ */
+export function unwrapGuard<T>(
+  result: { session: T } | { verified: true } | { response: Response },
+  status = 401,
+  message = "Unauthorized"
+): T {
+  if ("response" in result) throw new AppError(status, message);
+  return (result as { session: T }).session;
+}
+
+/**
  * Application-level error with an associated HTTP status code.
  * Throw this from within a withErrorHandler to get a non-500 response.
  *

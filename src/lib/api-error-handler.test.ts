@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler, validateApiResponse } from "./api-error-handler";
+import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler, validateApiResponse, unwrapGuard, AppError } from "./api-error-handler";
 import { z } from "zod";
 
 describe("formatZodError", () => {
@@ -323,5 +323,68 @@ describe("validateApiResponse", () => {
       expect((e as Error).message).toContain("attempts");
     }
     vi.unstubAllEnvs();
+  });
+});
+
+describe("AppError", () => {
+  it("stores status code and message", () => {
+    const err = new AppError(404, "Not found");
+    expect(err.statusCode).toBe(404);
+    expect(err.message).toBe("Not found");
+    expect(err.name).toBe("AppError");
+  });
+
+  it("is instanceof Error", () => {
+    const err = new AppError(500, "Server error");
+    expect(err).toBeInstanceOf(Error);
+    expect(err).toBeInstanceOf(AppError);
+  });
+});
+
+describe("unwrapGuard", () => {
+  it("returns session when result has session", () => {
+    const result = { session: { userId: "user-1", role: "STUDENT" } };
+    const session = unwrapGuard(result);
+    expect(session.userId).toBe("user-1");
+    expect(session.role).toBe("STUDENT");
+  });
+
+  it("returns session with custom type", () => {
+    const result = { session: { name: "Alice", age: 30 } };
+    const session = unwrapGuard<{ name: string; age: number }>(result);
+    expect(session.name).toBe("Alice");
+    expect(session.age).toBe(30);
+  });
+
+  it("throws AppError with default status 401 when result has response", () => {
+    const result = { response: new Response("Unauthorized", { status: 401 }) };
+    expect(() => unwrapGuard(result)).toThrow(AppError);
+    expect(() => unwrapGuard(result)).toThrow("Unauthorized");
+  });
+
+  it("throws AppError with custom status and message", () => {
+    const result = { response: new Response("Forbidden", { status: 403 }) };
+    expect(() => unwrapGuard(result, 403, "CSRF token missing")).toThrow("CSRF token missing");
+  });
+
+  it("preserves AppError status code for withErrorHandler", () => {
+    const result = { response: new Response("Not found", { status: 404 }) };
+    try {
+      unwrapGuard(result, 404, "Resource not found");
+    } catch (e) {
+      expect(e).toBeInstanceOf(AppError);
+      expect((e as AppError).statusCode).toBe(404);
+    }
+  });
+
+  it("works inside withErrorHandler for clean error flow", async () => {
+    const req = new Request("http://localhost/api/test");
+    const res = await withErrorHandler(req, async () => {
+      unwrapGuard({ response: new Response("Fail", { status: 403 }) }, 403, "Access denied");
+      return new Response("ok");
+    });
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toBe("Access denied");
   });
 });

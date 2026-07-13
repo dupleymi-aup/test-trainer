@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const createAttemptSchema = z.object({
@@ -26,11 +26,8 @@ const createAttemptSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
-
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    const auth = unwrapGuard(await requireAuth());
+    unwrapGuard(await requireCSRF(req), 403, "CSRF token missing or invalid");
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`attemptSubmission:${ip}`, rateLimits.attemptSubmission);
@@ -45,7 +42,7 @@ export async function POST(req: Request) {
 
     // Check group-based task permissions
     const userGroups = await db.userGroup.findMany({
-      where: { userId: auth.session.userId },
+      where: { userId: auth.userId },
       select: { groupId: true },
     });
 
@@ -67,7 +64,7 @@ export async function POST(req: Request) {
 
     const attempt = await db.attempt.create({
       data: {
-        userId: auth.session.userId,
+        userId: auth.userId,
         taskId,
         testCases: JSON.stringify(testCases),
         score,
@@ -86,8 +83,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireAuth());
 
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get("taskId");
@@ -96,7 +92,7 @@ export async function GET(req: Request) {
 
     const attempts = await db.attempt.findMany({
       where: {
-        userId: auth.session.userId,
+        userId: auth.userId,
         ...(taskId ? { taskId } : {}),
       },
       orderBy: { createdAt: "desc" },
