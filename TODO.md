@@ -43,6 +43,14 @@
 - [x] 4. Установить jsdom (отсутствовал, вызывал ошибки vitest)
 - [x] 5. Все 80 тестовых файлов (859 тестов) проходят, TypeScript 0 ошибок, ESLint 0 предупреждений
 
+# Plan — v13: Dead code cleanup
+
+- [x] 1. Удалить 50 неиспользуемых хуков из src/hooks/ (оставить только use-mobile и use-trainer-state)
+- [x] 2. Удалить src/lib/http-utils.ts + test (весь модуль мёртвый)
+- [x] 3. Добавить unwrapGuard утилиту в api-error-handler.ts для чистой обработки auth/CSRF guard
+- [x] 4. Рефакторинг 3 routes (change-password, profile, attempts) на unwrapGuard
+- [x] 5. TypeScript 0 ошибок, ESLint 0, 1239 тестов (69 файлов) проходят
+
 # Plan — v10: Admin error boundaries, дедупликация error-компонентов
 
 - [x] 1. Добавить поддержку роли admin в SubpageError + создать AdminSubpageError
