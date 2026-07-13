@@ -11,6 +11,34 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
+const translations: Record<string, string> = {
+  "achievements.title": "Достижения",
+  "achievements.subtitle": "{unlocked} из {total} получено",
+  "achievements.share": "Поделиться",
+  "achievements.shareTitle": "Тренажёр тестирования — Мои достижения",
+  "achievements.shareCount": "{count} из {total} получено",
+  "achievements.copied": "Достижения скопированы в буфер обмена!",
+  "achievements.copyFailed": "Не удалось скопировать",
+  "achievements.unlockedToast": "Достижение разблокировано!",
+  "achievements.first_blood_name": "Первый тест",
+  "achievements.first_blood_desc": "Отправьте первую проверку тест-кейсов",
+  "achievements.first_perfect_name": "Безупречно",
+  "achievements.first_perfect_desc": "Получите оценку 100% по любому заданию",
+};
+
+vi.mock("next-intl", () => ({
+  useTranslations: (ns: string) => (key: string, params?: Record<string, string | number>) => {
+    const fullKey = `${ns}.${key}`;
+    let text = translations[fullKey] ?? key;
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+      }
+    }
+    return text;
+  },
+}));
+
 describe("AchievementsPanel", () => {
   beforeEach(() => {
     localStorage.clear();

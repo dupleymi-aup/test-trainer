@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   achievements,
   loadUnlockedAchievements,
@@ -20,6 +21,7 @@ interface AchievementsPanelProps {
 }
 
 export function AchievementsPanel({ context }: AchievementsPanelProps) {
+  const t = useTranslations("achievements");
   const [unlockedIds, setUnlockedIds] = useState<string[]>(() => loadUnlockedAchievements());
   useEffect(() => {
     const handler = () => {
@@ -35,17 +37,17 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
   const handleShare = async () => {
     const unlocked = achievements.filter((a) => unlockedIds.includes(a.id));
     const lines = [
-      "🏆 Тренажёр тестирования — Мои достижения",
+      `🏆 ${t("shareTitle")}`,
       "",
-      `${unlockedCount} из ${totalCount} получено:`,
-      ...unlocked.map((a) => `${a.icon} ${a.name} — ${a.description}`),
+      t("shareCount", { count: unlockedCount, total: totalCount }),
+      ...unlocked.map((a) => `${a.icon} ${t(a.nameKey)} — ${t(a.descriptionKey)}`),
     ];
     const text = lines.join("\n");
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Достижения скопированы в буфер обмена!");
+      toast.success(t("copied"));
     } catch {
-      toast.error("Не удалось скопировать");
+      toast.error(t("copyFailed"));
     }
   };
 
@@ -59,10 +61,10 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
         <CardContent className="pt-6">
           <div className="text-center mb-4">
             <h2 className="text-lg font-bold flex items-center justify-center gap-2">
-              🏅 Достижения
+              🏅 {t("title")}
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
-              {unlockedCount} из {totalCount} получено
+              {t("subtitle", { unlocked: unlockedCount, total: totalCount })}
             </p>
             {unlockedCount > 0 && (
               <Button
@@ -72,7 +74,7 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
                 onClick={handleShare}
               >
                 <Share2 className="h-3 w-3" />
-                Поделиться
+                {t("share")}
               </Button>
             )}
           </div>
@@ -110,7 +112,7 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium truncate">
-                      {achievement.name}
+                      {t(achievement.nameKey)}
                     </p>
                     {isUnlocked && (
                       <Badge className="bg-amber-100 text-amber-800 text-[9px] dark:bg-amber-900/30 dark:text-amber-400 shrink-0">
@@ -119,7 +121,7 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {achievement.description}
+                    {t(achievement.descriptionKey)}
                   </p>
                   {!isUnlocked && progress > 0 && (
                     <div className="mt-2">
@@ -138,6 +140,7 @@ export function AchievementsPanel({ context }: AchievementsPanelProps) {
 }
 
 export function AchievementToast({ achievement }: { achievement: Achievement }) {
+  const t = useTranslations("achievements");
   return (
     <motion.div
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -148,9 +151,9 @@ export function AchievementToast({ achievement }: { achievement: Achievement }) 
       <span className="text-3xl">{achievement.icon}</span>
       <div>
         <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-          Достижение разблокировано!
+          {t("unlockedToast")}
         </p>
-        <p className="text-sm font-bold">{achievement.name}</p>
+        <p className="text-sm font-bold">{t(achievement.nameKey)}</p>
       </div>
     </motion.div>
   );

@@ -252,11 +252,11 @@ describe("achievements", () => {
   });
 
   describe("all achievements have required fields", () => {
-    it("every achievement has id, name, description, icon, condition", () => {
+    it("every achievement has id, nameKey, descriptionKey, icon, condition", () => {
       for (const ach of achievements) {
         expect(ach.id).toBeTruthy();
-        expect(ach.name).toBeTruthy();
-        expect(ach.description).toBeTruthy();
+        expect(ach.nameKey).toBeTruthy();
+        expect(ach.descriptionKey).toBeTruthy();
         expect(ach.icon).toBeTruthy();
         expect(typeof ach.condition).toBe("function");
       }
