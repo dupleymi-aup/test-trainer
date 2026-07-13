@@ -21,10 +21,11 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+import { NextRequest } from "next/server";
 import { GET } from "./route";
 
 function makeRequest() {
-  return new Request("http://localhost:3000/api/tasks/available");
+  return new NextRequest("http://localhost:3000/api/tasks/available");
 }
 
 describe("GET /api/tasks/available", () => {
