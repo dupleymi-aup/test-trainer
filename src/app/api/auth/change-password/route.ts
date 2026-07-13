@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { passwordSchema } from "@/lib/shared-schemas";
 
 const changePasswordSchema = z.object({
@@ -15,13 +15,10 @@ const changePasswordSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireAuth());
+    unwrapGuard(await requireCSRF(req), 403, "CSRF token missing or invalid");
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-
-    const result = checkRateLimit(`change-pw:${auth.session.userId}`, rateLimits.changePassword);
+    const result = checkRateLimit(`change-pw:${auth.userId}`, rateLimits.changePassword);
     if (result.limited) {
       return createRateLimitResponse(result.resetAt);
     }
@@ -32,7 +29,7 @@ export async function POST(req: Request) {
     const { currentPassword, newPassword } = body.data;
 
     const user = await db.user.findUnique({
-      where: { id: auth.session.userId },
+      where: { id: auth.userId },
     });
 
     if (!user || !user.hashedPassword) {
@@ -53,7 +50,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     await db.user.update({
-      where: { id: auth.session.userId },
+      where: { id: auth.userId },
       data: { hashedPassword, lastSessionInvalidation: new Date() },
     });
 

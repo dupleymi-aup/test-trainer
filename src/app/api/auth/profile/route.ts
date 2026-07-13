@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { checkRateLimit, rateLimits, createRateLimitResponse, getClientIp } from "@/lib/rate-limit";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const profileUpdateSchema = z.object({
   name: z.string().max(100).optional().nullable(),
@@ -17,11 +17,10 @@ const profileUpdateSchema = z.object({
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireAuth());
 
     const user = await db.user.findUnique({
-      where: { id: auth.session.userId },
+      where: { id: auth.userId },
       select: {
         id: true,
         name: true,
@@ -47,13 +46,11 @@ export async function GET() {
 
 export async function PUT(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    const auth = unwrapGuard(await requireAuth());
+    unwrapGuard(await requireCSRF(req), 403, "CSRF token missing or invalid");
 
     // Rate limit profile updates
-    const rateResult = checkRateLimit(`profile:${auth.session.userId}`, rateLimits.profileUpdate);
+    const rateResult = checkRateLimit(`profile:${auth.userId}`, rateLimits.profileUpdate);
     if (rateResult.limited) {
       return createRateLimitResponse(rateResult.resetAt);
     }
@@ -74,7 +71,7 @@ export async function PUT(req: Request) {
     // Check phone uniqueness
     if (phone) {
       const existingPhone = await db.user.findFirst({
-        where: { phone: phone.trim(), id: { not: auth.session.userId } },
+        where: { phone: phone.trim(), id: { not: auth.userId } },
       });
       if (existingPhone) {
         return NextResponse.json(
@@ -86,7 +83,7 @@ export async function PUT(req: Request) {
 
     try {
       const user = await db.user.update({
-        where: { id: auth.session.userId },
+        where: { id: auth.userId },
         data: updateData,
         select: {
           id: true,
@@ -104,10 +101,10 @@ export async function PUT(req: Request) {
 
       await db.activityLog.create({
         data: {
-          userId: auth.session.userId,
+          userId: auth.userId,
           action: "PROFILE_UPDATE",
           entity: "User",
-          entityId: auth.session.userId,
+          entityId: auth.userId,
           details: JSON.stringify({ fields: Object.keys(updateData) }),
           ipAddress: getClientIp(req),
         },
