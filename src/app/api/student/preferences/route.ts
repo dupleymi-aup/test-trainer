@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const preferencesSchema = z.object({
   email: z.boolean().optional(),
@@ -42,9 +42,7 @@ function parsePreferences(raw: string | null): NotificationPreferences {
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireStudent();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireStudent());
 
     const user = await db.user.findUnique({
       where: { id: session.userId },
@@ -61,11 +59,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireStudent();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireStudent());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentPreferences:${ip}`, rateLimits.studentPreferences);

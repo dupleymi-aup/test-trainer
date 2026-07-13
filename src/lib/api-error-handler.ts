@@ -162,10 +162,19 @@ export function parseSearchParams<T>(
  */
 export function unwrapGuard<T>(
   result: { session: T } | { verified: true } | { response: Response },
-  status = 401,
-  message = "Unauthorized"
+  status?: number,
+  message?: string
 ): T {
-  if ("response" in result) throw new AppError(status, message);
+  if ("response" in result) {
+    const res = result.response;
+    const inferredStatus = status ?? res.status;
+    const inferredMessage = message ??
+      (res.status === 401 ? "Unauthorized" :
+       res.status === 403 ? "Forbidden" :
+       res.status === 404 ? "Not found" :
+       "Request failed");
+    throw new AppError(inferredStatus, inferredMessage);
+  }
   return (result as { session: T }).session;
 }
 
