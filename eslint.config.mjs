@@ -110,7 +110,7 @@ const eslintConfig = [
   },
 
   {
-    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills", "*.js", "scripts/**", "next.config.ts", "tailwind.config.ts"],
+    ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts", "examples/**", "skills", "*.js", "scripts/**", "next.config.ts", "tailwind.config.ts"],
   },
 ];
 
