@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, Fragment, useState, useMemo } from "react";
+import { memo, Fragment, useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -355,17 +355,26 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
     toast.success("CSV экспортирован");
   };
 
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+
   const handleCopy = async () => {
     if (!result) return;
     try {
       await navigator.clipboard.writeText(formatResultsAsText(result));
       setCopied(true);
       toast.success("Результаты скопированы!");
-      setTimeout(() => setCopied(false), 2000);
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Не удалось скопировать результаты");
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   if (!result || !grade) {
     return (

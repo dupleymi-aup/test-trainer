@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 function parseInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
@@ -36,7 +36,7 @@ function parseInline(text: string): React.ReactNode[] {
   return parts.length > 0 ? parts : [text];
 }
 
-export function MarkdownPreview({ text }: { text: string }) {
+export const MarkdownPreview = memo(function MarkdownPreview({ text }: { text: string }) {
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
   let listItems: string[] = [];
@@ -96,4 +96,4 @@ export function MarkdownPreview({ text }: { text: string }) {
   flushList();
 
   return <div className="space-y-1">{elements}</div>;
-}
+});

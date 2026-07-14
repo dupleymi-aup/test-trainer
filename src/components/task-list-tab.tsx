@@ -10,12 +10,7 @@ import { getTaskHistory } from "@/lib/storage";
 import type { Task } from "@/lib/tasks";
 import type { TaskProgress } from "@/lib/storage";
 import type { DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
-
-const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 },
-};
+import { pageVariants } from "@/lib/constants";
 
 interface TaskListTabProps {
   filteredTasks: Task[];

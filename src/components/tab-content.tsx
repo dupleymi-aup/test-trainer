@@ -26,12 +26,7 @@ import { AchievementsPanel } from "@/components/achievements-panel";
 import { TheoryQuiz } from "@/components/theory-quiz";
 import type { AchievementContext } from "@/lib/achievements";
 import { tasks } from "@/lib/tasks";
-
-const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 },
-};
+import { pageVariants } from "@/lib/constants";
 
 interface TabContentProps {
   activeTab: TabValue;

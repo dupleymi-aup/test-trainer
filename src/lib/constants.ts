@@ -31,6 +31,13 @@ export const difficultyColors: Record<Difficulty, string> = {
   "Сложно": "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
 };
 
+/** Shared framer-motion page transition variants */
+export const pageVariants = {
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -20 },
+};
+
 export type QuizQuestionType = "single" | "truefalse" | "multiple" | "text";
 
 export interface QuizQuestion {

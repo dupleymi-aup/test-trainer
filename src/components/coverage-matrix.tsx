@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,7 +16,7 @@ interface CoverageMatrixProps {
   result: EvaluationResult;
 }
 
-export function CoverageMatrix({ result }: CoverageMatrixProps) {
+export const CoverageMatrix = memo(function CoverageMatrix({ result }: CoverageMatrixProps) {
   const allCoverageItems = [
     ...result.task.equivalenceClasses.map((ec) => ({
       id: ec.id,
@@ -217,4 +218,4 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
       </CardContent>
     </Card>
   );
-}
+});

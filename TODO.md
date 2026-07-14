@@ -116,3 +116,10 @@
 - [x] 1. Стандартизировать success responses в 4 auth routes: {message} → {success: true}
 - [x] 2. Обновить соответствующие тесты
 - [x] 3. 1246 тестов, TypeScript 0 ошибок
+
+# Plan — v22: Performance, dedup, cleanup (текущий)
+
+- [x] 1. Извлечь shared pageVariants в constants.ts (обновить 3 файла: trainer-tab, task-list-tab, tab-content)
+- [x] 2. Добавить React.memo к CoverageMatrix и MarkdownPreview
+- [x] 3. Исправить setTimeout memory leak в results-panel.tsx (useRef + cleanup)
+- [x] 4. 1246 тестов, TypeScript 0 ошибок

@@ -14,12 +14,7 @@ import {
 import type { TestCase } from "@/lib/evaluator";
 import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
 import { formatTimer } from "@/lib/format-time";
-
-const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 },
-};
+import { pageVariants } from "@/lib/constants";
 
 interface TrainerTabProps {
   task: TaskType;
