@@ -210,8 +210,9 @@ export async function apiFetchJson<T>(
   try {
     const { signal: _signal, ...initWithoutSignal } = (init as RequestInit & { signal?: AbortSignal }) || {};
     
-    const fetchFn = retryConfig ? apiFetchWithRetry : apiFetch;
-    const res = await fetchFn(url, { ...initWithoutSignal, signal: controller.signal }, retryConfig);
+    const res = retryConfig
+      ? await apiFetchWithRetry(url, { ...initWithoutSignal, signal: controller.signal }, retryConfig)
+      : await apiFetch(url, { ...initWithoutSignal, signal: controller.signal });
 
     if (!res.ok) {
       throw await parseApiError(res);

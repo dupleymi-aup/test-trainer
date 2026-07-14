@@ -6,6 +6,11 @@ import {
 } from "./tasks";
 import { parseInputValue } from "./utils";
 
+/** Lowercased, trimmed error prefix for matching error messages (e.g. "ошибка: "). */
+const ERROR_PREFIX_LC = ERROR_PREFIX.trim().toLowerCase();
+/** 5-char stem of the error prefix for catching all Russian grammatical forms in descriptions. */
+const ERROR_STEM = ERROR_PREFIX_LC.slice(0, 5);
+
 /** Weights for the overall score formula */
 const EC_COVERAGE_WEIGHT = 0.4;
 const BOUNDARY_COVERAGE_WEIGHT = 0.3;
@@ -135,7 +140,7 @@ function findCoveredEquivalenceClasses(
       const desc = ec.description.toLowerCase();
       if (
         desc.includes("недопустим") ||
-        desc.includes("ошибк") ||
+        desc.includes(ERROR_STEM) ||
         desc.includes("переполнен") ||
         desc.includes("неверный тип")
       ) {
@@ -579,18 +584,19 @@ function compareOutputs(expected: string, actual: unknown): boolean {
     }
   }
 
-  // Handle "Error:" prefix matching better
-  if (normalizedExpected.includes("ошибк") || normalizedExpected.includes("исключен") || normalizedExpected.startsWith("error:")) {
+  // Handle error prefix matching (Russian "Ошибка: " and English "error:")
+  const errorPrefixTrimmed = `${ERROR_PREFIX_LC}:`;
+  if (normalizedExpected.includes(ERROR_PREFIX_LC) || normalizedExpected.includes("исключен") || normalizedExpected.startsWith("error:")) {
     let strippedExpected = normalizedExpected;
     if (strippedExpected.startsWith("error:")) {
       strippedExpected = strippedExpected.slice(6).trim();
     }
-    if (strippedExpected.startsWith("ошибка:")) {
-      strippedExpected = strippedExpected.slice(7).trim();
+    if (strippedExpected.startsWith(errorPrefixTrimmed)) {
+      strippedExpected = strippedExpected.slice(errorPrefixTrimmed.length).trim();
     }
     let strippedActual = normalizedActual;
-    if (strippedActual.startsWith("ошибка:")) {
-      strippedActual = strippedActual.slice(7).trim();
+    if (strippedActual.startsWith(errorPrefixTrimmed)) {
+      strippedActual = strippedActual.slice(errorPrefixTrimmed.length).trim();
     }
     // Flexible matching: exact, keyword, or substring for medium messages
     if (strippedExpected === strippedActual) return true;
@@ -698,8 +704,8 @@ export function evaluateTestCases(
     } else {
       const normExpected = tc.expectedOutput.trim().toLowerCase();
       const normActual = actualOutput.trim().toLowerCase();
-      const expectedIsError = normExpected.includes("ошибк") || normExpected.includes("исключен") || normExpected.startsWith("error");
-      const actualIsError = normActual.includes("ошибк") || normActual.startsWith("ошибка");
+      const expectedIsError = normExpected.includes(ERROR_PREFIX_LC) || normExpected.includes("исключен") || normExpected.startsWith("error");
+      const actualIsError = normActual.includes(ERROR_PREFIX_LC);
 
       if (expectedIsError && !actualIsError) {
         explanation = `Ожидалась ошибка, но функция вернула результат. Фактический: ${actualOutput}. Проверьте, попадает ли вход в класс невалидных данных.`;
