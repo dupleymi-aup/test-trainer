@@ -2,6 +2,7 @@ import {
   type Task,
   type TestCaseCategory,
   runReferenceFunction,
+  ERROR_PREFIX,
 } from "./tasks";
 import { parseInputValue } from "./utils";
 
@@ -634,13 +635,13 @@ export function evaluateTestCases(
 
     let actualOutput: string;
     if (error) {
-      actualOutput = `Ошибка: ${error}`;
+      actualOutput = `${ERROR_PREFIX}${error}`;
     } else {
       actualOutput = normalizeValue(result);
     }
 
     // Compare expected with actual
-    const isCorrect = compareOutputs(tc.expectedOutput, error ? `Ошибка: ${error}` : result);
+    const isCorrect = compareOutputs(tc.expectedOutput, error ? `${ERROR_PREFIX}${error}` : result);
 
     // Find covered ECs - pass cached result to avoid duplicate runReferenceFunction call
     const coveredClasses = findCoveredEquivalenceClasses(

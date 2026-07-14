@@ -6,6 +6,9 @@ export type TestCaseCategory =
   | "Исключение"
   | "Недопустимый тип";
 
+/** Prefix prepended to error messages in evaluator output. Used to distinguish errors from normal results. */
+export const ERROR_PREFIX = "Ошибка: ";
+
 export interface EquivalenceClass {
   id: string;
   name: string;

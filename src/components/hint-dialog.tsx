@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb, ChevronRight, Plus } from "lucide-react";
-import { runReferenceFunction, type TestCaseCategory } from "@/lib/tasks";
+import { runReferenceFunction, type TestCaseCategory, ERROR_PREFIX } from "@/lib/tasks";
 import { toast } from "sonner";
 
 interface HintInfo {
@@ -49,7 +49,7 @@ export function HintDialog({
       return !isNaN(num) && v.trim() !== "" ? num : v;
     });
     const { result, error } = runReferenceFunction(hint.taskId, parsed);
-    return error ? `Ошибка: ${error}` : typeof result === "object" ? JSON.stringify(result) : String(result);
+    return error ? `${ERROR_PREFIX}${error}` : typeof result === "object" ? JSON.stringify(result) : String(result);
   }, [hint]);
 
   const inferCategory = useCallback((desc: string, hasError: boolean): TestCaseCategory => {
@@ -67,7 +67,7 @@ export function HintDialog({
     if (!hint) return;
     const inputStrs = hint.suggestedInput.split(", ").map((s) => s.trim());
     const expected = generateExpectedOutput(inputStrs);
-    const hasError = expected.startsWith("Ошибка:");
+    const hasError = expected.startsWith(ERROR_PREFIX);
     const category = inferCategory(hint.ecDescription, hasError);
     onAddTestCase(inputStrs, expected, category, `Подсказка: ${hint.ecName}`);
     setOpen(false);
@@ -81,7 +81,7 @@ export function HintDialog({
   if (!hint) return null;
 
   const expectedOutput = step >= 1 ? generateExpectedOutput(hint.suggestedInput.split(", ").map((s) => s.trim())) : null;
-  const hasError = expectedOutput?.startsWith("Ошибка:");
+  const hasError = expectedOutput?.startsWith(ERROR_PREFIX);
   const category = expectedOutput ? inferCategory(hint.ecDescription, hasError ?? false) : null;
 
   return (
