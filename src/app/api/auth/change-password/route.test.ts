@@ -84,7 +84,7 @@ describe("POST /api/auth/change-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Password changed successfully");
+      expect(json.success).toBe(true);
     });
 
     it("hashes new password with bcrypt cost 12", async () => {

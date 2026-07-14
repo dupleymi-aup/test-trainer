@@ -78,6 +78,6 @@ export async function POST(req: Request) {
       db.verificationToken.delete({ where: { token } }),
     ]);
 
-    return NextResponse.json({ message: "Email verified" }, { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   });
 }

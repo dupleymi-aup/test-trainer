@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     const emailData = generateVerificationEmail(verificationToken, baseUrl);
     try {
       await sendEmail({ to: user.email, ...emailData });
-      return NextResponse.json({ message: "Email sent" });
+      return NextResponse.json({ success: true });
     } catch {
       await db.verificationToken.delete({ where: { token: verificationToken } });
       return NextResponse.json(

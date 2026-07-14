@@ -135,7 +135,7 @@ describe("POST /api/auth/reset-password", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Password changed successfully");
+      expect(json.success).toBe(true);
       expect(mocks.bcryptHash).toHaveBeenCalledWith("NewSecurePass123!", 12);
       expect(mocks.mockUserUpdate).toHaveBeenCalledWith(
         expect.objectContaining({

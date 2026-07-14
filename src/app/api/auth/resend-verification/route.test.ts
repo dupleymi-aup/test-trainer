@@ -89,7 +89,7 @@ describe("POST /api/auth/resend-verification", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Email sent");
+      expect(json.success).toBe(true);
     });
 
     it("generates a new verification token", async () => {

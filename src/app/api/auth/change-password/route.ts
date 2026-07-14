@@ -54,6 +54,6 @@ export async function POST(req: Request) {
       data: { hashedPassword, lastSessionInvalidation: new Date() },
     });
 
-    return NextResponse.json({ message: "Password changed successfully" }, { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   });
 }

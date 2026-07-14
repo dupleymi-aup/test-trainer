@@ -110,3 +110,9 @@
 - [x] 5. Исправить import crypto → node:crypto в api-error-handler.ts
 - [x] 6. Стандартизировать withErrorHandler: details в dev mode для AppError и non-AppError
 - [x] 7. 1246 тестов, TypeScript 0 ошибок
+
+# Plan — v21: Auth response standardization (текущий)
+
+- [x] 1. Стандартизировать success responses в 4 auth routes: {message} → {success: true}
+- [x] 2. Обновить соответствующие тесты
+- [x] 3. 1246 тестов, TypeScript 0 ошибок

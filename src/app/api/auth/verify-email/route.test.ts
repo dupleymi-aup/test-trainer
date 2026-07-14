@@ -116,7 +116,7 @@ describe("POST /api/auth/verify-email", () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.message).toBe("Email verified");
+      expect(json.success).toBe(true);
       expect(mocks.mockUserUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: "user-123" },

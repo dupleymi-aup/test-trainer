@@ -71,6 +71,6 @@ export async function POST(req: Request) {
       await tx.verificationToken.delete({ where: { token } });
     });
 
-    return NextResponse.json({ message: "Password changed successfully" }, { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   });
 }
