@@ -40,7 +40,12 @@ function LoginFormContent() {
   const t = useTranslations("auth");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = (() => {
+    const raw = searchParams.get("callbackUrl") || "/";
+    // Prevent open redirect: only allow relative paths on the same host
+    if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    return "/";
+  })();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginForm>({
