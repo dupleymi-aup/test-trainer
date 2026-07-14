@@ -126,9 +126,9 @@ export async function POST(req: Request) {
           results.push({ status: "ok", email: r.email });
           created++;
         }
-      } catch (err) {
+      } catch {
         for (const r of toCreate) {
-          results.push({ status: "error", email: r.email, error: err instanceof Error ? err.message : "Unknown error" });
+          results.push({ status: "error", email: r.email, error: "Failed to create user" });
           skipped++;
         }
       }

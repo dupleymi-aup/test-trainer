@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { secureCompare } from "@/lib/crypto";
 import { logger } from "@/lib/logger";
+import { MS_PER_DAY } from "@/lib/time-constants";
 
 /**
  * GET /api/cron/scheduled-reports
@@ -24,7 +25,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const MS_PER_DAY = 86400000;
     const RISK_THRESHOLD = 2;
     const LOW_SCORE_THRESHOLD = 50;
     const MIN_ATTEMPTS_FOR_ACTIVE = 3;

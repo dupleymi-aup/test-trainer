@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { AttemptData, batchComputeStudentRisk } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { withErrorHandler } from "@/lib/api-error-handler";
+import { MS_PER_DAY } from "@/lib/time-constants";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
@@ -15,7 +16,7 @@ export async function GET() {
     if (cached) return NextResponse.json(cached);
 
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * MS_PER_DAY);
 
     // KPIs via count() — no full table scans
     const [totalStudents, totalTeachers, totalGroups, totalAttempts, activeStudents30d] =

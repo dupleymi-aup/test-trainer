@@ -1,4 +1,5 @@
 import { MS_PER_DAY } from "@/lib/time-constants";
+import { computeLinearRegression } from "@/lib/analytics-queries";
 
 export interface AttemptData {
   score: number;
@@ -332,40 +333,14 @@ export function predictNextScore(
   if (attempts.length < 3) return null;
 
   const points: [number, number][] = attempts.map((a, i) => [i, a.score]);
+  const regression = computeLinearRegression(points);
+  if (!regression) return null;
 
-  let sumX = 0,
-    sumY = 0,
-    sumXY = 0,
-    sumX2 = 0;
-  const n = points.length;
-  for (const [x, y] of points) {
-    sumX += x;
-    sumY += y;
-    sumXY += x * y;
-    sumX2 += x * x;
-  }
+  const nextX = points.length;
+  const predicted = Math.max(0, Math.min(100, regression.predict(nextX)));
 
-  const denom = n * sumX2 - sumX * sumX;
-  if (denom === 0) return null;
-
-  const slope = (n * sumXY - sumX * sumY) / denom;
-  const intercept = (sumY - slope * sumX) / n;
-
-  const meanY = sumY / n;
-  let ssTot = 0;
-  let ssRes = 0;
-  for (const [x, y] of points) {
-    const predicted = slope * x + intercept;
-    ssTot += (y - meanY) ** 2;
-    ssRes += (y - predicted) ** 2;
-  }
-  const r2 = ssTot === 0 ? 1 : Math.max(0, Math.min(1, 1 - ssRes / ssTot));
-
-  const nextX = n;
-  const predicted = Math.max(0, Math.min(100, slope * nextX + intercept));
-
-  const trend = slope > 3 ? "improving" : slope < -3 ? "declining" : "stable";
-  const confidence = Math.round(r2 * 100);
+  const trend = regression.slope > 3 ? "improving" : regression.slope < -3 ? "declining" : "stable";
+  const confidence = Math.round(regression.r2 * 100);
 
   return { predicted: Math.round(predicted), trend, confidence };
 }

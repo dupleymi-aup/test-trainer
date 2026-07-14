@@ -84,3 +84,13 @@
 - [x] 6. CSRF unwrapGuard с 403 + "CSRF token missing or invalid" в student/preferences
 - [x] 7. Rate limit cleanup interval: interval.unref() для graceful shutdown
 - [x] 8. 1246 тестов, TypeScript 0 ошибок, ESLint 0 ошибок
+
+# Plan — v18: Code quality, security, deduplication (текущий)
+
+- [x] 1. Убрать утечку внутренних ошибок в admin/users/import (err.message → "Failed to create user")
+- [x] 2. Заменить хрупкое определение P2002 (String.includes) на Prisma.PrismaClientKnownRequestError
+- [x] 3. Дедупликация linear regression: predictNextScore использует computeLinearRegression из analytics-queries
+- [x] 4. Удалить мёртвый код _handleEvaluate в marathon-mode.tsx
+- [x] 5. CoverageMatrix: TooltipProvider вынесен на уровень обёртки вместо каждого элемента
+- [x] 6. Заменить magic 86400000 на MS_PER_DAY из time-constants.ts (4 файла)
+- [x] 7. 1246 тестов, TypeScript 0 ошибок

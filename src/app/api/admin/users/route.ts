@@ -176,8 +176,8 @@ export async function POST(req: Request) {
       });
     } catch (createError) {
       if (
-        createError instanceof Error &&
-        createError.message.includes("P2002")
+        createError instanceof Prisma.PrismaClientKnownRequestError &&
+        createError.code === "P2002"
       ) {
         return NextResponse.json({ error: "User with this email or phone already exists" }, { status: 409 });
       }

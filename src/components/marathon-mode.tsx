@@ -168,32 +168,6 @@ export function MarathonMode({
     setElapsed(0);
   }, []);
 
-  const _handleEvaluate = useCallback(() => {
-    if (!currentTask || testCases.length === 0) return;
-    const result = evaluateTestCases(currentTask, testCases);
-    setEvaluationResult(result);
-
-    setState((prev) => {
-      const existing = prev.taskResults.find((r) => r.taskId === currentTask.id);
-      let newResults: typeof prev.taskResults;
-      if (existing) {
-        newResults = prev.taskResults.map((r) =>
-          r.taskId === currentTask.id
-            ? { ...r, bestScore: Math.max(r.bestScore, result.overallScore), attempts: r.attempts + 1 }
-            : r
-        );
-      } else {
-        newResults = [...prev.taskResults, {
-          taskId: currentTask.id,
-          bestScore: result.overallScore,
-          attempts: 1,
-          timeSpentSec: elapsed,
-        }];
-      }
-      return { ...prev, taskResults: newResults };
-    });
-  }, [currentTask, testCases, elapsed]);
-
   const handleNext = useCallback(() => {
     if (isLastTask) {
       setState((prev) => ({ ...prev, finished: true }));

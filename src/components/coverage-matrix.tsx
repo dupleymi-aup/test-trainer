@@ -78,11 +78,11 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <TooltipProvider>
         {/* Summary bar */}
         <div className="flex flex-wrap gap-2 mb-3">
           {columnStats.map((stat) => (
-            <TooltipProvider key={stat.id}>
-              <Tooltip>
+              <Tooltip key={stat.id}>
                 <TooltipTrigger asChild>
                   <div
                     className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium cursor-default transition-colors ${
@@ -113,7 +113,6 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
                   </p>
                 </TooltipContent>
               </Tooltip>
-            </TooltipProvider>
           ))}
         </div>
 
@@ -133,7 +132,6 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
                     key={stat.id}
                     className="p-1 text-center min-w-[32px]"
                   >
-                    <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span
@@ -153,7 +151,6 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
                           </p>
                         </TooltipContent>
                       </Tooltip>
-                    </TooltipProvider>
                   </th>
                 ))}
               </tr>
@@ -216,6 +213,7 @@ export function CoverageMatrix({ result }: CoverageMatrixProps) {
           </span>
           <span>Тестов: {result.results.length}</span>
         </div>
+        </TooltipProvider>
       </CardContent>
     </Card>
   );

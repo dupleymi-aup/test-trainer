@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { AttemptData, batchComputeStudentRisk } from "@/lib/risk-analysis";
+import { MS_PER_DAY } from "@/lib/time-constants";
 import { z } from "zod";
 
 const dashboardParamsSchema = z.object({
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
     });
 
     const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * MS_PER_DAY);
 
     // Use shared risk analysis library
     const riskMap = batchComputeStudentRisk(

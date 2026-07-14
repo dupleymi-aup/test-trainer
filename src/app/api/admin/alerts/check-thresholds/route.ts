@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { computeStudentRisk, AttemptData } from "@/lib/risk-analysis";
+import { MS_PER_DAY } from "@/lib/time-constants";
 import { withErrorHandler } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { safeJsonParse } from "@/lib/utils";
@@ -136,7 +137,7 @@ export async function POST(req: Request) {
         _avg: { score: true },
       }),
       db.attempt.aggregate({
-        where: { createdAt: { gte: new Date(sevenDaysAgo.getTime() - 7 * 86400000), lt: sevenDaysAgo } },
+        where: { createdAt: { gte: new Date(sevenDaysAgo.getTime() - 7 * MS_PER_DAY), lt: sevenDaysAgo } },
         _avg: { score: true },
       }),
     ]);
