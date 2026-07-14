@@ -64,6 +64,8 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   adminUserCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Admin group CRUD: 20 per 15 minutes */
   adminGroupCrud: { max: 20, windowMs: 15 * 60 * 1000 },
+  /** Admin group read: 60 per 15 minutes (separate from write quota) */
+  adminGroupRead: { max: 60, windowMs: 15 * 60 * 1000 },
   /** Teacher group CRUD: 20 per 15 minutes */
   teacherGroupCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Admin deadline CRUD: 20 per 15 minutes */
@@ -216,5 +218,7 @@ if (typeof global !== "undefined") {
   const rateLimitCleanupSymbol = Symbol.for("rate-limit-cleanup-interval");
   const existingInterval = (global as Record<symbol, unknown>)[rateLimitCleanupSymbol] as ReturnType<typeof setInterval> | undefined;
   if (existingInterval) clearInterval(existingInterval);
-  (global as Record<symbol, unknown>)[rateLimitCleanupSymbol] = setInterval(cleanupExpiredEntries, 60 * 1000);
+  const interval = setInterval(cleanupExpiredEntries, 60 * 1000);
+  interval.unref(); // Don't prevent Node.js graceful shutdown
+  (global as Record<symbol, unknown>)[rateLimitCleanupSymbol] = interval;
 }

@@ -81,6 +81,7 @@ export async function parseRequestBody<T>(
   | { success: false; errorResponse: NextResponse<{ error: string }> }
 > {
   try {
+    // Pre-check with Content-Length header (fast path, may be absent)
     const contentLength = req.headers.get("content-length");
     if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
       return {
@@ -92,6 +93,17 @@ export async function parseRequestBody<T>(
       };
     }
     const json = await req.json();
+    // Post-check: serialize to catch oversized payloads that bypassed Content-Length
+    const serialized = JSON.stringify(json);
+    if (serialized.length > MAX_BODY_SIZE) {
+      return {
+        success: false,
+        errorResponse: NextResponse.json(
+          { error: "Request body too large (max 1MB)" },
+          { status: 413 }
+        ),
+      };
+    }
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
       return {

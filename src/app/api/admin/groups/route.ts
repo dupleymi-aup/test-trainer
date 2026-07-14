@@ -12,8 +12,8 @@ export async function GET(req: Request) {
     if ("response" in guard) return guard.response;
     const { session } = guard;
 
-    // Rate limiting for expensive read operation
-    const rateResult = checkRateLimit(`adminGroups:${session.userId}`, rateLimits.adminGroupCrud);
+    // Rate limiting for read operation (separate bucket from write)
+    const rateResult = checkRateLimit(`adminGroupRead:${session.userId}`, rateLimits.adminGroupRead);
     if (rateResult.limited) {
       return createRateLimitResponse(rateResult.resetAt);
     }
@@ -51,8 +51,8 @@ export async function GET(req: Request) {
 }
 
 const createGroupSchema = z.object({
-  name: z.string().min(1, "Название обязательно").max(100, "Название слишком длинное"),
-  description: z.string().max(500, "Описание слишком длинное").optional(),
+  name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+  description: z.string().max(500, "Description is too long").optional(),
 });
 
 export async function POST(req: Request) {

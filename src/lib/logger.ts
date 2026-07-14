@@ -27,8 +27,28 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 };
 
+let _cachedLevel: number | null = null;
+let _cachedEnvValue: string | undefined = undefined;
+const CACHE_TTL_MS = 5_000; // Re-read env var every 5 seconds
+let _cacheTimestamp = 0;
+
 function getLogLevel(): number {
-  switch (process.env.LOG_LEVEL) {
+  const currentEnv = process.env.LOG_LEVEL;
+  const now = Date.now();
+  if (
+    _cachedLevel === null ||
+    currentEnv !== _cachedEnvValue ||
+    now - _cacheTimestamp > CACHE_TTL_MS
+  ) {
+    _cachedLevel = parseLogLevel(currentEnv);
+    _cachedEnvValue = currentEnv;
+    _cacheTimestamp = now;
+  }
+  return _cachedLevel;
+}
+
+function parseLogLevel(value: string | undefined): number {
+  switch (value) {
     case "error": return LOG_LEVELS.error;
     case "warn": return LOG_LEVELS.warn;
     case "info": return LOG_LEVELS.info;

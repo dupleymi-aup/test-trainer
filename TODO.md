@@ -73,3 +73,14 @@
 - [x] 3. Добавить loading.tsx + error.tsx для 5 auth sub-routes (login, register, forgot-password, reset-password, verify-email)
 - [x] 4. Добавить NODE_ENV и LOG_LEVEL в .env.example
 - [x] 5. ESLint 0 предупреждений, TypeScript 0 ошибок
+
+# Plan — v17: Security, dedup, performance improvements (текущий)
+
+- [x] 1. Дедупликация secureCompare в csrf.ts (импорт из crypto.ts вместо дублированного алгоритма)
+- [x] 2. Кэширование log level в logger.ts с TTL 5 сек (убрать повторный парсинг env var на каждый лог)
+- [x] 3. Русские строки в Zod-схемах admin/groups/route.ts → английский
+- [x] 4. Защита от обхода Content-Length: post-parse body size check в parseRequestBody
+- [x] 5. Разделение rate limit bucket для GET/POST в admin/groups (adminGroupRead: 60/15мин vs adminGroupCrud: 20/15мин)
+- [x] 6. CSRF unwrapGuard с 403 + "CSRF token missing or invalid" в student/preferences
+- [x] 7. Rate limit cleanup interval: interval.unref() для graceful shutdown
+- [x] 8. 1246 тестов, TypeScript 0 ошибок, ESLint 0 ошибок

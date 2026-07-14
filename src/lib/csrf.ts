@@ -4,6 +4,8 @@
  * Uses Web Crypto API for Edge Runtime compatibility.
  */
 
+import { secureCompare } from "./crypto";
+
 const CSRF_COOKIE_NAME = "csrf-token";
 const CSRF_HEADER_NAME = "x-csrf-token";
 
@@ -22,14 +24,7 @@ export function generateCSRFToken(): string {
  */
 export function verifyCSRFToken(cookieToken: string | undefined, headerToken: string | undefined): boolean {
   if (!cookieToken || !headerToken) return false;
-  if (cookieToken.length !== headerToken.length) return false;
-
-  // Constant-time comparison using simple XOR accumulation
-  let diff = 0;
-  for (let i = 0; i < cookieToken.length; i++) {
-    diff |= cookieToken.charCodeAt(i) ^ headerToken.charCodeAt(i);
-  }
-  return diff === 0;
+  return secureCompare(cookieToken, headerToken);
 }
 
 export { CSRF_COOKIE_NAME, CSRF_HEADER_NAME };

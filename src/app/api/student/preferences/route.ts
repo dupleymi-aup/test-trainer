@@ -60,7 +60,7 @@ export async function GET() {
 export async function PATCH(req: Request) {
   return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireStudent());
-    unwrapGuard(await requireCSRF(req));
+    unwrapGuard(await requireCSRF(req), 403, "CSRF token missing or invalid");
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentPreferences:${ip}`, rateLimits.studentPreferences);
