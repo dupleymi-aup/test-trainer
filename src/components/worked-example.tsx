@@ -7,13 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, BookOpen, Lightbulb, Code, CheckCircle2, Target } from "lucide-react";
 import { getWorkedExample, type WorkedExample } from "@/lib/worked-examples";
-
-const categoryBadgeStyles: Record<string, string> = {
-  "Нормальное значение": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
-  "Граничное значение": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-  "Исключение": "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
-  "Недопустимый тип": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-};
+import { categoryColors } from "@/lib/constants";
+import type { TestCaseCategory } from "@/lib/tasks";
 
 function StepCard({ step }: { step: WorkedExample["steps"][number] }) {
   const [isOpen, setIsOpen] = useState(step.stepNumber <= 2);
@@ -67,7 +62,7 @@ function StepCard({ step }: { step: WorkedExample["steps"][number] }) {
                   </code>
                 </div>
               </div>
-              <Badge variant="secondary" className={`mt-2 text-[10px] ${categoryBadgeStyles[step.example.category] || "bg-gray-100 text-gray-800 dark:bg-muted dark:text-muted-foreground"}`}>
+              <Badge variant="secondary" className={`mt-2 text-[10px] ${categoryColors[step.example.category as TestCaseCategory] || "bg-gray-100 text-gray-800 dark:bg-muted dark:text-muted-foreground"}`}>
                 {step.example.category}
               </Badge>
             </div>

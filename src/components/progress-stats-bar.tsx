@@ -21,7 +21,7 @@ import {
 interface ProgressStatsBarProps {
   completedCount: number;
   totalTasks: number;
-  savedProgress: Record<number, TaskProgress>;
+  savedProgress: Record<string, TaskProgress>;
   resetDialogOpen: boolean;
   onResetDialogOpenChange: (open: boolean) => void;
   onExport: () => void;

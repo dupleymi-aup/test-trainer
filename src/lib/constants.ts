@@ -1,4 +1,4 @@
-import type { TestCaseCategory } from "./tasks";
+import type { TestCaseCategory, Difficulty } from "./tasks";
 
 import { logger } from "./logger";
 
@@ -23,6 +23,12 @@ export const categoryColors: Record<TestCaseCategory, string> = {
   "Граничное значение": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   "Исключение": "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
   "Недопустимый тип": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+};
+
+export const difficultyColors: Record<Difficulty, string> = {
+  "Легко": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+  "Средне": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
+  "Сложно": "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400",
 };
 
 export type QuizQuestionType = "single" | "truefalse" | "multiple" | "text";

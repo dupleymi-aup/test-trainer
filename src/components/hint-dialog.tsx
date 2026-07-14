@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb, ChevronRight, Plus } from "lucide-react";
 import { runReferenceFunction, type TestCaseCategory, ERROR_PREFIX } from "@/lib/tasks";
+import { categoryColors } from "@/lib/constants";
 import { toast } from "sonner";
 
 interface HintInfo {
@@ -146,9 +147,7 @@ export function HintDialog({
                 </code>
                 {category && (
                   <Badge variant="secondary" className={`mt-2 text-[10px] ${
-                    category === "Исключение" ? "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400" :
-                    category === "Граничное значение" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
-                    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    categoryColors[category] || "bg-gray-100 text-gray-800 dark:bg-muted dark:text-muted-foreground"
                   }`}>
                     {category}
                   </Badge>

@@ -94,3 +94,19 @@
 - [x] 5. CoverageMatrix: TooltipProvider вынесен на уровень обёртки вместо каждого элемента
 - [x] 6. Заменить magic 86400000 на MS_PER_DAY из time-constants.ts (4 файла)
 - [x] 7. 1246 тестов, TypeScript 0 ошибок
+
+# Plan — v19: Shared components, error boundary deduplication (текущий)
+
+- [x] 1. Создать shared PageError компонент (src/components/page-error.tsx)
+- [x] 2. Рефакторинг 5 top-level error.tsx (root, student, teacher, admin, trainer) на PageError
+- [x] 3. 1246 тестов, TypeScript 0 ошибок
+
+# Plan — v20: Dedup constants, type fixes, error shape consistency (текущий)
+
+- [x] 1. Исправить тип Record<number> → Record<string> в progress-stats-bar.tsx
+- [x] 2. Извлечь difficultyColors в shared constant (constants.ts)
+- [x] 3. Дедупликация categoryBadgeStyles в worked-example.tsx → categoryColors из constants
+- [x] 4. Дедупликация inline categoryColors в hint-dialog.tsx → categoryColors из constants
+- [x] 5. Исправить import crypto → node:crypto в api-error-handler.ts
+- [x] 6. Стандартизировать withErrorHandler: details в dev mode для AppError и non-AppError
+- [x] 7. 1246 тестов, TypeScript 0 ошибок

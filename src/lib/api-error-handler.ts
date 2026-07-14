@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { logger } from "./logger";
 import { z, type ZodError, type ZodSchema } from "zod";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 
 /**
  * Formats a Zod v4 error into a human-readable string.
@@ -246,7 +246,10 @@ export async function withErrorHandler(
     logger.error("API response error", { method, path, status, duration, requestId, message });
 
     if (error instanceof AppError) {
-      return NextResponse.json({ error: message }, { status });
+      return NextResponse.json(
+        { error: message, details: process.env.NODE_ENV === "development" ? message : undefined },
+        { status }
+      );
     }
 
     logger.error("[API Error]", error instanceof Error ? error : undefined);
