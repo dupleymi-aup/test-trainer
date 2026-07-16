@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { computeTrend } from "@/lib/trend";
 
 export async function GET(req: NextRequest) {
   return withErrorHandler(req, async () => {
@@ -61,13 +62,7 @@ export async function GET(req: NextRequest) {
       const avgTime = attempts.length > 0 ? Math.round(attempts.reduce((sum, a) => sum + a.timeSpent, 0) / attempts.length) : 0;
 
       // Trend
-      const first3 = attempts.slice(0, 3);
-      const last3 = attempts.slice(-3);
-      const first3Avg = first3.length > 0 ? first3.reduce((s, a) => s + a.score, 0) / first3.length : 0;
-      const last3Avg = last3.length > 0 ? last3.reduce((s, a) => s + a.score, 0) / last3.length : 0;
-      const trend = attempts.length >= 6
-        ? last3Avg - first3Avg > 15 ? "improving" : last3Avg - first3Avg < -15 ? "declining" : "stable"
-        : "stable";
+      const trend = computeTrend(attempts);
 
       // Score trajectory
       const trajectory = attempts.map((a, i) => ({

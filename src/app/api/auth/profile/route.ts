@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth } from "@/lib/admin-guard";
@@ -113,8 +114,8 @@ export async function PUT(req: Request) {
       return NextResponse.json({ user }, { status: 200 });
     } catch (updateError) {
       if (
-        updateError instanceof Error &&
-        updateError.message.includes("P2002")
+        updateError instanceof Prisma.PrismaClientKnownRequestError &&
+        updateError.code === "P2002"
       ) {
         return NextResponse.json(
           { error: "This phone number is already in use" },

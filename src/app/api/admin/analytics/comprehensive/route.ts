@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { computeTrend } from "@/lib/trend";
 import { analyticsParamsSchema } from "@/lib/shared-schemas";
 
 export async function GET(request: Request) {
@@ -344,13 +345,9 @@ export async function GET(request: Request) {
     const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
     const lastAttempt = attempts[attempts.length - 1];
     const lastAttemptTime = lastAttempt.createdAt.getTime();
-    const first3 = attempts.slice(0, 3);
-    const last3 = attempts.slice(-3);
-    const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
-    const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
 
     if (bestScore < 50) lowPerformers++;
-    if (attempts.length >= 6 && first3Avg - last3Avg > 15) declining++;
+    if (computeTrend(attempts) === "declining") declining++;
     if (lastAttemptTime < fourteenDaysAgoTime.getTime()) inactive++;
     if (attempts.length < 3) {
       const createdAt = userCreationDates.get(userId);

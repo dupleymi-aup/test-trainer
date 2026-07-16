@@ -1,5 +1,6 @@
 import { MS_PER_DAY } from "@/lib/time-constants";
 import { computeLinearRegression } from "@/lib/analytics-queries";
+import { computeTrend } from "@/lib/trend";
 
 export interface AttemptData {
   score: number;
@@ -95,18 +96,7 @@ export function computeStudentRisk(
   const lastAttempt = attempts[attempts.length - 1];
 
   // Trend calculation
-  const first3 = attempts.slice(0, 3);
-  const last3 = attempts.slice(-3);
-  const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
-  const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
-  const trend =
-    attempts.length >= 6
-      ? last3Avg - first3Avg > 15
-        ? "improving"
-        : last3Avg - first3Avg < -15
-          ? "declining"
-          : "stable"
-      : "stable";
+  const trend = computeTrend(attempts);
 
   if (stats.bestScore < 50) {
     riskFactors.push("low_performer");

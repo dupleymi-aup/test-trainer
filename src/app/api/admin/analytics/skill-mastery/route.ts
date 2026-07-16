@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { computeTrend } from "@/lib/trend";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
@@ -154,12 +155,9 @@ export async function GET(request: Request) {
     const coverageRate = Math.round((data.coveredCount / data.totalAttempts) * 100);
 
     // Trend: compare first 3 vs last 3
-    let trend: "improving" | "stable" | "declining" | "none" = "none";
-    if (data.scores.length >= 6) {
-      const first3 = data.scores.slice(0, 3).reduce((s, v) => s + v, 0) / 3;
-      const last3 = data.scores.slice(-3).reduce((s, v) => s + v, 0) / 3;
-      trend = last3 - first3 > 10 ? "improving" : last3 - first3 < -10 ? "declining" : "stable";
-    }
+    const trend = data.scores.length >= 6
+      ? computeTrend(data.scores.map((s) => ({ score: s })), 3, 10)
+      : "none";
 
     // Score progression: group by date, take avg per date
     const dateScores: Record<string, number[]> = {};
@@ -202,9 +200,7 @@ export async function GET(request: Request) {
 
     let trend: "improving" | "stable" | "declining" | "none" = "none";
     if (data.scores.length >= 6) {
-      const first3 = data.scores.slice(0, 3).reduce((s, v) => s + v, 0) / 3;
-      const last3 = data.scores.slice(-3).reduce((s, v) => s + v, 0) / 3;
-      trend = last3 - first3 > 10 ? "improving" : last3 - first3 < -10 ? "declining" : "stable";
+      trend = computeTrend(data.scores.map((s) => ({ score: s })), 3, 10);
     }
 
     const dateScores: Record<string, number[]> = {};

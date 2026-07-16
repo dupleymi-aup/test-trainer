@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { computeTrend } from "@/lib/trend";
 
 interface TeacherMetrics {
   teacherId: string;
@@ -116,14 +117,9 @@ export async function GET(_request: Request) {
           }
 
           // Student trend
-          const first3 = attempts.slice(0, 3);
-          const last3 = attempts.slice(-3);
-          if (first3.length > 0 && last3.length > 0) {
-            const firstAvg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
-            const lastAvg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
-            if (lastAvg - firstAvg > 10) improvingStudents++;
-            else if (lastAvg - firstAvg < -10) decliningStudents++;
-          }
+          const trend = computeTrend(attempts, 3, 10);
+          if (trend === "improving") improvingStudents++;
+          else if (trend === "declining") decliningStudents++;
         }
 
         groups.push({

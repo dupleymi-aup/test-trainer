@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
@@ -62,8 +63,8 @@ export async function POST(
       });
     } catch (createError) {
       if (
-        createError instanceof Error &&
-        createError.message.includes("P2002")
+        createError instanceof Prisma.PrismaClientKnownRequestError &&
+        createError.code === "P2002"
       ) {
         return NextResponse.json({ error: "User is already a member of this group" }, { status: 409 });
       }

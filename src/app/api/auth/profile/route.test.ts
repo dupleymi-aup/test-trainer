@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Prisma } from "@prisma/client";
 
 const mocks = vi.hoisted(() => ({
   requireAuth: vi.fn(),
@@ -273,13 +274,12 @@ describe("PUT /api/auth/profile", () => {
     });
 
     it("handles P2002 unique constraint error", async () => {
-      const p2002Error = new Error("Unique constraint failed on the fields: (`phone`)");
-      p2002Error.message = "Unique constraint failed on the fields: (`phone`)";
-      p2002Error.name = "PrismaClientKnownRequestError";
-      Object.defineProperty(p2002Error, "message", {
-        value: "Unique constraint failed on the fields: (`phone`) P2002",
-      });
-      mocks.userUpdate.mockRejectedValue(p2002Error);
+      mocks.userUpdate.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError("Unique constraint failed on the fields: (`phone`)", {
+          code: "P2002",
+          clientVersion: "5.0.0",
+        })
+      );
 
       const res = await PUT(makePutRequest({ phone: "+79991234567" }));
       const json = await res.json();

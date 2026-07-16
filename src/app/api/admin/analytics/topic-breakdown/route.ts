@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { computeTrend } from "@/lib/trend";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(req: NextRequest) {
@@ -77,7 +78,7 @@ export async function GET(req: NextRequest) {
       avgBvCoverage: Math.round(data.bvCoverages.reduce((s, v) => s + v, 0) / data.bvCoverages.length),
       avgTimeSpent: Math.round(data.timeSpent.reduce((s, v) => s + v, 0) / data.timeSpent.length),
       attemptsCount: data.scores.length,
-      trend: computeTrend(data.scores),
+      trend: computeTrend(data.scores.map((s) => ({ score: s })), 3, 10),
     }));
 
     // Subtopic breakdown: EC/BV per topic
@@ -117,14 +118,6 @@ export async function GET(req: NextRequest) {
     setCache(cacheKey, result, DEFAULT_TTL.medium);
     return NextResponse.json(result);
   });
-}
-
-function computeTrend(scores: number[]): "improving" | "declining" | "stable" {
-  if (scores.length < 3) return "stable";
-  const first3 = scores.slice(0, 3).reduce((s, v) => s + v, 0) / 3;
-  const last3 = scores.slice(-3).reduce((s, v) => s + v, 0) / 3;
-  const delta = last3 - first3;
-  return delta > 10 ? "improving" : delta < -10 ? "declining" : "stable";
 }
 
 function computeMissRate(attempts: { taskId: string; coveredEcIds: string }[], taskId: number, ecId: string): number {

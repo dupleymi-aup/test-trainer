@@ -9,6 +9,7 @@ import { z } from "zod";
 import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { sanitizeCSVValue, sanitizeFilename } from "@/lib/csv-utils";
+import { computeTrend } from "@/lib/trend";
 
 const exportReportSchema = z.object({
   reportType: z.enum([
@@ -190,11 +191,7 @@ export async function POST(req: Request) {
         const bestScore = attempts.reduce((max, a) => Math.max(max, a.score), 0);
         const avgScore = Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length);
         const lastAttempt = attempts[attempts.length - 1].createdAt;
-        const first3 = attempts.slice(0, 3);
-        const last3 = attempts.slice(-3);
-        const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
-        const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
-        const trend = attempts.length >= 6 ? (last3Avg - first3Avg > 15 ? "improving" : last3Avg - first3Avg < -15 ? "declining" : "stable") : "stable";
+        const trend = computeTrend(attempts);
         const riskFactors: string[] = [];
         if (bestScore < 50) riskFactors.push("low_performer");
         if (trend === "declining") riskFactors.push("declining");
@@ -578,11 +575,8 @@ export async function POST(req: Request) {
       const avgScore = Math.round(attempts.reduce((sum, a) => sum + a.score, 0) / attempts.length);
       const lastAttempt = attempts[attempts.length - 1].createdAt;
 
-      const first3 = attempts.slice(0, 3);
-      const last3 = attempts.slice(-3);
-      const first3Avg = first3.reduce((s, a) => s + a.score, 0) / first3.length;
-      const last3Avg = last3.reduce((s, a) => s + a.score, 0) / last3.length;
-      const trend = attempts.length >= 6 ? (last3Avg - first3Avg > 15 ? "Улучшение" : last3Avg - first3Avg < -15 ? "Снижение" : "Стабильно") : "Стабильно";
+      const trendEn = computeTrend(attempts);
+      const trend = trendEn === "improving" ? "Улучшение" : trendEn === "declining" ? "Снижение" : "Стабильно";
 
       const riskFactors: string[] = [];
       if (bestScore < 50) riskFactors.push("Низкий балл");
@@ -707,13 +701,8 @@ export async function POST(req: Request) {
       const lastAttempt = attempts.length > 0 ? attempts[attempts.length - 1].createdAt : null;
 
       // Trend
-      const first3 = attempts.slice(0, 3);
-      const last3 = attempts.slice(-3);
-      const first3Avg = first3.length > 0 ? first3.reduce((s, a) => s + a.score, 0) / first3.length : 0;
-      const last3Avg = last3.length > 0 ? last3.reduce((s, a) => s + a.score, 0) / last3.length : 0;
-      const trend = attempts.length >= 6
-        ? last3Avg - first3Avg > 15 ? "Улучшение" : last3Avg - first3Avg < -15 ? "Снижение" : "Стабильно"
-        : "Стабильно";
+      const trendEn = computeTrend(attempts);
+      const trend = trendEn === "improving" ? "Улучшение" : trendEn === "declining" ? "Снижение" : "Стабильно";
 
       // Risk
       const riskFactors: string[] = [];

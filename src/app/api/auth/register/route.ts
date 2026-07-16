@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { sendEmail, generateVerificationEmail } from "@/lib/email";
@@ -83,8 +84,8 @@ export async function POST(req: Request) {
       });
     } catch (createError) {
       if (
-        createError instanceof Error &&
-        createError.message.includes("P2002")
+        createError instanceof Prisma.PrismaClientKnownRequestError &&
+        createError.code === "P2002"
       ) {
         return NextResponse.json(
           { error: "A user with this email or phone already exists" },

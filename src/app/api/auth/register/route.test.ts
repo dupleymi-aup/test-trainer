@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 const { mocks } = vi.hoisted(() => ({
   mocks: {
@@ -115,7 +116,12 @@ describe("POST /api/auth/register", () => {
 
   it("returns 409 on Prisma unique constraint violation", async () => {
     mocks.userFindFirst.mockResolvedValue(null);
-    mocks.userCreate.mockRejectedValue(new Error("P2002 unique constraint"));
+    mocks.userCreate.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "5.0.0",
+      })
+    );
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(409);
   });
