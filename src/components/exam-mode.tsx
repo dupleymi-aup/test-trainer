@@ -22,7 +22,7 @@ import {
 import { motion } from "framer-motion";
 import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2, Download, Lightbulb, AlertTriangle, Target } from "lucide-react";
 import { Confetti } from "./confetti";
-import { tasks, runReferenceFunction } from "@/lib/tasks";
+import { tasks } from "@/lib/tasks";
 import type { Task } from "@/lib/tasks";
 import { evaluateTestCases } from "@/lib/evaluator";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { formatTimer } from "@/lib/format-time";
 import { saveAttempt } from "@/lib/storage";
 import { apiFetch } from "@/lib/api-client";
-import { parseInputValue } from "@/lib/utils";
+import { calculateResult } from "@/lib/calculate";
 import { ResultsPanel } from "./results-panel";
 import { categories } from "@/lib/constants";
 
@@ -324,21 +324,12 @@ export function ExamMode() {
     const task = examTasks[currentTaskIndex];
     if (!task || examInputs.some((v) => v.trim() === "")) return;
     setIsCalculating(true);
-    requestAnimationFrame(() => {
-      try {
-        const parsedInputs = examInputs.map(parseInputValue);
-        const { result, error } = runReferenceFunction(task.id, parsedInputs);
-        if (error) {
-          setExamExpected(`Ошибка: ${error}`);
-        } else {
-          const output = typeof result === "object" ? JSON.stringify(result) : String(result);
-          setExamExpected(output);
-        }
-      } catch {
-        setExamExpected("Ошибка вычисления");
-      } finally {
-        setIsCalculating(false);
-      }
+    calculateResult({
+      inputs: examInputs,
+      taskId: task.id,
+      onResult: setExamExpected,
+      onError: (msg) => setExamExpected(`Ошибка: ${msg}`),
+      onFinally: () => setIsCalculating(false),
     });
   }, [examTasks, currentTaskIndex, examInputs]);
 

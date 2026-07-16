@@ -21,9 +21,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Plus, Calculator, HelpCircle } from "lucide-react";
 import type { Task, TestCaseCategory } from "@/lib/tasks";
-import { runReferenceFunction } from "@/lib/tasks";
 import { categories } from "@/lib/constants";
-import { parseInputValue } from "@/lib/utils";
+import { calculateResult } from "@/lib/calculate";
 
 interface TestFormProps {
   task: Task;
@@ -52,22 +51,12 @@ export function TestForm({ task, onAdd }: TestFormProps) {
   const handleCalculate = useCallback(() => {
     if (inputs.some((v) => v.trim() === "")) return;
     setIsCalculating(true);
-    // Use requestAnimationFrame so the button shows loading state
-    requestAnimationFrame(() => {
-      try {
-        const parsedInputs = inputs.map(parseInputValue);
-        const { result, error } = runReferenceFunction(task.id, parsedInputs);
-        if (error) {
-          setExpected(`${t("error")} ${error}`);
-        } else {
-          const output = typeof result === "object" ? JSON.stringify(result) : String(result);
-          setExpected(output);
-        }
-      } catch {
-        setExpected(t("computationError"));
-      } finally {
-        setIsCalculating(false);
-      }
+    calculateResult({
+      inputs,
+      taskId: task.id,
+      onResult: setExpected,
+      onError: (msg) => setExpected(`${t("error")} ${msg}`),
+      onFinally: () => setIsCalculating(false),
     });
   }, [inputs, task.id, t]);
 
