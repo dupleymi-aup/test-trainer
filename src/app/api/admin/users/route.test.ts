@@ -90,7 +90,7 @@ function setAdminAuthorized() {
 
 function setAdminUnauthorized() {
   mocks.adminGuardResult = {
-    response: NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 }),
+    response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
   };
 }
 
@@ -309,7 +309,7 @@ describe("GET /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(403);
-      expect(json.error).toBe("Forbidden: admin access required");
+      expect(json.error).toBe("Forbidden");
     });
   });
 
@@ -540,7 +540,7 @@ describe("POST /api/admin/users", () => {
       const json = await res.json();
 
       expect(res.status).toBe(403);
-      expect(json.error).toBe("Forbidden: admin access required");
+      expect(json.error).toBe("Forbidden");
     });
 
     it("does NOT attempt to create user when not authorized", async () => {

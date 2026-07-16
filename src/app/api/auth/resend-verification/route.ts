@@ -6,23 +6,20 @@ import { sendEmail, generateVerificationEmail } from "@/lib/email";
 import { generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
+    const session = unwrapGuard(await requireAuth());
+    unwrapGuard(await requireCSRF(req));
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-
-    const result = checkRateLimit(`resend:${auth.session.userId}`, rateLimits.resendVerification);
+    const result = checkRateLimit(`resend:${session.userId}`, rateLimits.resendVerification);
     if (result.limited) {
       return createRateLimitResponse(result.resetAt);
     }
 
     const user = await db.user.findUnique({
-      where: { id: auth.session.userId },
+      where: { id: session.userId },
       select: { id: true, email: true, emailVerified: true },
     });
 

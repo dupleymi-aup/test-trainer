@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { Prisma, Role } from "@prisma/client";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { parsePositiveInt } from "@/lib/validate";
 import { passwordSchema } from "@/lib/shared-schemas";
 
@@ -13,8 +13,7 @@ const RoleSchema = z.nativeEnum(Role);
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const { searchParams } = new URL(req.url);
     const rawRole = searchParams.get("role");
@@ -115,12 +114,8 @@ const createUserSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
-
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireAdmin());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`adminUserCrud:${ip}`, rateLimits.adminUserCrud);

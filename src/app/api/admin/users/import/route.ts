@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Role } from "@prisma/client";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
@@ -16,12 +16,8 @@ const importSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
-
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    const session = unwrapGuard(await requireAdmin());
+    unwrapGuard(await requireCSRF(req));
 
     // Rate limiting: protect against resource exhaustion
     const ip = getClientIp(req);

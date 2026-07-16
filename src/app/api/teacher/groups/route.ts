@@ -3,14 +3,12 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     // Filter groups by teacher ownership — prevent access to all groups on platform
     const where = session.role === "ADMIN" ? {} : { createdByUserId: session.userId };
@@ -35,14 +33,11 @@ const createGroupSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("teacherGroupCrud:" + ip, rateLimits.teacherGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
+    unwrapGuard(await requireCSRF(req));
 
     const bodyResult = await parseRequestBody(req, createGroupSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;
