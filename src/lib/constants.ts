@@ -18,6 +18,15 @@ export const categories: TestCaseCategory[] = [
   "Недопустимый тип",
 ];
 
+/** Score thresholds used across the platform */
+export const SCORE_EXCELLENT = 80;
+export const SCORE_GOOD = 75;
+export const SCORE_PASS = 50;
+export const SCORE_WEAK_AREA = 70;
+export const SCORE_LOW_PERFORMER = 50;
+export const MIN_ATTEMPTS_FOR_TREND = 6;
+export const MIN_ATTEMPTS_FOR_ANALYSIS = 3;
+
 export const categoryColors: Record<TestCaseCategory, string> = {
   "Нормальное значение": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
   "Граничное значение": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",

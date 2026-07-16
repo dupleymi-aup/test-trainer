@@ -1,6 +1,7 @@
 import { MS_PER_DAY } from "@/lib/time-constants";
 import { computeLinearRegression } from "@/lib/analytics-queries";
 import { computeTrend } from "@/lib/trend";
+import { SCORE_LOW_PERFORMER, MIN_ATTEMPTS_FOR_ANALYSIS, SCORE_PASS } from "@/lib/constants";
 
 export interface AttemptData {
   score: number;
@@ -98,7 +99,7 @@ export function computeStudentRisk(
   // Trend calculation
   const trend = computeTrend(attempts);
 
-  if (stats.bestScore < 50) {
+  if (stats.bestScore < SCORE_LOW_PERFORMER) {
     riskFactors.push("low_performer");
     recommendations.push(riskFactorLabels.low_performer.recommendation);
   }
@@ -113,17 +114,17 @@ export function computeStudentRisk(
     recommendations.push(riskFactorLabels.inactive.recommendation);
   }
 
-  if (attempts.length < 3 && createdAt < sevenDaysAgo) {
+  if (attempts.length < MIN_ATTEMPTS_FOR_ANALYSIS && createdAt < sevenDaysAgo) {
     riskFactors.push("low_engagement");
     recommendations.push(riskFactorLabels.low_engagement.recommendation);
   }
 
-  if (stats.avgEc < 50) {
+  if (stats.avgEc < SCORE_PASS) {
     riskFactors.push("poor_ec_coverage");
     recommendations.push(riskFactorLabels.poor_ec_coverage.recommendation);
   }
 
-  if (stats.avgBv < 50) {
+  if (stats.avgBv < SCORE_PASS) {
     riskFactors.push("poor_bv_coverage");
     recommendations.push(riskFactorLabels.poor_bv_coverage.recommendation);
   }
@@ -320,7 +321,7 @@ export function computeAnomalyFlags(
 export function predictNextScore(
   attempts: { score: number; createdAt: Date }[]
 ): { predicted: number; trend: "improving" | "declining" | "stable"; confidence: number } | null {
-  if (attempts.length < 3) return null;
+  if (attempts.length < MIN_ATTEMPTS_FOR_ANALYSIS) return null;
 
   const points: [number, number][] = attempts.map((a, i) => [i, a.score]);
   const regression = computeLinearRegression(points);
