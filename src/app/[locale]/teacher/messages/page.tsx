@@ -48,26 +48,27 @@ export default function MessagesPage() {
   // Student list for recipient selection
   const [students, setStudents] = useState<Array<{ id: string; name: string | null; email: string | null; group: string | null }>>([]);
 
-  const loadMessages = useCallback(async () => {
+  const loadMessages = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const folder = tab === "sent" ? "sent" : "inbox";
-      const res = await fetch(`/api/teacher/messages?folder=${folder}&limit=50`);
+      const res = await fetch(`/api/teacher/messages?folder=${folder}&limit=50`, { signal });
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages);
         setUnreadCount(data.unreadCount || 0);
       }
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       logger.warn("Failed to load messages", { error: e });
     } finally {
       setLoading(false);
     }
   }, [tab]);
 
-  const loadStudents = async () => {
+  const loadStudents = async (signal?: AbortSignal) => {
     try {
-      const res = await fetch("/api/teacher/students");
+      const res = await fetch("/api/teacher/students", { signal });
       if (res.ok) {
         const data = await res.json();
         setStudents(data.students || []);
@@ -76,8 +77,10 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    loadMessages();
-    loadStudents();
+    const controller = new AbortController();
+    loadMessages(controller.signal);
+    loadStudents(controller.signal);
+    return () => controller.abort();
   }, [loadMessages, tab]);
 
   const sendMessage = async () => {

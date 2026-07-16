@@ -50,18 +50,21 @@ export default function TemplatesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadTemplates();
+    const controller = new AbortController();
+    loadTemplates(controller.signal);
+    return () => controller.abort();
   }, []);
 
-  const loadTemplates = async () => {
+  const loadTemplates = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/teacher/templates");
+      const res = await fetch("/api/teacher/templates", { signal });
       if (res.ok) {
         const data = await res.json();
         setTemplates(data.templates || []);
       }
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       logger.warn("Failed to load templates", { error: e });
     } finally {
       setLoading(false);

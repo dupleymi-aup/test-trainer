@@ -90,8 +90,8 @@ export default function AdminGroupsPage() {
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [searchGroup, setSearchGroup] = useState("");
 
-  const fetchGroups = () => {
-    fetch("/api/admin/groups")
+  const fetchGroups = (signal?: AbortSignal) => {
+    fetch("/api/admin/groups", { signal })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -104,15 +104,18 @@ export default function AdminGroupsPage() {
   };
 
   useEffect(() => {
-    fetchGroups();
+    const controller = new AbortController();
+    fetchGroups(controller.signal);
+    return () => controller.abort();
   }, []);
 
   // Fetch task counts for all groups
   useEffect(() => {
+    const controller = new AbortController();
     const counts: Record<string, number> = {};
     const promises = groups.map(async (g) => {
       try {
-        const res = await fetch(`/api/admin/groups/${g.id}/tasks`);
+        const res = await fetch(`/api/admin/groups/${g.id}/tasks`, { signal: controller.signal });
         if (!res.ok) {
           counts[g.id] = 0;
           return;
@@ -124,6 +127,7 @@ export default function AdminGroupsPage() {
       }
     });
     Promise.all(promises).then(() => setTaskCount(counts)).catch(() => setTaskCount(counts));
+    return () => controller.abort();
   }, [groups]);
 
   const handleCreate = async () => {

@@ -50,8 +50,9 @@ export function NotificationsBell({
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchNotifications = () => {
-      fetch(apiEndpoint)
+      fetch(apiEndpoint, { signal: controller.signal })
         .then(async (r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`);
           return r.json();
@@ -61,6 +62,7 @@ export function NotificationsBell({
           setUnreadCount(data.unreadCount || 0);
         })
         .catch((err) => {
+          if (err.name === "AbortError") return;
           logger.warn(`Failed to fetch ${logPrefix} notifications`, {
             error: err instanceof Error ? err.message : String(err),
           });
@@ -68,7 +70,7 @@ export function NotificationsBell({
     };
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 60_000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); controller.abort(); };
   }, [apiEndpoint, logPrefix]);
 
   const getIcon = (type: string) => iconMap[type] ?? <Bell className="h-4 w-4" />;

@@ -31,16 +31,17 @@ export default function StudentTimelinePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTimeline = async (studentId: string) => {
+  const fetchTimeline = async (studentId: string, signal?: AbortSignal) => {
     if (!studentId) return;
     setLoading(true);
     setError(null);
     try {
-      const r = await fetch(`/api/admin/analytics/student-timeline?studentId=${studentId}`);
+      const r = await fetch(`/api/admin/analytics/student-timeline?studentId=${studentId}`, { signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const d = await r.json();
       setData(d);
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
@@ -49,7 +50,10 @@ export default function StudentTimelinePage() {
   };
 
   useEffect(() => {
-    if (preselectedStudent) fetchTimeline(preselectedStudent);
+    if (!preselectedStudent) return;
+    const controller = new AbortController();
+    fetchTimeline(preselectedStudent, controller.signal);
+    return () => controller.abort();
   }, [preselectedStudent]);
 
   return (

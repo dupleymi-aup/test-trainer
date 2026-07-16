@@ -30,12 +30,12 @@ export default function GradebookMatrixPage() {
   const [pendingChanges, setPendingChanges] = useState<Record<string, CellEdit>>({});
   const [saving, setSaving] = useState(false);
 
-  const fetchData = (groupId = "") => {
+  const fetchData = (groupId = "", signal?: AbortSignal) => {
     setLoading(true);
     const url = groupId ? `/api/teacher/gradebook?groupId=${groupId}` : "/api/teacher/gradebook";
     Promise.all([
-      fetch(url).then((r) => r.ok ? r.json() : { grades: [], students: [] }),
-      fetch("/api/teacher/groups").then((r) => r.ok ? r.json() : { groups: [] }),
+      fetch(url, { signal }).then((r) => r.ok ? r.json() : { grades: [], students: [] }),
+      fetch("/api/teacher/groups", { signal }).then((r) => r.ok ? r.json() : { groups: [] }),
     ])
       .then(([data, groupData]) => {
         setGrades(data.grades || []);
@@ -46,7 +46,11 @@ export default function GradebookMatrixPage() {
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchData(undefined, controller.signal);
+    return () => controller.abort();
+  }, []);
 
   const handleGroupChange = (groupId: string) => { setSelectedGroup(groupId); fetchData(groupId); };
 
