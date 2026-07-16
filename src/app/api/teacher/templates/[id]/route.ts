@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { safeJsonParse } from "@/lib/utils";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
@@ -12,9 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(_req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const template = await db.courseTemplate.findUnique({
       where: { id: (await params).id },
@@ -52,12 +50,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`teacherTemplateCrud:${ip}`, rateLimits.teacherTemplateCrud);
@@ -130,9 +125,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(_req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const ip = getClientIp(_req);
     const rateLimit = checkRateLimit(`teacherTemplateCrud:${ip}`, rateLimits.teacherTemplateCrud);

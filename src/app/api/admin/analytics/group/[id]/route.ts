@@ -3,15 +3,14 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(_req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const { id } = await params;
 

@@ -3,16 +3,15 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireStudent());
 
     const favorites = await db.favoriteTask.findMany({
-      where: { userId: auth.session.userId },
+      where: { userId: auth.userId },
       orderBy: { createdAt: "desc" },
       select: { id: true, taskId: true, createdAt: true },
     });
@@ -27,11 +26,8 @@ const favoriteSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
-
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    const auth = unwrapGuard(await requireStudent());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentFavoriteToggle:${ip}`, rateLimits.studentFavoriteToggle);
@@ -43,7 +39,7 @@ export async function POST(req: Request) {
     if (!bodyResult.success) return bodyResult.errorResponse;
 
     const existing = await db.favoriteTask.findUnique({
-      where: { userId_taskId: { userId: auth.session.userId, taskId: bodyResult.data.taskId } },
+      where: { userId_taskId: { userId: auth.userId, taskId: bodyResult.data.taskId } },
     });
 
     if (existing) {
@@ -52,7 +48,7 @@ export async function POST(req: Request) {
 
     const favorite = await db.favoriteTask.create({
       data: {
-        userId: auth.session.userId,
+        userId: auth.userId,
         taskId: bodyResult.data.taskId,
       },
     });
@@ -63,11 +59,8 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
-
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    const auth = unwrapGuard(await requireStudent());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentFavoriteToggle:${ip}`, rateLimits.studentFavoriteToggle);
@@ -85,12 +78,12 @@ export async function DELETE(req: Request) {
     }
 
     await db.favoriteTask.deleteMany({
-      where: { userId: auth.session.userId, taskId: parsedTaskId },
+      where: { userId: auth.userId, taskId: parsedTaskId },
     });
 
     await db.activityLog.create({
       data: {
-        userId: auth.session.userId,
+        userId: auth.userId,
         action: "FAVORITE_REMOVE",
         entity: "FavoriteTask",
         details: JSON.stringify({ taskId: parsedTaskId }),

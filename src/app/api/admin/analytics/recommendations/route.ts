@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 
 interface TaskRecommendation {
@@ -32,8 +32,7 @@ interface StudentRecommendation {
 
 export async function GET(request: Request) {
   return withErrorHandler(request, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { computeStudentStats, computeStudentRisk } from "@/lib/risk-analysis";
-import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { paginationSchema, searchParamsSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
 
@@ -14,8 +14,7 @@ const studentsParamsSchema = paginationSchema.merge(searchParamsSchema).extend({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
   const params = parseSearchParams(req, studentsParamsSchema);
   if (!params.success) return params.errorResponse;

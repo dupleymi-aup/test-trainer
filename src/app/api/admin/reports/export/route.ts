@@ -6,7 +6,7 @@ import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { sanitizeCSVValue, sanitizeFilename } from "@/lib/csv-utils";
 
@@ -50,10 +50,8 @@ async function logExport(userId: string, reportType: string, format: string, det
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-  const guard = await requireAdmin();
-  if ("response" in guard) return guard.response;
-  const csrf = await requireCSRF(req);
-  if ("response" in csrf) return csrf.response;
+  const session = unwrapGuard(await requireAdmin());
+  unwrapGuard(await requireCSRF(req));
 
   const ip = getClientIp(req);
   const rateLimit = checkRateLimit(`adminExport:${ip}`, rateLimits.adminReportExport);
@@ -66,7 +64,7 @@ export async function POST(req: Request) {
 
   const { reportType, startDate, endDate, format, groupId } = bodyResult.data;
 
-  const userId = guard.session.userId;
+  const userId = session.userId;
 
   const taskMap = new Map(
     tasks.map((t) => [String(t.id), { name: t.name, difficulty: t.difficulty }])

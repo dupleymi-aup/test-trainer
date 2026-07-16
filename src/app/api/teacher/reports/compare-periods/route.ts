@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const { searchParams } = new URL(req.url);
     const period1Start = searchParams.get("period1Start");

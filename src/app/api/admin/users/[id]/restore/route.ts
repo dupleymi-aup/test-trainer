@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function PATCH(
@@ -10,12 +10,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(_req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
     const csrf = await requireCSRF(_req);
     if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
     const ip = getClientIp(_req);
     const rateLimit = checkRateLimit(`adminUserRestore:${ip}`, rateLimits.adminUserRestore);
     if (rateLimit.limited) {
@@ -23,7 +20,6 @@ export async function PATCH(
     }
 
     const { id } = await params;
-
     const user = await db.user.findUnique({
       where: { id },
       select: { deletedAt: true },

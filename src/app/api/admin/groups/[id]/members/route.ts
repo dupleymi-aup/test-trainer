@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
@@ -11,8 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(_req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const { id } = await params;
     const members = await db.userGroup.findMany({
@@ -37,16 +36,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
-    const { id } = await params;
+    unwrapGuard(await requireCSRF(req));    const { id } = await params;
     const bodyResult = await parseRequestBody(req, addMemberSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;
 
@@ -85,14 +79,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-
+    unwrapGuard(await requireCSRF(req));
     const { id } = await params;
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
@@ -105,9 +96,9 @@ export async function DELETE(
       where: { userId_groupId: { userId, groupId: id } },
     });
 
-    await db.activityLog.create({
+      await db.activityLog.create({
       data: {
-        userId: guard.session.userId,
+        userId: session.userId,
         action: "GROUP_MEMBER_REMOVE",
         entity: "UserGroup",
         entityId: id,

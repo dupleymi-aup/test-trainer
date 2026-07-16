@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { tTest } from "@/lib/analytics-queries";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("group-comparison");
     const cached = getCache(cacheKey);

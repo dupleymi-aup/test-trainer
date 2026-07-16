@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const changeRoleSchema = z.object({
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
@@ -15,12 +15,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
+    const session = unwrapGuard(await requireAdmin());
+    unwrapGuard(await requireCSRF(req));
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`adminRoleChange:${ip}`, rateLimits.adminRoleChange);
     if (rateLimit.limited) {

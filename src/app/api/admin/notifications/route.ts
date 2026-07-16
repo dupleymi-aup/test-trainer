@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createNotificationSchema = z.object({
@@ -27,8 +27,7 @@ const markReadSchema = z.object({
  */
 export async function GET(req: NextRequest) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const { searchParams } = new URL(req.url);
     const rawPage = parseInt(searchParams.get("page") || "1", 10);
@@ -73,13 +72,11 @@ export async function GET(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminNotifications:" + ip, rateLimits.adminNotifications);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const bodyResult = await parseRequestBody(req, markReadSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;
@@ -108,13 +105,11 @@ export async function PATCH(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminNotifications:" + ip, rateLimits.adminNotifications);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const bodyResult = await parseRequestBody(req, createNotificationSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;
@@ -143,13 +138,11 @@ export async function POST(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminNotifications:" + ip, rateLimits.adminNotifications);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const { searchParams } = new URL(req.url);
     const all = searchParams.get("all") === "true";
@@ -162,7 +155,7 @@ export async function DELETE(req: NextRequest) {
 
     await db.activityLog.create({
       data: {
-        userId: guard.session.userId,
+        userId: session.userId,
         action: "NOTIFICATIONS_DELETE",
         entity: "Notification",
         details: JSON.stringify({ deleteAll: all }),

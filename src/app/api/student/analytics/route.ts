@@ -2,15 +2,13 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
+import { validateApiResponse, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { studentAnalyticsResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireStudent();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireStudent());
 
     const rateResult = checkRateLimit(`studentAnalytics:${session.userId}`, rateLimits.studentAnalytics);
     if (rateResult.limited) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, validateApiResponse, withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, validateApiResponse, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { leaderboardResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
@@ -15,10 +15,9 @@ const leaderboardParamsSchema = z.object({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireStudent());
 
-    const rateResult = checkRateLimit(`studentLeaderboard:${auth.session.userId}`, rateLimits.studentLeaderboard);
+    const rateResult = checkRateLimit(`studentLeaderboard:${auth.userId}`, rateLimits.studentLeaderboard);
     if (rateResult.limited) {
       return createRateLimitResponse(rateResult.resetAt);
     }
@@ -136,7 +135,7 @@ export async function GET(req: Request) {
       }));
 
     let currentUserRank: { rank: number; stats: typeof userStats[string] } | null = null;
-    const currentIndex = sortedAll.findIndex((u) => u.userId === auth.session.userId);
+    const currentIndex = sortedAll.findIndex((u) => u.userId === auth.userId);
     if (currentIndex >= 0) {
       currentUserRank = { rank: currentIndex + 1, stats: sortedAll[currentIndex] };
     }

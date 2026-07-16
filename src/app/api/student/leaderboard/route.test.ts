@@ -47,7 +47,21 @@ vi.mock("@/lib/api-error-handler", () => ({
   validateApiResponse: vi.fn().mockImplementation((_schema: unknown, data: unknown) => data),
   withErrorHandler: vi.fn(async (_req: unknown, handler: () => Promise<NextResponse>) => {
     try { return await handler(); }
-    catch { return NextResponse.json({ error: "Internal server error" }, { status: 500 }); }
+    catch (error: unknown) {
+      const appErr = error as { statusCode?: number; message?: string };
+      if (appErr.statusCode) {
+        return NextResponse.json({ error: appErr.message || "Error" }, { status: appErr.statusCode });
+      }
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+  }),
+  unwrapGuard: vi.fn(<T>(result: { session: T } | { response: Response; status: number }): T => {
+    if ("response" in result) {
+      const err = new Error("Error") as Error & { statusCode: number };
+      err.statusCode = result.response.status;
+      throw err;
+    }
+    return (result as { session: T }).session;
   }),
 }));
 

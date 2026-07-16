@@ -3,7 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 const saveExamSchema = z.object({
@@ -22,8 +22,7 @@ const saveExamSchema = z.object({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireStudent());
 
     const { searchParams } = new URL(req.url);
     const rawPage = parseInt(searchParams.get("page") || "1", 10);
@@ -31,7 +30,7 @@ export async function GET(req: Request) {
 
     const [exams, total] = await Promise.all([
       db.studentExam.findMany({
-        where: { userId: auth.session.userId },
+        where: { userId: auth.userId },
         orderBy: { createdAt: "desc" },
         take: 20,
         skip: (page - 1) * 20,
@@ -47,7 +46,7 @@ export async function GET(req: Request) {
           createdAt: true,
         },
       }),
-      db.studentExam.count({ where: { userId: auth.session.userId } }),
+      db.studentExam.count({ where: { userId: auth.userId } }),
     ]);
 
     return NextResponse.json({ exams, total, page });
@@ -56,11 +55,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
-
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    const auth = unwrapGuard(await requireStudent());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentExamSubmit:${ip}`, rateLimits.studentExamSubmit);
@@ -73,7 +69,7 @@ export async function POST(req: Request) {
 
     const exam = await db.studentExam.create({
       data: {
-        userId: auth.session.userId,
+        userId: auth.userId,
         taskIds: JSON.stringify(bodyResult.data.taskIds),
         timeLimit: bodyResult.data.timeLimit,
         mode: bodyResult.data.mode,

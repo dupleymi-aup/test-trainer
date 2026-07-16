@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const exportJsonSchema = z.object({
   groupId: z.string().optional(),
@@ -15,12 +15,8 @@ const exportJsonSchema = z.object({
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
+    const session = unwrapGuard(await requireTeacherOrAdmin());
+    unwrapGuard(await requireCSRF(req));
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`teacherReportExport:${ip}`, rateLimits.teacherReportExport);
     if (rateLimit.limited) {

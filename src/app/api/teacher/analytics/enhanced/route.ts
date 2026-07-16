@@ -3,7 +3,7 @@ import type { StoredTestCase } from "@/lib/evaluator";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { withErrorHandler, parseSearchParams } from "@/lib/api-error-handler";
+import { withErrorHandler, parseSearchParams, unwrapGuard } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -16,9 +16,7 @@ const enhancedParamsSchema = z.object({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const params = parseSearchParams(req, enhancedParamsSchema);
     if (!params.success) return params.errorResponse;
@@ -243,9 +241,9 @@ export async function GET(req: Request) {
   };
 
   // 7. Group Comparison (only groups owned by the teacher, or all for admin)
-  const groupWhere = guard.session.role === "ADMIN"
+  const groupWhere = session.role === "ADMIN"
     ? {}
-    : { createdByUserId: guard.session.userId };
+    : { createdByUserId: session.userId };
 
   const groups = await db.group.findMany({
     where: groupWhere,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const analyticsParamsSchema = z.object({
@@ -10,9 +10,7 @@ const analyticsParamsSchema = z.object({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const params = parseSearchParams(req, analyticsParamsSchema);
     if (!params.success) return params.errorResponse;

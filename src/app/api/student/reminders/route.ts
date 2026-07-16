@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const updateReminderSchema = z.object({
   reminderId: z.string().optional(),
@@ -18,9 +18,7 @@ const updateReminderSchema = z.object({
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireStudent();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireStudent());
 
     const now = new Date();
     const sevenDaysFromNow = new Date(now);
@@ -68,11 +66,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireStudent();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireStudent());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`studentReminders:${ip}`, rateLimits.studentReminders);

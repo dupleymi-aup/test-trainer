@@ -2,14 +2,13 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { checkRateLimit, getClientIp, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { readFileSync, existsSync } from "fs";
 import path from "path";
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const ip = getClientIp(req);
     const rl = checkRateLimit(`admin-backup:${ip}`, rateLimits.adminReportExport);

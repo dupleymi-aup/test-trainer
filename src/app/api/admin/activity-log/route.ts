@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { paginationSchema } from "@/lib/shared-schemas";
 import { z } from "zod";
 
@@ -14,9 +14,7 @@ const activityLogParamsSchema = paginationSchema.extend({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireAdmin());
 
     const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminSettings);
     if (rateResult.limited) {

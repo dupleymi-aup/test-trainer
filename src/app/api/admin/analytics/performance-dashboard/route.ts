@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
 import { AttemptData, batchComputeStudentRisk } from "@/lib/risk-analysis";
 import { MS_PER_DAY } from "@/lib/time-constants";
@@ -19,8 +19,7 @@ const dashboardParamsSchema = z.object({
 
 export async function GET(req: NextRequest) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const params = parseSearchParams(req, dashboardParamsSchema);
     if (!params.success) return params.errorResponse;

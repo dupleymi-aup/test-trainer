@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, getClientIp, createRateLimitResponse, rateLimits } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
 
     const ip = getClientIp(req);
     const rl = checkRateLimit(`admin-export:${ip}`, rateLimits.adminReportExport);
@@ -38,7 +37,7 @@ export async function GET(req: Request) {
     if (format === "json") {
       db.activityLog.create({
         data: {
-          userId: guard.session.userId,
+          userId: session.userId,
           action: "EXPORT_REPORT",
           entity: "User",
           details: JSON.stringify({ reportType: "user-list", format: "json", count: users.length }),
@@ -69,9 +68,9 @@ export async function GET(req: Request) {
     const csv = "\uFEFF" + csvRows.join("\n");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-    db.activityLog.create({
-      data: {
-        userId: guard.session.userId,
+      db.activityLog.create({
+        data: {
+          userId: session.userId,
         action: "EXPORT_REPORT",
         entity: "User",
         details: JSON.stringify({ reportType: "user-list", format, count: users.length }),

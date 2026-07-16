@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const notificationSchema = z.object({
   type: z.string().max(50).regex(/^[A-Z_]+$/, "Type must be uppercase letters and underscores only"),
@@ -19,10 +19,7 @@ const updateNotificationSchema = z.object({
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     // Get notifications for this teacher
     const notifications = await db.activityLog.findMany({
@@ -57,13 +54,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-
-    const { session } = guard;
-
+    const session = unwrapGuard(await requireTeacherOrAdmin());
+    unwrapGuard(await requireCSRF(req));
     // Rate limit: 20 notifications per hour per teacher
     const result = checkRateLimit(`notifications:${session.userId}`, rateLimits.notifications);
     if (result.limited) {
@@ -92,13 +84,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-
-    const { session } = guard;
-
+    const session = unwrapGuard(await requireTeacherOrAdmin());
+    unwrapGuard(await requireCSRF(req));
     const bodyResult = await parseRequestBody(req, updateNotificationSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;
 

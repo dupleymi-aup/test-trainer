@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const auth = await requireStudent();
-    if ("response" in auth) return auth.response;
+    const auth = unwrapGuard(await requireStudent());
 
     const groupIds = (
       await db.userGroup.findMany({
-        where: { userId: auth.session.userId },
+        where: { userId: auth.userId },
         select: { groupId: true },
       })
     ).map((g) => g.groupId);
@@ -35,7 +34,7 @@ export async function GET() {
     const completedAttempts = allTaskIds.length > 0
       ? await db.attempt.findMany({
           where: {
-            userId: auth.session.userId,
+            userId: auth.userId,
             taskId: { in: [...new Set(allTaskIds)].map(String) },
           },
           select: { taskId: true, score: true },

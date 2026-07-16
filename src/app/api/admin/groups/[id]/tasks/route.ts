@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { tasks } from "@/lib/tasks";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
@@ -12,8 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(_req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const { id } = await params;
 
@@ -50,15 +49,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
+    unwrapGuard(await requireCSRF(req));
     const { id } = await params;
 
     const group = await db.group.findUnique({ where: { id } });
@@ -99,15 +94,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    const session = unwrapGuard(await requireAdmin());
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
+    unwrapGuard(await requireCSRF(req));
     const { id } = await params;
 
     const group = await db.group.findUnique({ where: { id } });

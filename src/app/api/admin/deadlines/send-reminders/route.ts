@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { sendDeadlineReminders } from "@/lib/reminder-dispatch";
 import { secureCompare } from "@/lib/crypto";
-import { parseSearchParams, withErrorHandler } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -30,11 +30,9 @@ export async function POST(req: Request) {
 
     // Fall back to admin auth
     if (!userId) {
-      const guard = await requireAdmin();
-      if ("response" in guard) return guard.response;
-      const csrf = await requireCSRF(req);
-      if ("response" in csrf) return csrf.response;
-      userId = guard.session.userId;
+      const session = unwrapGuard(await requireAdmin());
+      unwrapGuard(await requireCSRF(req));
+      userId = session.userId;
     }
 
     const ip = getClientIp(req);

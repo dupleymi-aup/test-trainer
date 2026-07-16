@@ -3,7 +3,7 @@ import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 const createAnnouncementSchema = z.object({
@@ -15,9 +15,7 @@ const createAnnouncementSchema = z.object({
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const { searchParams } = new URL(req.url);
     const groupId = searchParams.get("groupId");
@@ -51,16 +49,13 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const ip = getClientIp(req);
     const rl = checkRateLimit("teacherAnnouncements:" + ip, rateLimits.teacherAnnouncements);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const bodyResult = await parseRequestBody(req, createAnnouncementSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;
@@ -108,16 +103,13 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const ip = getClientIp(req);
     const rl = checkRateLimit("teacherAnnouncements:" + ip, rateLimits.teacherAnnouncements);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -159,16 +151,13 @@ const updateAnnouncementSchema = z.object({
 
 export async function PATCH(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireTeacherOrAdmin();
-    if ("response" in guard) return guard.response;
-    const { session } = guard;
+    const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const ip = getClientIp(req);
     const rl = checkRateLimit("teacherAnnouncements:" + ip, rateLimits.teacherAnnouncements);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const bodyResult = await parseRequestBody(req, updateAnnouncementSchema);
     if (!bodyResult.success) return bodyResult.errorResponse;

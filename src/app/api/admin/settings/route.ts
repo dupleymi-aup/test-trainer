@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const validSettingKeys = [
   "maxLoginAttempts",
@@ -24,8 +24,7 @@ const updateSettingSchema = z.object({
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     // Seed default settings only if none exist yet
     const existingCount = await db.systemSetting.count();
@@ -73,12 +72,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
-    const { session } = guard;
-
+    const session = unwrapGuard(await requireAdmin());
+    unwrapGuard(await requireCSRF(req));
     // Rate limit settings updates
     const rateResult = checkRateLimit(`admin-settings:${session.userId}`, rateLimits.adminSettings);
     if (rateResult.limited) {

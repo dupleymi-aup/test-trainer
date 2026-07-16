@@ -4,7 +4,7 @@ import { requireCSRF } from "@/lib/csrf-middleware";
 import { invalidateCache, clearCache, getCacheStats } from "@/lib/analytics-cache";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { z } from "zod";
-import { parseRequestBody, withErrorHandler } from "@/lib/api-error-handler";
+import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const invalidateCacheSchema = z.object({
   pattern: z.string().max(200).regex(/^[a-zA-Z0-9\-_.*:]*$/).optional(),
@@ -12,10 +12,8 @@ const invalidateCacheSchema = z.object({
 
 export async function POST(req: NextRequest) {
   return withErrorHandler(req, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireAdmin());
+    unwrapGuard(await requireCSRF(req));
 
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`adminCacheInvalidate:${ip}`, rateLimits.adminCacheInvalidate);
@@ -40,8 +38,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
     return NextResponse.json(getCacheStats());
   });
 }

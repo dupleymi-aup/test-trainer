@@ -57,10 +57,22 @@ vi.mock("@/lib/tasks", () => ({
 
 vi.mock("@/lib/api-error-handler", () => ({
   validateApiResponse: vi.fn(),
+  unwrapGuard: vi.fn(<T>(result: { session: T } | { response: Response; status: number }): T => {
+    if ("response" in result) {
+      const err = new Error("Error") as Error & { statusCode: number };
+      err.statusCode = result.response.status;
+      throw err;
+    }
+    return (result as { session: T }).session;
+  }),
   withErrorHandler: vi.fn(async (_req: unknown, handler: () => Promise<NextResponse>) => {
     try {
       return await handler();
-    } catch {
+    } catch (error: unknown) {
+      const appErr = error as { statusCode?: number; message?: string };
+      if (appErr.statusCode) {
+        return NextResponse.json({ error: appErr.message || "Error" }, { status: appErr.statusCode });
+      }
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }),

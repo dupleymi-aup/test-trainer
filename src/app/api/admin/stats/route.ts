@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
     const [totalUsers, usersByRole, totalAttempts, totalGroups, recentActivity] = await Promise.all([
     db.user.count({ where: { deletedAt: null } }),

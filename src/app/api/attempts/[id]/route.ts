@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth, getTeacherGroupIds } from "@/lib/admin-guard";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withErrorHandler(req, async () => {
-    const auth = await requireAuth();
-    if ("response" in auth) return auth.response;
+    const session = unwrapGuard(await requireAuth());
 
     const { id } = await params;
 
@@ -23,12 +22,12 @@ export async function GET(
     }
 
     // Users can only view their own attempts
-    if (attempt.userId !== auth.session.userId) {
-      if (auth.session.role === "ADMIN") {
+    if (attempt.userId !== session.userId) {
+      if (session.role === "ADMIN") {
         // Admins can view any attempt
-      } else if (auth.session.role === "TEACHER") {
+      } else if (session.role === "TEACHER") {
         // Teachers can only view attempts from students in their own groups
-        const teacherGroupIds = await getTeacherGroupIds(auth.session.userId, auth.session.role);
+        const teacherGroupIds = await getTeacherGroupIds(session.userId, session.role);
         const studentInTeacherGroup = await db.userGroup.findFirst({
           where: {
             userId: attempt.userId,

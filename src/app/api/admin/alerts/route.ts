@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { batchComputeStudentRisk } from "@/lib/risk-analysis";
-import { withErrorHandler } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { MS_PER_DAY } from "@/lib/time-constants";
 
 export interface SystemAlert {
@@ -19,8 +19,7 @@ export interface SystemAlert {
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
-    const guard = await requireAdmin();
-    if ("response" in guard) return guard.response;
+    unwrapGuard(await requireAdmin());
 
   const now = new Date();
   const fourteenDaysAgo = new Date(now);
