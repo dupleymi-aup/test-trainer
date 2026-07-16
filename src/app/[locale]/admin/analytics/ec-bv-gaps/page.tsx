@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -9,6 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AlertCircle } from "lucide-react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 interface EcGap {
   taskId: string; taskName: string; ecId: string; ecName: string; missRate: number;
@@ -27,20 +27,7 @@ interface GapData {
 }
 
 export default function EcbvGapsPage() {
-  const [data, setData] = useState<GapData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/ec-bv-gaps", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      }).then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data, loading, error } = useFetchData<GapData>("/api/admin/analytics/ec-bv-gaps");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;

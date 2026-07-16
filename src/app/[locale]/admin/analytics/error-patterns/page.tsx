@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -34,6 +33,7 @@ import {
   Target,
   Shield,
 } from "lucide-react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 interface PerTaskError {
   taskId: string;
@@ -70,18 +70,7 @@ interface ErrorPatternsData {
 }
 
 export default function ErrorPatternsPage() {
-  const [data, setData] = useState<ErrorPatternsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/error-patterns", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data, loading, error } = useFetchData<ErrorPatternsData>("/api/admin/analytics/error-patterns");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;

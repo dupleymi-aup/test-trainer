@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -9,6 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AlertCircle, Route, ArrowRight } from "lucide-react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 interface PathData {
   commonPaths: { path: string[]; count: number; avgScore: number }[];
@@ -18,20 +18,7 @@ interface PathData {
 }
 
 export default function LearningPathPage() {
-  const [data, setData] = useState<PathData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/learning-path", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      }).then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data, loading, error } = useFetchData<PathData>("/api/admin/analytics/learning-path");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;

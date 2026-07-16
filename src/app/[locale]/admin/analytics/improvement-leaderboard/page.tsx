@@ -1,13 +1,13 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { ScoreBadge } from "@/components/admin/analytics/score-badge";
 import { TrendingUp, Trophy } from "lucide-react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 interface ImprovementData {
   studentImprovement: { studentId: string; name: string; group: string | null; university: string | null; firstAvg: number; lastAvg: number; scoreDelta: number; percentChange: number; attemptsCount: number }[];
@@ -16,21 +16,7 @@ interface ImprovementData {
 }
 
 export default function ImprovementLeaderboardPage() {
-  const [data, setData] = useState<ImprovementData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/improvement-leaderboard", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data, loading, error } = useFetchData<ImprovementData>("/api/admin/analytics/improvement-leaderboard");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
