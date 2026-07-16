@@ -385,7 +385,7 @@ export function MarathonMode({
         onAdd={(inputs, expected, category, comment) => {
           setTestCases((prev) => [
             ...prev,
-            { id: `tc-${Date.now()}`, inputs, expectedOutput: expected, category, comment },
+            { id: `tc-${crypto.randomUUID()}`, inputs, expectedOutput: expected, category, comment },
           ]);
         }}
       />

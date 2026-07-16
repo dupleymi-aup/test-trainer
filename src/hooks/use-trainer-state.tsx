@@ -219,7 +219,7 @@ export function useTrainerState() {
       pushUndoSnapshot();
 
       const newCase: TestCase = {
-        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `tc-${crypto.randomUUID()}`,
         inputs,
         expectedOutput: expected,
         category,
@@ -317,7 +317,7 @@ export function useTrainerState() {
 
       const clone: TestCase = {
         ...tc,
-        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `tc-${crypto.randomUUID()}`,
         comment: tc.comment ? `${tc.comment} (копия)` : "копия",
       };
 
@@ -383,7 +383,7 @@ export function useTrainerState() {
       }
 
       return {
-        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `tc-${crypto.randomUUID()}`,
         inputs,
         expectedOutput,
         category,
@@ -485,7 +485,7 @@ export function useTrainerState() {
           : String(fnResult);
 
       newCases.push({
-        id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id: `tc-${crypto.randomUUID()}`,
         inputs: inputValues,
         expectedOutput,
         category: "Граничное значение",

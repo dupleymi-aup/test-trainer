@@ -17,7 +17,7 @@ interface CategoryDistributionChartProps {
   }>;
 }
 
-const categoryColors: Record<string, string> = {
+const categoryChartColors: Record<string, string> = {
   "Нормальное значение": "hsl(var(--emerald-500, 160 84% 39%))",
   "Граничное значение": "hsl(var(--amber-500, 38 92% 50%))",
   Исключение: "hsl(var(--rose-500, 346 83% 51%))",
@@ -53,7 +53,7 @@ export function CategoryDistributionChart({
               {data.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={categoryColors[entry.category] || "hsl(var(--primary))"}
+                  fill={categoryChartColors[entry.category] || "hsl(var(--primary))"}
                 />
               ))}
             </Pie>

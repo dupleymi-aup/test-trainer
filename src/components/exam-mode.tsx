@@ -305,7 +305,7 @@ export function ExamMode() {
     if (!task) return;
     if (examInputs.some((v) => v.trim() === "") || !examExpected.trim()) return;
     const tc: TestCase = {
-      id: `tc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: `tc-${crypto.randomUUID()}`,
       inputs: examInputs.map((v) => v.trim()),
       expectedOutput: examExpected.trim(),
       category: examCategory as TestCase["category"],
