@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +9,7 @@ import {
 import dynamic from "next/dynamic";
 import { TrendIndicator } from "@/components/admin/analytics/trend-indicator";
 import { Zap } from "lucide-react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 const WeeklyActivityChart = dynamic(
   () => import("@/components/admin/analytics/charts/weekly-activity-chart").then((m) => m.WeeklyActivityChart),
@@ -22,21 +22,7 @@ interface VelocityData {
 }
 
 export default function VelocityPage() {
-  const [data, setData] = useState<VelocityData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setError(null);
-    fetch("/api/admin/analytics/velocity", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      }).then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data, loading, error } = useFetchData<VelocityData>("/api/admin/analytics/velocity");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
