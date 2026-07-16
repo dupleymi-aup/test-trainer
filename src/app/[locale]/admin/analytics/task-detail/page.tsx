@@ -36,15 +36,16 @@ export default function TaskDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
 
-  const fetchData = useCallback(async (taskId?: string) => {
+  const fetchData = useCallback(async (taskId?: string, signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     const qs = taskId ? `?taskId=${taskId}` : "";
     try {
-      const r = await fetch(`/api/admin/analytics/task-detail${qs}`);
+      const r = await fetch(`/api/admin/analytics/task-detail${qs}`, { signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       setData(await r.json());
     } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       setError(e instanceof Error ? e.message : String(e));
       setData(null);
     } finally {
@@ -52,7 +53,11 @@ export default function TaskDetailPage() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchData(undefined, controller.signal);
+    return () => controller.abort();
+  }, [fetchData]);
 
   const toggleTask = (id: string) => {
     setExpandedTasks((prev) => {

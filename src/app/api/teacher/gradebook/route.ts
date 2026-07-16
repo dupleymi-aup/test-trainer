@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { requireTeacherOrAdmin } from "@/lib/admin-guard";
 import { requireCSRF } from "@/lib/csrf-middleware";
 import { db } from "@/lib/db";
@@ -165,8 +166,8 @@ export async function DELETE(req: Request) {
       await db.grade.delete({
         where: { userId_taskId: { userId, taskId } },
       });
-    } catch (e: unknown) {
-      if (e && typeof e === "object" && "code" in e && e.code === "P2025") {
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
         return NextResponse.json({ error: "Grade not found" }, { status: 404 });
       }
       throw e;

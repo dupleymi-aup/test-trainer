@@ -46,11 +46,11 @@ export default function TeacherCalendarPage() {
   const [formGroupId, setFormGroupId] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const fetchData = () => {
+  const fetchData = (signal?: AbortSignal) => {
     setLoading(true);
     Promise.all([
       apiFetch("/api/teacher/notifications").then((r) => r.ok ? r.json() : null),
-      fetch("/api/teacher/groups").then((r) => r.ok ? r.json() : { groups: [] }),
+      fetch("/api/teacher/groups", { signal }).then((r) => r.ok ? r.json() : { groups: [] }),
     ])
       .then(([dlData, groupData]) => {
         if (dlData?.deadlines) setDeadlines(dlData.deadlines);
@@ -60,7 +60,11 @@ export default function TeacherCalendarPage() {
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchData(controller.signal);
+    return () => controller.abort();
+  }, []);
 
   const handleCreate = async () => {
     if (!formTitle || !formDate) { toast.error("Заполните название и дату"); return; }
