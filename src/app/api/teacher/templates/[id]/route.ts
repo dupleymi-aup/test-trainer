@@ -8,10 +8,10 @@ import { safeJsonParse } from "@/lib/utils";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withErrorHandler(_req, async () => {
+  return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const template = await db.courseTemplate.findUnique({
@@ -121,19 +121,19 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withErrorHandler(_req, async () => {
+  return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireTeacherOrAdmin());
 
-    const ip = getClientIp(_req);
+    const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`teacherTemplateCrud:${ip}`, rateLimits.teacherTemplateCrud);
     if (rateLimit.limited) {
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const csrf = await requireCSRF(_req);
+    const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
 
     const templateId = (await params).id;

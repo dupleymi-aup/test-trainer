@@ -70,20 +70,11 @@ export default function UniversityComparisonPage() {
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
-  const _universities = data.universities;
-
   const barData = data.universities.slice(0, 10).map((u) => ({
     name: u.university.length > 20 ? u.university.slice(0, 20) + "..." : u.university,
     avgScore: u.avgScore,
     avgEc: u.avgEc,
     avgBv: u.avgBv,
-  }));
-
-  const _radarData = data.universities.slice(0, 3).map((u, i) => ({
-    topic: `Университет ${i + 1}`,
-    score: u.avgScore,
-    ec: u.avgEc,
-    bv: u.avgBv,
   }));
 
   return (

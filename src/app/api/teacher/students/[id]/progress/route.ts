@@ -6,10 +6,10 @@ import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { safeJsonParse } from "@/lib/utils";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withErrorHandler(_req, async () => {
+  return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const { id } = await params;

@@ -6,10 +6,10 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withErrorHandler(_req, async () => {
+  return withErrorHandler(req, async () => {
     unwrapGuard(await requireAdmin());
 
     const { id } = await params;

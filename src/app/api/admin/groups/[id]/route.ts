@@ -51,15 +51,15 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withErrorHandler(_req, async () => {
+  return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireAdmin());
-    const ip = getClientIp(_req);
+    const ip = getClientIp(req);
     const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(_req);
+    const csrf = await requireCSRF(req);
     if ("response" in csrf) return csrf.response;
     const { id } = await params;
     const group = await db.group.findUnique({ where: { id } });

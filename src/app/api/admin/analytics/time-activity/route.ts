@@ -5,7 +5,6 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
 const DAY_NAMES = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-const _HOUR_LABELS = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
 export async function GET(request: Request) {
   return withErrorHandler(request, async () => {

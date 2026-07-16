@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Beaker, Loader2, CheckCircle2, XCircle } from "lucide-react";
@@ -17,7 +17,6 @@ import {
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const _router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );

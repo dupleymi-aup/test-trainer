@@ -8,10 +8,10 @@ import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withErrorHandler(_req, async () => {
+  return withErrorHandler(req, async () => {
     unwrapGuard(await requireAdmin());
 
     const { id } = await params;
