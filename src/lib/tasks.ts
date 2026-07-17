@@ -1482,7 +1482,7 @@ export function runReferenceFunction(
   try {
     const result = fn(args);
     return { result, error: null };
-  } catch (e) {
-    return { result: undefined, error: (e as Error).message };
+  } catch (e: unknown) {
+    return { result: undefined, error: e instanceof Error ? e.message : String(e) };
   }
 }

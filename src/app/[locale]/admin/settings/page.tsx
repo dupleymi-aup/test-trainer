@@ -133,7 +133,7 @@ export default function AdminSettingsPage() {
                           type={typeof setting.value === "number" ? "number" : "text"}
                           value={typeof localVal === "string" && localVal.startsWith("[") ? localVal : String(localVal)}
                           className={setting.key === "defaultReminderSchedule" ? "w-48" : "w-32"}
-                          onChange={(e) => handleLocalChange(setting.key, typeof setting.value === "number" ? parseInt(e.target.value) : e.target.value)}
+                          onChange={(e) => handleLocalChange(setting.key, typeof setting.value === "number" ? parseInt(e.target.value, 10) : e.target.value)}
                           onBlur={() => handleBlur(setting.key, setting.value)}
                         />
                       )}

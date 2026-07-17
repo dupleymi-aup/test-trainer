@@ -642,7 +642,6 @@ export function ExamMode() {
     // Collect task-specific tips from commonMistakes
     const taskSpecificTips = selectedTasks
       .map((id) => tasks.find((t) => t.id === id))
-      .filter(Boolean)
       .filter((t): t is (typeof tasks)[number] => !!t)
       .map((task) => ({
         taskName: task.name,

@@ -36,6 +36,15 @@ export async function GET() {
       take: 50_000,
     });
 
+    if (allAttempts.length === 0) {
+      return NextResponse.json({
+        globalCorrelation: 0,
+        timeSegments: [],
+        taskTimeRanges: [],
+        totalAttempts: 0,
+      });
+    }
+
     const taskMap = new Map(
       tasks.map((t) => [String(t.id), { name: t.name, difficulty: t.difficulty }])
     );

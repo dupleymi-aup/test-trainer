@@ -110,7 +110,7 @@ export default function TemplatesPage() {
           name: name.trim(),
           description: description.trim() || null,
           taskIds: selectedTasks,
-          estimatedHours: estimatedHours ? parseInt(estimatedHours) : null,
+          estimatedHours: estimatedHours ? parseInt(estimatedHours, 10) : null,
         }),
       });
       if (res.ok) {

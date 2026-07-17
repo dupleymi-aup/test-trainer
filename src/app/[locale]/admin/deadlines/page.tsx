@@ -149,7 +149,7 @@ export default function AdminDeadlinesPage() {
     try {
       const body = {
         ...data,
-        taskId: data.taskId ? parseInt(data.taskId) : null,
+        taskId: data.taskId ? parseInt(data.taskId, 10) : null,
         groupId: data.groupId || null,
         dueDate: new Date(data.dueDate).toISOString(),
       };
