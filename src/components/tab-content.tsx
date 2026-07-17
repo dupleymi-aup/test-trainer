@@ -13,7 +13,7 @@ import {
   ClipboardList,
 } from "lucide-react";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
-import type { Task as TaskType, TestCaseCategory } from "@/lib/tasks";
+import { tasks, type Task as TaskType, type TestCaseCategory } from "@/lib/tasks";
 import type { TaskProgress, AttemptRecord } from "@/lib/storage";
 import type { TabValue, DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
 import { TaskListTab } from "@/components/task-list-tab";
@@ -25,7 +25,6 @@ import { ExamMode } from "@/components/exam-mode";
 import { AchievementsPanel } from "@/components/achievements-panel";
 import { TheoryQuiz } from "@/components/theory-quiz";
 import type { AchievementContext } from "@/lib/achievements";
-import { tasks } from "@/lib/tasks";
 import { pageVariants } from "@/lib/constants";
 
 interface TabContentProps {

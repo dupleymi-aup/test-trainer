@@ -44,11 +44,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Trash2, Send, AlertCircle, Keyboard, Lightbulb, Pencil, Save, X, GripVertical, Wand2, Copy, CheckSquare, Square, GitBranch, ChevronDown, ChevronUp } from "lucide-react";
-import type { Task } from "@/lib/tasks";
-import type { TestCase } from "@/lib/evaluator";
-import type { TestCaseCategory } from "@/lib/tasks";
+import { type Task, type TestCaseCategory } from "@/lib/tasks";
+import { type TestCase, evaluateTestCases } from "@/lib/evaluator";
 import { categories, categoryColors } from "@/lib/constants";
-import { evaluateTestCases } from "@/lib/evaluator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -210,7 +208,6 @@ function SortableRow({
   editExpectedOutput,
   editCategory,
   editComment,
-  _onEditChange,
   startEditing,
   cancelEditing,
   saveEditing,
@@ -231,7 +228,6 @@ function SortableRow({
   editExpectedOutput: string;
   editCategory: TestCaseCategory;
   editComment: string;
-  _onEditChange: (id: string, updates: Partial<{ inputs: string[], expectedOutput: string, category: TestCaseCategory, comment: string }>) => void;
   startEditing: (tc: TestCase) => void;
   cancelEditing: () => void;
   saveEditing: () => void;
@@ -693,7 +689,6 @@ export const TestList = memo(function TestList({ task, testCases, onRemove, onDu
                       editExpectedOutput={editExpectedOutput}
                       editCategory={editCategory}
                       editComment={editComment}
-                      _onEditChange={onEdit}
                       startEditing={startEditing}
                       cancelEditing={cancelEditing}
                       saveEditing={saveEditing}

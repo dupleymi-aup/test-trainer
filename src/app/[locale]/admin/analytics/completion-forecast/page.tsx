@@ -178,7 +178,7 @@ export default function CompletionForecastPage() {
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                  {distData.map((entry, i) => (
+                  {distData.map((_, i) => (
                     <Cell key={i} fill={i === 0 ? "#ef4444" : i === 1 ? "#f97316" : i === 2 ? "#f59e0b" : i === 3 ? "#3b82f6" : "#10b981"} />
                   ))}
                 </Bar>

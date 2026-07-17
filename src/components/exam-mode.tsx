@@ -22,10 +22,8 @@ import {
 import { motion } from "framer-motion";
 import { Timer, Trophy, RotateCcw, ChevronRight, Clock, CheckCircle2, Calculator, Trash2, Download, Lightbulb, AlertTriangle, Target } from "lucide-react";
 import { Confetti } from "./confetti";
-import { tasks } from "@/lib/tasks";
-import type { Task } from "@/lib/tasks";
-import { evaluateTestCases } from "@/lib/evaluator";
-import type { TestCase, EvaluationResult } from "@/lib/evaluator";
+import { tasks, type Task } from "@/lib/tasks";
+import { evaluateTestCases, type TestCase, type EvaluationResult } from "@/lib/evaluator";
 import { toast } from "sonner";
 import { formatTimer } from "@/lib/format-time";
 import { saveAttempt } from "@/lib/storage";
@@ -100,6 +98,13 @@ export function ExamMode() {
       confettiTimeoutRef.current = null;
     }, 3500);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+    };
+  }, []);
+
   const [practiceMode, setPracticeMode] = useState(false);
   const [lastPracticeResult, setLastPracticeResult] = useState<EvaluationResult | null>(null);
   const [showCode, setShowCode] = useState(false);

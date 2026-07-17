@@ -3,8 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
-import type { Permission } from "@/lib/permissions";
-import { hasPermission } from "@/lib/permissions";
+import { type Permission, hasPermission } from "@/lib/permissions";
 
 export interface AuthSession {
   userId: string;

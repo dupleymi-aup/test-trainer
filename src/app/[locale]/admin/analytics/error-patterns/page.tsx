@@ -141,7 +141,7 @@ export default function ErrorPatternsPage() {
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {ecDistData.map((entry, i) => (
+                    {ecDistData.map((_, i) => (
                       <Bar key={i} dataKey="count" fill={i < 2 ? "#ef4444" : i < 3 ? "#f59e0b" : "#10b981"} />
                     ))}
                   </Bar>
@@ -160,7 +160,7 @@ export default function ErrorPatternsPage() {
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {bvDistData.map((entry, i) => (
+                    {bvDistData.map((_, i) => (
                       <Bar key={i} dataKey="count" fill={i < 2 ? "#ef4444" : i < 3 ? "#f59e0b" : "#10b981"} />
                     ))}
                   </Bar>

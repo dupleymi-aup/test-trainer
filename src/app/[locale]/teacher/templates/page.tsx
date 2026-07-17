@@ -13,6 +13,7 @@ import { Loader2, Plus, BookTemplate, Save, Trash2, Clock, BookOpen, Edit, Copy,
 import { toast } from "sonner";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { safeJsonParse } from "@/lib/utils";
 import Link from "next/link";
 
 interface Template {
@@ -87,7 +88,7 @@ export default function TemplatesPage() {
   const openEdit = (template: Template) => {
     setName(template.name);
     setDescription(template.description || "");
-    setSelectedTasks(template.taskIds ? JSON.parse(template.taskIds) : []);
+    setSelectedTasks(template.taskIds ? safeJsonParse<number[]>(template.taskIds, []) : []);
     setEstimatedHours(template.estimatedHours ? String(template.estimatedHours) : "");
     setEditingId(template.id);
     setShowCreate(true);
@@ -273,7 +274,7 @@ export default function TemplatesPage() {
             ) : (
               <div className="space-y-3">
                 {templates.map((tpl) => {
-                  const parsedTasks = tpl.taskIds ? JSON.parse(tpl.taskIds) as number[] : [];
+                  const parsedTasks = safeJsonParse<number[]>(tpl.taskIds, []);
                   return (
                     <Card key={tpl.id} className="hover:bg-muted/30 transition-colors">
                       <CardContent className="p-4">

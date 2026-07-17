@@ -2,10 +2,8 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { tasks, runReferenceFunction } from "@/lib/tasks";
-import type { Task, Difficulty, TestCaseCategory } from "@/lib/tasks";
-import type { TestCase, EvaluationResult } from "@/lib/evaluator";
-import { evaluateTestCases } from "@/lib/evaluator";
+import { tasks, runReferenceFunction, type Task, type Difficulty, type TestCaseCategory } from "@/lib/tasks";
+import { evaluateTestCases, type TestCase, type EvaluationResult } from "@/lib/evaluator";
 import { UndoStack } from "@/lib/undo-stack";
 import { logger } from "@/lib/logger";
 import { parseInputValue } from "@/lib/utils";
@@ -73,6 +71,13 @@ export function useTrainerState() {
       confettiTimeoutRef.current = null;
     }, 3500);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (confettiTimeoutRef.current) clearTimeout(confettiTimeoutRef.current);
+    };
+  }, []);
+
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [attemptHistory, setAttemptHistory] = useState<AttemptRecord[]>(() => loadAttemptHistory());
   const [streak, setStreak] = useState(() => loadStreak());

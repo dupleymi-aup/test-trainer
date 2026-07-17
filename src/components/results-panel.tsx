@@ -38,8 +38,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import type { EvaluationResult } from "@/lib/evaluator";
-import type { TestCase } from "@/lib/evaluator";
+import type { EvaluationResult, TestCase } from "@/lib/evaluator";
 import { getTaskHistory } from "@/lib/storage";
 import { useLocale } from "next-intl";
 import { formatDuration } from "@/lib/format-time";

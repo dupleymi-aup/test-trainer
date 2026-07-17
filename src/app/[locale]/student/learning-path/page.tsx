@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, BookOpen, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
 import { logger } from "@/lib/logger";
+import { safeJsonParse } from "@/lib/utils";
 
 interface TemplateAssignment {
   id: string;
@@ -90,7 +91,7 @@ export default function StudentLearningPathPage() {
         <div className="space-y-4">
           {assignments.map((assignment) => {
             const prog = progress[assignment.template.id];
-            const taskIds: number[] = JSON.parse(assignment.template.taskIds || "[]");
+            const taskIds: number[] = safeJsonParse<number[]>(assignment.template.taskIds, []);
             const completed = prog?.completedTasks || 0;
             const total = taskIds.length;
             const pct = total > 0 ? Math.round((completed / total) * 100) : 0;

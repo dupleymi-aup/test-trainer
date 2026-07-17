@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { quizQuestions } from "@/lib/constants";
-import type { QuizQuestion } from "@/lib/constants";
+import { quizQuestions, type QuizQuestion } from "@/lib/constants";
 import { Brain, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 
 type QuizAnswer = Record<number, number | number[] | string>;

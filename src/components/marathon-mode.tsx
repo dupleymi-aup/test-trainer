@@ -16,8 +16,7 @@ import {
   Flag,
 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
-import type { TestCase } from "@/lib/evaluator";
-import { evaluateTestCases } from "@/lib/evaluator";
+import { evaluateTestCases, type TestCase } from "@/lib/evaluator";
 import { TestForm } from "@/components/test-form";
 import { ResultsPanel } from "@/components/results-panel";
 import { saveMarathonRecord } from "@/lib/storage";

@@ -31,8 +31,7 @@ import { format } from "date-fns";
 import { ru, enUS, zhCN } from "date-fns/locale";
 import { useLocale, useTranslations } from "next-intl";
 import { tasks } from "@/lib/tasks";
-import { loadStreak } from "@/lib/storage";
-import type { AttemptRecord, StreakData } from "@/lib/storage";
+import { loadStreak, type AttemptRecord, type StreakData } from "@/lib/storage";
 import { downloadJSON, downloadCSV } from "@/lib/export";
 import { toast } from "sonner";
 

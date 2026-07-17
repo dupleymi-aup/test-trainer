@@ -153,7 +153,13 @@ function TypedWords() {
       }
     }, typeSpeed);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (pauseTimerRef.current) {
+        clearTimeout(pauseTimerRef.current);
+        pauseTimerRef.current = null;
+      }
+    };
   }, [charIndex, isDeleting, wordIndex, words, isPausing]);
 
   return (

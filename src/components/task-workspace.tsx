@@ -27,8 +27,7 @@ import SyntaxHighlighter from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import type { Task } from "@/lib/tasks";
 import { saveTaskNote, loadTaskNote } from "@/lib/storage";
-import type { TestCase } from "@/lib/evaluator";
-import { evaluateTestCases } from "@/lib/evaluator";
+import { evaluateTestCases, type TestCase } from "@/lib/evaluator";
 import { MarkdownPreview } from "@/components/markdown-preview";
 
 interface TaskWorkspaceProps {
