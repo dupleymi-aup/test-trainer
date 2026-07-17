@@ -49,5 +49,5 @@ test-results/
 # test coverage
 coverage/
 
-# cron lock file
-.mimocode/.cron-lock
+# MiMoCode internal files
+.mimocode/
