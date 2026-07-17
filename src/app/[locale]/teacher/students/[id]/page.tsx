@@ -69,7 +69,7 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/teacher/students"><ArrowLeft className="h-4 w-4" /></Link>
+            <Link href="/teacher/students" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Link>
             <div>
               <h2 className="text-lg font-bold">{data.student.name || data.student.email}</h2>
               {data.student.group && <p className="text-sm text-muted-foreground">{data.student.group}{data.student.university ? ` • ${data.student.university}` : ""}</p>}
