@@ -11,8 +11,7 @@ export async function PATCH(
 ) {
   return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireAdmin());
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`adminUserRestore:${ip}`, rateLimits.adminUserRestore);
     if (rateLimit.limited) {

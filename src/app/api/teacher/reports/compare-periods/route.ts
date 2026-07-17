@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { withErrorHandler, unwrapGuard, unwrapGroupGuard } from "@/lib/api-error-handler";
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
@@ -20,12 +20,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "groupId is required" }, { status: 400 });
     }
 
-    const groupCheck = await requireTeacherGroup(groupId, session);
-    if ("response" in groupCheck) return groupCheck.response;
+    const group = unwrapGroupGuard(await requireTeacherGroup(groupId, session));
 
     // Get student IDs in this group
     const userGroups = await db.userGroup.findMany({
-      where: { groupId: groupCheck.group.id },
+      where: { groupId: group.id },
       select: { userId: true },
     });
     const userIds = userGroups.map((u) => u.userId);

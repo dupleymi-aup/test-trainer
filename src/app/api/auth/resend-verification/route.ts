@@ -7,6 +7,7 @@ import { generateSecureToken } from "@/lib/crypto";
 import { DEFAULT_APP_URL } from "@/lib/constants";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   return withErrorHandler(req, async () => {
@@ -57,7 +58,8 @@ export async function POST(req: Request) {
     try {
       await sendEmail({ to: user.email, ...emailData });
       return NextResponse.json({ success: true });
-    } catch {
+    } catch (emailErr: unknown) {
+      logger.warn("Failed to send verification email", { userId: session.userId, error: emailErr instanceof Error ? emailErr.message : String(emailErr) });
       await db.verificationToken.delete({ where: { token: verificationToken } });
       return NextResponse.json(
         { error: "Failed to send email. Please try later" },

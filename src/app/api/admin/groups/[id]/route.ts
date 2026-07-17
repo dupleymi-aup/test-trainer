@@ -59,8 +59,7 @@ export async function DELETE(
     const ip = getClientIp(req);
     const rl = checkRateLimit("adminGroupCrud:" + ip, rateLimits.adminGroupCrud);
     if (rl.limited) return createRateLimitResponse(rl.resetAt);
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
     const { id } = await params;
     const group = await db.group.findUnique({ where: { id } });
     if (!group) {

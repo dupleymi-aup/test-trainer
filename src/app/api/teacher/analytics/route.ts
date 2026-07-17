@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard, unwrapGroupGuard } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const analyticsParamsSchema = z.object({
@@ -16,12 +16,11 @@ export async function GET(req: Request) {
     if (!params.success) return params.errorResponse;
     const { groupId } = params.data;
 
-    const groupCheck = await requireTeacherGroup(groupId, session);
-    if ("response" in groupCheck) return groupCheck.response;
+    const group = unwrapGroupGuard(await requireTeacherGroup(groupId, session));
 
     // Get student IDs in this group
     const userGroups = await db.userGroup.findMany({
-      where: { groupId: groupCheck.group.id },
+      where: { groupId: group.id },
       select: { userId: true },
     });
     const userIds = userGroups.map((ug) => ug.userId);

@@ -141,8 +141,7 @@ export async function DELETE(
 ) {
   return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireAdmin());
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
     const ip = getClientIp(req);
     const rateLimit = checkRateLimit(`adminUserCrud:${ip}`, rateLimits.adminUserCrud);
     if (rateLimit.limited) {

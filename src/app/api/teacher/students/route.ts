@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard, unwrapGroupGuard } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const studentsParamsSchema = z.object({
@@ -17,13 +17,12 @@ export async function GET(req: Request) {
     if (!params.success) return params.errorResponse;
     const { groupId, search } = params.data;
 
-    const groupCheck = await requireTeacherGroup(groupId, session);
-    if ("response" in groupCheck) return groupCheck.response;
+    const group = unwrapGroupGuard(await requireTeacherGroup(groupId, session));
 
     const where: Record<string, unknown> = {
       role: "STUDENT",
       deletedAt: null,
-      groups: { some: { groupId: groupCheck.group.id } },
+      groups: { some: { groupId: group.id } },
     };
 
     if (search) {

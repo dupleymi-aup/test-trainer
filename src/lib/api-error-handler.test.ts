@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler, validateApiResponse, unwrapGuard, AppError } from "./api-error-handler";
+import { formatZodError, logApiError, apiErrorResponse, parseRequestBody, parseSearchParams, withErrorHandler, validateApiResponse, unwrapGuard, unwrapGroupGuard, AppError } from "./api-error-handler";
 import { z } from "zod";
 
 describe("formatZodError", () => {
@@ -383,5 +383,28 @@ describe("unwrapGuard", () => {
     expect(res.status).toBe(403);
     const body = await res.json();
     expect(body.error).toBe("Access denied");
+  });
+
+  it("returns group from unwrapGroupGuard on success", () => {
+    const result = { group: { id: "g1", createdByUserId: "u1" } };
+    const group = unwrapGroupGuard(result);
+    expect(group.id).toBe("g1");
+    expect(group.createdByUserId).toBe("u1");
+  });
+
+  it("throws AppError from unwrapGroupGuard when response present", () => {
+    const result = { response: new Response("Forbidden", { status: 403 }) };
+    expect(() => unwrapGroupGuard(result)).toThrow(AppError);
+    expect(() => unwrapGroupGuard(result)).toThrow("Forbidden");
+  });
+
+  it("unwrapGroupGuard preserves status code for withErrorHandler", () => {
+    const result = { response: new Response("Not found", { status: 404 }) };
+    try {
+      unwrapGroupGuard(result, 404, "Group not found");
+    } catch (e) {
+      expect(e).toBeInstanceOf(AppError);
+      expect((e as AppError).statusCode).toBe(404);
+    }
   });
 });

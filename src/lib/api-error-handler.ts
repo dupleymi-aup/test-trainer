@@ -170,42 +170,43 @@ export function parseSearchParams<T>(
  * Throws AppError with the given status and message when "response" is present.
  */
 export function unwrapGuard<T>(
-  result: { session: T } | { response: Response },
+  result: { session: T } | { verified: true } | { response: Response },
   status?: number,
   message?: string
-): T;
-export function unwrapGuard<T>(
-  result: { group: T } | { response: Response },
-  key: "group",
-  status?: number,
-  message?: string
-): T;
-export function unwrapGuard(
-  result: { verified: true } | { response: Response },
-  status?: number,
-  message?: string
-): void;
-export function unwrapGuard<T>(
-  result: { session: T } | { group: T } | { verified: true } | { response: Response },
-  keyOrStatus?: string | number,
-  statusOrMessage?: number | string,
-  message?: string
-): T | void {
+): T {
   if ("response" in result) {
     const res = result.response;
-    const inferredStatus = typeof keyOrStatus === "number" ? keyOrStatus : (typeof statusOrMessage === "number" ? statusOrMessage : res.status);
-    const inferredMessage = typeof statusOrMessage === "string" ? statusOrMessage :
-      (typeof keyOrStatus === "string" ? keyOrStatus :
-      (message ??
+    const inferredStatus = status ?? res.status;
+    const inferredMessage = message ??
       (res.status === 401 ? "Unauthorized" :
        res.status === 403 ? "Forbidden" :
        res.status === 404 ? "Not found" :
-       "Request failed")));
+       "Request failed");
     throw new AppError(inferredStatus, inferredMessage);
   }
-  if ("verified" in result) return;
-  const key = typeof keyOrStatus === "string" ? keyOrStatus : "session";
-  return (result as Record<string, T>)[key];
+  return (result as { session: T }).session;
+}
+
+/**
+ * Unwrap a teacher-group guard result and throw AppError on failure.
+ * Like unwrapGuard but extracts the `group` property instead of `session`.
+ */
+export function unwrapGroupGuard(
+  result: { group: { id: string; createdByUserId: string } } | { response: Response },
+  status?: number,
+  message?: string
+): { id: string; createdByUserId: string } {
+  if ("response" in result) {
+    const res = result.response;
+    const inferredStatus = status ?? res.status;
+    const inferredMessage = message ??
+      (res.status === 401 ? "Unauthorized" :
+       res.status === 403 ? "Forbidden" :
+       res.status === 404 ? "Not found" :
+       "Request failed");
+    throw new AppError(inferredStatus, inferredMessage);
+  }
+  return result.group;
 }
 
 /**

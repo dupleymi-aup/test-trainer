@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
-import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { parseSearchParams, withErrorHandler, unwrapGuard, unwrapGroupGuard } from "@/lib/api-error-handler";
 import { z } from "zod";
 
 const groupPerformanceParamsSchema = z.object({
@@ -18,12 +18,11 @@ export async function GET(req: Request) {
     if (!params.success) return params.errorResponse;
     const { groupId, startDate, endDate } = params.data;
 
-    const groupCheck = await requireTeacherGroup(groupId, session);
-    if ("response" in groupCheck) return groupCheck.response;
+    const group = unwrapGroupGuard(await requireTeacherGroup(groupId, session));
 
     // Fetch students in this group only
     const usersInGroup = await db.userGroup.findMany({
-      where: { groupId: groupCheck.group.id },
+      where: { groupId: group.id },
       select: { userId: true },
     });
     const userIds = usersInGroup.map((u) => u.userId);
@@ -76,7 +75,7 @@ export async function GET(req: Request) {
     };
 
     // Build group response
-    const groupRecord = await db.group.findUnique({ where: { id: groupCheck.group.id }, select: { name: true } });
+    const groupRecord = await db.group.findUnique({ where: { id: group.id }, select: { name: true } });
     const groupName = groupRecord?.name || "Без группы";
     const activeThreshold = new Date();
     activeThreshold.setDate(activeThreshold.getDate() - 30);

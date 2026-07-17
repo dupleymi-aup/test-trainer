@@ -3,7 +3,7 @@ import type { StoredTestCase } from "@/lib/evaluator";
 import { requireTeacherOrAdmin, requireTeacherGroup } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { withErrorHandler, parseSearchParams, unwrapGuard } from "@/lib/api-error-handler";
+import { withErrorHandler, parseSearchParams, unwrapGuard, unwrapGroupGuard } from "@/lib/api-error-handler";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 
@@ -24,8 +24,7 @@ export async function GET(req: Request) {
 
   // Verify group ownership for teachers
   if (groupId && session.role !== "ADMIN") {
-    const groupCheck = await requireTeacherGroup(groupId, session);
-    if ("response" in groupCheck) return groupCheck.response;
+    unwrapGroupGuard(await requireTeacherGroup(groupId, session));
   }
 
   // Build user filter

@@ -133,8 +133,7 @@ export async function DELETE(
       return createRateLimitResponse(rateLimit.resetAt);
     }
 
-    const csrf = await requireCSRF(req);
-    if ("response" in csrf) return csrf.response;
+    unwrapGuard(await requireCSRF(req));
 
     const templateId = (await params).id;
     const template = await db.courseTemplate.findUnique({ where: { id: templateId } });
