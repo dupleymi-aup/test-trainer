@@ -31,8 +31,8 @@ interface TeacherMetrics {
   }>;
 }
 
-export async function GET(_request: Request) {
-  return withErrorHandler(_request, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("teacher-comparison");

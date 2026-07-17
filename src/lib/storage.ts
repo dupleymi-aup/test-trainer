@@ -365,7 +365,7 @@ export function loadMarathonRecords(): MarathonRecord[] {
   try {
     const raw = localStorage.getItem(MARATHON_KEY);
     if (!raw) return [];
-    return JSON.parse(raw || "[]");
+    return JSON.parse(raw);
   } catch {
     return [];
   }
@@ -409,7 +409,7 @@ export function loadTheorySectionsViewed(): string[] {
   try {
     const raw = localStorage.getItem(THEORY_VIEWED_KEY);
     if (!raw) return [];
-    return JSON.parse(raw || "[]");
+    return JSON.parse(raw);
   } catch {
     return [];
   }
