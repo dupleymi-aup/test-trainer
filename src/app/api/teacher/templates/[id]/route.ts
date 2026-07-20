@@ -97,13 +97,13 @@ export async function PATCH(
         });
         // Also assign template tasks to the group
         const taskIds = updateData.taskIds || safeJsonParse(template.taskIds, []);
-        for (const taskId of taskIds) {
-          await db.groupTask.upsert({
+        await Promise.all(taskIds.map((taskId) =>
+          db.groupTask.upsert({
             where: { groupId_taskId: { groupId: assignToGroupId, taskId } },
             create: { groupId: assignToGroupId, taskId },
             update: {},
-          });
-        }
+          })
+        ));
       } else {
         await db.templateAssignment.deleteMany({ where: { templateId } });
       }

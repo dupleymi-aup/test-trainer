@@ -35,8 +35,9 @@ export async function GET() {
     });
 
     // Count unread (all notifications from last 7 days are considered "new")
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const unreadCount = notifications.filter(
-      (n) => n.createdAt > new Date(Date.now() - 24 * 60 * 60 * 1000) // last 24 hours
+      (n) => n.createdAt > twentyFourHoursAgo // last 24 hours
     ).length;
 
     return NextResponse.json({
@@ -45,7 +46,7 @@ export async function GET() {
         type: n.action.replace("ALERT_", ""),
         message: n.details,
         createdAt: n.createdAt.toISOString(),
-        read: n.createdAt < new Date(Date.now() - 24 * 60 * 60 * 1000),
+        read: n.createdAt < twentyFourHoursAgo,
       })),
       unreadCount,
     });

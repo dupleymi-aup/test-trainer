@@ -166,7 +166,8 @@ export async function GET(
   });
 
   const dailyMap: Record<string, { attemptsCount: number; uniqueStudents: Set<string> }> = {};
-  for (let d = new Date(thirtyDaysAgo); d <= new Date(); d.setDate(d.getDate() + 1)) {
+  const today = new Date();
+  for (let d = new Date(thirtyDaysAgo); d <= today; d.setDate(d.getDate() + 1)) {
     const key = d.toISOString().split("T")[0];
     dailyMap[key] = { attemptsCount: 0, uniqueStudents: new Set() };
   }

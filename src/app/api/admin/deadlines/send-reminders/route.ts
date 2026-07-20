@@ -106,17 +106,20 @@ async function forceSendAllReminders(hoursAhead: number) {
   const errors: string[] = [];
 
   for (const dl of [...upcomingDeadlines, ...overdueDeadlines]) {
-    for (const reminder of dl.reminders) {
-      try {
-        // Mark as sent (email will be sent by the dispatch service on next cron run)
-        await db.reminder.update({
+    const markSentAt = new Date();
+    const results = await Promise.allSettled(
+      dl.reminders.map((reminder) =>
+        db.reminder.update({
           where: { id: reminder.id },
-          data: { sent: true, sentAt: new Date() },
-        });
-        sentCount++;
-      } catch (e) {
+          data: { sent: true, sentAt: markSentAt },
+        })
+      )
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled") sentCount++;
+      else {
         failedCount++;
-        errors.push(`Failed to mark reminder ${reminder.id}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(`Failed to mark reminder: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
       }
     }
   }
