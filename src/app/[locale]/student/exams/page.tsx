@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, FileText, Clock, Trophy } from "lucide-react";
-import { logger } from "@/lib/logger";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface ExamRecord {
   id: string;
@@ -22,25 +21,28 @@ interface ExamRecord {
   createdAt: string;
 }
 
+interface ExamsData {
+  exams: ExamRecord[];
+}
+
 export default function StudentExamHistoryPage() {
   const { status } = useSession();
   const router = useRouter();
-  const [exams, setExams] = useState<ExamRecord[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "unauthenticated") { router.push("/login"); return; }
-    if (status !== "authenticated") return;
+  const { data, isLoading } = useSWRApi<ExamsData>(
+    status === "authenticated" ? "/api/student/exams" : null
+  );
 
-    const controller = new AbortController();
-    fetch("/api/student/exams", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data) => { if (!controller.signal.aborted) { setExams(data.exams || []); setLoading(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load exam history", err instanceof Error ? err : undefined); setLoading(false); } });
-    return () => controller.abort();
-  }, [status, router]);
+  if (status === "unauthenticated") {
+    router.push("/login");
+    return null;
+  }
 
-  if (loading) return <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  if (status === "loading" || isLoading) {
+    return <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
+
+  const exams = data?.exams || [];
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">

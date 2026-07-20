@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,14 +8,66 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Star, ArrowLeft, Bookmark, Trash2 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
 import { toast } from "sonner";
+import { useSWRApi } from "@/hooks/use-swr-api";
+import { swrMutateFetcher } from "@/lib/swr-fetcher";
 
 interface Favorite {
   id: string;
   taskId: number;
   createdAt: string;
 }
+
+interface FavoritesData {
+  favorites: Favorite[];
+}
+
+const difficultyColors: Record<string, string> = {
+  "Легко": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  "Средне": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  "Сложно": "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+};
+
+export default function FavoritesPage() {
+  const { status } = useSession();
+  const router = useRouter();
+
+  const { data, isLoading, mutate } = useSWRApi<FavoritesData>(
+    status === "authenticated" ? "/api/student/favorites" : null
+  );
+
+  if (status === "unauthenticated") {
+    router.push("/login?callbackUrl=/student/favorites");
+    return null;
+  }
+
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
+  const favorites = data?.favorites || [];
+
+  const removeFavorite = async (taskId: number) => {
+    // Optimistic update: remove from cache immediately
+    const prevFavorites = favorites;
+    await mutate(
+      { favorites: favorites.filter((f) => f.taskId !== taskId) },
+      { revalidate: false }
+    );
+
+    try {
+      await swrMutateFetcher("DELETE", `/api/student/favorites?taskId=${taskId}`);
+      toast.success("Удалено из избранного");
+    } catch {
+      // Revert on error
+      await mutate({ favorites: prevFavorites }, { revalidate: false });
+      toast.error("Не удалось удалить");
+    }
+  };
 
 const difficultyColors: Record<string, string> = {
   "Легко": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",

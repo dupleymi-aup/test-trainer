@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Trophy, Medal, Crown, ArrowLeft, TrendingUp, Target, User } from "lucide-react";
-import { logger } from "@/lib/logger";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface LeaderboardEntry {
   rank: number;
@@ -18,6 +18,12 @@ interface LeaderboardEntry {
   avgScore: number;
   bestScore: number;
   totalAttempts: number;
+}
+
+interface LeaderboardData {
+  leaderboard: LeaderboardEntry[];
+  currentUser: { rank: number; stats: LeaderboardEntry } | null;
+  totalParticipants: number;
 }
 
 type Period = "week" | "month" | "all";
@@ -37,40 +43,28 @@ const rankIcons: Record<number, React.ReactNode> = {
 export default function LeaderboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [currentUser, setCurrentUser] = useState<{ rank: number; stats: LeaderboardEntry } | null>(null);
-  const [totalParticipants, setTotalParticipants] = useState(0);
   const [period, setPeriod] = useState<Period>("all");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/student/leaderboard");
-      return;
-    }
-    if (status !== "authenticated") return;
+  const { data, isLoading } = useSWRApi<LeaderboardData>(
+    status === "authenticated" ? `/api/student/leaderboard?period=${period}&limit=30` : null
+  );
 
-    const controller = new AbortController();
-    fetch(`/api/student/leaderboard?period=${period}&limit=30`, { signal: controller.signal })
-      .then((r) => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then((data) => {
-        setLeaderboard(data.leaderboard);
-        setCurrentUser(data.currentUser);
-        setTotalParticipants(data.totalParticipants);
-      })
-      .catch((e) => { logger.warn("Failed to load leaderboard", { error: e }); })
-      .finally(() => setLoading(false));
+  if (status === "unauthenticated") {
+    router.push("/login?callbackUrl=/student/leaderboard");
+    return null;
+  }
 
-    return () => controller.abort();
-  }, [status, router, period]);
-
-  if (status === "loading" || loading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
   }
+
+  const leaderboard = data?.leaderboard || [];
+  const currentUser = data?.currentUser || null;
+  const totalParticipants = data?.totalParticipants || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
