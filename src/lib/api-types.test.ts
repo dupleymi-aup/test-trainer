@@ -55,15 +55,15 @@ describe("studentAnalyticsResponseSchema", () => {
     attempts: 10,
     scoresOverTime: [{ date: "2026-01-01", score: 85, ecCoverage: 0.8, bvCoverage: 0.7 }],
     topicMastery: [{ topic: "EC", avgScore: 90, attempts: 5 }],
-    taskBreakdown: [{ taskId: "1", taskName: "Factorial", bestScore: 100, attempts: 3 }],
+    taskBreakdown: [{ taskId: "1", taskName: "Factorial", bestScore: 100, attemptsCount: 3 }],
     weakAreas: [{ topic: "BV", avgScore: 50 }],
     strongAreas: [{ topic: "EC", avgScore: 95 }],
-    skillGaps: [{ topic: "Boundary", gap: 30 }],
-    difficultyBreakdown: {
-      easy: { count: 5, avgScore: 90 },
-      medium: { count: 3, avgScore: 70 },
-      hard: { count: 2, avgScore: 50 },
-    },
+    skillGaps: [{ topic: "Boundary", avgScore: 60, attempts: 3 }],
+    difficultyBreakdown: [
+      { difficulty: "easy", completed: 5, total: 5, percent: 100 },
+      { difficulty: "medium", completed: 3, total: 5, percent: 60 },
+      { difficulty: "hard", completed: 0, total: 5, percent: 0 },
+    ],
   };
 
   it("accepts valid analytics response", () => {
@@ -102,10 +102,10 @@ describe("studentAnalyticsResponseSchema", () => {
 describe("leaderboardResponseSchema", () => {
   const validLeaderboard = {
     leaderboard: [
-      { userId: "u1", name: "Alice", totalScore: 950, rank: 1, attempts: 10, avgScore: 95 },
+      { userId: "u1", name: "Alice", avatar: null, totalScore: 950, rank: 1, totalAttempts: 10, avgScore: 95, bestScore: 100, totalTasks: 5, avgTime: 120 },
     ],
     totalParticipants: 1,
-    currentUser: { userId: "u1", rank: 1, totalScore: 950 },
+    currentUser: { rank: 1, stats: { userId: "u1", name: "Alice", avatar: null, totalScore: 950, avgScore: 95, bestScore: 100, totalAttempts: 10, totalTasks: 5, avgTime: 120 } },
     period: "all",
     page: 1,
     totalPages: 1,

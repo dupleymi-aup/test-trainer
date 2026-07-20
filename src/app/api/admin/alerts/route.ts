@@ -202,11 +202,11 @@ export async function GET() {
 
   // 3. Tasks with high fail rate — compute in DB to avoid fetching 10k rows
   const taskFailStats = await db.$queryRaw<
-    Array<{ taskId: string; total: bigint; fails: bigint }>
+    Array<{ taskId: string; total: number; fails: number }>
   >`
     SELECT "taskId",
-           COUNT(*)::int::bigint AS total,
-           COUNT(*) FILTER (WHERE "score" < 50)::int::bigint AS fails
+           COUNT(*) AS total,
+           SUM(CASE WHEN "score" < 50 THEN 1 ELSE 0 END) AS fails
     FROM "Attempt"
     GROUP BY "taskId"
     HAVING COUNT(*) >= 5

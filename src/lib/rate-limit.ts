@@ -72,6 +72,8 @@ export const rateLimits: Record<string, RateLimitConfig> = {
   adminDeadlineCrud: { max: 20, windowMs: 15 * 60 * 1000 },
   /** Admin cache invalidation: 10 per 15 minutes */
   adminCacheInvalidate: { max: 10, windowMs: 15 * 60 * 1000 },
+  /** Admin activity log read: 60 per 15 minutes */
+  adminActivityLog: { max: 60, windowMs: 15 * 60 * 1000 },
   /** Admin role changes: 10 per 15 minutes (privilege escalation protection) */
   adminRoleChange: { max: 10, windowMs: 15 * 60 * 1000 },
   /** Attempt submissions: 30 per 15 minutes */

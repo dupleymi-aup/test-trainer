@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
     const session = unwrapGuard(await requireAdmin());
 
-    const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminSettings);
+    const rateResult = checkRateLimit(`activity-log:${session.userId}`, rateLimits.adminActivityLog);
     if (rateResult.limited) {
       return createRateLimitResponse(rateResult.resetAt);
     }

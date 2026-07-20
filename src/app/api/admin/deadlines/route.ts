@@ -140,10 +140,11 @@ export async function PATCH(req: Request) {
 
     const updateData: Record<string, unknown> = { ...bodyResult.data };
     if (bodyResult.data.dueDate) updateData.dueDate = new Date(bodyResult.data.dueDate);
-    if (updateData.groupId === undefined) delete updateData.groupId;
-    if (updateData.taskId === undefined) delete updateData.taskId;
-    if (updateData.targetUsers === undefined) delete updateData.targetUsers;
-    if (updateData.reminderSchedule === undefined) delete updateData.reminderSchedule;
+    if (bodyResult.data.reminderSchedule) updateData.reminderSchedule = JSON.stringify(bodyResult.data.reminderSchedule);
+    // Remove fields that exist in Zod but not in the Deadline DB model
+    delete updateData.groupId;
+    delete updateData.targetUsers;
+    delete updateData.specificUserIds;
 
     const deadline = await db.deadline.update({
       where: { id },
