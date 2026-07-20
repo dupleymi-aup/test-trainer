@@ -11,8 +11,9 @@ const cache = new Map<string, CacheEntry>();
 
 const DEFAULT_TTL = {
   expensive: 5 * 60 * 1000, // 5 min for heavy aggregations
-  simple: 1 * 60 * 1000,    // 1 min for simple counts
   medium: 3 * 60 * 1000,    // 3 min for medium queries
+  simple: 1 * 60 * 1000,    // 1 min for simple counts
+  short: 30 * 1000,         // 30 sec for frequently changing data
 };
 
 function hashParams(params: Record<string, unknown>): string {

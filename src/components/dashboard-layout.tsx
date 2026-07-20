@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useCallback, useMemo, memo, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -168,7 +168,7 @@ export function DashboardLayout({
   );
 }
 
-function NavSidebar({
+const NavSidebar = memo(function NavSidebar({
   navItems,
   navGroups,
   pathname,
@@ -183,22 +183,26 @@ function NavSidebar({
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const t = useTranslations("dashboard");
 
-  const activeClass = cn(
-    activeColor.bg,
-    activeColor.text,
-    activeColor.darkBg,
-    activeColor.darkText,
-    "font-medium"
+  const activeClass = useMemo(
+    () =>
+      cn(
+        activeColor.bg,
+        activeColor.text,
+        activeColor.darkBg,
+        activeColor.darkText,
+        "font-medium"
+      ),
+    [activeColor]
   );
 
-  const toggleGroup = (label: string) => {
+  const toggleGroup = useCallback((label: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev);
       if (next.has(label)) next.delete(label);
       else next.add(label);
       return next;
     });
-  };
+  }, []);
 
   if (navGroups && navGroups.length > 0) {
     return (
@@ -289,4 +293,4 @@ function NavSidebar({
       </Link>
     );
   });
-}
+});

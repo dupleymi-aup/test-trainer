@@ -5,10 +5,17 @@ import { tasks } from "@/lib/tasks";
 import { validateApiResponse, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { studentAnalyticsResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+
+const cacheKey = "student-analytics";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
     const session = unwrapGuard(await requireStudent());
+
+    // Check cache
+    const cached = getCache(`${cacheKey}:${session.userId}`);
+    if (cached) return NextResponse.json(cached);
 
     const rateResult = checkRateLimit(`studentAnalytics:${session.userId}`, rateLimits.studentAnalytics);
     if (rateResult.limited) {
@@ -123,6 +130,7 @@ export async function GET() {
       })),
     };
     validateApiResponse(studentAnalyticsResponseSchema, responseData);
+    setCache(`${cacheKey}:${session.userId}`, responseData, DEFAULT_TTL.short);
     return NextResponse.json(responseData);
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { tasks } from "@/lib/tasks";
 import type { TaskProgress } from "@/lib/storage";
@@ -43,14 +43,20 @@ export const ProgressStatsBar = memo(function ProgressStatsBar({
   const tTrainer = useTranslations("trainer");
   const tProgress = useTranslations("progress");
 
-  const percentage = (completedCount / totalTasks) * 100;
+  const percentage = useMemo(
+    () => (completedCount / totalTasks) * 100,
+    [completedCount, totalTasks]
+  );
 
-  const barGradient =
-    completedCount >= 5
-      ? "linear-gradient(to right, #10b981, #059669)"
-      : completedCount >= 3
-        ? "linear-gradient(to right, #f59e0b, #10b981)"
-        : "linear-gradient(to right, #ef4444, #f59e0b)";
+  const barGradient = useMemo(
+    () =>
+      completedCount >= 5
+        ? "linear-gradient(to right, #10b981, #059669)"
+        : completedCount >= 3
+          ? "linear-gradient(to right, #f59e0b, #10b981)"
+          : "linear-gradient(to right, #ef4444, #f59e0b)",
+    [completedCount]
+  );
 
   return (
     <div className="mb-4 sm:mb-6">

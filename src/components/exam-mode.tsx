@@ -263,11 +263,11 @@ export function ExamMode() {
     }
   }, [timeRemaining, examState]);
 
-  const toggleTask = (id: number) => {
+  const toggleTask = useCallback((id: number) => {
     setSelectedTasks((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
-  };
+  }, []);
 
   const startExam = () => {
     if (selectedTasks.length === 0) {

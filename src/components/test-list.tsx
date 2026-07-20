@@ -73,7 +73,7 @@ interface TestListProps {
   onClearAll?: () => void;
 }
 
-function CoverageBar({ task, evaluationResult }: { task: Task | null; evaluationResult: ReturnType<typeof evaluateTestCases> | null }) {
+const CoverageBar = memo(function CoverageBar({ task, evaluationResult }: { task: Task | null; evaluationResult: ReturnType<typeof evaluateTestCases> | null }) {
   if (!task || !evaluationResult) return null;
 
   const ecPercent = evaluationResult.totalEcs > 0 ? (evaluationResult.coveredEcsCount / evaluationResult.totalEcs) * 100 : 0;
@@ -117,9 +117,9 @@ function CoverageBar({ task, evaluationResult }: { task: Task | null; evaluation
       </div>
     </div>
   );
-}
+});
 
-function UncoveredChecklist({ task, evaluationResult }: { task: Task | null; evaluationResult: ReturnType<typeof evaluateTestCases> | null }) {
+const UncoveredChecklist = memo(function UncoveredChecklist({ task, evaluationResult }: { task: Task | null; evaluationResult: ReturnType<typeof evaluateTestCases> | null }) {
   const [open, setOpen] = useState(false);
 
   const uncovered = useMemo(() => {
@@ -198,9 +198,9 @@ function UncoveredChecklist({ task, evaluationResult }: { task: Task | null; eva
       )}
     </div>
   );
-}
+});
 
-function SortableRow({
+const SortableRow = memo(function SortableRow({
   tc,
   idx,
   editingId,
@@ -428,7 +428,7 @@ function SortableRow({
       </TableCell>
     </TableRow>
   );
-}
+});
 
 export const TestList = memo(function TestList({ task, testCases, onRemove, onDuplicate, onEdit, onSubmit, onShowHint, onFillAllEc, onFillAllBv, onReorder, onBulkRemove, onClearAll }: TestListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,13 +39,11 @@ export function TheoryQuiz() {
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswer>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  const handleSingleAnswer = (questionIndex: number, optionIndex: number) => {
-    if (quizSubmitted) return;
+  const handleSingleAnswer = useCallback((questionIndex: number, optionIndex: number) => {
     setQuizAnswers((prev) => ({ ...prev, [questionIndex]: optionIndex }));
-  };
+  }, []);
 
-  const handleMultipleAnswer = (questionIndex: number, optionIndex: number) => {
-    if (quizSubmitted) return;
+  const handleMultipleAnswer = useCallback((questionIndex: number, optionIndex: number) => {
     setQuizAnswers((prev) => {
       const current = (prev[questionIndex] as number[]) || [];
       const updated = current.includes(optionIndex)
@@ -53,22 +51,34 @@ export function TheoryQuiz() {
         : [...current, optionIndex];
       return { ...prev, [questionIndex]: updated };
     });
-  };
+  }, []);
 
-  const handleTextAnswer = (questionIndex: number, value: string) => {
-    if (quizSubmitted) return;
+  const handleTextAnswer = useCallback((questionIndex: number, value: string) => {
     setQuizAnswers((prev) => ({ ...prev, [questionIndex]: value }));
-  };
+  }, []);
 
-  const handleQuizSubmit = () => {
-    if (getAnsweredCount() < quizQuestions.length) return;
+  const handleQuizSubmit = useCallback(() => {
+    let count = 0;
+    quizQuestions.forEach((q, idx) => {
+      const answer = quizAnswers[idx];
+      if (answer !== undefined) {
+        if (q.type === "multiple") {
+          if (Array.isArray(answer) && answer.length > 0) count++;
+        } else if (q.type === "text") {
+          if (String(answer).trim().length > 0) count++;
+        } else {
+          count++;
+        }
+      }
+    });
+    if (count < quizQuestions.length) return;
     setQuizSubmitted(true);
-  };
+  }, [quizAnswers]);
 
-  const handleQuizReset = () => {
+  const handleQuizReset = useCallback(() => {
     setQuizAnswers({});
     setQuizSubmitted(false);
-  };
+  }, []);
 
   const quizScore = quizSubmitted
     ? quizQuestions.reduce(
@@ -77,7 +87,24 @@ export function TheoryQuiz() {
       )
     : 0;
 
-  const getAnsweredCount = () => {
+  const allAnswered = useMemo(() => {
+    let count = 0;
+    quizQuestions.forEach((q, idx) => {
+      const answer = quizAnswers[idx];
+      if (answer !== undefined) {
+        if (q.type === "multiple") {
+          if (Array.isArray(answer) && answer.length > 0) count++;
+        } else if (q.type === "text") {
+          if (String(answer).trim().length > 0) count++;
+        } else {
+          count++;
+        }
+      }
+    });
+    return count === quizQuestions.length;
+  }, [quizAnswers]);
+
+  const answeredCount = useMemo(() => {
     let count = 0;
     quizQuestions.forEach((q, idx) => {
       const answer = quizAnswers[idx];
@@ -92,16 +119,14 @@ export function TheoryQuiz() {
       }
     });
     return count;
-  };
+  }, [quizAnswers]);
 
-  const allAnswered = getAnsweredCount() === quizQuestions.length;
-
-  const typeLabels: Record<string, { label: string; color: string }> = {
+  const typeLabels: Record<string, { label: string; color: string }> = useMemo(() => ({
     single: { label: "Выбор ответа", color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-400" },
     truefalse: { label: "Верно/Неверно", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
     multiple: { label: "Несколько ответов", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" },
     text: { label: "Ввод ответа", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
-  };
+  }), []);
 
   return (
     <Card className="border-violet-200 dark:border-violet-800">
@@ -335,7 +360,7 @@ export function TheoryQuiz() {
               disabled={!allAnswered}
               className="w-full bg-violet-600 hover:bg-violet-700 text-white"
             >
-              Проверить ответы ({getAnsweredCount()}/{quizQuestions.length})
+              Проверить ответы ({answeredCount}/{quizQuestions.length})
             </Button>
           ) : (
             <Button

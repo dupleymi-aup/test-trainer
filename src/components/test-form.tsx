@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,14 +39,46 @@ export function TestForm({ task, onAdd }: TestFormProps) {
   const [comment, setComment] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const categoryOptions = useMemo(() => {
+    const descriptions: Record<TestCaseCategory, { desc: string; example: string }> = {
+      "Нормальное значение": {
+        desc: t("categoryDescNormal"),
+        example: t("exampleNormal"),
+      },
+      "Граничное значение": {
+        desc: t("categoryDescBoundary"),
+        example: t("exampleBoundary"),
+      },
+      "Исключение": {
+        desc: t("categoryDescException"),
+        example: t("exampleException"),
+      },
+      "Недопустимый тип": {
+        desc: t("categoryDescInvalidType"),
+        example: t("exampleInvalidType"),
+      },
+    };
+    const dotColors: Record<TestCaseCategory, string> = {
+      "Нормальное значение": "bg-emerald-500 dark:bg-emerald-400",
+      "Граничное значение": "bg-amber-500 dark:bg-amber-400",
+      "Исключение": "bg-rose-500 dark:bg-rose-400",
+      "Недопустимый тип": "bg-purple-500 dark:bg-purple-400",
+    };
+    return categories.map((cat) => ({
+      cat,
+      ...descriptions[cat],
+      dotColor: dotColors[cat],
+    }));
+  }, [t]);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (inputs.some((v) => v.trim() === "") || !expected.trim()) return;
     onAdd(inputs, expected.trim(), category, comment.trim());
     setInputs(task.params.map(() => ""));
     setExpected("");
     setComment("");
-  };
+  }, [inputs, expected, category, comment, task.params, onAdd]);
 
   const handleCalculate = useCallback(() => {
     if (inputs.some((v) => v.trim() === "")) return;
@@ -60,8 +92,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
     });
   }, [inputs, task.id, t]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Allow Ctrl+Enter or Cmd+Enter to submit from any input
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       if (inputs.some((v) => v.trim() === "") || !expected.trim()) return;
@@ -70,7 +101,7 @@ export function TestForm({ task, onAdd }: TestFormProps) {
       setExpected("");
       setComment("");
     }
-  };
+  }, [inputs, expected, category, comment, task.params, onAdd]);
 
   return (
     <Card>
@@ -157,56 +188,26 @@ export function TestForm({ task, onAdd }: TestFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => {
-                  const descriptions: Record<TestCaseCategory, { desc: string; example: string }> = {
-                    "Нормальное значение": {
-                      desc: t("categoryDescNormal"),
-                      example: t("exampleNormal"),
-                    },
-                    "Граничное значение": {
-                      desc: t("categoryDescBoundary"),
-                      example: t("exampleBoundary"),
-                    },
-                    "Исключение": {
-                      desc: t("categoryDescException"),
-                      example: t("exampleException"),
-                    },
-                    "Недопустимый тип": {
-                      desc: t("categoryDescInvalidType"),
-                      example: t("exampleInvalidType"),
-                    },
-                  };
-                  const info = descriptions[cat];
-                  const dotColor =
-                    cat === "Нормальное значение"
-                      ? "bg-emerald-500 dark:bg-emerald-400"
-                      : cat === "Граничное значение"
-                        ? "bg-amber-500 dark:bg-amber-400"
-                        : cat === "Исключение"
-                          ? "bg-rose-500 dark:bg-rose-400"
-                          : "bg-purple-500 dark:bg-purple-400";
-
-                  return (
-                    <SelectItem key={cat} value={cat}>
-                      <span className="flex items-center gap-2">
-                        <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
-                        {cat}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-[260px]">
-                            <p className="text-xs font-medium mb-1">{cat}</p>
-                            <p className="text-[11px] text-muted-foreground mb-1">{info.desc}</p>
-                            <p className="text-[11px] font-mono bg-muted/50 rounded px-1.5 py-0.5">
-                              {info.example}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </span>
-                    </SelectItem>
-                  );
-                })}
+                {categoryOptions.map(({ cat, desc, example, dotColor }) => (
+                  <SelectItem key={cat} value={cat}>
+                    <span className="flex items-center gap-2">
+                      <span className={`inline-block w-2 h-2 rounded-full ${dotColor}`} />
+                      {cat}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-3 w-3 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[260px]">
+                          <p className="text-xs font-medium mb-1">{cat}</p>
+                          <p className="text-[11px] text-muted-foreground mb-1">{desc}</p>
+                          <p className="text-[11px] font-mono bg-muted/50 rounded px-1.5 py-0.5">
+                            {example}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

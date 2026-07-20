@@ -5,26 +5,22 @@ import { parseSearchParams, validateApiResponse, withErrorHandler, unwrapGuard }
 import { leaderboardResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
 import { z } from "zod";
-
-const leaderboardParamsSchema = z.object({
-  period: z.enum(["all", "week", "month"]).default("all"),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-  page: z.coerce.number().int().min(1).default(1),
-  groupId: z.string().optional(),
-});
+import { getCache, setCache, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
     const auth = unwrapGuard(await requireStudent());
 
-    const rateResult = checkRateLimit(`studentLeaderboard:${auth.userId}`, rateLimits.studentLeaderboard);
-    if (rateResult.limited) {
-      return createRateLimitResponse(rateResult.resetAt);
-    }
-
     const params = parseSearchParams(req, leaderboardParamsSchema);
     if (!params.success) return params.errorResponse;
     const { period, limit, page, groupId } = params.data;
+
+    // Build cache key from all query params
+    const cacheKey = `student-leaderboard:${period}:${limit}:${page}:${groupId || "all"}`;
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
+
+    const rateResult = checkRateLimit(`studentLeaderboard:${auth.userId}`, rateLimits.studentLeaderboard);
 
     const now = new Date();
     let dateFrom: Date | undefined;

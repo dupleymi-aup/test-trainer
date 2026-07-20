@@ -27,7 +27,14 @@ function createLocalStorageMock() {
 }
 
 describe("useLocalStorage", () => {
-  let mockStorage: ReturnType<typeof createLocalStorageMock>;
+  let mockStorage: {
+    getItem: ReturnType<typeof vi.fn>;
+    setItem: ReturnType<typeof vi.fn>;
+    removeItem: ReturnType<typeof vi.fn>;
+    length: number;
+    key: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     mockStorage = createLocalStorageMock();
@@ -44,7 +51,7 @@ describe("useLocalStorage", () => {
   });
 
   it("initializes with initialValue when localStorage is empty", () => {
-    mockStorage.getItem.mockReturnValue(null);
+    mockStorage.getItem.mockImplementation(() => null);
     const { result } = renderHook(() => useLocalStorage("test-key", { count: 0 }));
     expect(result.current.value).toEqual({ count: 0 });
   });
@@ -58,7 +65,7 @@ describe("useLocalStorage", () => {
   });
 
   it("saves to localStorage when setValue is called", () => {
-    mockStorage.getItem.mockReturnValue(null);
+    mockStorage.getItem.mockImplementation(() => null);
     const { result } = renderHook(() => useLocalStorage("test-key", { count: 0 }));
 
     act(() => {
@@ -125,7 +132,7 @@ describe("useLocalStorage", () => {
   });
 
   it("debounces rapid setValue calls", () => {
-    mockStorage.getItem.mockReturnValue(null);
+    mockStorage.getItem.mockImplementation(() => null);
     const { result } = renderHook(() => useLocalStorage("test-key", 0));
 
     act(() => {
@@ -144,7 +151,7 @@ describe("useLocalStorage", () => {
   });
 
   it("handles non-object initial values (strings, numbers)", () => {
-    mockStorage.getItem.mockReturnValue(null);
+    mockStorage.getItem.mockImplementation(() => null);
     const { result: r1 } = renderHook(() => useLocalStorage("str-key", "hello"));
     expect(r1.current.value).toBe("hello");
 
@@ -156,7 +163,7 @@ describe("useLocalStorage", () => {
   });
 
   it("persists string values correctly", () => {
-    mockStorage.getItem.mockReturnValue(null);
+    mockStorage.getItem.mockImplementation(() => null);
     const { result } = renderHook(() => useLocalStorage("str-key", ""));
 
     act(() => {

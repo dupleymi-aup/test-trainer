@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useDeferredValue } from "react";
+import { useState, useMemo, useDeferredValue, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,9 +47,9 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
   const [expandedBvs, setExpandedBvs] = useState<Set<number>>(new Set());
   const [mistakesOpen, setMistakesOpen] = useState(false);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     saveTaskNote(task.id, note);
-  };
+  }, [task.id, note]);
 
   // Defer expensive coverage computation to keep UI responsive during rapid test case changes
   const deferredTestCases = useDeferredValue(testCases);
@@ -80,11 +80,11 @@ function TaskWorkspaceInner({ task, testCases }: TaskWorkspaceProps) {
 
   const maxNoteLength = 2000;
 
-  const formatExampleValue = (val: unknown): string => {
+  const formatExampleValue = useCallback((val: unknown): string => {
     if (Array.isArray(val)) return `[${val.join(", ")}]`;
     if (typeof val === "string") return `"${val}"`;
     return String(val);
-  };
+  }, []);
 
   return (
     <ScrollArea className="h-full">
