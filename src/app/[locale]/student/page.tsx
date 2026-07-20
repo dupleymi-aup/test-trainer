@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { loadProgress, loadAttemptHistory, loadStreak } from "@/lib/storage";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 const TOTAL_TASKS = tasks.length;
 const difficultyMap: Record<string, { labelKey: string; color: string; russianValue: string }> = {
@@ -40,6 +40,21 @@ const difficultyMap: Record<string, { labelKey: string; color: string; russianVa
   hard: { labelKey: "hard", color: "text-rose-600 dark:text-rose-400", russianValue: "Сложно" },
 };
 
+interface AnnouncementsData {
+  announcements: Array<{
+    id: string;
+    title: string;
+    content: string;
+    createdAt: string;
+    group: { name: string } | null;
+    creator: { name: string | null; role: string };
+  }>;
+}
+
+interface MessagesData {
+  unreadCount: number;
+}
+
 export default function StudentDashboardPage() {
   const t = useTranslations("student");
   const tCommon = useTranslations("common");
@@ -47,83 +62,57 @@ export default function StudentDashboardPage() {
   const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [stats, setStats] = useState<{
-    completed: number;
-    bestScore: number;
-    avgScore: number;
-    totalAttempts: number;
-    streak: number;
-    longestStreak: number;
-  } | null>(null);
-  const [progress, setProgress] = useState<Record<string, { score: number }>>({});
-  const [announcements, setAnnouncements] = useState<Array<{
-    id: string;
-    title: string;
-    content: string;
-    createdAt: string;
-    group: { name: string } | null;
-    creator: { name: string | null; role: string };
-  }>>([]);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  const [lastTaskId, setLastTaskId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/student");
-      return;
-    }
-    if (status === "authenticated" && session?.user?.role !== "STUDENT") {
-      if (session.user.role === "ADMIN") router.push("/admin/analytics");
-      else if (session.user.role === "TEACHER") router.push("/teacher");
-      return;
-    }
-    if (status === "authenticated") {
-      const controller = new AbortController();
-      const progressData = loadProgress();
-      const attempts = loadAttemptHistory();
-      const streakData = loadStreak();
+  // Fetch announcements via SWR (cached, auto-revalidates on focus)
+  const { data: announcementsData } = useSWRApi<AnnouncementsData>(
+    status === "authenticated" ? "/api/student/announcements" : null
+  );
 
-      setProgress(progressData);
+  // Fetch unread messages count via SWR
+  const { data: messagesData } = useSWRApi<MessagesData>(
+    status === "authenticated" ? "/api/student/messages?limit=1" : null
+  );
 
-      const completedTasks = Object.keys(progressData).length;
-      const scores = Object.values(progressData).map((p) => p.score);
-      const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
-      const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  // Compute local stats from localStorage (no API call needed)
+  const stats = useMemo(() => {
+    const progressData = loadProgress();
+    const attempts = loadAttemptHistory();
+    const streakData = loadStreak();
 
-      setStats({
-        completed: completedTasks,
-        bestScore,
-        avgScore,
-        totalAttempts: attempts.length,
-        streak: streakData.currentStreak,
-        longestStreak: streakData.longestStreak,
-      });
+    const completedTasks = Object.keys(progressData).length;
+    const scores = Object.values(progressData).map((p) => p.score);
+    const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
+    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-      // Fetch announcements
-      fetch("/api/student/announcements", { signal: controller.signal })
-        .then((r) => r.ok ? r.json() : { announcements: [] })
-        .then((d) => setAnnouncements(d.announcements || []))
-        .catch((e) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch announcements", { error: e }); setAnnouncements([]); });
+    return {
+      progress: progressData,
+      completed: completedTasks,
+      bestScore,
+      avgScore,
+      totalAttempts: attempts.length,
+      streak: streakData.currentStreak,
+      longestStreak: streakData.longestStreak,
+      lastTaskId: attempts.length > 0
+        ? [...attempts].sort((a, b) => b.timestamp - a.timestamp)[0].taskId
+        : null,
+    };
+  }, []);
 
-      // Find last attempted task for "resume" feature
-      if (attempts.length > 0) {
-        const sortedAttempts = [...attempts].sort((a, b) => b.timestamp - a.timestamp);
-        setLastTaskId(sortedAttempts[0].taskId);
-      }
+  const announcements = announcementsData?.announcements || [];
+  const unreadMessages = messagesData?.unreadCount || 0;
 
-      // Fetch unread messages count
-      fetch("/api/student/messages?limit=1", { signal: controller.signal })
-        .then((r) => r.ok ? r.json() : { unreadCount: 0 })
-        .then((d) => setUnreadMessages(d.unreadCount || 0))
-        .catch((e) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch unread messages count", { error: e }); });
+  if (status === "unauthenticated") {
+    router.push("/login?callbackUrl=/student");
+    return null;
+  }
 
-      return () => {
-        controller.abort();
-      };
-    }
-  }, [status, session, router]);
+  if (status === "authenticated" && session?.user?.role !== "STUDENT") {
+    if (session.user.role === "ADMIN") router.push("/admin/analytics");
+    else if (session.user.role === "TEACHER") router.push("/teacher");
+    return null;
+  }
 
-  if (status === "loading" || !stats) {
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -161,9 +150,9 @@ export default function StudentDashboardPage() {
                   {t("goToTrainer")} <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              {lastTaskId && (
+              {stats.lastTaskId && (
                 <Button asChild variant="outline">
-                  <Link href={`/trainer?task=${lastTaskId}`}>
+                  <Link href={`/trainer?task=${stats.lastTaskId}`}>
                     <Clock className="h-4 w-4 mr-1" /> {t("continue")}
                   </Link>
                 </Button>
@@ -368,7 +357,7 @@ export default function StudentDashboardPage() {
               {Object.entries(difficultyMap).map(([difficulty, config]) => {
                 const tasksByDifficulty = tasks.filter((t) => t.difficulty === config.russianValue);
                 const completedByDifficulty = tasksByDifficulty.filter(
-                  (t) => progress[String(t.id)]
+                  (t) => stats.progress[String(t.id)]
                 ).length;
                 const percent = tasksByDifficulty.length > 0
                   ? Math.round((completedByDifficulty / tasksByDifficulty.length) * 100)

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import {
   AlertTriangle, AlertCircle, Info, ArrowRight, RefreshCw, Filter,
   TrendingDown, Clock, UserX, Users, BookOpen, GraduationCap, CalendarClock,
 } from "lucide-react";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface SystemAlert {
   id: string;
@@ -69,26 +70,11 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function AdminAlertsPage() {
-  const [data, setData] = useState<AlertsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState<string>("all");
 
-  const fetchAlerts = () => {
-    setLoading(true);
-    fetch("/api/admin/alerts")
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  };
+  const { data, isLoading, mutate } = useSWRApi<AlertsData>("/api/admin/alerts");
 
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (isLoading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
 
   const filtered = severityFilter === "all"
@@ -100,7 +86,7 @@ export default function AdminAlertsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Системные алерты</h2>
-          <Button variant="outline" size="sm" onClick={fetchAlerts}>
+          <Button variant="outline" size="sm" onClick={() => mutate()}>
             <RefreshCw className="h-4 w-4 mr-1" /> Обновить
           </Button>
         </div>

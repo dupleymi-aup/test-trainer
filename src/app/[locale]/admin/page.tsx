@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +27,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { DonutChart } from "@/components/admin/charts/donut-chart";
-import { logger } from "@/lib/logger";
-import { apiFetch } from "@/lib/api-client";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface Stats {
   totalUsers: number;
@@ -56,6 +54,10 @@ interface RiskData {
 interface NotifData {
   notifications: Array<{ id: string; type: string; createdAt: string }>;
   unreadCount: number;
+}
+
+interface PredictionsResponse {
+  riskOverview: RiskData;
 }
 
 const roleLabels: Record<string, string> = {
@@ -86,24 +88,14 @@ const quickReports = [
 ];
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [riskData, setRiskData] = useState<RiskData | null>(null);
-  const [notifData, setNotifData] = useState<NotifData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fetch all dashboard data via SWR (cached, auto-revalidates on focus)
+  const { data: stats, isLoading: statsLoading, error: statsError } = useSWRApi<Stats>("/api/admin/stats");
+  const { data: predictionsData } = useSWRApi<PredictionsResponse>("/api/admin/analytics/predictions");
+  const { data: notifData } = useSWRApi<NotifData>("/api/admin/notifications");
 
-  useEffect(() => {
-    Promise.all([
-      apiFetch("/api/admin/stats").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); return null; }),
-      apiFetch("/api/admin/analytics/predictions").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { logger.warn("Failed to fetch predictions", { error: e }); return null; }),
-      apiFetch("/api/admin/notifications").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).catch((e) => { logger.warn("Failed to fetch notifications", { error: e }); return null; }),
-    ]).then(([statsData, riskResp, notifResp]) => {
-      if (statsData) setStats(statsData);
-      if (riskResp?.riskOverview) setRiskData(riskResp.riskOverview);
-      if (notifResp?.notifications !== undefined) setNotifData(notifResp);
-      setLoading(false);
-    }).catch((e) => { logger.warn("Dashboard data fetch failed", { error: e }); setLoading(false); });
-  }, []);
+  const loading = statsLoading;
+  const error = statsError?.message ?? null;
+  const riskData = predictionsData?.riskOverview ?? null;
 
   if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></AdminLayout>;
   if (error) return <AdminLayout><div className="p-8 text-center text-sm text-destructive">Ошибка загрузки статистики: {error}</div></AdminLayout>;

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -66,37 +66,24 @@ function RetentionBadge({ value }: { value: number }) {
   return <Badge variant={variant}>{value}%</Badge>;
 }
 
-export default function AdminCohortRetentionPage() {
-  const [cohortChartData, setCohortChartData] = useState<CohortData[]>([]);
-  const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([]);
-  const [groupData, setGroupData] = useState<GroupData[]>([]);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [totalCohorts, setTotalCohorts] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface CohortRetentionData {
+  cohortChartData: CohortData[];
+  weeklyTrends: WeeklyTrend[];
+  groupData: GroupData[];
+  totalStudents: number;
+  totalCohorts: number;
+}
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/cohort-retention", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setCohortChartData(data.cohortChartData || []);
-        setWeeklyTrends(data.weeklyTrends || []);
-        setGroupData(data.groupData || []);
-        setTotalStudents(data.totalStudents || 0);
-        setTotalCohorts(data.totalCohorts || 0);
-        setLoading(false);
-      })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+export default function AdminCohortRetentionPage() {
+  const { data, loading, error } = useFetchData<CohortRetentionData>("/api/admin/analytics/cohort-retention");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
 
   if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+
+  if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
+
+  const { cohortChartData, weeklyTrends, groupData, totalStudents, totalCohorts } = data;
 
   // Prepare retention curve data
   const retentionCurves = cohortChartData.map((c) => ({

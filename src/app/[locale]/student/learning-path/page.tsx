@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, BookOpen, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
 import { safeJsonParse } from "@/lib/utils";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface TemplateAssignment {
   id: string;
@@ -36,43 +35,29 @@ interface TemplateProgress {
   totalTasks: number;
 }
 
+interface LearningPathData {
+  assignments: TemplateAssignment[];
+  progress: Record<string, TemplateProgress>;
+}
+
 export default function StudentLearningPathPage() {
   const { status } = useSession();
   const router = useRouter();
-  const [assignments, setAssignments] = useState<TemplateAssignment[]>([]);
-  const [progress, setProgress] = useState<Record<string, TemplateProgress>>({});
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "unauthenticated") { router.push("/login"); return; }
-    if (status !== "authenticated") return;
+  const { data, isLoading } = useSWRApi<LearningPathData>(
+    status === "authenticated" ? "/api/student/learning-path" : null
+  );
 
-    const controller = new AbortController();
-    Promise.all([
-      fetch("/api/student/learning-path", { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    ])
-      .then(([data]) => {
-        if (!controller.signal.aborted) {
-          setAssignments(data.assignments || []);
-          setProgress(data.progress || {});
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (!controller.signal.aborted) {
-          logger.error("Failed to load learning path", err instanceof Error ? err : undefined);
-          setLoading(false);
-        }
-      });
-    return () => controller.abort();
-  }, [status, router]);
+  if (status === "unauthenticated") { router.push("/login"); return null; }
+  if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+
+  const assignments = data?.assignments || [];
+  const progress = data?.progress || {};
 
   const getTaskName = (taskId: number) => {
     const task = tasks.find((t) => t.id === taskId);
     return task?.name || `Задание ${taskId}`;
   };
-
-  if (loading) return <div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">

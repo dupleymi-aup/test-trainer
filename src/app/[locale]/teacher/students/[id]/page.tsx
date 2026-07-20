@@ -1,14 +1,14 @@
 "use client";
 
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
-import { useEffect, useState } from "react";
+import { use } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, FileText, AlertCircle, Award } from "lucide-react";
 import Link from "next/link";
-import { logger } from "@/lib/logger";
+import { useSWRApi } from "@/hooks/use-swr-api";
 import {
   Table,
   TableBody,
@@ -39,22 +39,11 @@ interface ProgressData {
 }
 
 export default function TeacherStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [data, setData] = useState<ProgressData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { id } = use(params);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    params.then(({ id }) => {
-      if (controller.signal.aborted) return;
-      fetch(`/api/teacher/students/${id}/progress`, { signal: controller.signal })
-        .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-        .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-        .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load student progress", err); setLoading(false); } });
-    });
-    return () => controller.abort();
-  }, [params]);
+  const { data, isLoading } = useSWRApi<ProgressData>(`/api/teacher/students/${id}/progress`);
 
-  if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
   if (!data) return <TeacherLayout><div className="p-8 text-center">Не найдено</div></TeacherLayout>;
 
   const chartData = data.scoresOverTime.map((entry, i) => ({

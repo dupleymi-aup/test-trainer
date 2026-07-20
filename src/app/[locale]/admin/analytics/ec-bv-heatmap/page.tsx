@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -56,37 +56,24 @@ function MissRateBar({ value }: { value: number }) {
   );
 }
 
-export default function AdminEcBvHeatmapPage() {
-  const [ecHeatmap, setEcHeatmap] = useState<EcData[]>([]);
-  const [bvHeatmap, setBvHeatmap] = useState<BvData[]>([]);
-  const [byTaskEc, setByTaskEc] = useState<Record<string, EcData[]>>({});
-  const [byTaskBv, setByTaskBv] = useState<Record<string, BvData[]>>({});
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface HeatmapData {
+  ecHeatmap: EcData[];
+  bvHeatmap: BvData[];
+  byTaskEc: Record<string, EcData[]>;
+  byTaskBv: Record<string, BvData[]>;
+  summary: Summary;
+}
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/ec-bv-heatmap", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setEcHeatmap(data.ecHeatmap || []);
-        setBvHeatmap(data.bvHeatmap || []);
-        setByTaskEc(data.byTaskEc || {});
-        setByTaskBv(data.byTaskBv || {});
-        setSummary(data.summary);
-        setLoading(false);
-      })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+export default function AdminEcBvHeatmapPage() {
+  const { data, loading, error } = useFetchData<HeatmapData>("/api/admin/analytics/ec-bv-heatmap");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
 
   if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+
+  if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
+
+  const { ecHeatmap, bvHeatmap, byTaskEc, byTaskBv, summary } = data;
 
   return (
     <AdminLayout>

@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +31,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 
 interface AnalyticsData {
@@ -77,30 +77,23 @@ const chartColors = [
 export default function StudentAnalyticsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/student/analytics");
-      return;
-    }
-    if (status === "authenticated" && session?.user?.role !== "STUDENT") {
-      if (session.user.role === "ADMIN") router.push("/admin/analytics");
-      else if (session.user.role === "TEACHER") router.push("/teacher/analytics");
-      return;
-    }
-    if (status === "authenticated") {
-      const controller = new AbortController();
-      fetch("/api/student/analytics", { signal: controller.signal })
-        .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-        .then((d) => { setData(d); setLoading(false); })
-        .catch(() => setLoading(false));
-      return () => controller.abort();
-    }
-  }, [status, session, router]);
+  const { data, isLoading } = useSWRApi<AnalyticsData>(
+    status === "authenticated" ? "/api/student/analytics" : null
+  );
 
-  if (status === "loading" || loading) {
+  if (status === "unauthenticated") {
+    router.push("/login?callbackUrl=/student/analytics");
+    return null;
+  }
+
+  if (status === "authenticated" && session?.user?.role !== "STUDENT") {
+    if (session.user.role === "ADMIN") router.push("/admin/analytics");
+    else if (session.user.role === "TEACHER") router.push("/teacher/analytics");
+    return null;
+  }
+
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

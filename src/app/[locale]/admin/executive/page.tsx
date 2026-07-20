@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +17,7 @@ import {
   ArrowRight,
   AlertTriangle,
 } from "lucide-react";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface ExecutiveData {
   kpi: {
@@ -42,21 +42,10 @@ interface ExecutiveData {
 const roleLabels: Record<string, string> = { STUDENT: "Студенты", TEACHER: "Преподаватели", ADMIN: "Администраторы" };
 
 export default function ExecutivePage() {
-  const [data, setData] = useState<ExecutiveData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useSWRApi<ExecutiveData>("/api/admin/executive");
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/executive", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
-    return () => controller.abort();
-  }, []);
-
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
+  if (isLoading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error.message}</p></div></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
 
   const { kpi, roleDistribution, riskBreakdown, topRiskStudents, activityTrend, topGroups } = data;

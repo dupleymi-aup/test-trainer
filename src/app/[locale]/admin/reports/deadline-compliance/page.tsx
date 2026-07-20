@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -24,17 +24,8 @@ interface DeadlineCompliance {
 }
 
 export default function AdminDeadlineCompliancePage() {
-  const [report, setReport] = useState<DeadlineCompliance[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/reports/deadline-compliance", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data) => { if (!controller.signal.aborted) { setReport(data.deadlines || data.report || []); setLoading(false); } })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data: resp, loading } = useFetchData<{ deadlines?: DeadlineCompliance[]; report?: DeadlineCompliance[] }>("/api/admin/reports/deadline-compliance");
+  const report = resp?.deadlines || resp?.report || [];
 
   const exportCSV = () => {
     const headers = ["Дедлайн", "Тип", "Дата", "Студентов", "Соблюли", "Нарушили", "Показатель"];

@@ -35,14 +35,17 @@ async function sendViaTwilio({ phone, message }: SendSMSOptions): Promise<SMSPro
   try {
     // Lazy dynamic import for optional SMS provider
     const twilio = (await import("twilio")).default;
-    const client = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+    if (!accountSid || !authToken || !fromNumber) {
+      throw new Error("Twilio env vars not configured");
+    }
+    const client = twilio(accountSid, authToken);
 
     const sms = await client.messages.create({
       body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
+      from: fromNumber,
       to: phone,
     });
 

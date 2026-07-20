@@ -1,7 +1,9 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
+import { mutate as swrMutate } from "swr";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,24 +21,15 @@ interface Template {
 }
 
 export default function AdminTemplatesPage() {
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/teacher/templates", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(); return r.json(); })
-      .then((d) => { setTemplates(d.templates || []); setLoading(false); })
-      .catch(() => setLoading(false));
-    return () => controller.abort();
-  }, []);
+  const { data: templatesData, loading } = useFetchData<{ templates: Template[] }>("/api/teacher/templates");
+  const templates = templatesData?.templates || [];
 
   const handleDelete = async (id: string) => {
     if (!confirm("Удалить шаблон?")) return;
     try {
       const res = await apiFetch(`/api/teacher/templates/${id}`, { method: "DELETE" });
-      if (res.ok) { toast.success("Удалён"); setTemplates((prev) => prev.filter((t) => t.id !== id)); }
+      if (res.ok) { toast.success("Удалён"); swrMutate("/api/teacher/templates"); }
       else toast.error("Ошибка");
     } catch { toast.error("Ошибка"); }
   };

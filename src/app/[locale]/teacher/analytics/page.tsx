@@ -1,11 +1,9 @@
 "use client";
 
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { logger } from "@/lib/logger";
-import { toast } from "sonner";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface Analytics {
   distribution: Record<string, number>;
@@ -15,19 +13,9 @@ interface Analytics {
 }
 
 export default function TeacherAnalyticsPage() {
-  const [data, setData] = useState<Analytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading } = useSWRApi<Analytics>("/api/teacher/analytics");
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/teacher/analytics", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { if (!controller.signal.aborted) { setData(d); setLoading(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load analytics", err); toast.error("Не удалось загрузить аналитику"); setLoading(false); } });
-    return () => controller.abort();
-  }, []);
-
-  if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
   if (!data) return <TeacherLayout><div className="p-8 text-center">Ошибка</div></TeacherLayout>;
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,25 +16,7 @@ interface HealthStatus {
 }
 
 export default function AdminDatabasePage() {
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const checkHealth = () => {
-    fetch("/api/admin/database/health")
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setHealth(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    checkHealth();
-  }, []);
+  const { data: health, loading, refetch } = useFetchData<HealthStatus>("/api/admin/database/health");
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
 
@@ -55,7 +37,7 @@ export default function AdminDatabasePage() {
                   <RefreshCw className="h-4 w-4 mr-1" /> Статистика JSON
                 </a>
               </Button>
-              <Button variant="outline" size="sm" onClick={checkHealth}>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
                 <RefreshCw className="h-4 w-4 mr-1" /> Обновить
               </Button>
             </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useEffect, useState } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,17 +27,8 @@ interface StudentReport {
 }
 
 export default function AdminStudentsReportPage() {
-  const [report, setReport] = useState<StudentReport[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/reports/students", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data) => { if (!controller.signal.aborted) { setReport(data.students || data.report || []); setLoading(false); } })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const { data: resp, loading } = useFetchData<{ students?: StudentReport[]; report?: StudentReport[] }>("/api/admin/reports/students");
+  const report = resp?.students || resp?.report || [];
 
   const exportCSV = () => {
     const headers = ["Имя", "Email", "Университет", "Попыток", "Ср. балл", "Ср. EC", "Ср. BV", "Лучший", "Заданий", "Завершено", "Активность", "Тренд"];

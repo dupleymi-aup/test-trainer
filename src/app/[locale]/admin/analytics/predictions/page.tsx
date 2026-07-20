@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,28 +68,16 @@ interface PredictionsData {
 }
 
 export default function PredictionsPage() {
-  const [data, setData] = useState<PredictionsData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const params = new URLSearchParams();
-    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
-    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
-    if (filters?.groupId) params.set("groupId", filters.groupId);
-    if (filters?.university) params.set("university", filters.university);
-    const qs = params.toString();
-    fetch(`/api/admin/analytics/predictions${qs ? `?${qs}` : ""}`, { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, [filters]);
+  const params = new URLSearchParams();
+  if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters?.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters?.groupId) params.set("groupId", filters.groupId);
+  if (filters?.university) params.set("university", filters.university);
+  const qs = params.toString();
+  const url = `/api/admin/analytics/predictions${qs ? `?${qs}` : ""}`;
+  const { data, loading, error } = useFetchData<PredictionsData>(url);
 
   if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
   if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;

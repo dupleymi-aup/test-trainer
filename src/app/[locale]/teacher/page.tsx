@@ -1,15 +1,14 @@
 "use client";
 
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, FileText, TrendingUp, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { logger } from "@/lib/logger";
-import { toast } from "sonner";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface Student {
   id: string;
@@ -28,36 +27,31 @@ interface Group {
   name: string;
 }
 
+interface GroupsData {
+  groups: Group[];
+}
+
+interface StudentsData {
+  students: Student[];
+}
+
 export default function TeacherDashboardPage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/teacher/groups", { signal: controller.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((data) => { if (!controller.signal.aborted) { setGroups(data.groups || []); if (data.groups?.length > 0) setSelectedGroupId(data.groups[0].id); } })
-      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load groups", err); toast.error("Не удалось загрузить список групп"); } });
-    return () => controller.abort();
-  }, []);
+  // Fetch groups via SWR (cached across all teacher pages)
+  const { data: groupsData, isLoading: groupsLoading } = useSWRApi<GroupsData>("/api/teacher/groups");
 
-  useEffect(() => {
-    if (!selectedGroupId) return;
-    const controller = new AbortController();
-    setLoading(true);
-    Promise.allSettled([
-      fetch(`/api/teacher/students?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-      fetch(`/api/teacher/analytics?groupId=${encodeURIComponent(selectedGroupId)}`, { signal: controller.signal }).then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    ]).then(([studentsResult, _analyticsResult]) => {
-      if (studentsResult.status === "fulfilled" && !controller.signal.aborted) {
-        setStudents(studentsResult.value.students || []);
-      }
-      if (!controller.signal.aborted) setLoading(false);
-    }).catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load data", err); toast.error("Не удалось загрузить данные"); setLoading(false); } });
-    return () => controller.abort();
-  }, [selectedGroupId]);
+  // Set default group when data arrives
+  const groups = groupsData?.groups || [];
+  const effectiveGroupId = selectedGroupId || (groups.length > 0 ? groups[0].id : "");
+
+  // Fetch students for selected group
+  const { data: studentsData, isLoading: studentsLoading } = useSWRApi<StudentsData>(
+    effectiveGroupId ? `/api/teacher/students?groupId=${encodeURIComponent(effectiveGroupId)}` : null
+  );
+
+  const students = studentsData?.students || [];
+  const loading = groupsLoading || (effectiveGroupId && studentsLoading);
 
   if (loading) return <TeacherLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></TeacherLayout>;
 
@@ -67,7 +61,7 @@ export default function TeacherDashboardPage() {
     <TeacherLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+          <Select value={effectiveGroupId} onValueChange={setSelectedGroupId}>
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Выберите группу" />
             </SelectTrigger>

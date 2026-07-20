@@ -52,7 +52,6 @@ export default function FavoritesPage() {
   const favorites = data?.favorites || [];
 
   const removeFavorite = async (taskId: number) => {
-    // Optimistic update: remove from cache immediately
     const prevFavorites = favorites;
     await mutate(
       { favorites: favorites.filter((f) => f.taskId !== taskId) },
@@ -63,60 +62,10 @@ export default function FavoritesPage() {
       await swrMutateFetcher("DELETE", `/api/student/favorites?taskId=${taskId}`);
       toast.success("Удалено из избранного");
     } catch {
-      // Revert on error
       await mutate({ favorites: prevFavorites }, { revalidate: false });
       toast.error("Не удалось удалить");
     }
   };
-
-const difficultyColors: Record<string, string> = {
-  "Легко": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  "Средне": "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  "Сложно": "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
-};
-
-export default function FavoritesPage() {
-  const { status } = useSession();
-  const router = useRouter();
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/student/favorites");
-      return;
-    }
-    if (status !== "authenticated") return;
-
-    const controller = new AbortController();
-    fetch("/api/student/favorites", { signal: controller.signal })
-      .then((r) => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then((data) => setFavorites(data.favorites))
-      .catch((e) => { logger.warn("Failed to load favorites", { error: e }); })
-      .finally(() => setLoading(false));
-
-    return () => controller.abort();
-  }, [status, router]);
-
-  const removeFavorite = async (taskId: number) => {
-    try {
-      const res = await fetch(`/api/student/favorites?taskId=${taskId}`, { method: "DELETE" });
-      if (res.ok) {
-        setFavorites((prev) => prev.filter((f) => f.taskId !== taskId));
-        toast.success("Удалено из избранного");
-      }
-    } catch {
-      toast.error("Не удалось удалить");
-    }
-  };
-
-  if (status === "loading" || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
 
   const favoriteTasks = favorites
     .map((f) => {

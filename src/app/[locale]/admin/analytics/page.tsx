@@ -1,7 +1,6 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +46,7 @@ import {
   Brain,
   RotateCcw,
 } from "lucide-react";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 const AttemptVolumeChart = dynamic(
   () => import("@/components/admin/analytics/charts/attempt-volume-chart").then((m) => m.AttemptVolumeChart),
@@ -114,21 +114,10 @@ const reportCards = [
 ];
 
 export default function AdminAnalyticsHubPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useSWRApi<AnalyticsData>("/api/admin/analytics");
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics", { signal: controller.signal })
-      .then((r) => { if (!r.ok) throw new Error("Fetch failed"); return r.json(); })
-      .then((d) => { setData(d); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : String(e)); setLoading(false); });
-    return () => controller.abort();
-  }, []);
-
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (isLoading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error && !isLoading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error.message}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
   return (

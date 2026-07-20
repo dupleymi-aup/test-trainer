@@ -1,7 +1,7 @@
 "use client";
 
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, Users, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { useSWRApi } from "@/hooks/use-swr-api";
+import { mutate as swrMutate } from "swr";
 
 interface Group {
   id: string;
@@ -26,9 +28,11 @@ interface Group {
   createdAt: string;
 }
 
+interface GroupsData {
+  groups: Group[];
+}
+
 export default function TeacherGroupsPage() {
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
 
@@ -41,21 +45,19 @@ export default function TeacherGroupsPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [addingStudent, setAddingStudent] = useState(false);
 
-  const fetchGroups = useCallback(() => {
-    fetch("/api/teacher/groups").then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }).then((d) => { setGroups(d.groups); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
-
-  useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  // Fetch groups via SWR (cached across all teacher pages)
+  const { data: groupsData, isLoading } = useSWRApi<GroupsData>("/api/teacher/groups");
+  const groups = groupsData?.groups || [];
 
   const createGroup = async () => {
     if (!name.trim()) return;
     const res = await apiFetch("/api/teacher/groups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description: desc }) });
-    if (res.ok) { toast.success("Группа создана"); setName(""); setDesc(""); fetchGroups(); }
+    if (res.ok) { toast.success("Группа создана"); setName(""); setDesc(""); swrMutate("/api/teacher/groups"); }
   };
 
   const deleteGroup = async (id: string) => {
     const res = await apiFetch(`/api/teacher/groups/${id}`, { method: "DELETE" });
-    if (res.ok) { toast.success("Группа удалена"); fetchGroups(); }
+    if (res.ok) { toast.success("Группа удалена"); swrMutate("/api/teacher/groups"); }
   };
 
   const openMembersModal = async (group: Group) => {
@@ -114,7 +116,7 @@ export default function TeacherGroupsPage() {
     }
   };
 
-  if (loading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
 
   return (
     <TeacherLayout>

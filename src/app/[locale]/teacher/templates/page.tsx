@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Loader2, Plus, BookTemplate, Save, Trash2, Clock, BookOpen, Edit, Copy, Eye, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { tasks } from "@/lib/tasks";
-import { logger } from "@/lib/logger";
 import { safeJsonParse } from "@/lib/utils";
 import Link from "next/link";
+import { useSWRApi } from "@/hooks/use-swr-api";
+import { mutate as swrMutate } from "swr";
 
 interface Template {
   id: string;
@@ -28,6 +29,10 @@ interface Template {
   assignments: Array<{ group: { id: string; name: string } }>;
 }
 
+interface TemplatesData {
+  templates: Template[];
+}
+
 type Difficulty = "Легко" | "Средне" | "Сложно";
 
 const difficultyColors: Record<Difficulty, string> = {
@@ -37,8 +42,6 @@ const difficultyColors: Record<Difficulty, string> = {
 };
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
@@ -50,27 +53,9 @@ export default function TemplatesPage() {
   const [estimatedHours, setEstimatedHours] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    loadTemplates(controller.signal);
-    return () => controller.abort();
-  }, []);
-
-  const loadTemplates = async (signal?: AbortSignal) => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/teacher/templates", { signal });
-      if (res.ok) {
-        const data = await res.json();
-        setTemplates(data.templates || []);
-      }
-    } catch (e) {
-      if (e instanceof DOMException && e.name === "AbortError") return;
-      logger.warn("Failed to load templates", { error: e });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch templates via SWR (cached)
+  const { data: templatesData, isLoading } = useSWRApi<TemplatesData>("/api/teacher/templates");
+  const templates = templatesData?.templates || [];
 
   const resetForm = () => {
     setName("");
@@ -117,7 +102,7 @@ export default function TemplatesPage() {
         toast.success(editingId ? "Шаблон обновлён" : "Шаблон создан");
         setShowCreate(false);
         resetForm();
-        loadTemplates();
+        swrMutate("/api/teacher/templates");
       } else {
         const err = await res.json();
         toast.error(err.error || "Ошибка сохранения");
@@ -135,7 +120,7 @@ export default function TemplatesPage() {
       const res = await fetch(`/api/teacher/templates/${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Шаблон удалён");
-        loadTemplates();
+        swrMutate("/api/teacher/templates");
       }
     } catch {
       toast.error("Не удалось удалить");
@@ -196,7 +181,7 @@ export default function TemplatesPage() {
       });
       if (res.ok) {
         toast.success(`Шаблон "${prebuilt.name}" создан`);
-        loadTemplates();
+        swrMutate("/api/teacher/templates");
       }
     } catch {
       toast.error("Ошибка создания");
@@ -264,7 +249,7 @@ export default function TemplatesPage() {
             <CardTitle className="text-base">Мои шаблоны</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {isLoading ? (
               <div className="flex justify-center py-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : templates.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">

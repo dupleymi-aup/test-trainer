@@ -1,7 +1,8 @@
 "use client";
 
 import { AdminLayout } from "@/components/admin/admin-layout";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -37,22 +38,13 @@ interface GroupData {
 }
 
 export default function AdminGroupPerformancePage() {
-  const [groups, setGroups] = useState<GroupData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const { data: groupsData, loading, error } = useFetchData<{ groups: GroupData[] }>("/api/admin/analytics/group-performance");
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/admin/analytics/group-performance", { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => { setGroups(data.groups || []); setLoading(false); })
-      .catch((e) => { if (controller.signal.aborted) return; setError(e instanceof Error ? e.message : "Unknown error"); setLoading(false); });
-    return () => controller.abort();
-  }, []);
+  const groups = groupsData?.groups || [];
+
+  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
 
   const toggleGroup = (groupName: string) => {
     const newExpanded = new Set(expandedGroups);
@@ -60,9 +52,6 @@ export default function AdminGroupPerformancePage() {
     else newExpanded.add(groupName);
     setExpandedGroups(newExpanded);
   };
-
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
 
   return (
     <AdminLayout>

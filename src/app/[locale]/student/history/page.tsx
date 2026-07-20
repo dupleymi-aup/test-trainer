@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { formatDuration } from "@/lib/format-time";
+import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface TaskHistoryItem {
   taskId: string;
@@ -28,6 +29,10 @@ interface TaskHistoryItem {
   attemptsCount: number;
   lastAttempt: string;
   lastScore: number;
+}
+
+interface TaskHistoryData {
+  taskHistory: TaskHistoryItem[];
 }
 
 interface TaskDetail {
@@ -69,39 +74,30 @@ function formatDate(dateStr: string) {
 export default function StudentHistoryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [taskHistory, setTaskHistory] = useState<TaskHistoryItem[]>([]);
-  const [selectedTask, setSelectedTask] = useState<TaskDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/student/history");
-      return;
-    }
-    if (status === "authenticated" && session?.user?.role !== "STUDENT") {
-      if (session.user.role === "ADMIN") router.push("/admin/analytics");
-      else if (session.user.role === "TEACHER") router.push("/teacher");
-      return;
-    }
-    if (status === "authenticated") {
-      const controller = new AbortController();
-      fetch("/api/student/history", { signal: controller.signal })
-        .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-        .then((d) => { setTaskHistory(d.taskHistory || []); setLoading(false); })
-        .catch(() => { if (!controller.signal.aborted) setLoading(false); });
-      return () => controller.abort();
-    }
-  }, [status, session, router]);
+  // Fetch task history list (cached)
+  const { data: historyData, isLoading: historyLoading } = useSWRApi<TaskHistoryData>(
+    status === "authenticated" && !selectedTaskId ? "/api/student/history" : null
+  );
 
-  const loadTaskDetail = (taskId: string) => {
-    setLoading(true);
-    fetch(`/api/student/history?taskId=${taskId}`)
-      .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then((d) => { setSelectedTask(d); setLoading(false); })
-      .catch(() => setLoading(false));
-  };
+  // Fetch task detail when selected (cached)
+  const { data: detailData, isLoading: detailLoading } = useSWRApi<TaskDetail>(
+    selectedTaskId ? `/api/student/history?taskId=${selectedTaskId}` : null
+  );
 
-  if (status === "loading" || loading) {
+  if (status === "unauthenticated") {
+    router.push("/login?callbackUrl=/student/history");
+    return null;
+  }
+
+  if (status === "authenticated" && session?.user?.role !== "STUDENT") {
+    if (session.user.role === "ADMIN") router.push("/admin/analytics");
+    else if (session.user.role === "TEACHER") router.push("/teacher");
+    return null;
+  }
+
+  if (status === "loading" || historyLoading || (selectedTaskId && detailLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -112,6 +108,9 @@ export default function StudentHistoryPage() {
     );
   }
 
+  const taskHistory = historyData?.taskHistory || [];
+  const selectedTask = detailData || null;
+
   // Task detail view
   if (selectedTask) {
     return (
@@ -119,7 +118,7 @@ export default function StudentHistoryPage() {
         <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
           <div className="max-w-4xl mx-auto px-4 py-4 sm:py-5">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => { setSelectedTask(null); setTaskHistory(taskHistory); }}>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedTaskId(null)}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
@@ -265,10 +264,10 @@ export default function StudentHistoryPage() {
               <div
                 key={task.taskId}
                 className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => loadTaskDetail(task.taskId)}
+                onClick={() => setSelectedTaskId(task.taskId)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && loadTaskDetail(task.taskId)}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedTaskId(task.taskId)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">

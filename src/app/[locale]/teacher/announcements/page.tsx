@@ -1,7 +1,7 @@
 "use client";
 
 import { TeacherLayout } from "@/components/teacher/teacher-layout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import {
 import { Megaphone, Plus, Trash2, Loader2, Calendar, Users } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { useSWRApi } from "@/hooks/use-swr-api";
+import { mutate as swrMutate } from "swr";
 
 interface Group {
   id: string;
@@ -35,10 +37,15 @@ interface Announcement {
   creator: { id: string; name: string | null; role: string };
 }
 
+interface AnnouncementsData {
+  announcements: Announcement[];
+}
+
+interface GroupsData {
+  groups: Group[];
+}
+
 export default function TeacherAnnouncementsPage() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
@@ -46,23 +53,12 @@ export default function TeacherAnnouncementsPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState("");
 
-  const fetchData = () => {
-    setLoading(true);
-    Promise.all([
-      fetch("/api/teacher/announcements").then((r) => r.ok ? r.json() : { announcements: [] }),
-      fetch("/api/teacher/groups").then((r) => r.ok ? r.json() : { groups: [] }),
-    ])
-      .then(([annData, groupData]) => {
-        setAnnouncements(annData.announcements || []);
-        setGroups(groupData.groups || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  };
+  // Fetch announcements & groups via SWR (cached)
+  const { data: announcementsData, isLoading } = useSWRApi<AnnouncementsData>("/api/teacher/announcements");
+  const { data: groupsData } = useSWRApi<GroupsData>("/api/teacher/groups");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const announcements = announcementsData?.announcements || [];
+  const groups = groupsData?.groups || [];
 
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) {
@@ -89,7 +85,7 @@ export default function TeacherAnnouncementsPage() {
         setSelectedGroup("");
         setExpiresAt("");
         setShowForm(false);
-        fetchData();
+        swrMutate("/api/teacher/announcements");
       } else {
         toast.error(json.error || "Ошибка при создании");
       }
@@ -106,7 +102,7 @@ export default function TeacherAnnouncementsPage() {
       const res = await apiFetch(`/api/teacher/announcements?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Объявление удалено");
-        fetchData();
+        swrMutate("/api/teacher/announcements");
       } else {
         toast.error("Ошибка при удалении");
       }
@@ -208,7 +204,7 @@ export default function TeacherAnnouncementsPage() {
         )}
 
         {/* Announcements List */}
-        {loading ? (
+        {isLoading ? (
           <div className="text-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />
             <p className="text-muted-foreground">Загрузка...</p>

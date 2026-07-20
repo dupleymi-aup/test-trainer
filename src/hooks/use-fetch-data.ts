@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import useSWR from "swr";
+import { swrFetcher, type FetcherError } from "@/lib/swr-fetcher";
 
 interface UseFetchDataResult<T> {
   data: T | null;
@@ -10,40 +11,27 @@ interface UseFetchDataResult<T> {
 }
 
 /**
- * Shared hook for fetching data with loading/error states and AbortController cleanup.
- * Eliminates the repeated fetch-loading-error boilerplate across analytics pages.
+ * Shared hook for fetching data with loading/error states.
+ * Now backed by SWR for automatic caching, deduplication, and revalidation.
+ * Maintains backward-compatible API.
  */
-export function useFetchData<T>(url: string, deps: unknown[] = []): UseFetchDataResult<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [fetchKey, setFetchKey] = useState(0);
+export function useFetchData<T>(url: string, _deps: unknown[] = []): UseFetchDataResult<T> {
+  const { data, error, isLoading, mutate } = useSWR<T, FetcherError>(
+    url,
+    swrFetcher,
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
+      errorRetryInterval: 5000,
+      errorRetryCount: 3,
+    }
+  );
 
-  const refetch = useCallback(() => setFetchKey((k) => k + 1), []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setError(null);
-    setLoading(true);
-
-    fetch(url, { signal: controller.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((d) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch((e) => {
-        if (controller.signal.aborted) return;
-        setError(e instanceof Error ? e.message : String(e));
-        setLoading(false);
-      });
-
-    return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, fetchKey, ...deps]);
-
-  return { data, loading, error, refetch };
+  return {
+    data: data ?? null,
+    loading: isLoading,
+    error: error?.message ?? null,
+    refetch: () => mutate(),
+  };
 }
