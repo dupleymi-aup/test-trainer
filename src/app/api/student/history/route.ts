@@ -2,56 +2,20 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { tasks } from "@/lib/tasks";
-import { parseSearchParams, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
-import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { z } from "zod";
+import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { getCache, setCache } from "@/lib/analytics-cache";
 
-const historyParamsSchema = z.object({
-  taskId: z.string().optional(),
-});
+export async function GET() {
+  return withErrorHandler(undefined, async () => {
+    const auth = unwrapGuard(await requireStudent());
 
-export async function GET(req: Request) {
-  return withErrorHandler(req, async () => {
-    const session = unwrapGuard(await requireStudent());
-
-    const rateResult = checkRateLimit(`studentHistory:${session.userId}`, rateLimits.studentHistory);
-    if (rateResult.limited) {
-      return createRateLimitResponse(rateResult.resetAt);
-    }
-
-    const params = parseSearchParams(req, historyParamsSchema);
-    if (!params.success) return params.errorResponse;
-    const { taskId } = params.data;
-
-    if (taskId) {
-      // Detailed history for a specific task
-      const task = tasks.find((t) => t.id === Number(taskId));
-      const attempts = await db.attempt.findMany({
-        where: { userId: session.userId, taskId },
-        orderBy: { createdAt: "asc" },
-        select: {
-          id: true,
-          taskId: true,
-          score: true,
-          ecCoverage: true,
-          bvCoverage: true,
-          correctness: true,
-          timeSpent: true,
-          createdAt: true,
-        },
-      });
-
-      return NextResponse.json({
-        task: task
-          ? { id: task.id, name: task.name, difficulty: task.difficulty, topics: task.topics }
-          : null,
-        attempts,
-      });
-    }
+    const cacheKey = `student-history:${auth.userId}`;
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
 
     // List of all tasks the user has attempted
     const attempts = await db.attempt.findMany({
-      where: { userId: session.userId },
+      where: { userId: auth.userId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -77,8 +41,8 @@ export async function GET(req: Request) {
       }
     }
 
-    const taskHistory = Array.from(taskMap.entries()).map(([taskId, taskAttempts]) => {
-      const task = tasks.find((t) => t.id === Number(taskId));
+    const taskHistory = Array.from(taskMap.entries()).map(([taskId, taskAttempts]: [string, typeof attempts]) => {
+      const task = tasks.find((t: typeof tasks[number]) => t.id === Number(taskId));
       const scores = taskAttempts.map((a) => a.score);
       return {
         taskId,
@@ -93,6 +57,9 @@ export async function GET(req: Request) {
       };
     });
 
+    setCache(cacheKey, { taskHistory }, 300000);
     return NextResponse.json({ taskHistory });
   });
 }
+
+// Keep response in cache for 5 minutes

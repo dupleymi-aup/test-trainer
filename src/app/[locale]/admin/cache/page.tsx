@@ -18,7 +18,10 @@ export default function AdminCachePage() {
     try {
       const res = await fetch("/api/admin/cache/invalidate");
       if (res.ok) setStats(await res.json());
-    } catch { /* ignore */ }
+      else setStats(null);
+    } catch {
+      setStats(null);
+    }
     setLoading(false);
   };
 

@@ -41,6 +41,12 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimits: { studentHistory: { window: 60000, max: 30 } },
 }));
 
+vi.mock("@/lib/analytics-cache", () => ({
+  getCache: vi.fn().mockReturnValue(null),
+  setCache: vi.fn(),
+  DEFAULT_TTL: { expensive: 300000, medium: 180000, simple: 60000, short: 30000 },
+}));
+
 vi.mock("@/lib/tasks", () => ({
   tasks: [
     { id: 1, name: "Task One", difficulty: "easy", topics: ["equivalence"] },
@@ -49,13 +55,6 @@ vi.mock("@/lib/tasks", () => ({
 }));
 
 import { GET } from "./route";
-
-function makeRequest(url: string) {
-  return new Request(url, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
-}
 
 function setAuthorized() {
   mocks.guardResult = { session: { userId: "student-1", role: "STUDENT" } };
@@ -80,7 +79,7 @@ describe("GET /api/student/history", () => {
   });
 
   it("returns grouped task history without taskId param", async () => {
-    const res = await GET(makeRequest("http://localhost:3000/api/student/history"));
+    const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.taskHistory).toHaveLength(2);
@@ -91,36 +90,21 @@ describe("GET /api/student/history", () => {
     expect(t1.avgScore).toBe(85);
   });
 
-  it("returns detailed history when taskId is provided", async () => {
-    const res = await GET(makeRequest("http://localhost:3000/api/student/history?taskId=1"));
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.task).toBeDefined();
-    expect(body.task.name).toBe("Task One");
-    expect(body.attempts).toHaveLength(3);
-  });
-
-  it("returns null task when taskId matches no known task", async () => {
-    const res = await GET(makeRequest("http://localhost:3000/api/student/history?taskId=999"));
-    const body = await res.json();
-    expect(body.task).toBeNull();
-  });
-
   it("returns 403 when unauthorized", async () => {
     setUnauthorized();
-    const res = await GET(makeRequest("http://localhost:3000/api/student/history"));
+    const res = await GET();
     expect(res.status).toBe(403);
   });
 
   it("handles db error gracefully", async () => {
     mocks.mockAttemptFindMany.mockRejectedValue(new Error("DB down"));
-    const res = await GET(makeRequest("http://localhost:3000/api/student/history"));
+    const res = await GET();
     expect(res.status).toBe(500);
   });
 
   it("returns empty history when student has no attempts", async () => {
     mocks.mockAttemptFindMany.mockResolvedValue([]);
-    const res = await GET(makeRequest("http://localhost:3000/api/student/history"));
+    const res = await GET();
     const body = await res.json();
     expect(body.taskHistory).toEqual([]);
   });

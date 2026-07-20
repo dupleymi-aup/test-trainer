@@ -66,6 +66,12 @@ vi.mock("@/lib/api-error-handler", () => ({
   }),
 }));
 
+vi.mock("@/lib/analytics-cache", () => ({
+  getCache: vi.fn().mockReturnValue(null),
+  setCache: vi.fn(),
+  DEFAULT_TTL: { expensive: 300000, medium: 180000, simple: 60000, short: 30000 },
+}));
+
 import { GET } from "./route";
 
 function setAuthorized() {

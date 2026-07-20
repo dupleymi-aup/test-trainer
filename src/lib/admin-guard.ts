@@ -73,8 +73,11 @@ export async function requireAdmin(): Promise<
   const result = await fetchUserFromSession(session.user.id);
   if ("response" in result) return result;
 
-  if (result.user.role !== "ADMIN" || !result.user.isActive) {
+  if (result.user.role !== "ADMIN") {
     return { response: NextResponse.json({ error: "Forbidden: admin access required" }, { status: 403 }) };
+  }
+  if (!result.user.isActive) {
+    return { response: NextResponse.json({ error: "Forbidden: account is inactive" }, { status: 403 }) };
   }
 
   return { session: { userId: result.user.id, role: result.user.role } };

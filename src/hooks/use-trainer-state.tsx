@@ -110,7 +110,8 @@ export function useTrainerState() {
   }, []);
 
   // Undo/Redo
-  const undoStackRef = useRef(new UndoStack<TestCase[]>());
+  const undoStackRef = useRef<UndoStack<TestCase[]> | null>(null);
+  if (!undoStackRef.current) undoStackRef.current = new UndoStack();
   const undoStack = undoStackRef.current;
 
   const pushUndoSnapshot = useCallback(() => {
@@ -247,6 +248,8 @@ export function useTrainerState() {
   const handleRemoveTestCase = useCallback(
     (id: string) => {
       const tc = testCases.find((t) => t.id === id);
+      if (!tc) return;
+      const taskIdAtRemoval = selectedTask?.id;
       pushUndoSnapshot();
 
       setTestCases((prev) => {
@@ -257,24 +260,22 @@ export function useTrainerState() {
         return updated;
       });
 
-      if (tc) {
-        toast.info("Тест-кейс удалён", {
-          action: {
-            label: "Отменить",
-            onClick: () => {
-              setTestCases((prev) => {
-                const restored = [...prev, tc];
-                if (selectedTask) {
-                  saveCurrentSession(selectedTask.id, restored);
-                }
-                return restored;
-              });
-              toast.success("Тест-кейс восстановлен");
-            },
+      toast.info("Тест-кейс удалён", {
+        action: {
+          label: "Отменить",
+          onClick: () => {
+            setTestCases((prev) => {
+              const restored = [...prev, tc];
+              if (taskIdAtRemoval) {
+                saveCurrentSession(taskIdAtRemoval, restored);
+              }
+              return restored;
+            });
+            toast.success("Тест-кейс восстановлен");
           },
-          duration: 5000,
-        });
-      }
+        },
+        duration: 5000,
+      });
     },
     [selectedTask, testCases, pushUndoSnapshot]
   );
@@ -519,138 +520,145 @@ export function useTrainerState() {
   const handleSubmit = useCallback(async () => {
     if (!selectedTask || testCases.length === 0) return;
 
-    const result = evaluateTestCases(selectedTask, testCases);
-    setEvaluationResult(result);
-    setActiveTab("results");
+    try {
+      const result = evaluateTestCases(selectedTask, testCases);
+      setEvaluationResult(result);
+      setActiveTab("results");
 
-    saveProgress(selectedTask.id, result.overallScore, testCases);
-    setSavedProgress(loadProgress());
+      saveProgress(selectedTask.id, result.overallScore, testCases);
+      setSavedProgress(loadProgress());
 
-    // Compute category distribution
-    const categoryDist: Record<string, number> = {};
-    testCases.forEach((tc) => {
-      categoryDist[tc.category] = (categoryDist[tc.category] || 0) + 1;
-    });
+      // Compute category distribution
+      const categoryDist: Record<string, number> = {};
+      testCases.forEach((tc) => {
+        categoryDist[tc.category] = (categoryDist[tc.category] || 0) + 1;
+      });
 
-    saveAttempt({
-      taskId: selectedTask.id,
-      score: result.overallScore,
-      ecCoverage: result.ecCoverage,
-      bvCoverage: result.boundaryCoverage,
-      correctnessScore: result.correctnessScore,
-      timestamp: Date.now(),
-      testCasesCount: testCases.length,
-      coveredEcIds: result.coveredEcIds,
-      coveredBvDescriptions: result.coveredBvDescriptions,
-      timeSpentMs: elapsedTime > 0 ? elapsedTime * 1000 : undefined,
-      categoryDistribution: categoryDist,
-    });
-    setAttemptHistory(loadAttemptHistory());
+      saveAttempt({
+        taskId: selectedTask.id,
+        score: result.overallScore,
+        ecCoverage: result.ecCoverage,
+        bvCoverage: result.boundaryCoverage,
+        correctnessScore: result.correctnessScore,
+        timestamp: Date.now(),
+        testCasesCount: testCases.length,
+        coveredEcIds: result.coveredEcIds,
+        coveredBvDescriptions: result.coveredBvDescriptions,
+        timeSpentMs: elapsedTime > 0 ? elapsedTime * 1000 : undefined,
+        categoryDistribution: categoryDist,
+      });
+      setAttemptHistory(loadAttemptHistory());
 
-    // Sync to server (fire-and-forget)
-    const timeSpentSeconds = elapsedTime > 0 ? elapsedTime : 0;
-    syncAttemptToServer({
-      taskId: String(selectedTask.id),
-      testCases: testCases.map((tc) => ({
-        id: tc.id,
-        inputs: tc.inputs,
-        expectedOutput: tc.expectedOutput,
-        category: tc.category,
-        comment: tc.comment,
-      })),
-      score: result.overallScore,
-      ecCoverage: result.ecCoverage,
-      bvCoverage: result.boundaryCoverage,
-      correctness: result.correctnessScore,
-      coveredEcIds: result.coveredEcIds,
-      coveredBvDescriptions: result.coveredBvDescriptions,
-      timeSpent: timeSpentSeconds,
-    });
+      // Sync to server (fire-and-forget)
+      const timeSpentSeconds = elapsedTime > 0 ? elapsedTime : 0;
+      syncAttemptToServer({
+        taskId: String(selectedTask.id),
+        testCases: testCases.map((tc) => ({
+          id: tc.id,
+          inputs: tc.inputs,
+          expectedOutput: tc.expectedOutput,
+          category: tc.category,
+          comment: tc.comment,
+        })),
+        score: result.overallScore,
+        ecCoverage: result.ecCoverage,
+        bvCoverage: result.boundaryCoverage,
+        correctness: result.correctnessScore,
+        coveredEcIds: result.coveredEcIds,
+        coveredBvDescriptions: result.coveredBvDescriptions,
+        timeSpent: timeSpentSeconds,
+      }).catch((err: unknown) => {
+        logger.warn("Failed to sync attempt to server", { error: err instanceof Error ? err.message : String(err) });
+      });
 
-    const updatedStreak = await saveStreak();
-    setStreak(updatedStreak);
+      const updatedStreak = await saveStreak();
+      setStreak(updatedStreak);
 
-    // Check achievements
-    const history = loadAttemptHistory();
-    const progress = loadProgress();
+      // Check achievements
+      const history = loadAttemptHistory();
+      const progress = loadProgress();
 
-    const maxEc = history.reduce((max, h) => Math.max(max, h.ecCoverage ?? 0), 0);
-    const maxBv = history.reduce((max, h) => Math.max(max, h.bvCoverage ?? 0), 0);
+      const maxEc = history.reduce((max, h) => Math.max(max, h.ecCoverage ?? 0), 0);
+      const maxBv = history.reduce((max, h) => Math.max(max, h.bvCoverage ?? 0), 0);
 
-    const examScores = history.filter((h) => h.testCasesCount > 0);
-    const examsCompleted = examScores.length;
-    const examAvgScore =
-      examsCompleted > 0
-        ? Math.round(examScores.reduce((s, h) => s + h.score, 0) / examsCompleted)
-        : 0;
+      const examScores = history.filter((h) => h.testCasesCount > 0);
+      const examsCompleted = examScores.length;
+      const examAvgScore =
+        examsCompleted > 0
+          ? Math.round(examScores.reduce((s, h) => s + h.score, 0) / examsCompleted)
+          : 0;
 
-    // Check if all 4 categories were used in this submission
-    const categorySet = new Set(testCases.map((tc) => tc.category));
-    const usedAllCategories = categorySet.size >= 4;
+      // Check if all 4 categories were used in this submission
+      const categorySet = new Set(testCases.map((tc) => tc.category));
+      const usedAllCategories = categorySet.size >= 4;
 
-    // Count score improvements (current score > previous best on same task)
-    const scoreImprovements = history.filter((h) => {
-      const prev = progress[String(h.taskId)];
-      return prev && h.score > prev.score;
-    }).length;
+      // Count score improvements (current score > previous best on same task)
+      const scoreImprovements = history.filter((h) => {
+        const prev = progress[String(h.taskId)];
+        return prev && h.score > prev.score;
+      }).length;
 
-    // Count distinct active days
-    const activeDays = new Set(history.map((h) => new Date(h.timestamp).toDateString())).size;
+      // Count distinct active days
+      const activeDays = new Set(history.map((h) => new Date(h.timestamp).toDateString())).size;
 
-    // Count distinct tasks where exception/invalid type tests were submitted
-    const exceptionTestTasks = new Set(
-      history
-        .filter((h) => h.categoryDistribution && h.categoryDistribution["Исключение"] > 0)
-        .map((h) => h.taskId)
-    ).size;
+      // Count distinct tasks where exception/invalid type tests were submitted
+      const exceptionTestTasks = new Set(
+        history
+          .filter((h) => h.categoryDistribution && h.categoryDistribution["Исключение"] > 0)
+          .map((h) => h.taskId)
+      ).size;
 
-    const context = {
-      completedTasks: Object.keys(progress).length,
-      totalTasks: tasks.length,
-      bestScores: Object.fromEntries(
-        Object.entries(progress).map(([id, p]) => [id, p.score])
-      ),
-      totalAttempts: history.length,
-      perfectScores: Object.values(progress).filter((p) => p.score >= 100).length,
-      attemptHistory: history.map((h) => ({
-        taskId: h.taskId,
-        score: h.score,
-        timestamp: h.timestamp,
-      })),
-      maxEcCoverage: maxEc,
-      maxBvCoverage: maxBv,
-      examsCompleted,
-      examAvgScore,
-      usedAllCategories,
-      scoreImprovements,
-      daysActive: activeDays,
-      marathonCompleted: getMarathonsCompleted(),
-      bestMarathonScore: getBestMarathonAvgScore(),
-      exceptionTestTasks,
-      workedExamplesViewed: Object.keys(progress).length, // tasks with attempts ≈ worked examples viewed
-      testCaseCategories: new Set(
-        history.flatMap((h) => {
-          const dist = h.categoryDistribution;
-          return dist ? Object.keys(dist).filter((k) => dist[k] > 0) : [];
-        })
-      ),
-    };
+      const context = {
+        completedTasks: Object.keys(progress).length,
+        totalTasks: tasks.length,
+        bestScores: Object.fromEntries(
+          Object.entries(progress).map(([id, p]) => [id, p.score])
+        ),
+        totalAttempts: history.length,
+        perfectScores: Object.values(progress).filter((p) => p.score >= 100).length,
+        attemptHistory: history.map((h) => ({
+          taskId: h.taskId,
+          score: h.score,
+          timestamp: h.timestamp,
+        })),
+        maxEcCoverage: maxEc,
+        maxBvCoverage: maxBv,
+        examsCompleted,
+        examAvgScore,
+        usedAllCategories,
+        scoreImprovements,
+        daysActive: activeDays,
+        marathonCompleted: getMarathonsCompleted(),
+        bestMarathonScore: getBestMarathonAvgScore(),
+        exceptionTestTasks,
+        workedExamplesViewed: Object.keys(progress).length,
+        testCaseCategories: new Set(
+          history.flatMap((h) => {
+            const dist = h.categoryDistribution;
+            return dist ? Object.keys(dist).filter((k) => dist[k] > 0) : [];
+          })
+        ),
+      };
 
-    const newlyUnlocked = checkAndUnlockAchievements(context);
-    if (newlyUnlocked.length > 0) {
-      window.dispatchEvent(new Event("achievements-updated"));
-      for (const id of newlyUnlocked) {
-        const ach = allAchievements.find((a) => a.id === id);
-        if (ach) {
-          toast.custom(() => <AchievementToast achievement={ach} />, { duration: 5000 });
+      const newlyUnlocked = checkAndUnlockAchievements(context);
+      if (newlyUnlocked.length > 0) {
+        window.dispatchEvent(new Event("achievements-updated"));
+        for (const id of newlyUnlocked) {
+          const ach = allAchievements.find((a) => a.id === id);
+          if (ach) {
+            toast.custom(() => <AchievementToast achievement={ach} />, { duration: 5000 });
+          }
         }
       }
-    }
 
-    toast.success(`Проверка завершена! Оценка: ${result.overallScore}%`);
+      toast.success(`Проверка завершена! Оценка: ${result.overallScore}%`);
 
-    if (result.overallScore >= 90) {
-      triggerConfetti();
+      if (result.overallScore >= 90) {
+        triggerConfetti();
+      }
+    } catch (err: unknown) {
+      logger.error("Submission failed", { error: err instanceof Error ? err.message : String(err) });
+      toast.error("Ошибка при отправке");
     }
   }, [selectedTask, testCases, elapsedTime, triggerConfetti]);
 
@@ -716,7 +724,11 @@ export function useTrainerState() {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
-        const text = reader.result as string;
+        if (typeof reader.result !== "string") {
+          toast.error("Не удалось прочитать файл");
+          return;
+        }
+        const text = reader.result;
         if (importAllProgress(text)) {
           setSavedProgress(loadProgress());
           setStreak(loadStreak());
@@ -757,7 +769,9 @@ export function useTrainerState() {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
         if (activeTab === "trainer" && selectedTask && testCases.length > 0) {
-          handleSubmit();
+          handleSubmit().catch((err: unknown) => {
+            logger.warn("Keyboard submit failed", { error: err instanceof Error ? err.message : String(err) });
+          });
         }
       }
 

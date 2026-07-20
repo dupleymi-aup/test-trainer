@@ -3,9 +3,16 @@ import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { parseSearchParams, validateApiResponse, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { leaderboardResponseSchema } from "@/lib/api-types";
-import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
+import { checkRateLimit, rateLimits } from "@/lib/rate-limit";
 import { z } from "zod";
-import { getCache, setCache, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { getCache, setCache } from "@/lib/analytics-cache";
+
+const leaderboardParamsSchema = z.object({
+  period: z.enum(["all", "week", "month"]).default("all"),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  groupId: z.string().optional(),
+});
 
 export async function GET(req: Request) {
   return withErrorHandler(req, async () => {
@@ -21,6 +28,9 @@ export async function GET(req: Request) {
     if (cached) return NextResponse.json(cached);
 
     const rateResult = checkRateLimit(`studentLeaderboard:${auth.userId}`, rateLimits.studentLeaderboard);
+    if (rateResult.limited) {
+      return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
 
     const now = new Date();
     let dateFrom: Date | undefined;
@@ -146,6 +156,7 @@ export async function GET(req: Request) {
       groupId: groupId || null,
     };
     validateApiResponse(leaderboardResponseSchema, responseData);
+    setCache(cacheKey, responseData, 30000);
     return NextResponse.json(responseData);
   });
 }

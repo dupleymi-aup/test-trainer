@@ -5,10 +5,15 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
+import { getCache, setCache } from "@/lib/analytics-cache";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
     const auth = unwrapGuard(await requireStudent());
+
+    const cacheKey = `student-favorites:${auth.userId}`;
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
 
     const favorites = await db.favoriteTask.findMany({
       where: { userId: auth.userId },
@@ -16,6 +21,7 @@ export async function GET() {
       select: { id: true, taskId: true, createdAt: true },
     });
 
+    setCache(cacheKey, { favorites }, 300000);
     return NextResponse.json({ favorites });
   });
 }
@@ -53,6 +59,10 @@ export async function POST(req: Request) {
       },
     });
 
+    // Invalidate cache
+    const cacheKey = `student-favorites:${auth.userId}`;
+    setCache(cacheKey, null, 0);
+
     return NextResponse.json({ favorite }, { status: 201 });
   });
 }
@@ -80,6 +90,10 @@ export async function DELETE(req: Request) {
     await db.favoriteTask.deleteMany({
       where: { userId: auth.userId, taskId: parsedTaskId },
     });
+
+    // Invalidate cache
+    const cacheKey = `student-favorites:${auth.userId}`;
+    setCache(cacheKey, null, 0);
 
     await db.activityLog.create({
       data: {

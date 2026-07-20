@@ -86,24 +86,22 @@ export function useLocalStorage<T>(
     (value: T | ((prev: T) => T)) => {
       setState((prev) => {
         const nextValue = value instanceof Function ? value(prev.value) : value;
-
-        // Debounce the actual localStorage write
-        if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current);
-
-        setState({ value: nextValue, isPending: true });
-
-        writeTimeoutRef.current = setTimeout(() => {
-          try {
-            localStorage.setItem(key, JSON.stringify(nextValue));
-          } catch {
-            // localStorage full or unavailable
-          } finally {
-            setState((p) => (p.value === nextValue ? { ...p, isPending: false } : p));
-          }
-        }, 50);
-
         return { value: nextValue, isPending: true };
       });
+
+      // Debounce the actual localStorage write (outside setState updater)
+      if (writeTimeoutRef.current) clearTimeout(writeTimeoutRef.current);
+
+      writeTimeoutRef.current = setTimeout(() => {
+        setState((prev) => {
+          try {
+            localStorage.setItem(key, JSON.stringify(prev.value));
+          } catch {
+            // localStorage full or unavailable
+          }
+          return { ...prev, isPending: false };
+        });
+      }, 50);
     },
     [key]
   );

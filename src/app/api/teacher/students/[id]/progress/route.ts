@@ -28,7 +28,7 @@ export async function GET(
     }
 
     const student = await db.user.findUnique({
-      where: { id, role: "STUDENT" },
+      where: { id },
       select: {
         id: true,
         name: true,

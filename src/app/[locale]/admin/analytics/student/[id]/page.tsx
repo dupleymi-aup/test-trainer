@@ -88,7 +88,7 @@ export default function AdminStudentReportPage() {
       <div className="space-y-6">
         {/* Header + Back */}
         <div className="flex items-center gap-3">
-          <Link href="/admin/analytics/predictions">
+          <Link href="/admin/analytics/performance-dashboard">
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <div className="flex-1">

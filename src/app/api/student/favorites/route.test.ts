@@ -69,6 +69,12 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimits: { studentFavoriteToggle: { window: 60000, max: 20 } },
 }));
 
+vi.mock("@/lib/analytics-cache", () => ({
+  getCache: vi.fn().mockReturnValue(null),
+  setCache: vi.fn(),
+  DEFAULT_TTL: { expensive: 300000, medium: 180000, simple: 60000, short: 30000 },
+}));
+
 vi.mock("@/lib/api-error-handler", () => ({
   parseRequestBody: vi.fn().mockImplementation(async () => mocks.parseBodyResult),
   withErrorHandler: vi.fn(async (_req: unknown, handler: () => Promise<NextResponse>) => {

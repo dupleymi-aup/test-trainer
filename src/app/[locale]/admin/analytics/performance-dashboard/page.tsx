@@ -184,7 +184,7 @@ export default function PerformanceDashboardPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page <= 1}>Предыдущая</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= data.pagination.total}>Следующая</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= data.pagination.totalPages}>Следующая</Button>
               </div>
             </div>
           </>

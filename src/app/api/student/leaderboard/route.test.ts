@@ -42,6 +42,12 @@ vi.mock("@/lib/rate-limit", () => ({
   rateLimits: { studentLeaderboard: { window: 60000, max: 20 } },
 }));
 
+vi.mock("@/lib/analytics-cache", () => ({
+  getCache: vi.fn().mockReturnValue(null),
+  setCache: vi.fn(),
+  DEFAULT_TTL: { expensive: 300000, medium: 180000, simple: 60000, short: 30000 },
+}));
+
 vi.mock("@/lib/api-error-handler", () => ({
   parseSearchParams: vi.fn().mockImplementation(() => mocks.parseParamsResult),
   validateApiResponse: vi.fn().mockImplementation((_schema: unknown, data: unknown) => data),

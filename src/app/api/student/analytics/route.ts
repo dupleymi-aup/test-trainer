@@ -5,7 +5,7 @@ import { tasks } from "@/lib/tasks";
 import { validateApiResponse, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { studentAnalyticsResponseSchema } from "@/lib/api-types";
 import { checkRateLimit, rateLimits, createRateLimitResponse } from "@/lib/rate-limit";
-import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-cache";
+import { getCache, setCache, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 const cacheKey = "student-analytics";
 

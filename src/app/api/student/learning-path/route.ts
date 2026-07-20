@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
+import { getCache, setCache } from "@/lib/analytics-cache";
 
 export async function GET() {
   return withErrorHandler(undefined, async () => {
     const auth = unwrapGuard(await requireStudent());
+
+    const cacheKey = `student-learning-path:${auth.userId}`;
+    const cached = getCache(cacheKey);
+    if (cached) return NextResponse.json(cached);
 
     const groupIds = (
       await db.userGroup.findMany({
@@ -56,6 +61,8 @@ export async function GET() {
       progress[assignment.template.id] = { templateId: assignment.template.id, completedTasks: completed, totalTasks: taskIds.length };
     }
 
-    return NextResponse.json({ assignments, progress });
+    const responseData = { assignments, progress };
+    setCache(cacheKey, responseData, 300000);
+    return NextResponse.json(responseData);
   });
 }
