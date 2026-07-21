@@ -118,6 +118,7 @@ export async function GET(request: Request) {
 
     for (const a of attempts) {
       const tid = parseInt(a.taskId, 10);
+      if (!Number.isFinite(tid)) continue;
       if (!taskScores[tid]) {
         taskScores[tid] = [];
         taskEcCoverage[tid] = [];

@@ -83,7 +83,9 @@ export async function parseRequestBody<T>(
   try {
     // Pre-check with Content-Length header (fast path, may be absent)
     const contentLength = req.headers.get("content-length");
-    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+    if (contentLength) {
+      const len = parseInt(contentLength, 10);
+      if (Number.isFinite(len) && len > MAX_BODY_SIZE) {
       return {
         success: false,
         errorResponse: NextResponse.json(

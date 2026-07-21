@@ -94,6 +94,7 @@ export async function GET(request: Request) {
 
   for (const a of attempts) {
     const taskId = parseInt(a.taskId, 10);
+    if (!Number.isFinite(taskId)) continue;
     const task = taskMap.get(taskId);
     if (!task) continue;
     const dateStr = a.createdAt.toISOString().split("T")[0];
