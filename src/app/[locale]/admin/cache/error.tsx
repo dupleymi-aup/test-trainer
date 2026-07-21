@@ -9,5 +9,5 @@ export default function CacheError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Кэш" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Cache" />;
 }

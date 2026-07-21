@@ -9,5 +9,5 @@ export default function GroupsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Группы" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Groups" />;
 }

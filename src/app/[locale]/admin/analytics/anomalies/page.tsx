@@ -87,19 +87,19 @@ export default function AnomaliesPage() {
           <Button variant="outline" size="sm" onClick={() => fetchData()}>
             <RefreshCw className="h-3 w-3 mr-1" /> Обновить
           </Button>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
         <AnalyticsFilterBar onFilterChange={(filters) => fetchData(filters)} />
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Error: {error}</p></CardContent></Card>
         )}
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {!loading && !data && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No data</CardContent></Card>
         )}
 
         {!loading && data && (
@@ -160,7 +160,7 @@ export default function AnomaliesPage() {
                       <div className="flex items-center gap-2">
                         <SeverityBadge severity={a.severity} />
                         <Link href={`/admin/analytics/student/${a.studentId}`}>
-                          <Button variant="ghost" size="sm">Подробнее</Button>
+                          <Button variant="ghost" size="sm">Details</Button>
                         </Link>
                       </div>
                     </div>

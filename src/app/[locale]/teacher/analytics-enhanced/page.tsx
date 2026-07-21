@@ -91,7 +91,7 @@ export default function EnhancedAnalyticsPage() {
   if (loading)
     return (
       <TeacherLayout>
-        <div className="p-8 text-center">Загрузка...</div>
+        <div className="p-8 text-center">Loading...</div>
       </TeacherLayout>
     );
 

@@ -6,8 +6,8 @@ import { z } from "zod";
 import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const session = unwrapGuard(await requireTeacherOrAdmin());
 
     // Filter groups by teacher ownership — prevent access to all groups on platform

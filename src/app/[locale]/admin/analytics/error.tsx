@@ -9,5 +9,5 @@ export default function AnalyticsHubError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Аналитика" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Analytics" />;
 }

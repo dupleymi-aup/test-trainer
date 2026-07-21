@@ -138,7 +138,7 @@ export default function AdminGroupsPage() {
       body: JSON.stringify({ name: newGroupName, description: newGroupDesc }),
     });
     if (res.ok) {
-      toast.success("Группа создана");
+      toast.success("Group created");
       setNewGroupName("");
       setNewGroupDesc("");
       fetchGroups();
@@ -148,7 +148,7 @@ export default function AdminGroupsPage() {
   const handleDelete = async (id: string) => {
     const res = await apiFetch(`/api/admin/groups/${id}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Группа удалена");
+      toast.success("Group deleted");
       fetchGroups();
     }
   };
@@ -164,7 +164,7 @@ export default function AdminGroupsPage() {
       setGroupTasks(data.tasks || []);
       setTotalTasks(data.tasks?.length || 15);
     } catch {
-      toast.error("Ошибка при загрузке заданий");
+      toast.error("Error loading tasks");
     } finally {
       setTasksLoading(false);
     }
@@ -195,15 +195,15 @@ export default function AdminGroupsPage() {
         body: JSON.stringify({ taskIds: assignedIds }),
       });
       if (res.ok) {
-        toast.success("Задания сохранены");
+        toast.success("Tasks saved");
         setShowTasksModal(false);
         setTaskCount((prev) => ({ ...prev, [selectedGroup.id]: assignedIds.length }));
       } else {
         const data = await res.json();
-        toast.error(data.error || "Ошибка при сохранении");
+        toast.error(data.error || "Error saving");
       }
     } catch {
-      toast.error("Ошибка при сохранении");
+      toast.error("Error saving");
     } finally {
       setIsSaving(false);
     }
@@ -234,7 +234,7 @@ export default function AdminGroupsPage() {
           }))
       );
     } catch {
-      toast.error("Ошибка при загрузке данных");
+      toast.error("Error loading data");
     } finally {
       setMembersLoading(false);
     }
@@ -250,15 +250,15 @@ export default function AdminGroupsPage() {
         body: JSON.stringify({ userId: addMemberId }),
       });
       if (res.ok) {
-        toast.success("Студент добавлен");
+        toast.success("Student added");
         setAddMemberId("");
         openMembersModal(membersGroup);
       } else {
         const data = await res.json();
-        toast.error(data.error || "Ошибка при добавлении");
+        toast.error(data.error || "Error adding");
       }
     } catch {
-      toast.error("Ошибка при добавлении");
+      toast.error("Error adding");
     } finally {
       setAddingMember(false);
     }
@@ -268,7 +268,7 @@ export default function AdminGroupsPage() {
     if (!membersGroup) return;
     const res = await apiFetch(`/api/admin/groups/${membersGroup.id}/members?userId=${userId}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Студент удалён");
+      toast.success("Student removed");
       openMembersModal(membersGroup);
     }
   };
@@ -307,7 +307,7 @@ export default function AdminGroupsPage() {
         const data = await res.json();
         setBulkTasks(data.tasks || []);
       } catch {
-        toast.error("Ошибка загрузки заданий");
+        toast.error("Error loading tasks");
       } finally {
         setBulkTaskLoading(false);
       }
@@ -323,7 +323,7 @@ export default function AdminGroupsPage() {
             .map((s: { id: string; name: string | null; email: string }) => ({ id: s.id, name: s.name, email: s.email }))
         );
       } catch {
-        toast.error("Ошибка загрузки студентов");
+        toast.error("Error loading students");
       } finally {
         setBulkStudentsLoading(false);
       }
@@ -414,7 +414,7 @@ export default function AdminGroupsPage() {
     !searchGroup || g.name.toLowerCase().includes(searchGroup.toLowerCase()) || (g.description || "").toLowerCase().includes(searchGroup.toLowerCase())
   );
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
   return (
     <AdminLayout>
@@ -422,14 +422,14 @@ export default function AdminGroupsPage() {
         <Card>
           <CardHeader><CardTitle className="text-sm">Создать группу</CardTitle></CardHeader>
           <CardContent className="flex gap-2">
-            <Input placeholder="Название" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="flex-1" />
-            <Input placeholder="Описание" value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)} className="flex-1" />
+            <Input placeholder="Name" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="flex-1" />
+            <Input placeholder="Description" value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)} className="flex-1" />
             <Button onClick={handleCreate}><Plus className="h-4 w-4 mr-1" /> Создать</Button>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-sm">Группы</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Groups</CardTitle></CardHeader>
           <CardContent className="p-0">
             {selectedGroups.size > 0 && (
               <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-950/30 border-b">
@@ -452,7 +452,7 @@ export default function AdminGroupsPage() {
               <div className="relative max-w-sm">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Поиск групп..."
+                  placeholder="Search groups..."
                   value={searchGroup}
                   onChange={(e) => setSearchGroup(e.target.value)}
                   className="pl-8"
@@ -463,7 +463,7 @@ export default function AdminGroupsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
-                    <button onClick={selectAllGroups} className="flex items-center" aria-label="Выбрать все группы">
+                    <button onClick={selectAllGroups} className="flex items-center" aria-label="Select all groups">
                       {selectedGroups.size === filteredGroups.length && filteredGroups.length > 0 ? (
                         <CheckSquare className="h-4 w-4" />
                       ) : (
@@ -476,7 +476,7 @@ export default function AdminGroupsPage() {
                   <TableHead>Создатель</TableHead>
                   <TableHead><Users className="h-4 w-4" /></TableHead>
                   <TableHead><ListChecks className="h-4 w-4" /></TableHead>
-                  <TableHead>Дата</TableHead>
+                  <TableHead>Date</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -510,7 +510,7 @@ export default function AdminGroupsPage() {
                         <Button variant="outline" size="sm" onClick={() => openTasksModal(g)}>
                           <ListChecks className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(g.id)}>Удалить</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(g.id)}>Delete</Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -604,7 +604,7 @@ export default function AdminGroupsPage() {
           {membersLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Загрузка...</span>
+              <span className="ml-2 text-muted-foreground">Loading...</span>
             </div>
           ) : (
             <>
@@ -759,7 +759,7 @@ export default function AdminGroupsPage() {
 
           {bulkAction === "delete" && (
             <div className="py-4 text-center text-sm text-muted-foreground">
-              Группы будут удалены ({selectedGroups.size} шт.)
+              Groups будут удалены ({selectedGroups.size} шт.)
             </div>
           )}
 

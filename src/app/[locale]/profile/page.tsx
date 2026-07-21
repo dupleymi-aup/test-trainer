@@ -172,10 +172,10 @@ function ProfileContent() {
               group: json.user.group || "",
             });
           } else {
-            toast.error(json.error || "Ошибка при загрузке профиля");
+            toast.error(json.error || "Error loading profile");
           }
         } catch {
-          toast.error("Ошибка при загрузке профиля");
+          toast.error("Error loading profile");
         } finally {
           setLoading(false);
         }
@@ -196,12 +196,12 @@ function ProfileContent() {
       if (res.ok) {
         setProfile(json.user);
         setEditing(false);
-        toast.success("Профиль обновлён");
+        toast.success("Profile updated");
       } else {
-        toast.error(json.error || "Ошибка при обновлении");
+        toast.error(json.error || "Error updating profile");
       }
     } catch {
-      toast.error("Ошибка при обновлении профиля");
+      toast.error("Error updating profile");
     } finally {
       setSaving(false);
     }
@@ -221,14 +221,14 @@ function ProfileContent() {
 
       const json = await res.json();
       if (res.ok) {
-        toast.success("Пароль изменён");
+        toast.success("Password changed");
         passwordForm.reset();
         setNewPasswordValue("");
       } else {
-        toast.error(json.error || "Ошибка при смене пароля");
+        toast.error(json.error || "Error changing password");
       }
     } catch {
-      toast.error("Ошибка при смене пароля");
+      toast.error("Error changing password");
     } finally {
       setIsSavingPassword(false);
     }
@@ -253,13 +253,13 @@ function ProfileContent() {
       });
       const json = await res.json();
       if (res.ok) {
-        toast.success("Письмо для подтверждения отправлено");
+        toast.success("Verification email sent");
         setVerifyCooldown(60);
       } else {
-        toast.error(json.error || "Ошибка при отправке");
+        toast.error(json.error || "Error sending email");
       }
     } catch {
-      toast.error("Ошибка при отправке письма");
+      toast.error("Error sending email");
     } finally {
       setIsSendingVerification(false);
     }
@@ -274,7 +274,7 @@ function ProfileContent() {
     a.download = `test-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Прогресс экспортирован");
+    toast.success("Progress exported");
   }, []);
 
   const handleImportProgress = useCallback(() => {
@@ -288,11 +288,11 @@ function ProfileContent() {
       reader.onload = (ev) => {
         const content = ev.target?.result;
         if (typeof content === "string" && importAllProgress(content)) {
-          toast.success("Прогресс импортирован");
+          toast.success("Progress imported");
           // Refresh the page to show updated stats
           window.location.reload();
         } else {
-          toast.error("Ошибка при импорте");
+          toast.error("Import error");
         }
       };
       reader.readAsText(file);
@@ -302,7 +302,7 @@ function ProfileContent() {
 
   const handleResetProgress = useCallback(() => {
     clearAllProgress();
-    toast.success("Прогресс сброшен");
+    toast.success("Progress reset");
     window.location.reload();
   }, []);
 
@@ -484,7 +484,7 @@ function ProfileContent() {
                                 <Input
                                   {...field}
                                   disabled={!editing}
-                                  placeholder="Иван Иванов"
+                                  placeholder="John Doe"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -518,7 +518,7 @@ function ProfileContent() {
                                 <Textarea
                                   {...field}
                                   disabled={!editing}
-                                  placeholder="Расскажите о себе..."
+                                  placeholder="Tell us about yourself..."
                                   rows={3}
                                 />
                               </FormControl>
@@ -532,12 +532,12 @@ function ProfileContent() {
                             name="university"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Университет</FormLabel>
+                                <FormLabel>University</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
                                     disabled={!editing}
-                                    placeholder="МГУ"
+                                    placeholder="University"
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -549,12 +549,12 @@ function ProfileContent() {
                             name="group"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Группа</FormLabel>
+                                <FormLabel>Group</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
                                     disabled={!editing}
-                                    placeholder="ИТ-101"
+                                    placeholder="IT-101"
                                   />
                                 </FormControl>
                                 <FormMessage />

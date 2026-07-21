@@ -62,7 +62,7 @@ export default function TeacherAnnouncementsPage() {
 
   const handleCreate = async () => {
     if (!title.trim() || !content.trim()) {
-      toast.error("Заполните заголовок и содержание");
+      toast.error("Fill in the title and content");
       return;
     }
     setCreating(true);
@@ -79,7 +79,7 @@ export default function TeacherAnnouncementsPage() {
       });
       const json = await res.json();
       if (res.ok) {
-        toast.success("Объявление создано");
+        toast.success("Announcement created");
         setTitle("");
         setContent("");
         setSelectedGroup("");
@@ -87,27 +87,27 @@ export default function TeacherAnnouncementsPage() {
         setShowForm(false);
         swrMutate("/api/teacher/announcements");
       } else {
-        toast.error(json.error || "Ошибка при создании");
+        toast.error(json.error || "Error creating");
       }
     } catch {
-      toast.error("Ошибка при создании объявления");
+      toast.error("Error creating announcement");
     } finally {
       setCreating(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Удалить это объявление?")) return;
+    if (!confirm("Delete this announcement?")) return;
     try {
       const res = await apiFetch(`/api/teacher/announcements?id=${id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("Объявление удалено");
+        toast.success("Announcement deleted");
         swrMutate("/api/teacher/announcements");
       } else {
-        toast.error("Ошибка при удалении");
+        toast.error("Error deleting");
       }
     } catch {
-      toast.error("Ошибка при удалении");
+      toast.error("Error deleting");
     }
   };
 
@@ -148,7 +148,7 @@ export default function TeacherAnnouncementsPage() {
                 <Label htmlFor="title">Заголовок</Label>
                 <Input
                   id="title"
-                  placeholder="Важное объявление"
+                  placeholder="Important announcement"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={200}
@@ -158,7 +158,7 @@ export default function TeacherAnnouncementsPage() {
                 <Label htmlFor="content">Содержание</Label>
                 <Textarea
                   id="content"
-                  placeholder="Текст объявления..."
+                  placeholder="Announcement text..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={4}
@@ -171,10 +171,10 @@ export default function TeacherAnnouncementsPage() {
                   <Label>Группа</Label>
                   <Select value={selectedGroup} onValueChange={setSelectedGroup}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Все группы" />
+                      <SelectValue placeholder="All groups" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Все группы</SelectItem>
+                      <SelectItem value="">All groups</SelectItem>
                       {groups.map((g) => (
                         <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                       ))}
@@ -207,13 +207,13 @@ export default function TeacherAnnouncementsPage() {
         {isLoading ? (
           <div className="text-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-muted-foreground">Загрузка...</p>
+            <p className="text-muted-foreground">Loading...</p>
           </div>
         ) : announcements.length === 0 ? (
           <Card>
             <CardContent className="pt-8 text-center">
               <Megaphone className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Нет объявлений</h3>
+              <h3 className="text-lg font-semibold mb-2">No announcements</h3>
               <p className="text-muted-foreground">
                 Создайте первое объявление для ваших групп
               </p>
@@ -242,7 +242,7 @@ export default function TeacherAnnouncementsPage() {
                             <Users className="h-3 w-3" /> {ann.group.name}
                           </span>
                         ) : (
-                          <span>Все группы</span>
+                          <span>All groups</span>
                         )}
                       </CardDescription>
                     </div>

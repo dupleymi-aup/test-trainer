@@ -13,6 +13,7 @@ import { Lightbulb, ChevronRight, Plus } from "lucide-react";
 import { runReferenceFunction, type TestCaseCategory, ERROR_PREFIX } from "@/lib/tasks";
 import { categoryColors } from "@/lib/constants";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface HintInfo {
   ecName: string;
@@ -28,6 +29,7 @@ export function HintDialog({
 }: {
   onAddTestCase: (inputs: string[], expected: string, category: TestCaseCategory, comment: string) => void;
 }) {
+  const t = useTranslations("hint");
   const [open, setOpen] = useState(false);
   const [hint, setHint] = useState<HintInfo | null>(null);
   const [step, setStep] = useState(0); // 0 = description, 1 = input, 2 = add button
@@ -55,10 +57,10 @@ export function HintDialog({
 
   const inferCategory = useCallback((desc: string, hasError: boolean): TestCaseCategory => {
     const lower = desc.toLowerCase();
-    if (lower.includes("ошибк") || lower.includes("недопустим") || lower.includes("переполнен") || lower.includes("неверный")) {
+    if (lower.includes("ошибк") || lower.includes("недопустим") || lower.includes("переполнен") || lower.includes("неверный") || lower.includes("error") || lower.includes("invalid") || lower.includes("overflow")) {
       return hasError ? "Исключение" : "Нормальное значение";
     }
-    if (lower.includes("границ") || lower.includes("миним") || lower.includes("максим")) {
+    if (lower.includes("границ") || lower.includes("миним") || lower.includes("максим") || lower.includes("bound") || lower.includes("min") || lower.includes("max")) {
       return "Граничное значение";
     }
     return "Нормальное значение";
@@ -70,10 +72,10 @@ export function HintDialog({
     const expected = generateExpectedOutput(inputStrs);
     const hasError = expected.startsWith(ERROR_PREFIX);
     const category = inferCategory(hint.ecDescription, hasError);
-    onAddTestCase(inputStrs, expected, category, `Подсказка: ${hint.ecName}`);
+    onAddTestCase(inputStrs, expected, category, `${t("hintPrefix")} ${hint.ecName}`);
     setOpen(false);
-    toast.success(`Добавлен тест для «${hint.ecName}»`);
-  }, [hint, generateExpectedOutput, inferCategory, onAddTestCase]);
+    toast.success(`${t("testAdded")} "${hint.ecName}"`);
+  }, [hint, generateExpectedOutput, inferCategory, onAddTestCase, t]);
 
   const handleNext = () => {
     if (hint && step < 2) setStep(step + 1);
@@ -92,7 +94,7 @@ export function HintDialog({
           <div className="flex justify-center mb-2">
             <Lightbulb className="h-8 w-8 text-amber-500" />
           </div>
-          <DialogTitle className="text-center">Подсказка</DialogTitle>
+          <DialogTitle className="text-center">{t("title")}</DialogTitle>
         </DialogHeader>
 
         {/* Step indicator */}
@@ -121,13 +123,13 @@ export function HintDialog({
             {hint.whyImportant && (
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
                 <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1 flex items-center gap-1">
-                  <Lightbulb className="h-3.5 w-3.5" /> Почему это важно?
+                  <Lightbulb className="h-3.5 w-3.5" /> {t("whyImportant")}
                 </p>
                 <p className="text-xs text-blue-700 dark:text-blue-400">{hint.whyImportant}</p>
               </div>
             )}
             <p className="text-xs text-muted-foreground text-center">
-              Попробуйте создать тест-кейс, который проверяет этот класс эквивалентности
+              {t("tryCreatingTest")}
             </p>
           </div>
         )}
@@ -136,12 +138,12 @@ export function HintDialog({
         {step === 1 && (
           <div className="space-y-3">
             <div className="bg-muted/50 rounded-lg p-3">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Рекомендуемый ввод:</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">{t("suggestedInput")}</p>
               <code className="text-sm font-mono bg-background px-2 py-1 rounded">{hint.suggestedInput}</code>
             </div>
             {expectedOutput && (
               <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Ожидаемый результат:</p>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t("expectedOutput")}</p>
                 <code className={`text-sm font-mono bg-background px-2 py-1 rounded ${hasError ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                   {expectedOutput}
                 </code>
@@ -161,14 +163,14 @@ export function HintDialog({
         {step === 2 && (
           <div className="space-y-3 text-center">
             <p className="text-sm text-muted-foreground">
-              Хотите автоматически добавить этот тест-кейс?
+              {t("autoAddQuestion")}
             </p>
             <Button
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleAddHintTestCase}
             >
               <Plus className="h-4 w-4 mr-1" />
-              Добавить тест-кейс
+              {t("addTestCase")}
             </Button>
           </div>
         )}
@@ -180,14 +182,14 @@ export function HintDialog({
             className="flex-1"
             onClick={() => setOpen(false)}
           >
-            Закрыть
+            {t("close")}
           </Button>
           {step < 2 && (
             <Button
               className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
               onClick={handleNext}
             >
-              Далее
+              {t("next")}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}

@@ -9,5 +9,5 @@ export default function DatabaseAnalyticsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Аналитика БД" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Database Analytics" />;
 }

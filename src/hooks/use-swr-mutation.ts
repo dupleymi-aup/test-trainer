@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import { mutate as swrMutate } from "swr";
 import type { Key } from "swr";
 import { swrMutateFetcher, type FetcherError } from "@/lib/swr-fetcher";
@@ -48,31 +49,39 @@ export function useSWRMutation<T = unknown>(
   method: "POST" | "PUT" | "DELETE" | "PATCH",
   options?: UseSWRMutationOptions
 ): UseSWRMutationResult<T> {
-  const executeMutation = async (body?: Record<string, unknown>): Promise<T> => {
-    const result = await swrMutateFetcher<T>(method, url, body);
+  const executeMutation = useCallback(
+    async (body?: Record<string, unknown>): Promise<T> => {
+      const result = await swrMutateFetcher<T>(method, url, body);
 
-    if (options?.invalidateKeys) {
-      await Promise.all(
-        options.invalidateKeys.map((key) => swrMutate(key))
-      );
-    }
+      if (options?.invalidateKeys) {
+        await Promise.all(
+          options.invalidateKeys.map((key) => swrMutate(key))
+        );
+      }
 
-    if (options?.revalidateKeys) {
-      await Promise.all(
-        options.revalidateKeys.map((key) => swrMutate(key))
-      );
-    }
+      if (options?.revalidateKeys) {
+        await Promise.all(
+          options.revalidateKeys.map((key) => swrMutate(key))
+        );
+      }
 
-    return result;
-  };
+      return result;
+    },
+    [url, method, options?.invalidateKeys, options?.revalidateKeys]
+  );
 
-  return {
-    data: undefined,
-    error: null,
-    isMutating: false,
-    mutate: executeMutation,
-    reset: () => {},
-  };
+  const reset = useCallback(() => {}, []);
+
+  return useMemo(
+    () => ({
+      data: undefined,
+      error: null,
+      isMutating: false,
+      mutate: executeMutation,
+      reset,
+    }),
+    [executeMutation, reset]
+  );
 }
 
 /**

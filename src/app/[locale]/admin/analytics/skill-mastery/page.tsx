@@ -95,9 +95,9 @@ export default function SkillMasteryPage() {
     fetchData(filters);
   }, [filters]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const { summary } = data;
   const ecCoverageRate = summary.totalEcSkills > 0 ? Math.round((summary.masteredEc / summary.totalEcSkills) * 100) : 0;
@@ -167,7 +167,7 @@ export default function SkillMasteryPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Навык</TableHead>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead className="text-right">Покрытие</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -200,7 +200,7 @@ export default function SkillMasteryPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Навык</TableHead>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead className="text-right">Покрытие</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -245,19 +245,19 @@ export default function SkillMasteryPage() {
                     <TableRow>
                       <TableHead className="w-8"></TableHead>
                       <TableHead>EC</TableHead>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead>Сложность</TableHead>
-                      <TableHead className="text-right">Попытки</TableHead>
+                      <TableHead className="text-right">Attempts</TableHead>
                       <TableHead className="text-right">Покрытие</TableHead>
-                      <TableHead className="text-right">Ср. балл</TableHead>
-                      <TableHead>Тренд</TableHead>
+                      <TableHead className="text-right">Avg. score</TableHead>
+                      <TableHead>Trend</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.ecSkills.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                          Нет данных
+                          No data
                         </TableCell>
                       </TableRow>
                     )}
@@ -339,19 +339,19 @@ export default function SkillMasteryPage() {
                     <TableRow>
                       <TableHead className="w-8"></TableHead>
                       <TableHead>BV</TableHead>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead>Сложность</TableHead>
-                      <TableHead className="text-right">Попытки</TableHead>
+                      <TableHead className="text-right">Attempts</TableHead>
                       <TableHead className="text-right">Покрытие</TableHead>
-                      <TableHead className="text-right">Ср. балл</TableHead>
-                      <TableHead>Тренд</TableHead>
+                      <TableHead className="text-right">Avg. score</TableHead>
+                      <TableHead>Trend</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {data.bvSkills.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                          Нет данных
+                          No data
                         </TableCell>
                       </TableRow>
                     )}

@@ -84,14 +84,14 @@ export default function AdminAtRiskPage() {
 
   const handleSearch = () => { fetchStudents(); };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {error && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>)}
+        {error && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>)}
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold">Студенты группы риска</h1>
+          <h1 className="text-xl font-bold">Students группы риска</h1>
           <Badge variant="destructive">{pagination.total} студентов</Badge>
         </div>
 
@@ -102,28 +102,28 @@ export default function AdminAtRiskPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Поиск</label>
-                <Input placeholder="Имя или email" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input placeholder="Name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Уровень риска</label>
                 <Select value={riskLevel} onValueChange={setRiskLevel}>
-                  <SelectTrigger><SelectValue placeholder="Все уровни" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="All levels" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все уровни</SelectItem>
-                    <SelectItem value="high">Высокий</SelectItem>
-                    <SelectItem value="medium">Средний</SelectItem>
-                    <SelectItem value="low">Низкий</SelectItem>
-                    <SelectItem value="none">Без риска</SelectItem>
+                    <SelectItem value="">All levels</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="none">No risk</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Университет</label>
-                <Input placeholder="Название" value={university} onChange={(e) => setUniversity(e.target.value)} />
+                <label className="text-xs text-muted-foreground mb-1 block">University</label>
+                <Input placeholder="Name" value={university} onChange={(e) => setUniversity(e.target.value)} />
               </div>
               <div className="flex items-end gap-2">
-                <Button size="sm" onClick={handleSearch}>Найти</Button>
-                <Button variant="outline" size="sm" onClick={() => { setSearch(""); setRiskLevel(""); setUniversity(""); }}>Сброс</Button>
+                <Button size="sm" onClick={handleSearch}>Search</Button>
+                <Button variant="outline" size="sm" onClick={() => { setSearch(""); setRiskLevel(""); setUniversity(""); }}>Reset</Button>
               </div>
             </div>
           </CardContent>
@@ -134,7 +134,7 @@ export default function AdminAtRiskPage() {
           <Card>
             <CardContent className="p-8 text-center">
               <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-emerald-600" />
-              <p className="text-muted-foreground">Студенты группы риска не найдены</p>
+              <p className="text-muted-foreground">Students группы риска не найдены</p>
             </CardContent>
           </Card>
         ) : (
@@ -143,12 +143,12 @@ export default function AdminAtRiskPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Студент</TableHead>
+                    <TableHead>Student</TableHead>
                     <TableHead>Уровень риска</TableHead>
-                    <TableHead>Тренд</TableHead>
-                    <TableHead className="text-right">Лучший балл</TableHead>
-                    <TableHead className="text-right">Ср. балл</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
+                    <TableHead>Trend</TableHead>
+                    <TableHead className="text-right">Best score</TableHead>
+                    <TableHead className="text-right">Avg. score</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>

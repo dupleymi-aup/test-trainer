@@ -27,7 +27,7 @@ export default function TeacherReportsPage() {
     fetch("/api/teacher/groups", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { if (!controller.signal.aborted) { setGroups(d.groups || []); setLoadingGroups(false); } })
-      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load groups", err); toast.error("Не удалось загрузить список групп"); setLoadingGroups(false); } });
+      .catch((err) => { if (!controller.signal.aborted) { logger.error("Failed to load groups", err); toast.error("Failed to load group list"); setLoadingGroups(false); } });
     return () => controller.abort();
   }, []);
 
@@ -52,13 +52,13 @@ export default function TeacherReportsPage() {
         a.download = `student-report-${exportType}-${new Date().toISOString().split("T")[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success("Отчёт экспортирован");
+        toast.success("Report exported");
       } else {
         const data = await res.json().catch(() => null);
-        toast.error(data?.error || "Ошибка при экспорте отчёта");
+        toast.error(data?.error || "Export error");
       }
     } catch {
-      toast.error("Ошибка экспорта");
+      toast.error("Export error");
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export default function TeacherReportsPage() {
         toast.error(data?.error || "Ошибка при экспорте JSON отчёта");
       }
     } catch {
-      toast.error("Ошибка экспорта JSON");
+      toast.error("Export error");
     } finally {
       setLoading(false);
     }
@@ -158,13 +158,13 @@ export default function TeacherReportsPage() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Группа</label>
+              <label className="text-sm text-muted-foreground mb-1 block">Group</label>
               <Select onValueChange={(v) => setGroupId(v === "ALL" ? undefined : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder={loadingGroups ? "Загрузка..." : "Все группы"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">Все группы</SelectItem>
+                  <SelectItem value="ALL">All groups</SelectItem>
                   {groups.map((g) => (
                     <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                   ))}

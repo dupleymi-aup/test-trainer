@@ -9,5 +9,5 @@ export default function PreferencesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Настройки" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Settings" />;
 }

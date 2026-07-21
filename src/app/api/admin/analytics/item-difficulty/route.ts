@@ -13,8 +13,8 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
  * - guessability (% of students who got >80% on first attempt)
  * - time efficiency (avg time vs score ratio)
  */
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("item-difficulty");

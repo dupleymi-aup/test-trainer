@@ -91,7 +91,7 @@ export default function TeacherGradebookPage() {
     if (!editingGrade || !gradeScore) return;
     const score = parseInt(gradeScore, 10);
     if (isNaN(score) || score < 0 || score > 100) {
-      toast.error("Балл должен быть от 0 до 100");
+      toast.error("Score must be between 0 and 100");
       return;
     }
     setSaving(true);
@@ -107,42 +107,42 @@ export default function TeacherGradebookPage() {
         }),
       });
       if (res.ok) {
-        toast.success("Оценка сохранена");
+        toast.success("Grade saved");
         setEditingGrade(null);
         setGradeScore("");
         setGradeComment("");
         fetchData(selectedGroup);
       } else {
         const json = await res.json();
-        toast.error(json.error || "Ошибка");
+        toast.error(json.error || "Error");
       }
     } catch {
-      toast.error("Ошибка при сохранении");
+      toast.error("Error saving");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteGrade = async (userId: string, taskId: string) => {
-    if (!confirm("Удалить эту оценку?")) return;
+    if (!confirm("Delete this grade?")) return;
     try {
       const res = await apiFetch(`/api/teacher/gradebook?userId=${userId}&taskId=${taskId}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        toast.success("Оценка удалена");
+        toast.success("Grade deleted");
         fetchData(selectedGroup);
       } else {
-        toast.error("Ошибка при удалении");
+        toast.error("Error deleting");
       }
     } catch {
-      toast.error("Ошибка при удалении");
+      toast.error("Error deleting");
     }
   };
 
   const getTaskName = (taskId: string) => {
     const task = tasks.find((t) => t.id === Number(taskId));
-    return task?.name || `Задание #${taskId}`;
+    return task?.name || `Task #${taskId}`;
   };
 
   const getTaskDifficulty = (taskId: string) => {
@@ -170,10 +170,10 @@ export default function TeacherGradebookPage() {
           <CardContent>
             <Select value={selectedGroup} onValueChange={handleGroupChange}>
               <SelectTrigger className="max-w-xs">
-                <SelectValue placeholder="Все группы" />
+                <SelectValue placeholder="All groups" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Все группы</SelectItem>
+                <SelectItem value="">All groups</SelectItem>
                 {groups.map((g) => (
                   <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                 ))}
@@ -187,7 +187,7 @@ export default function TeacherGradebookPage() {
           <Card className="border-emerald-300 dark:border-emerald-700">
             <CardHeader>
               <CardTitle className="text-base">
-                {getTaskName(editingGrade.taskId)} — {students.find((s) => s.id === editingGrade.userId)?.name || "Студент"}
+                {getTaskName(editingGrade.taskId)} — {students.find((s) => s.id === editingGrade.userId)?.name || "Student"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -227,13 +227,13 @@ export default function TeacherGradebookPage() {
         {loading ? (
           <div className="text-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-muted-foreground">Загрузка...</p>
+            <p className="text-muted-foreground">Loading...</p>
           </div>
         ) : grades.length === 0 ? (
           <Card>
             <CardContent className="pt-8 text-center">
               <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Нет оценок</h3>
+              <h3 className="text-lg font-semibold mb-2">No grades</h3>
               <p className="text-muted-foreground">
                 Выберите группу и начните выставлять оценки
               </p>
@@ -249,11 +249,11 @@ export default function TeacherGradebookPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Студент</TableHead>
-                    <TableHead>Задание</TableHead>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Task</TableHead>
                     <TableHead>Балл</TableHead>
                     <TableHead>Комментарий</TableHead>
-                    <TableHead>Дата</TableHead>
+                    <TableHead>Date</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>

@@ -29,9 +29,9 @@ interface GapData {
 export default function EcbvGapsPage() {
   const { data, loading, error } = useFetchData<GapData>("/api/admin/analytics/ec-bv-gaps");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   return (
     <AdminLayout>
@@ -44,7 +44,7 @@ export default function EcbvGapsPage() {
             <CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-rose-600" /> Наиболее пропускаемые EC</CardTitle></CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader><TableRow><TableHead>Задача</TableHead><TableHead>Класс эквивалентности</TableHead><TableHead className="text-right">Miss Rate</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Task</TableHead><TableHead>Класс эквивалентности</TableHead><TableHead className="text-right">Miss Rate</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.worstECs.slice(0, 10).map((ec, i) => (
                     <TableRow key={i}>
@@ -63,7 +63,7 @@ export default function EcbvGapsPage() {
             <CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" /> Наиболее пропускаемые BV</CardTitle></CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader><TableRow><TableHead>Задача</TableHead><TableHead>Граничное значение</TableHead><TableHead className="text-right">Miss Rate</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Task</TableHead><TableHead>Граничное значение</TableHead><TableHead className="text-right">Miss Rate</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {data.worstBVs.slice(0, 10).map((bv, i) => (
                     <TableRow key={i}>

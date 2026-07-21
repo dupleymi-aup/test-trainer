@@ -185,10 +185,10 @@ export default function StudentRemindersPage() {
                     body: JSON.stringify({ action: "mark_all_read" }),
                   })
                     .then(() => {
-                      toast.success("Все напоминания отмечены как прочитанные");
+                      toast.success("All reminders marked as read");
                       fetchReminders();
                     })
-                    .catch(() => toast.error("Ошибка при обновлении"));
+                    .catch(() => toast.error("Error updating"));
                 }}
                 variant="outline"
                 size="sm"
@@ -338,7 +338,7 @@ export default function StudentRemindersPage() {
                                       body: JSON.stringify({ reminderId: reminder.id, action: "mark_read" }),
                                     })
                                       .then(() => fetchReminders())
-                                      .catch(() => toast.error("Ошибка"));
+                                      .catch(() => toast.error("Error"));
                                   }}
                                 >
                                   <CheckCircle className="h-4 w-4" />

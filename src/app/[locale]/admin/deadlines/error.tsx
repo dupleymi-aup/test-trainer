@@ -9,5 +9,5 @@ export default function DeadlinesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Дедлайны" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Deadlines" />;
 }

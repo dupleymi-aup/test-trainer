@@ -75,8 +75,8 @@ export default function TaskInsightsPage() {
   const url = `/api/admin/analytics/task-insights${qs ? `?${qs}` : ""}`;
   const { data, loading, error } = useFetchData<TaskInsightsData>(url);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
 
@@ -120,8 +120,8 @@ export default function TaskInsightsPage() {
                 <YAxis yAxisId="right" orientation="right" domain={[0, 100]} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="avgScore" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Ср. балл" />
-                <Line yAxisId="right" type="monotone" dataKey="failRate" stroke="hsl(var(--destructive))" strokeWidth={2} name="Отказы %" />
+                <Bar yAxisId="left" dataKey="avgScore" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Avg. Score" />
+                <Line yAxisId="right" type="monotone" dataKey="failRate" stroke="hsl(var(--destructive))" strokeWidth={2} name="Fail Rate %" />
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
@@ -137,7 +137,7 @@ export default function TaskInsightsPage() {
                   <PolarGrid className="stroke-muted" />
                   <PolarAngleAxis dataKey="topic" className="text-xs" />
                   <PolarRadiusAxis domain={[0, 100]} className="text-xs" />
-                  <Radar name="Балл" dataKey="avgScore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                  <Radar name="Score" dataKey="avgScore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
                   <Tooltip />
                 </RadarChart>
               </ResponsiveContainer>
@@ -149,7 +149,7 @@ export default function TaskInsightsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Задача</TableHead><TableHead className="text-right">Сложность</TableHead><TableHead className="text-right">Отказы</TableHead><TableHead className="text-right">Ср. балл</TableHead></TableRow>
+                  <TableRow><TableHead>Task</TableHead><TableHead className="text-right">Сложность</TableHead><TableHead className="text-right">Отказы</TableHead><TableHead className="text-right">Avg. score</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedByFailRate.map((t) => (
@@ -177,7 +177,7 @@ export default function TaskInsightsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Задача</TableHead><TableHead className="text-right">Заявленная</TableHead><TableHead className="text-right">Фактическая</TableHead><TableHead className="text-right">Точность</TableHead></TableRow>
+                  <TableRow><TableHead>Task</TableHead><TableHead className="text-right">Заявленная</TableHead><TableHead className="text-right">Фактическая</TableHead><TableHead className="text-right">Точность</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.taskInsights.map((t) => (
@@ -204,7 +204,7 @@ export default function TaskInsightsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Задача</TableHead><TableHead className="text-right">EC</TableHead><TableHead className="text-right">BV</TableHead><TableHead className="text-right">Время (с)</TableHead><TableHead className="text-right">Попытки</TableHead></TableRow>
+                  <TableRow><TableHead>Task</TableHead><TableHead className="text-right">EC</TableHead><TableHead className="text-right">BV</TableHead><TableHead className="text-right">Время (с)</TableHead><TableHead className="text-right">Attempts</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.taskInsights.slice(0, 10).map((t) => (

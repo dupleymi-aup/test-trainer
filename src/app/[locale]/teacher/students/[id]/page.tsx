@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, FileText, AlertCircle, Award } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSWRApi } from "@/hooks/use-swr-api";
 import {
@@ -39,12 +40,13 @@ interface ProgressData {
 }
 
 export default function TeacherStudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations();
   const { id } = use(params);
 
   const { data, isLoading } = useSWRApi<ProgressData>(`/api/teacher/students/${id}/progress`);
 
-  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
-  if (!data) return <TeacherLayout><div className="p-8 text-center">Не найдено</div></TeacherLayout>;
+  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Loading...</div></TeacherLayout>;
+  if (!data) return <TeacherLayout><div className="p-8 text-center">Not found</div></TeacherLayout>;
 
   const chartData = data.scoresOverTime.map((entry, i) => ({
     attempt: `#${i + 1}`,
@@ -58,7 +60,7 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/teacher/students" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Link>
+            <Link href="/teacher/students" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Link>
             <div>
               <h2 className="text-lg font-bold">{data.student.name || data.student.email}</h2>
               {data.student.group && <p className="text-sm text-muted-foreground">{data.student.group}{data.student.university ? ` • ${data.student.university}` : ""}</p>}
@@ -75,9 +77,9 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
           {[
             { label: "Лучший балл", value: data.stats.bestScore },
             { label: "Средний балл", value: data.stats.avgScore },
-            { label: "Ср. EC", value: data.stats.avgEc },
-            { label: "Ср. BV", value: data.stats.avgBv },
-            { label: "Попытки", value: data.stats.totalAttempts },
+            { label: "Avg. EC", value: data.stats.avgEc },
+            { label: "Avg. BV", value: data.stats.avgBv },
+            { label: "Attempts", value: data.stats.totalAttempts },
           ].map((s) => (
             <Card key={s.label}><CardContent className="pt-4 text-center"><p className="text-xl font-bold">{s.value}</p><p className="text-xs text-muted-foreground">{s.label}</p></CardContent></Card>
           ))}
@@ -100,7 +102,7 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
                   <YAxis domain={[0, 100]} className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} name="Балл" dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} name="Score" dot={{ r: 4 }} />
                   <Line type="monotone" dataKey="ec" stroke="hsl(var(--chart-1, 12 76% 61%))" strokeWidth={1.5} name="EC" strokeDasharray="5 3" />
                   <Line type="monotone" dataKey="bv" stroke="hsl(var(--chart-2, 173 58% 39%))" strokeWidth={1.5} name="BV" strokeDasharray="5 3" />
                 </LineChart>
@@ -170,11 +172,11 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Задание</TableHead>
-                    <TableHead className="text-right">Лучший балл</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
-                    <TableHead className="text-right">Ср. EC</TableHead>
-                    <TableHead className="text-right">Ср. BV</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="text-right">Best score</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
+                    <TableHead className="text-right">Avg. EC</TableHead>
+                    <TableHead className="text-right">Avg. BV</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -204,13 +206,13 @@ export default function TeacherStudentDetailPage({ params }: { params: Promise<{
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
-                  <TableHead>Задание</TableHead>
+                  <TableHead>Task</TableHead>
                   <TableHead>Балл</TableHead>
                   <TableHead>EC</TableHead>
                   <TableHead>BV</TableHead>
                   <TableHead>Корректность</TableHead>
                   <TableHead>Время (с)</TableHead>
-                  <TableHead>Дата</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

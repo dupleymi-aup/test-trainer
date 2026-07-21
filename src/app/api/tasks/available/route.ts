@@ -5,7 +5,7 @@ import { tasks } from "@/lib/tasks";
 import { withErrorHandler } from "@/lib/api-error-handler";
 
 export async function GET(req: NextRequest) {
-  return withErrorHandler(undefined, async () => {
+  return withErrorHandler(req, async () => {
     const token = await getToken({ req });
 
     // No session — return all tasks (unrestricted for non-authenticated)

@@ -80,7 +80,7 @@ export default function AdminDatabaseAnalyticsPage() {
   if (loading)
     return (
       <AdminLayout>
-        <div className="p-8 text-center">Загрузка...</div>
+        <div className="p-8 text-center">Loading...</div>
       </AdminLayout>
     );
 
@@ -114,7 +114,7 @@ export default function AdminDatabaseAnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs text-muted-foreground">Попытки</span>
+                <span className="text-xs text-muted-foreground">Attempts</span>
               </div>
               <p className="text-2xl font-bold">{data.database.totalAttempts}</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -126,7 +126,7 @@ export default function AdminDatabaseAnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-2">
                 <Database className="h-4 w-4 text-purple-600" />
-                <span className="text-xs text-muted-foreground">Группы</span>
+                <span className="text-xs text-muted-foreground">Groups</span>
               </div>
               <p className="text-2xl font-bold">{data.database.totalGroups}</p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -161,7 +161,7 @@ export default function AdminDatabaseAnalyticsPage() {
                     (count / data.database.totalUsers) * 100
                   );
                   const roleLabels: Record<string, string> = {
-                    STUDENT: "Студенты",
+                    STUDENT: "Students",
                     TEACHER: "Преподаватели",
                     ADMIN: "Администраторы",
                   };
@@ -230,7 +230,7 @@ export default function AdminDatabaseAnalyticsPage() {
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip
                   labelFormatter={(h) => `${h}:00`}
-                  formatter={(value: number) => [value, "Попытки"]}
+                  formatter={(value: number) => [value, "Attempts"]}
                 />
                 <Bar
                   dataKey="count"
@@ -252,9 +252,9 @@ export default function AdminDatabaseAnalyticsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Задание</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
-                    <TableHead className="text-right">Ср. балл</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
+                    <TableHead className="text-right">Avg. score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -318,8 +318,8 @@ export default function AdminDatabaseAnalyticsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Группа</TableHead>
-                  <TableHead className="text-right">Студенты</TableHead>
+                  <TableHead>Group</TableHead>
+                  <TableHead className="text-right">Students</TableHead>
                   <TableHead className="text-right">Задания</TableHead>
                 </TableRow>
               </TableHeader>

@@ -100,8 +100,8 @@ export default function AdminTopicHeatmapPage() {
     fetchData({});
   }, []);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
 
   return (
     <AdminLayout>
@@ -169,10 +169,10 @@ export default function AdminTopicHeatmapPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Тема</TableHead>
-                  <TableHead className="text-right">Ср. балл</TableHead>
-                  <TableHead className="text-right">Ср. EC</TableHead>
-                  <TableHead className="text-right">Ср. BV</TableHead>
-                  <TableHead className="text-right">Попытки</TableHead>
+                  <TableHead className="text-right">Avg. score</TableHead>
+                  <TableHead className="text-right">Avg. EC</TableHead>
+                  <TableHead className="text-right">Avg. BV</TableHead>
+                  <TableHead className="text-right">Attempts</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -208,10 +208,10 @@ export default function AdminTopicHeatmapPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Задание</TableHead>
+                        <TableHead>Task</TableHead>
                         <TableHead>Сложность</TableHead>
-                        <TableHead className="text-right">Ср. балл</TableHead>
-                        <TableHead className="text-right">Попытки</TableHead>
+                        <TableHead className="text-right">Avg. score</TableHead>
+                        <TableHead className="text-right">Attempts</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

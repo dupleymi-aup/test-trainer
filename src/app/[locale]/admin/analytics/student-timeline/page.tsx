@@ -64,17 +64,17 @@ export default function StudentTimelinePage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h1 className="text-xl font-bold">Траектория студента</h1>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
         <AnalyticsFilterBar
           onFilterChange={() => {}}
         />
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>
         )}
 
         {!loading && !data && (
@@ -113,14 +113,14 @@ export default function StudentTimelinePage() {
                       <YAxis className="text-xs" domain={[0, 100]} />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} name="Балл" dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} name="Score" dot={{ r: 3 }} />
                       <Line type="monotone" dataKey="ecCoverage" stroke="#10b981" strokeWidth={1.5} name="EC" dot={false} />
                       <Line type="monotone" dataKey="bvCoverage" stroke="#f59e0b" strokeWidth={1.5} name="BV" dot={false} />
-                      <ReferenceLine y={75} stroke="#ef4444" strokeDasharray="5 5" label="Цель 75%" />
+                      <ReferenceLine y={75} stroke="#ef4444" strokeDasharray="5 5" label="Target 75%" />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+                  <p className="text-center text-muted-foreground py-8">No data</p>
                 )}
               </CardContent>
             </Card>
@@ -164,8 +164,8 @@ export default function StudentTimelinePage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-2">Дата</th>
-                        <th className="text-left p-2">Задача</th>
+                        <th className="text-left p-2">Date</th>
+                        <th className="text-left p-2">Task</th>
                         <th className="text-right p-2">Балл</th>
                         <th className="text-right p-2">EC</th>
                         <th className="text-right p-2">BV</th>

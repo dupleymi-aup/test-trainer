@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, BookOpen, Clock, CheckCircle2, Loader2 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
 import { safeJsonParse } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface TemplateAssignment {
@@ -41,6 +42,7 @@ interface LearningPathData {
 }
 
 export default function StudentLearningPathPage() {
+  const t = useTranslations();
   const { status } = useSession();
   const router = useRouter();
 
@@ -62,7 +64,7 @@ export default function StudentLearningPathPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">Учебный план</h1>
       </div>
 

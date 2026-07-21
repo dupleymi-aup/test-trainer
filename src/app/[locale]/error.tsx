@@ -13,8 +13,8 @@ export default function RootError({
     <PageError
       error={error}
       reset={reset}
-      title="Что-то пошло не так"
-      description="Произошла критическая ошибка. Попробуйте обновить страницу."
+      title="Something went wrong"
+      description="A critical error occurred. Please try refreshing the page."
       logPrefix="RootError"
       iconSize="lg"
     />

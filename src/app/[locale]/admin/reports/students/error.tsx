@@ -9,5 +9,5 @@ export default function StudentReportsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Отчёты по студентам" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Student Reports" />;
 }

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Trophy, Lock } from "lucide-react";
 
 interface AchievementState {
@@ -51,6 +52,7 @@ const achievementDefs: AchievementDef[] = [
 ];
 
 export default function AchievementsPage() {
+  const t = useTranslations();
   const { status } = useSession();
   const router = useRouter();
   const [achievements, setAchievements] = useState<AchievementState[]>([]);
@@ -72,7 +74,7 @@ export default function AchievementsPage() {
 
   const getState = (id: string) => achievements.find((a) => a.id === id);
 
-  if (loading) return <div className="p-8 text-center">Загрузка...</div>;
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   const unlocked = achievements.filter((a) => a.unlocked).length;
   const total = achievementDefs.length;
@@ -80,7 +82,7 @@ export default function AchievementsPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">Достижения</h1>
         <Badge variant="secondary">{unlocked} / {total}</Badge>
       </div>

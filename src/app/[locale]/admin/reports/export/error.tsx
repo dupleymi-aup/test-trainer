@@ -9,5 +9,5 @@ export default function ExportError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Экспорт отчётов" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Report Export" />;
 }

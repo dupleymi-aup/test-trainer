@@ -13,8 +13,8 @@ export default function StudentError({
     <PageError
       error={error}
       reset={reset}
-      title="Ошибка в панели студента"
-      description="Произошла непредвиденная ошибка. Попробуйте обновить страницу."
+      title="Student panel error"
+      description="An unexpected error occurred. Please try refreshing the page."
       logPrefix="StudentError"
     />
   );

@@ -3,6 +3,14 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // --- localStorage mock (must be hoisted before imports) ---
 const store: Record<string, string> = {};
 
+// Vitest runs lib tests under "node" environment (no window).
+// Storage functions now guard with typeof window check for SSR safety,
+// so we need to define window for the tests to work.
+Object.defineProperty(globalThis, "window", {
+  value: {} as Window & typeof globalThis,
+  configurable: true,
+});
+
 const mockLocalStorage = {
   getItem: vi.fn((key: string) => store[key] ?? null),
   setItem: vi.fn((key: string, value: string) => {

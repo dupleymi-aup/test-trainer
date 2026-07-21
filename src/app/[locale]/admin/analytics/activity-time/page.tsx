@@ -68,8 +68,8 @@ function getHeatmapColor(value: number, max: number): string {
 export default function ActivityTimePage() {
   const { data, loading, error } = useFetchData<ActivityTimeData>("/api/admin/analytics/activity-time");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const maxCount = Math.max(...data.heatmapData.map((d) => d.count), 1);
@@ -149,7 +149,7 @@ export default function ActivityTimePage() {
                     <Progress value={seg.pct} className="h-2" />
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <p className="text-muted-foreground">Ср. балл</p>
+                        <p className="text-muted-foreground">Avg. score</p>
                         <p className="font-bold text-lg">{seg.avgScore}%</p>
                       </div>
                       <div>
@@ -222,8 +222,8 @@ export default function ActivityTimePage() {
                 <YAxis yAxisId="right" orientation="right" domain={[0, 100]} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="attempts" fill="hsl(var(--primary))" name="Попытки" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="avgScore" fill="#10b981" name="Ср. балл %" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="attempts" fill="hsl(var(--primary))" name="Attempts" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="avgScore" fill="#10b981" name="Avg. Score %" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -242,8 +242,8 @@ export default function ActivityTimePage() {
                   <YAxis yAxisId="right" orientation="right" domain={[0, 100]} className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="attempts" stroke="hsl(var(--primary))" strokeWidth={2} name="Попытки" dot={false} />
-                  <Line yAxisId="right" type="monotone" dataKey="avgScore" stroke="#10b981" strokeWidth={2} name="Ср. балл %" dot={false} />
+                  <Line yAxisId="left" type="monotone" dataKey="attempts" stroke="hsl(var(--primary))" strokeWidth={2} name="Attempts" dot={false} />
+                  <Line yAxisId="right" type="monotone" dataKey="avgScore" stroke="#10b981" strokeWidth={2} name="Avg. Score %" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

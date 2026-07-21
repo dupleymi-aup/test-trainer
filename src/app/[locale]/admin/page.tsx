@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
   const error = statsError?.message ?? null;
   const riskData = predictionsData?.riskOverview ?? null;
 
-  if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Загрузка...</span></div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div></AdminLayout>;
   if (error) return <AdminLayout><div className="p-8 text-center text-sm text-destructive">Ошибка загрузки статистики: {error}</div></AdminLayout>;
   if (!stats) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-destructive" /><span className="ml-3 text-sm text-destructive">Ошибка загрузки</span></div></AdminLayout>;
 

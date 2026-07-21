@@ -80,7 +80,7 @@ function HeatmapCellComponent({ cell }: { cell: HeatmapCell }) {
   return (
     <div
       className={`${bgColor} ${textColor} rounded p-1 text-center text-xs min-w-[48px] min-h-[36px] flex flex-col items-center justify-center`}
-      title={`Попыток: ${cell.count}, Ср. балл: ${cell.avgScore}%, Ср. время: ${cell.avgTime}с`}
+      title={`Попыток: ${cell.count}, Avg. score: ${cell.avgScore}%, Ср. время: ${cell.avgTime}с`}
     >
       <span className="font-bold">{cell.count}</span>
       {cell.count > 0 && <span className="text-[10px] opacity-75">{cell.avgScore}%</span>}
@@ -121,9 +121,9 @@ export default function TimeActivityPage() {
     fetchData(filters);
   }, [filters]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const { summary } = data;
 
@@ -173,7 +173,7 @@ export default function TimeActivityPage() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-xs text-muted-foreground">Студентов</div>
+              <div className="text-xs text-muted-foreground">Students</div>
               <div className="text-2xl font-bold">{summary.totalStudents}</div>
             </CardContent>
           </Card>
@@ -235,7 +235,7 @@ export default function TimeActivityPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Тепловая карта активности</CardTitle>
-            <CardDescription>Попытки студентов по часам и дням недели</CardDescription>
+            <CardDescription>Attempts студентов по часам и дням недели</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -270,7 +270,7 @@ export default function TimeActivityPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Попытки по часам</CardTitle>
+              <CardTitle className="text-sm">Attempts по часам</CardTitle>
               <CardDescription>Количество попыток за каждый час суток</CardDescription>
             </CardHeader>
             <CardContent>
@@ -288,7 +288,7 @@ export default function TimeActivityPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Попытки по дням недели</CardTitle>
+              <CardTitle className="text-sm">Attempts по дням недели</CardTitle>
               <CardDescription>Количество попыток и средний балл по дням</CardDescription>
             </CardHeader>
             <CardContent>
@@ -299,8 +299,8 @@ export default function TimeActivityPage() {
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="attempts" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Попытки" />
-                  <Bar dataKey="avgScore" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} name="Ср. балл" />
+                  <Bar dataKey="attempts" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Attempts" />
+                  <Bar dataKey="avgScore" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} name="Avg. Score" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -319,8 +319,8 @@ export default function TimeActivityPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Время</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
-                    <TableHead className="text-right">Ср. балл</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
+                    <TableHead className="text-right">Avg. score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -352,8 +352,8 @@ export default function TimeActivityPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Время</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
-                    <TableHead className="text-right">Ср. балл</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
+                    <TableHead className="text-right">Avg. score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

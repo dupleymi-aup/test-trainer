@@ -60,7 +60,7 @@ export default function AdminSettingsPage() {
       body: JSON.stringify({ key, value }),
     });
     if (res.ok) {
-      toast.success("Настройка сохранена");
+      toast.success("Setting saved");
     } else {
       toast.error(`Ошибка сохранения: HTTP ${res.status}`);
     }
@@ -75,7 +75,7 @@ export default function AdminSettingsPage() {
     if (newVal !== originalValue) {
       const parsed = typeof originalValue === "number" ? parseInt(String(newVal), 10) : newVal;
       if (typeof parsed === "number" && Number.isNaN(parsed)) {
-        toast.error("Некорректное числовое значение");
+        toast.error("Invalid numeric value");
         setLocalValues((prev) => ({ ...prev, [key]: originalValue }));
         return;
       }
@@ -83,7 +83,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
   // Group settings
   const grouped: Record<string, Setting[]> = {};

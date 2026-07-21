@@ -9,5 +9,5 @@ export default function ActivityError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Активность" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Activity" />;
 }

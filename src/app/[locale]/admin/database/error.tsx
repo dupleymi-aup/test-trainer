@@ -9,5 +9,5 @@ export default function DatabaseError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="База данных" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Database" />;
 }

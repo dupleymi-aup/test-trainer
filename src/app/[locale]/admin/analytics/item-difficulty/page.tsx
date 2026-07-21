@@ -85,8 +85,8 @@ export default function ItemDifficultyPage() {
   const [filterQuality, setFilterQuality] = useState<string>("all");
   const { data, loading, error } = useFetchData<AnalysisData>("/api/admin/analytics/item-difficulty");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   let filtered = [...data.taskAnalysis];
@@ -178,8 +178,8 @@ export default function ItemDifficultyPage() {
             <ResponsiveContainer width="100%" height={300}>
               <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="difficulty" name="Сложность (p)" domain={[0, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
-                <YAxis dataKey="discrimination" name="Дифференциация" domain={[-0.5, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
+                <XAxis dataKey="difficulty" name="Difficulty (p)" domain={[0, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
+                <YAxis dataKey="discrimination" name="Discrimination" domain={[-0.5, 1]} tickFormatter={(v: number) => v.toFixed(1)} />
                 <ZAxis dataKey="attempts" range={[30, 200]} />
                 <Tooltip
                   cursor={{ strokeDasharray: "3 3" }}
@@ -234,7 +234,7 @@ export default function ItemDifficultyPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Задание</TableHead>
+                    <TableHead>Task</TableHead>
                     <TableHead className="text-center">Сложность</TableHead>
                     <TableHead className="text-center">p-value</TableHead>
                     <TableHead className="text-center">Дискрим.</TableHead>

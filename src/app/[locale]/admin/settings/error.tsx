@@ -9,5 +9,5 @@ export default function SettingsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Настройки" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Settings" />;
 }

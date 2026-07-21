@@ -3,7 +3,7 @@ import { LoadingSpinner } from "@/components/loading";
 export default function Loading() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <LoadingSpinner size="lg" text="Загрузка рейтинга..." />
+      <LoadingSpinner size="lg" text="Loading leaderboard..." />
     </div>
   );
 }

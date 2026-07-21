@@ -9,5 +9,5 @@ export default function AnalyticsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Сравнение групп" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Group Comparison" />;
 }

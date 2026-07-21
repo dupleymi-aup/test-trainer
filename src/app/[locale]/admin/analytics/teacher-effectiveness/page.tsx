@@ -72,8 +72,8 @@ const gradeColors: Record<string, string> = {
 export default function TeacherEffectivenessPage() {
   const { data, loading, error } = useFetchData<EffectivenessData>("/api/admin/analytics/teacher-effectiveness");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const radarData = data.teachers.slice(0, 5).map((t) => ({
@@ -140,10 +140,10 @@ export default function TeacherEffectivenessPage() {
                 <RadarChart data={radarData}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="subject" className="text-xs" />
-                  <Radar name="Ср. балл" dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
-                  <Radar name="Улучшение" dataKey="improvement" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
-                  <Radar name="Удержание" dataKey="retention" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
-                  <Radar name="Низкий риск" dataKey="lowRisk" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
+                  <Radar name="Avg. Score" dataKey="score" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} />
+                  <Radar name="Improvement" dataKey="improvement" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
+                  <Radar name="Retention" dataKey="retention" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
+                  <Radar name="Low Risk" dataKey="lowRisk" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.3} />
                   <Legend />
                 </RadarChart>
               </ResponsiveContainer>
@@ -183,10 +183,10 @@ export default function TeacherEffectivenessPage() {
                 <TableRow>
                   <TableHead className="w-10">#</TableHead>
                   <TableHead>Преподаватель</TableHead>
-                  <TableHead className="text-center">Группы</TableHead>
-                  <TableHead className="text-center">Студенты</TableHead>
+                  <TableHead className="text-center">Groups</TableHead>
+                  <TableHead className="text-center">Students</TableHead>
                   <TableHead className="text-center">Попыток/студ</TableHead>
-                  <TableHead className="text-center">Ср. балл</TableHead>
+                  <TableHead className="text-center">Avg. score</TableHead>
                   <TableHead className="text-center">Улучшение</TableHead>
                   <TableHead className="text-center">Удержание</TableHead>
                   <TableHead className="text-center">Риск</TableHead>

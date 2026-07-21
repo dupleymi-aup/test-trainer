@@ -9,5 +9,5 @@ export default function ComparePeriodsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Сравнение периодов" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Compare Periods" />;
 }

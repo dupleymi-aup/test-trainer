@@ -72,8 +72,8 @@ interface ErrorPatternsData {
 export default function ErrorPatternsPage() {
   const { data, loading, error } = useFetchData<ErrorPatternsData>("/api/admin/analytics/error-patterns");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const { summary, ecDistribution, bvDistribution, perTaskErrors, worstECStudents, errorTrend } = data;
@@ -185,7 +185,7 @@ export default function ErrorPatternsPage() {
                   <YAxis domain={[0, 100]} className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="errorRate" stroke="#ef4444" strokeWidth={2} name="Ошибки %" dot />
+                  <Line type="monotone" dataKey="errorRate" stroke="#ef4444" strokeWidth={2} name="Error Rate %" dot />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -206,7 +206,7 @@ export default function ErrorPatternsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead className="text-center">Ошибочных попыток</TableHead>
                       <TableHead className="text-center">Критических</TableHead>
                       <TableHead className="text-center">% ошибок</TableHead>
@@ -249,7 +249,7 @@ export default function ErrorPatternsPage() {
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
                 <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                Студенты с худшим EC/BV покрытием
+                Students с худшим EC/BV покрытием
               </CardTitle>
               <CardDescription>Среднее покрытие ниже 60%</CardDescription>
             </CardHeader>
@@ -257,11 +257,11 @@ export default function ErrorPatternsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Студент</TableHead>
-                    <TableHead>Группа</TableHead>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Group</TableHead>
                     <TableHead className="text-center">Ср. EC %</TableHead>
                     <TableHead className="text-center">Ср. BV %</TableHead>
-                    <TableHead className="text-center">Попыток</TableHead>
+                    <TableHead className="text-center">Attempts</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

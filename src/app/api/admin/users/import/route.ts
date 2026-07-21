@@ -7,6 +7,7 @@ import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { checkRateLimit, createRateLimitResponse, getClientIp, rateLimits } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
 
 const importSchema = z.object({
   csv: z.string().min(1, "CSV content is required"),
@@ -122,7 +123,11 @@ export async function POST(req: Request) {
           results.push({ status: "ok", email: r.email });
           created++;
         }
-      } catch {
+      } catch (err) {
+        logger.error("Bulk user createMany failed", {
+          count: toCreate.length,
+          error: err instanceof Error ? err.message : String(err),
+        });
         for (const r of toCreate) {
           results.push({ status: "error", email: r.email, error: "Failed to create user" });
           skipped++;

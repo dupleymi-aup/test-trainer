@@ -65,8 +65,8 @@ export default function ComprehensiveAnalyticsPage() {
 
   const { data, loading, error } = useFetchData<ComprehensiveData>(url, [filters]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
   return (
@@ -85,7 +85,7 @@ export default function ComprehensiveAnalyticsPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Студенты</span></div>
+              <div className="flex items-center gap-2 mb-2"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Students</span></div>
               <p className="text-2xl font-bold">{data.kpi.totalStudents}</p>
             </CardContent>
           </Card>
@@ -97,13 +97,13 @@ export default function ComprehensiveAnalyticsPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><BarChart3 className="h-4 w-4 text-purple-600" /><span className="text-xs text-muted-foreground">Группы</span></div>
+              <div className="flex items-center gap-2 mb-2"><BarChart3 className="h-4 w-4 text-purple-600" /><span className="text-xs text-muted-foreground">Groups</span></div>
               <p className="text-2xl font-bold">{data.kpi.totalGroups}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><Target className="h-4 w-4 text-emerald-600" /><span className="text-xs text-muted-foreground">Ср. балл</span></div>
+              <div className="flex items-center gap-2 mb-2"><Target className="h-4 w-4 text-emerald-600" /><span className="text-xs text-muted-foreground">Avg. score</span></div>
               <p className="text-2xl font-bold">{data.kpi.avgPlatformScore}%</p>
             </CardContent>
           </Card>
@@ -132,7 +132,7 @@ export default function ComprehensiveAnalyticsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Университет</TableHead><TableHead className="text-right">Студенты</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Попытки</TableHead></TableRow>
+                  <TableRow><TableHead>University</TableHead><TableHead className="text-right">Students</TableHead><TableHead className="text-right">Avg. score</TableHead><TableHead className="text-right">Attempts</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.universityPerformance.map((u) => (
@@ -144,7 +144,7 @@ export default function ComprehensiveAnalyticsPage() {
                     </TableRow>
                   ))}
                   {data.universityPerformance.length === 0 && (
-                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Нет данных</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No data</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -156,7 +156,7 @@ export default function ComprehensiveAnalyticsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Преподаватель</TableHead><TableHead className="text-right">Группы</TableHead><TableHead className="text-right">Студенты</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Тренд</TableHead></TableRow>
+                  <TableRow><TableHead>Преподаватель</TableHead><TableHead className="text-right">Groups</TableHead><TableHead className="text-right">Students</TableHead><TableHead className="text-right">Avg. score</TableHead><TableHead className="text-right">Trend</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.teacherLeaderboard.map((t) => (
@@ -173,7 +173,7 @@ export default function ComprehensiveAnalyticsPage() {
                     </TableRow>
                   ))}
                   {data.teacherLeaderboard.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Нет данных</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No data</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -188,7 +188,7 @@ export default function ComprehensiveAnalyticsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Месяц</TableHead><TableHead className="text-right">Студенты</TableHead><TableHead className="text-right">С попытками</TableHead><TableHead className="text-right">Активация</TableHead></TableRow>
+                  <TableRow><TableHead>Месяц</TableHead><TableHead className="text-right">Students</TableHead><TableHead className="text-right">С попытками</TableHead><TableHead className="text-right">Активация</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.cohortAnalysis.slice(-6).map((c) => (

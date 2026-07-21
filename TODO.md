@@ -123,3 +123,35 @@
 - [x] 2. Добавить React.memo к CoverageMatrix и MarkdownPreview
 - [x] 3. Исправить setTimeout memory leak в results-panel.tsx (useRef + cleanup)
 - [x] 4. 1246 тестов, TypeScript 0 ошибок
+
+# Plan — v23: Performance, SSR safety, i18n, dead code cleanup
+
+- [x] 1. Мемоизация demoTask, benefitItems, testimonialItems, faqItems в landing-content.tsx (useMemo)
+- [x] 2. Извлечение IIFE с сортировкой в exam-mode.tsx в useMemo sortedResults
+- [x] 3. Улучшение типизации в backup/route.ts (типизированная карта моделей вместо `as unknown as Record`)
+- [x] 4. Добавление SSR-безопасности в export.ts (typeof document guard)
+- [x] 5. Мемоизация use-swr-mutation.ts (useCallback + useMemo для стабильных ссылок)
+- [x] 6. Добавление typeof window guards к 20 localStorage-функциям в storage.ts
+- [x] 7. Исправление not-found.tsx: замена hardcoded русского на i18n (en/ru/zh)
+- [x] 8. Исправление onboarding.tsx: замена hardcoded русского на i18n (en/ru/zh)
+- [x] 9. Исправление hint-dialog.tsx: замена hardcoded русского на i18n (en/ru/zh)
+- [x] 10. Удаление export из WorkedStep interface (используется только внутри файла)
+- [x] 11. Удалить swr-cache-utils.ts (весь файл мёртвый код — нет ни одного импорта)
+
+# Plan — v26: Fix withErrorHandler(undefined) across 34 routes
+
+- [x] 1. Исправить 34 роута, передающих `undefined` вместо `request` в `withErrorHandler`
+- [x] 2. Добавить `makeGetRequest()` хелпер в 11 тестовых файлов
+- [x] 3. Заменить все `GET()` на `GET(makeGetRequest())` в тестах
+- [x] 4. TypeScript 0 ошибок, ESLint 0 ошибок, 1390 тестов проходят
+
+# Plan — v27: Code quality improvements (текущий)
+
+- [x] 1. Добавить 30+ i18n ключей (trainer/quiz/exam/tab labels) в en/ru/zh
+- [x] 2. Обновить tab-content.tsx: все вкладки (Задания, Тренажёр, Результаты, Статистика, Экзамен, Теория, Опросник) + описания разделов
+- [x] 3. Обновить task-list-tab.tsx: заголовок, описание, поиск, счётчик заданий, пустое состояние
+- [x] 4. Обновить trainer-tab.tsx: кнопка «Назад», заголовок «Тренажёр:»
+- [x] 5. Обновить task-card.tsx: aria-label избранного, «Новое», попытки
+- [x] 6. Обновить global-notes-dialog.tsx: редактирование, сохранить, статус
+- [x] 7. Добавить 13 exam-специфичных i18n ключей в en/ru/zh
+- [x] 8. Обновить exam-mode.tsx: toast-сообщения, кнопки навигации, aria-labels

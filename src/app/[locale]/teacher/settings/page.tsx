@@ -32,9 +32,9 @@ export default function TeacherSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profile),
       });
-      if (res.ok) toast.success("Профиль обновлён");
-      else toast.error("Ошибка обновления");
-    } catch { toast.error("Ошибка при сохранении"); }
+      if (res.ok) toast.success("Profile updated");
+      else toast.error("Update error");
+    } catch { toast.error("Error saving"); }
     setSaving(false);
   };
 
@@ -57,7 +57,7 @@ export default function TeacherSettingsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Телефон</Label><Input value={profile.phone} onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))} /></div>
-              <div><Label>Университет</Label><Input value={profile.university} onChange={(e) => setProfile((p) => ({ ...p, university: e.target.value }))} /></div>
+              <div><Label>University</Label><Input value={profile.university} onChange={(e) => setProfile((p) => ({ ...p, university: e.target.value }))} /></div>
             </div>
             <div><Label>О себе</Label><Input value={profile.bio} onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))} /></div>
             <Button onClick={handleSave} disabled={saving}>

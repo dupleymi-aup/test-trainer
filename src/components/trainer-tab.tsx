@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { TaskWorkspace } from "@/components/task-workspace";
 import { TestForm } from "@/components/test-form";
 import { TestList } from "@/components/test-list";
+import { useTranslations } from "next-intl";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -51,6 +52,7 @@ export function TrainerTab({
   onBulkRemove,
   onClearAll,
 }: TrainerTabProps) {
+  const t = useTranslations("trainer");
   return (
     <motion.div
       key="trainer"
@@ -64,9 +66,9 @@ export function TrainerTab({
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Назад
+            {t("back")}
           </Button>
-          <h2 className="text-lg sm:text-xl font-semibold">Тренажёр: {task.name}</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">{t("trainerTab")}: {task.name}</h2>
         </div>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
           <Clock className="h-3.5 w-3.5" />

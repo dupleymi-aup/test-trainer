@@ -6,8 +6,8 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
 import { logger } from "@/lib/logger";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
   const cacheKey = makeCacheKey("ec-bv-heatmap");

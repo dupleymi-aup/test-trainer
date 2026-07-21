@@ -67,7 +67,7 @@ export default function TeacherCalendarPage() {
   }, []);
 
   const handleCreate = async () => {
-    if (!formTitle || !formDate) { toast.error("Заполните название и дату"); return; }
+    if (!formTitle || !formDate) { toast.error("Fill in the title and date"); return; }
     setSaving(true);
     try {
       const res = await apiFetch("/api/admin/deadlines", {
@@ -79,22 +79,22 @@ export default function TeacherCalendarPage() {
         }),
       });
       if (res.ok) {
-        toast.success("Дедлайн создан");
+        toast.success("Deadline created");
         setShowCreate(false); setFormTitle(""); setFormDesc(""); setFormDate(""); setFormType("ASSIGNMENT"); setFormGroupId("");
         fetchData();
       } else {
-        const j = await res.json(); toast.error(j.error || "Ошибка");
+        const j = await res.json(); toast.error(j.error || "Error");
       }
-    } catch { toast.error("Ошибка при создании"); }
+    } catch { toast.error("Error creating"); }
     setSaving(false);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Удалить дедлайн?")) return;
+    if (!confirm("Delete deadline?")) return;
     try {
       const res = await apiFetch(`/api/admin/deadlines?id=${id}`, { method: "DELETE" });
-      if (res.ok) { toast.success("Удалён"); fetchData(); } else toast.error("Ошибка");
-    } catch { toast.error("Ошибка при удалении"); }
+      if (res.ok) { toast.success("Deleted"); fetchData(); } else toast.error("Error");
+    } catch { toast.error("Error deleting"); }
   };
 
   const prevMonth = () => setCurrentMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1));
@@ -141,11 +141,11 @@ export default function TeacherCalendarPage() {
               <div><Label>Название</Label><Input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} /></div>
               <div><Label>Описание</Label><Textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Дата</Label><Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} /></div>
+                <div><Label>Date</Label><Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} /></div>
                 <div><Label>Тип</Label><Select value={formType} onValueChange={setFormType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DEADLINE_TYPES.map((t) => <SelectItem key={t} value={t}>{typeLabels[t]}</SelectItem>)}</SelectContent></Select></div>
               </div>
-              <div><Label>Группа</Label><Select value={formGroupId} onValueChange={setFormGroupId}><SelectTrigger><SelectValue placeholder="Все группы" /></SelectTrigger><SelectContent><SelectItem value="">Все группы</SelectItem>{groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent></Select></div>
-              <div className="flex gap-2"><Button onClick={handleCreate} disabled={saving}>{saving && <Loader2 className="h-3 w-3 animate-spin mr-1" />}Создать</Button><Button variant="outline" onClick={() => setShowCreate(false)}>Отмена</Button></div>
+              <div><Label>Group</Label><Select value={formGroupId} onValueChange={setFormGroupId}><SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger><SelectContent><SelectItem value="">All groups</SelectItem>{groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="flex gap-2"><Button onClick={handleCreate} disabled={saving}>{saving && <Loader2 className="h-3 w-3 animate-spin mr-1" />}Create</Button><Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button></div>
             </CardContent>
           </Card>
         )}
@@ -194,7 +194,7 @@ export default function TeacherCalendarPage() {
             <CardHeader><CardTitle className="text-sm">Ближайшие дедлайны</CardTitle></CardHeader>
             <CardContent>
               {upcomingDeadlines.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">Нет предстоящих дедлайнов</p>
+                <p className="text-sm text-muted-foreground text-center py-4">No upcoming deadlines</p>
               ) : (
                 <div className="space-y-2">
                   {upcomingDeadlines.map((dl) => (
@@ -210,7 +210,7 @@ export default function TeacherCalendarPage() {
                           {new Date(dl.dueDate).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })}
                           {(() => {
                             const daysLeft = Math.ceil((new Date(dl.dueDate).getTime() - Date.now()) / 86400000);
-                            if (daysLeft <= 0) return <Badge variant="destructive" className="text-[10px] ml-1">Просрочен</Badge>;
+                            if (daysLeft <= 0) return <Badge variant="destructive" className="text-[10px] ml-1">Overdue</Badge>;
                             if (daysLeft <= 3) return <Badge variant="destructive" className="text-[10px] ml-1">{daysLeft} дн</Badge>;
                             return <span className="text-emerald-600 ml-1">{daysLeft} дн</span>;
                           })()}

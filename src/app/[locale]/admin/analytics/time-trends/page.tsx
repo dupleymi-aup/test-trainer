@@ -71,8 +71,8 @@ export default function TimeTrendsPage() {
     return () => controller.abort();
   }, [filters]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
   const dayNames = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
@@ -142,7 +142,7 @@ export default function TimeTrendsPage() {
                 <YAxis domain={[0, 100]} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Area type="monotone" dataKey="avgScore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} name="Балл" />
+                <Area type="monotone" dataKey="avgScore" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} name="Score" />
                 <Area type="monotone" dataKey="avgEc" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.1} name="EC" strokeDasharray="5 5" />
                 <Area type="monotone" dataKey="avgBv" stroke="hsl(var(--chart-3))" fill="hsl(var(--chart-3))" fillOpacity={0.1} name="BV" strokeDasharray="5 5" />
               </AreaChart>
@@ -161,7 +161,7 @@ export default function TimeTrendsPage() {
                   <XAxis dataKey="day" className="text-xs" />
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip />
-                  <Bar dataKey="attempts" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Попытки" />
+                  <Bar dataKey="attempts" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Attempts" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -176,7 +176,7 @@ export default function TimeTrendsPage() {
                   <XAxis dataKey="hour" className="text-xs" />
                   <YAxis allowDecimals={false} className="text-xs" />
                   <Tooltip />
-                  <Bar dataKey="attempts" fill="hsl(var(--chart-2))" radius={[2, 2, 0, 0]} name="Попытки" />
+                  <Bar dataKey="attempts" fill="hsl(var(--chart-2))" radius={[2, 2, 0, 0]} name="Attempts" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -189,7 +189,7 @@ export default function TimeTrendsPage() {
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow><TableHead>Когорта</TableHead><TableHead className="text-right">Студенты</TableHead><TableHead className="text-right">Месяцев активности</TableHead><TableHead className="text-right">Последний ср. балл</TableHead></TableRow>
+                <TableRow><TableHead>Когорта</TableHead><TableHead className="text-right">Students</TableHead><TableHead className="text-right">Месяцев активности</TableHead><TableHead className="text-right">Последний ср. балл</TableHead></TableRow>
               </TableHeader>
               <TableBody>
                 {data.cohortProgress.slice(-8).map((c) => {
@@ -210,7 +210,7 @@ export default function TimeTrendsPage() {
                   );
                 })}
                 {data.cohortProgress.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Нет данных</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No data</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -227,7 +227,7 @@ export default function TimeTrendsPage() {
                 <XAxis dataKey="month" className="text-xs" />
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip />
-                <Bar dataKey="attemptsCount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Попытки" />
+                <Bar dataKey="attemptsCount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Attempts" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

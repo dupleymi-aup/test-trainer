@@ -131,20 +131,20 @@ export default function ComparePeriodsPage() {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Группа</label>
                 <Select value={groupId} onValueChange={setGroupId}>
-                  <SelectTrigger><SelectValue placeholder="Все группы" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все группы</SelectItem>
+                    <SelectItem value="">All groups</SelectItem>
                     {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               {universities.length > 0 && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Университет</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">University</label>
                   <Select value={university} onValueChange={setUniversity}>
-                    <SelectTrigger><SelectValue placeholder="Все университеты" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="All universities" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Все университеты</SelectItem>
+                      <SelectItem value="">All universities</SelectItem>
                       {universities.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -161,44 +161,44 @@ export default function ComparePeriodsPage() {
           </CardContent>
         </Card>
 
-        {loading && <div className="p-8 text-center">Загрузка...</div>}
+        {loading && <div className="p-8 text-center">Loading...</div>}
 
-        {error && !loading && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>)}
+        {error && !loading && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>)}
 
         {data && data.comparison && (
           <>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Card>
                 <CardContent className="pt-4">
-                  <p className="text-xs text-muted-foreground">Попытки</p>
+                  <p className="text-xs text-muted-foreground">Attempts</p>
                   <p className="text-lg font-bold">{data.comparison.attempts.period1} → {data.comparison.attempts.period2}</p>
                   <ChangeIndicator value={data.comparison.attempts.change} />
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <p className="text-xs text-muted-foreground">Студенты</p>
+                  <p className="text-xs text-muted-foreground">Students</p>
                   <p className="text-lg font-bold">{data.comparison.students.period1} → {data.comparison.students.period2}</p>
                   <ChangeIndicator value={data.comparison.students.change} />
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <p className="text-xs text-muted-foreground">Ср. балл</p>
+                  <p className="text-xs text-muted-foreground">Avg. score</p>
                   <p className="text-lg font-bold">{data.comparison.avgScore.period1}% → {data.comparison.avgScore.period2}%</p>
                   <ChangeIndicator value={data.comparison.avgScore.change} isPoints />
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <p className="text-xs text-muted-foreground">Ср. EC</p>
+                  <p className="text-xs text-muted-foreground">Avg. EC</p>
                   <p className="text-lg font-bold">{data.comparison.avgEc.period1}% → {data.comparison.avgEc.period2}%</p>
                   <ChangeIndicator value={data.comparison.avgEc.change} isPoints />
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <p className="text-xs text-muted-foreground">Ср. BV</p>
+                  <p className="text-xs text-muted-foreground">Avg. BV</p>
                   <p className="text-lg font-bold">{data.comparison.avgBv.period1}% → {data.comparison.avgBv.period2}%</p>
                   <ChangeIndicator value={data.comparison.avgBv.change} isPoints />
                 </CardContent>
@@ -239,9 +239,9 @@ export default function ComparePeriodsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Задание</TableHead>
-                      <TableHead className="text-right">Ср. балл</TableHead>
-                      <TableHead className="text-right">Попытки</TableHead>
+                      <TableHead>Task</TableHead>
+                      <TableHead className="text-right">Avg. score</TableHead>
+                      <TableHead className="text-right">Attempts</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

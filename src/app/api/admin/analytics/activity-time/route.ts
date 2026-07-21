@@ -11,8 +11,8 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
  * - Activity by time of day (morning/afternoon/evening/night)
  * - Activity trends by week
  */
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("activity-time");

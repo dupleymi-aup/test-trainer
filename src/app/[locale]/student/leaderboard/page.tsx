@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Trophy, Medal, Crown, ArrowLeft, TrendingUp, Target, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface LeaderboardEntry {
@@ -41,6 +42,7 @@ const rankIcons: Record<number, React.ReactNode> = {
 };
 
 export default function LeaderboardPage() {
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("all");
@@ -71,7 +73,7 @@ export default function LeaderboardPage() {
       <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild aria-label="Назад">
+            <Button variant="ghost" size="icon" asChild aria-label={t("common.back")}>
               <Link href="/student"><ArrowLeft className="h-5 w-5" /></Link>
             </Button>
             <div className="flex items-center gap-2">
@@ -185,7 +187,7 @@ export default function LeaderboardPage() {
               {leaderboard.length === 0 && (
                 <div className="p-12 text-center text-muted-foreground">
                   <Trophy className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Нет данных за выбранный период</p>
+                  <p>No data за выбранный период</p>
                 </div>
               )}
             </div>

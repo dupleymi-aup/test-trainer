@@ -170,11 +170,11 @@ export default function TaskConstructorPage() {
 
   const saveTask = () => {
     if (!taskName.trim() || !description.trim() || !signature.trim()) {
-      toast.error("Заполните название, описание и сигнатуру");
+      toast.error("Fill in the name, description, and signature");
       return;
     }
     if (ecs.length === 0) {
-      toast.error("Добавьте хотя бы один класс эквивалентности");
+      toast.error("Add at least one equivalence class");
       return;
     }
 
@@ -227,7 +227,7 @@ export default function TaskConstructorPage() {
     const updated = savedTasks.filter((t) => t.id !== id);
     setSavedTasks(updated);
     saveCustomTasks(updated);
-    toast.info("Задание удалено");
+    toast.info("Task deleted");
   };
 
   const clearForm = () => {
@@ -280,7 +280,7 @@ export default function TaskConstructorPage() {
                   <div className="space-y-2">
                     <Label>Название задания *</Label>
                     <Input
-                      placeholder="Например: factorial(n)"
+                      placeholder="e.g. factorial(n)"
                       value={taskName}
                       onChange={(e) => setTaskName(e.target.value)}
                     />
@@ -312,7 +312,7 @@ export default function TaskConstructorPage() {
                 <div className="space-y-2">
                   <Label>Описание *</Label>
                   <Textarea
-                    placeholder="Опишите, что должна делать функция..."
+                    placeholder="Describe what the function should do..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
@@ -332,7 +332,7 @@ export default function TaskConstructorPage() {
                     <Label>Темы (добавляйте через Enter)</Label>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Классы эквивалентности"
+                        placeholder="Equivalence classes"
                         value={topicInput}
                         onChange={(e) => setTopicInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -342,7 +342,7 @@ export default function TaskConstructorPage() {
                           }
                         }}
                       />
-                      <Button type="button" variant="outline" size="sm" onClick={addTopic} aria-label="Добавить тему">
+                      <Button type="button" variant="outline" size="sm" onClick={addTopic} aria-label="Add topic">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -378,7 +378,7 @@ export default function TaskConstructorPage() {
                 <div className="grid grid-cols-12 gap-2">
                   <Input
                     className="col-span-3"
-                    placeholder="Имя (n)"
+                    placeholder="Name (n)"
                     value={paramName}
                     onChange={(e) => setParamName(e.target.value)}
                   />
@@ -395,7 +395,7 @@ export default function TaskConstructorPage() {
                   </Select>
                   <Input
                     className="col-span-5"
-                    placeholder="Описание"
+                    placeholder="Description"
                     value={paramDesc}
                     onChange={(e) => setParamDesc(e.target.value)}
                   />
@@ -458,13 +458,13 @@ export default function TaskConstructorPage() {
                   />
                   <Input
                     className="col-span-5"
-                    placeholder="Описание класса"
+                    placeholder="Class description"
                     value={ecDesc}
                     onChange={(e) => setEcDesc(e.target.value)}
                   />
                   <Input
                     className="col-span-2"
-                    placeholder="Пример (0)"
+                    placeholder="Example (0)"
                     value={ecExample}
                     onChange={(e) => setEcExample(e.target.value)}
                   />
@@ -523,13 +523,13 @@ export default function TaskConstructorPage() {
                 <div className="grid grid-cols-12 gap-2">
                   <Input
                     className="col-span-3"
-                    placeholder="Значение (0)"
+                    placeholder="Value (0)"
                     value={bvValue}
                     onChange={(e) => setBvValue(e.target.value)}
                   />
                   <Input
                     className="col-span-7"
-                    placeholder="Описание (min-1: значение ниже минимума)"
+                    placeholder="Description (min-1: value below minimum)"
                     value={bvDesc}
                     onChange={(e) => setBvDesc(e.target.value)}
                   />
@@ -603,7 +603,7 @@ export default function TaskConstructorPage() {
                 <CardContent className="space-y-3">
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Пропуск проверки n < 0"
+                      placeholder="Skip check n < 0"
                       value={mistakeInput}
                       onChange={(e) => setMistakeInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -613,7 +613,7 @@ export default function TaskConstructorPage() {
                         }
                       }}
                     />
-                    <Button variant="outline" size="sm" onClick={addMistake} aria-label="Добавить ошибку">
+                    <Button variant="outline" size="sm" onClick={addMistake} aria-label="Add mistake">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>

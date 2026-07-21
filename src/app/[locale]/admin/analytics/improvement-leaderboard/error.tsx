@@ -9,5 +9,5 @@ export default function AnalyticsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Таблица улучшений" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Improvement Leaderboard" />;
 }

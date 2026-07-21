@@ -58,9 +58,9 @@ export default function TeacherComparisonPage() {
   const [expandedTeacher, setExpandedTeacher] = useState<string | null>(null);
   const { data, loading, error } = useFetchData<ComparisonData>("/api/admin/analytics/teacher-comparison");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const chartData = data.teachers.map((t) => ({
     name: t.name.split(" ")[0] || t.name,
@@ -84,7 +84,7 @@ export default function TeacherComparisonPage() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-xs text-muted-foreground">Ср. балл студентов</div>
+              <div className="text-xs text-muted-foreground">Avg. score студентов</div>
               <div className="text-2xl font-bold">{data.platformAvg.avgScore}%</div>
             </CardContent>
           </Card>
@@ -110,9 +110,9 @@ export default function TeacherComparisonPage() {
                 <YAxis domain={[0, 100]} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="effectiveness" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Эффективность" />
-                <Bar dataKey="avgScore" fill="#22c55e" radius={[3, 3, 0, 0]} name="Ср. балл" />
-                <Bar dataKey="activeRate" fill="#f59e0b" radius={[3, 3, 0, 0]} name="Активность" />
+                <Bar dataKey="effectiveness" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Effectiveness" />
+                <Bar dataKey="avgScore" fill="#22c55e" radius={[3, 3, 0, 0]} name="Avg. Score" />
+                <Bar dataKey="activeRate" fill="#f59e0b" radius={[3, 3, 0, 0]} name="Activity" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -133,13 +133,13 @@ export default function TeacherComparisonPage() {
                   <TableHead className="w-8"></TableHead>
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Преподаватель</TableHead>
-                  <TableHead className="text-right">Группы</TableHead>
-                  <TableHead className="text-right">Студенты</TableHead>
-                  <TableHead className="text-right">Попытки</TableHead>
-                  <TableHead className="text-right">Ср. балл</TableHead>
+                  <TableHead className="text-right">Groups</TableHead>
+                  <TableHead className="text-right">Students</TableHead>
+                  <TableHead className="text-right">Attempts</TableHead>
+                  <TableHead className="text-right">Avg. score</TableHead>
                   <TableHead className="text-right">Активность</TableHead>
                   <TableHead className="text-right">Эффективность</TableHead>
-                  <TableHead>Тренд</TableHead>
+                  <TableHead>Trend</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -207,14 +207,14 @@ export default function TeacherComparisonPage() {
                           <div className="p-4">
                             <div className="text-sm font-medium mb-2 flex items-center gap-2">
                               <Activity className="h-4 w-4 text-muted-foreground" />
-                              Группы: {t.name}
+                              Groups: {t.name}
                             </div>
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Группа</TableHead>
-                                  <TableHead className="text-right">Студенты</TableHead>
-                                  <TableHead className="text-right">Ср. балл</TableHead>
+                                  <TableHead>Group</TableHead>
+                                  <TableHead className="text-right">Students</TableHead>
+                                  <TableHead className="text-right">Avg. score</TableHead>
                                   <TableHead className="text-right">Активность</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -268,8 +268,8 @@ export default function TeacherComparisonPage() {
                 <YAxis type="category" dataKey="name" className="text-xs" width={100} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="improving" fill="#22c55e" radius={[0, 3, 3, 0]} name="Улучшаются" />
-                <Bar dataKey="declining" fill="#ef4444" radius={[0, 3, 3, 0]} name="Снижаются" />
+                <Bar dataKey="improving" fill="#22c55e" radius={[0, 3, 3, 0]} name="Improving" />
+                <Bar dataKey="declining" fill="#ef4444" radius={[0, 3, 3, 0]} name="Declining" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

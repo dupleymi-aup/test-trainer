@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -75,6 +76,7 @@ function clearExamSession() {
 }
 
 export function ExamMode() {
+  const t = useTranslations("trainer");
   const [examState, setExamState] = useState<ExamState>("setup");
   const [selectedTasks, setSelectedTasks] = useState<number[]>([]);
   const [timeLimit, setTimeLimit] = useState(10); // minutes
@@ -144,8 +146,9 @@ export function ExamMode() {
       if (currentTask) {
         setExamInputs(currentTask.params.map(() => ""));
       }
-      toast.info("Сессия экзамена восстановлена");
+      toast.info(t("sessionRestored"));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const completedCount = examResults.length;
@@ -171,11 +174,11 @@ export function ExamMode() {
         results: Object.fromEntries(results.map((r) => [String(r.task.id), r.overallScore])),
       }),
     }).then((r) => {
-      if (!r.ok) toast.error("Не удалось сохранить результаты экзамена на сервер");
+      if (!r.ok) toast.error(t("saveResultsServerFailed"));
     }).catch(() => {
-      toast.error("Не удалось сохранить результаты экзамена");
+      toast.error(t("saveResultsFailed"));
     });
-  }, [timeLimit, practiceMode]);
+  }, [timeLimit, practiceMode, t]);
 
   const finishExam = useCallback(() => {
     if (isFinishingRef.current) return;
@@ -271,7 +274,7 @@ export function ExamMode() {
 
   const startExam = () => {
     if (selectedTasks.length === 0) {
-      toast.error("Выберите хотя бы одно задание");
+      toast.error(t("addAtLeastOneTask"));
       return;
     }
     setExamState("tips");
@@ -290,7 +293,7 @@ export function ExamMode() {
     }
     
     if (foundTasks.length === 0) {
-      toast.error("Выбранные задания не найдены");
+      toast.error(t("selectedTasksNotFound"));
       return;
     }
     
@@ -322,8 +325,8 @@ export function ExamMode() {
     }));
     setExamInputs(task.params.map(() => ""));
     setExamExpected("");
-    toast.success("Тест-кейс добавлен");
-  }, [examTasks, currentTaskIndex, examInputs, examExpected, examCategory]);
+    toast.success(t("testCaseAdded"));
+  }, [examTasks, currentTaskIndex, examInputs, examExpected, examCategory, t]);
 
   const handleCalculate = useCallback(() => {
     const task = examTasks[currentTaskIndex];
@@ -353,21 +356,20 @@ export function ExamMode() {
       ...prev,
       [task.id]: (prev[task.id] || []).filter((tc) => tc.id !== tcId),
     }));
-    toast.info("Тест-кейс удалён");
-  }, [examTasks, currentTaskIndex]);
+    toast.info(t("testCaseRemoved"));
+  }, [examTasks, currentTaskIndex, t]);
 
   const submitCurrentTask = useCallback(() => {
     const task = examTasks[currentTaskIndex];
     if (!task) return;
     const tcs = examTestCases[task.id] || [];
     if (tcs.length === 0) {
-      toast.error("Добавьте хотя бы один тест-кейс");
+      toast.error(t("addAtLeastOneTestCase"));
       return;
     }
     const result = evaluateTestCases(task, tcs);
     setExamResults((prev) => [...prev, result]);
 
-    // Save this task's result to attempt history
     const catDist: Record<string, number> = {};
     tcs.forEach((tc) => { catDist[tc.category] = (catDist[tc.category] || 0) + 1; });
     saveAttempt({
@@ -408,7 +410,7 @@ export function ExamMode() {
         triggerConfetti();
       }
     }
-  }, [examTasks, currentTaskIndex, examTestCases, examResults, practiceMode, triggerConfetti]);
+  }, [examTasks, currentTaskIndex, examTestCases, examResults, practiceMode, triggerConfetti, t]);
 
   const handleNextAfterPractice = useCallback(() => {
     setLastPracticeResult(null);
@@ -432,6 +434,12 @@ export function ExamMode() {
   const avgScore = examResults.length > 0
     ? Math.round(examResults.reduce((s, r) => s + r.overallScore, 0) / examResults.length)
     : 0;
+
+  const sortedResults = useMemo(() => {
+    if (examResults.length <= 1) return null;
+    const sorted = [...examResults].sort((a, b) => a.overallScore - b.overallScore);
+    return { weakest: sorted[0], strongest: sorted[sorted.length - 1] };
+  }, [examResults]);
 
   const exportExamResults = useCallback(() => {
     const data = {
@@ -457,8 +465,8 @@ export function ExamMode() {
     a.download = `exam-results-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Результаты экспортированы");
-  }, [examResults, avgScore]);
+    toast.success(t("resultsExported"));
+  }, [examResults, avgScore, t]);
 
   const timePerTask = selectedTasks.length > 0
     ? Math.round((timeLimit * 60) / selectedTasks.length)
@@ -732,7 +740,7 @@ export function ExamMode() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setExamState("setup")} className="flex-1">
             <RotateCcw className="h-4 w-4 mr-1" />
-            Назад к настройке
+            {t("backToSetup")}
           </Button>
           <Button onClick={beginExam} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
             <Timer className="h-4 w-4 mr-1" />
@@ -800,7 +808,7 @@ export function ExamMode() {
                 className="shrink-0 text-xs gap-1 h-7"
                 onClick={() => setShowCode(!showCode)}
               >
-                {showCode ? "Скрыть" : "Показать"} код
+                {showCode ? t("hideCode") : t("showCode")}
               </Button>
             </div>
 
@@ -924,7 +932,7 @@ export function ExamMode() {
                 disabled={taskTestCases.length === 0 || (practiceMode && !!lastPracticeResult)}
               >
                 <ChevronRight className="h-3.5 w-3.5 mr-1" />
-                {currentTaskIndex < examTasks.length - 1 ? "Далее" : "Завершить"}
+                {currentTaskIndex < examTasks.length - 1 ? t("next") : t("finish")}
               </Button>
             </div>
             {taskTestCases.length > 0 && (
@@ -947,7 +955,7 @@ export function ExamMode() {
                       <button
                         onClick={() => removeExamTestCase(tc.id)}
                         className="shrink-0 text-muted-foreground hover:text-destructive transition-colors"
-                        aria-label="Удалить тест-кейс"
+                        aria-label={t("deleteTestCase")}
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -975,7 +983,7 @@ export function ExamMode() {
                     onClick={handleNextAfterPractice}
                   >
                     <ChevronRight className="h-3.5 w-3.5 mr-1" />
-                    {currentTaskIndex < examTasks.length - 1 ? "Следующее задание" : "Завершить"}
+                    {currentTaskIndex < examTasks.length - 1 ? t("nextTask") : t("finish")}
                   </Button>
                 </div>
               </div>
@@ -1031,36 +1039,31 @@ export function ExamMode() {
         </CardHeader>
         <CardContent className="space-y-2">
           {/* Weakest and strongest tasks */}
-          {examResults.length > 1 && (() => {
-            const sorted = [...examResults].sort((a, b) => a.overallScore - b.overallScore);
-            const weakest = sorted[0];
-            const strongest = sorted[sorted.length - 1];
-            return (
-              <>
-                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-900/10">
-                  <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+          {sortedResults && (
+            <>
+              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-900/10">
+                <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-rose-800 dark:text-rose-300">Слабое место: {sortedResults.weakest.task.name} ({sortedResults.weakest.overallScore}%)</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {sortedResults.weakest.uncoveredEcIds.length > 0
+                      ? `Не покрыто ${sortedResults.weakest.uncoveredEcIds.length} классов эквивалентности.`
+                      : "Покрытие хорошее, но есть ошибки в ожидаемых результатах."}
+                    Рекомендуем вернуться к теории и практике этого задания.
+                  </p>
+                </div>
+              </div>
+              {sortedResults.strongest.overallScore !== sortedResults.weakest.overallScore && (
+                <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs font-medium text-rose-800 dark:text-rose-300">Слабое место: {weakest.task.name} ({weakest.overallScore}%)</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {weakest.uncoveredEcIds.length > 0
-                        ? `Не покрыто ${weakest.uncoveredEcIds.length} классов эквивалентности.`
-                        : "Покрытие хорошее, но есть ошибки в ожидаемых результатах."}
-                      Рекомендуем вернуться к теории и практике этого задания.
-                    </p>
+                    <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Сильное место: {sortedResults.strongest.task.name} ({sortedResults.strongest.overallScore}%)</p>
+                    <p className="text-[11px] text-muted-foreground">Лучший результат на экзамене. Вы хорошо понимаете этот тип задач.</p>
                   </div>
                 </div>
-                {strongest.overallScore !== weakest.overallScore && (
-                  <div className="flex items-start gap-2 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/10">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">Сильное место: {strongest.task.name} ({strongest.overallScore}%)</p>
-                      <p className="text-[11px] text-muted-foreground">Лучший результат на экзамене. Вы хорошо понимаете этот тип задач.</p>
-                    </div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+              )}
+            </>
+          )}
 
           {/* Category distribution tips */}
           <div className="bg-muted/50 rounded-lg p-3">

@@ -20,9 +20,9 @@ interface PathData {
 export default function LearningPathPage() {
   const { data, loading, error } = useFetchData<PathData>("/api/admin/analytics/learning-path");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   return (
     <AdminLayout>
@@ -30,7 +30,7 @@ export default function LearningPathPage() {
         <h1 className="text-xl font-bold">Путь обучения</h1>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Студентов с ≥3 попытками</div><div className="text-2xl font-bold">{data.totalStudents}</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Students с ≥3 попытками</div><div className="text-2xl font-bold">{data.totalStudents}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Уникальных путей</div><div className="text-2xl font-bold">{data.commonPaths.length}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Точек схода</div><div className="text-2xl font-bold">{data.dropoffPoints.length}</div></CardContent></Card>
         </div>
@@ -62,7 +62,7 @@ export default function LearningPathPage() {
           <CardHeader><CardTitle className="text-sm flex items-center gap-2"><AlertCircle className="h-4 w-4 text-rose-600" /> Точки схода студентов</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Задача</TableHead><TableHead className="text-right">Сход</TableHead><TableHead className="text-right">% от всех</TableHead><TableHead className="text-right">Ср. балл при сходе</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Task</TableHead><TableHead className="text-right">Сход</TableHead><TableHead className="text-right">% от всех</TableHead><TableHead className="text-right">Ср. балл при сходе</TableHead></TableRow></TableHeader>
               <TableBody>
                 {data.dropoffPoints.map((d) => (
                   <TableRow key={d.taskId}>

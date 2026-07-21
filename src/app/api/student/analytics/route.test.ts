@@ -86,6 +86,10 @@ vi.mock("@/lib/api-error-handler", () => ({
 
 import { GET } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/student/analytics");
+}
+
 function setAuthorized() {
   mocks.guardResult = { session: { userId: "student-1", role: "STUDENT" } };
 }
@@ -103,7 +107,7 @@ describe("GET /api/student/analytics", () => {
   });
 
   it("returns analytics with zero attempts when student has none", async () => {
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.attempts).toBe(0);
@@ -118,7 +122,7 @@ describe("GET /api/student/analytics", () => {
       { id: "a1", taskId: 1, score: 80, ecCoverage: 70, bvCoverage: 60, correctness: 1, timeSpent: 120, createdAt: new Date("2024-06-01") },
       { id: "a2", taskId: 2, score: 90, ecCoverage: 85, bvCoverage: 80, correctness: 1, timeSpent: 90, createdAt: new Date("2024-06-02") },
     ]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.attempts).toBe(2);
     expect(body.scoresOverTime).toHaveLength(2);
@@ -131,7 +135,7 @@ describe("GET /api/student/analytics", () => {
       { id: "a1", taskId: 1, score: 100, ecCoverage: 100, bvCoverage: 100, correctness: 1, timeSpent: 60, createdAt: new Date("2024-06-01") },
       { id: "a2", taskId: 2, score: 50, ecCoverage: 50, bvCoverage: 40, correctness: 1, timeSpent: 120, createdAt: new Date("2024-06-02") },
     ]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.topicMastery.length).toBeGreaterThanOrEqual(1);
     const eq = body.topicMastery.find((t: { topic: string }) => t.topic === "equivalence");
@@ -141,13 +145,13 @@ describe("GET /api/student/analytics", () => {
 
   it("returns 403 when unauthorized", async () => {
     setUnauthorized();
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(403);
   });
 
   it("handles db error gracefully", async () => {
     mocks.mockAttemptFindMany.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 
@@ -155,7 +159,7 @@ describe("GET /api/student/analytics", () => {
     mocks.mockAttemptFindMany.mockResolvedValue([
       { id: "a1", taskId: 1, score: 30, ecCoverage: 20, bvCoverage: 10, correctness: 0, timeSpent: 200, createdAt: new Date("2024-06-01") },
     ]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.weakAreas.length).toBeGreaterThanOrEqual(0);
     expect(body.strongAreas.length).toBeGreaterThanOrEqual(0);
@@ -165,7 +169,7 @@ describe("GET /api/student/analytics", () => {
     mocks.mockAttemptFindMany.mockResolvedValue([
       { id: "a1", taskId: 1, score: 90, ecCoverage: 80, bvCoverage: 70, correctness: 1, timeSpent: 60, createdAt: new Date("2024-06-01") },
     ]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     const easy = body.difficultyBreakdown.find((d: { difficulty: string }) => d.difficulty === "easy");
     expect(easy.completed).toBe(1);
@@ -178,7 +182,8 @@ describe("GET /api/student/analytics", () => {
 
   it("validates response schema", async () => {
     const { validateApiResponse } = await import("@/lib/api-error-handler");
-    await GET();
+    await GET(makeGetRequest());
     expect(validateApiResponse).toHaveBeenCalled();
   });
 });
+

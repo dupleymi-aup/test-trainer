@@ -39,14 +39,14 @@ interface ExecutiveData {
   topGroups: Array<{ groupId: string; name: string; avgScore: number; studentCount: number }>;
 }
 
-const roleLabels: Record<string, string> = { STUDENT: "Студенты", TEACHER: "Преподаватели", ADMIN: "Администраторы" };
+const roleLabels: Record<string, string> = { STUDENT: "Studentы", TEACHER: "Преподаватели", ADMIN: "Администраторы" };
 
 export default function ExecutivePage() {
   const { data, isLoading, error } = useSWRApi<ExecutiveData>("/api/admin/executive");
 
-  if (isLoading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error.message}</p></div></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
+  if (isLoading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Error: {error.message}</p></div></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center">No data</div></AdminLayout>;
 
   const { kpi, roleDistribution, riskBreakdown, topRiskStudents, activityTrend, topGroups } = data;
 
@@ -67,11 +67,11 @@ export default function ExecutivePage() {
         {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           {[
-            { label: "Студенты", value: kpi.totalStudents, icon: Users, color: "text-blue-600 dark:text-blue-400" },
+            { label: "Studentы", value: kpi.totalStudents, icon: Users, color: "text-blue-600 dark:text-blue-400" },
             { label: "Преподаватели", value: kpi.totalTeachers, icon: GraduationCap, color: "text-amber-600 dark:text-amber-400" },
-            { label: "Группы", value: kpi.totalGroups, icon: FolderKanban, color: "text-purple-600" },
+            { label: "Groups", value: kpi.totalGroups, icon: FolderKanban, color: "text-purple-600" },
             { label: "Попытки", value: kpi.totalAttempts, icon: FileText, color: "text-emerald-600" },
-            { label: "Ср. балл", value: `${kpi.avgScore}%`, icon: TrendingUp, color: "text-cyan-600" },
+            { label: "Avg. score", value: `${kpi.avgScore}%`, icon: TrendingUp, color: "text-cyan-600" },
             { label: "Активные 30д", value: kpi.activeStudents30d, icon: Users, color: "text-teal-600" },
             { label: "Активность", value: `${kpi.activeRate}%`, icon: TrendingUp, color: "text-violet-600" },
           ].map((card) => (
@@ -137,7 +137,7 @@ export default function ExecutivePage() {
                     </Badge>
                   </div>
                 ))}
-                {topGroups.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Нет данных</p>}
+                {topGroups.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No data</p>}
               </div>
             </CardContent>
           </Card>
@@ -164,7 +164,7 @@ export default function ExecutivePage() {
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                Студенты с наибольшим риском
+                Studentы с наибольшим риском
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -172,10 +172,10 @@ export default function ExecutivePage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Студент</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Группа</th>
-                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Ср. балл</th>
-                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Тренд</th>
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Student</th>
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Group</th>
+                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Avg. score</th>
+                      <th className="text-center py-2 px-3 font-medium text-muted-foreground">Trend</th>
                       <th className="text-center py-2 px-3 font-medium text-muted-foreground">Риск</th>
                       <th className="text-right py-2 px-3 font-medium text-muted-foreground"></th>
                     </tr>

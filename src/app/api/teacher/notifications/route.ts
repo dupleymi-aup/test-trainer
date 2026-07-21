@@ -17,8 +17,8 @@ const updateNotificationSchema = z.object({
   read: z.boolean(),
 });
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const session = unwrapGuard(await requireTeacherOrAdmin());
 
     // Get notifications for this teacher

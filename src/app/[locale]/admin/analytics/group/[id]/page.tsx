@@ -69,9 +69,9 @@ export default function AdminGroupAnalyticsPage() {
     return () => controller.abort();
   }, [id]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Группа не найдена</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Group not found</div></AdminLayout>;
 
   const { group, members, taskCompletionMatrix, performanceDistribution, taskComparison, activityTimeline, summary } = data;
 
@@ -103,9 +103,9 @@ export default function AdminGroupAnalyticsPage() {
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> Всего</div><div className="text-2xl font-bold">{summary.totalMembers}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Активных</div><div className="text-2xl font-bold text-emerald-600">{summary.activeMembers}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Activity className="h-3 w-3" /> Попыток</div><div className="text-2xl font-bold">{summary.totalAttempts}</div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. балл</div><div className="text-2xl font-bold"><ScoreBadge score={summary.avgGroupScore} /></div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. EC</div><div className="text-2xl font-bold">{summary.avgEc}%</div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. BV</div><div className="text-2xl font-bold">{summary.avgBv}%</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Avg. score</div><div className="text-2xl font-bold"><ScoreBadge score={summary.avgGroupScore} /></div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Avg. EC</div><div className="text-2xl font-bold">{summary.avgEc}%</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Avg. BV</div><div className="text-2xl font-bold">{summary.avgBv}%</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><FileText className="h-3 w-3" /> Назначено</div><div className="text-2xl font-bold">{summary.tasksAssigned}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><CheckCircle className="h-3 w-3" /> Выполнено</div><div className="text-2xl font-bold">{summary.tasksCompleted}</div></CardContent></Card>
         </div>
@@ -117,12 +117,12 @@ export default function AdminGroupAnalyticsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Студент</TableHead>
-                  <TableHead>Университет</TableHead>
-                  <TableHead className="text-right">Лучший</TableHead>
-                  <TableHead className="text-right">Средний</TableHead>
-                  <TableHead className="text-right">Попытки</TableHead>
-                  <TableHead className="text-right">Тренд</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>University</TableHead>
+                  <TableHead className="text-right">Best</TableHead>
+                  <TableHead className="text-right">Average</TableHead>
+                  <TableHead className="text-right">Attempts</TableHead>
+                  <TableHead className="text-right">Trend</TableHead>
                   <TableHead className="text-right">Активность</TableHead>
                   <TableHead className="text-right"></TableHead>
                 </TableRow>
@@ -146,7 +146,7 @@ export default function AdminGroupAnalyticsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Link href={`/admin/analytics/student/${m.id}`}>
-                        <Button variant="ghost" size="sm" className="text-xs h-7">Подробнее</Button>
+                        <Button variant="ghost" size="sm" className="text-xs h-7">Details</Button>
                       </Link>
                     </TableCell>
                   </TableRow>
@@ -164,11 +164,11 @@ export default function AdminGroupAnalyticsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="sticky left-0 bg-white dark:bg-gray-950 z-10">Задача</TableHead>
+                    <TableHead className="sticky left-0 bg-white dark:bg-gray-950 z-10">Task</TableHead>
                     <TableHead>Сложность</TableHead>
                     <TableHead className="text-right">Выполнено</TableHead>
-                    <TableHead className="text-right">Ср. балл</TableHead>
-                    <TableHead className="text-right">Лучший</TableHead>
+                    <TableHead className="text-right">Avg. score</TableHead>
+                    <TableHead className="text-right">Best</TableHead>
                     <TableHead className="text-right">Завершение %</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -221,8 +221,8 @@ export default function AdminGroupAnalyticsPage() {
                   <YAxis className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="groupAvgScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Группа" />
-                  <Bar dataKey="platformAvgScore" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} name="Платформа" />
+                  <Bar dataKey="groupAvgScore" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Group" />
+                  <Bar dataKey="platformAvgScore" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} name="Platform" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -240,8 +240,8 @@ export default function AdminGroupAnalyticsPage() {
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Area type="monotone" dataKey="attemptsCount" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} name="Попытки" />
-                <Area type="monotone" dataKey="uniqueStudents" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.1} name="Студенты" />
+                <Area type="monotone" dataKey="attemptsCount" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} name="Attempts" />
+                <Area type="monotone" dataKey="uniqueStudents" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.1} name="Students" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

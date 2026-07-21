@@ -61,8 +61,8 @@ export default function GroupTaskMatrixPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>("all");
   const { data, loading, error } = useFetchData<MatrixData>("/api/admin/analytics/group-task-matrix");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const filteredMatrix = data.matrix.filter((m) => {
@@ -95,13 +95,13 @@ export default function GroupTaskMatrixPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><FolderKanban className="h-4 w-4 text-teal-600" /><span className="text-xs text-muted-foreground">Группы</span></div>
+              <div className="flex items-center gap-2 mb-1"><FolderKanban className="h-4 w-4 text-teal-600" /><span className="text-xs text-muted-foreground">Groups</span></div>
               <p className="text-2xl font-bold">{data.groupSummary.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Target className="h-4 w-4 text-emerald-600" /><span className="text-xs text-muted-foreground">Ср. балл (лучшая)</span></div>
+              <div className="flex items-center gap-2 mb-1"><Target className="h-4 w-4 text-emerald-600" /><span className="text-xs text-muted-foreground">Avg. score (лучшая)</span></div>
               <p className="text-2xl font-bold">{data.groupSummary[0]?.avgScore || 0}%</p>
             </CardContent>
           </Card>
@@ -132,8 +132,8 @@ export default function GroupTaskMatrixPage() {
                 <YAxis domain={[0, 100]} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="avgScore" fill="hsl(var(--primary))" name="Ср. балл %" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="passRate" fill="#10b981" name="Проход %" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="avgScore" fill="hsl(var(--primary))" name="Avg. Score %" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="passRate" fill="#10b981" name="Pass Rate %" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -144,7 +144,7 @@ export default function GroupTaskMatrixPage() {
           <div className="flex-1 max-w-xs">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Поиск группы или задачи..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
+              <Input placeholder="Search group or task..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
             </div>
           </div>
           <select
@@ -152,7 +152,7 @@ export default function GroupTaskMatrixPage() {
             value={selectedGroup}
             onChange={(e) => setSelectedGroup(e.target.value)}
           >
-            <option value="all">Все группы</option>
+            <option value="all">All groups</option>
             {data.groupSummary.map((g) => (
               <option key={g.groupId} value={g.groupId}>{g.groupName}</option>
             ))}
@@ -167,12 +167,12 @@ export default function GroupTaskMatrixPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Группа</TableHead>
-                    <TableHead>Задание</TableHead>
-                    <TableHead className="text-center">Попыток</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="text-center">Attempts</TableHead>
                     <TableHead className="text-center">Прошли</TableHead>
-                    <TableHead className="text-center">Ср. балл</TableHead>
-                    <TableHead className="text-center">Лучший</TableHead>
+                    <TableHead className="text-center">Avg. score</TableHead>
+                    <TableHead className="text-center">Best</TableHead>
                     <TableHead className="text-center">Платформа</TableHead>
                     <TableHead className="text-center">Δ</TableHead>
                     <TableHead className="text-center">Проход %</TableHead>
@@ -206,7 +206,7 @@ export default function GroupTaskMatrixPage() {
                     </TableRow>
                   ))}
                   {filteredMatrix.length === 0 && (
-                    <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Нет данных</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No data</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -222,10 +222,10 @@ export default function GroupTaskMatrixPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>#</TableHead>
-                  <TableHead>Группа</TableHead>
-                  <TableHead className="text-center">Студенты</TableHead>
+                  <TableHead>Group</TableHead>
+                  <TableHead className="text-center">Students</TableHead>
                   <TableHead className="text-center">Заданий</TableHead>
-                  <TableHead className="text-center">Ср. балл</TableHead>
+                  <TableHead className="text-center">Avg. score</TableHead>
                   <TableHead className="text-center">Ср. проход</TableHead>
                   <TableHead className="text-center">Δ от платформы</TableHead>
                 </TableRow>

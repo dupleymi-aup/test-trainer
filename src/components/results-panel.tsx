@@ -40,7 +40,7 @@ import {
 import { toast } from "sonner";
 import type { EvaluationResult, TestCase } from "@/lib/evaluator";
 import { getTaskHistory } from "@/lib/storage";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatDuration } from "@/lib/format-time";
 import { CoverageMatrix } from "@/components/coverage-matrix";
 
@@ -164,6 +164,7 @@ function formatResultsAsText(result: EvaluationResult): string {
 
 export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [], onReset, bestScore, elapsedTime }: ResultsPanelProps) {
   const locale = useLocale();
+  const t = useTranslations("trainer");
   const [copied, setCopied] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
@@ -361,11 +362,11 @@ export const ResultsPanel = memo(function ResultsPanel({ result, testCases = [],
     try {
       await navigator.clipboard.writeText(formatResultsAsText(result));
       setCopied(true);
-      toast.success("Результаты скопированы!");
+      toast.success(t("resultsCopied"));
       if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
       copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Не удалось скопировать результаты");
+      toast.error(t("saveResultsFailed"));
     }
   };
 

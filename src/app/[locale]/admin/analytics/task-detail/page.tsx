@@ -75,17 +75,17 @@ export default function TaskDetailPage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h1 className="text-xl font-bold">Детальный анализ задач</h1>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>
         )}
 
         {!loading && !data && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No data</CardContent></Card>
         )}
 
         {!loading && data && (
@@ -113,11 +113,11 @@ export default function TaskDetailPage() {
                         </div>
                         <div className="flex items-center gap-4 text-sm">
                           <div className="text-right">
-                            <div className="text-xs text-muted-foreground">Ср. балл</div>
+                            <div className="text-xs text-muted-foreground">Avg. score</div>
                             <Badge variant={t.metrics.avgScore >= 75 ? "default" : t.metrics.avgScore >= 50 ? "secondary" : "destructive"}>{t.metrics.avgScore}%</Badge>
                           </div>
                           <div className="text-right">
-                            <div className="text-xs text-muted-foreground">Попытки</div>
+                            <div className="text-xs text-muted-foreground">Attempts</div>
                             <div className="font-bold">{t.metrics.totalAttempts}</div>
                           </div>
                           <div className="text-right">
@@ -134,8 +134,8 @@ export default function TaskDetailPage() {
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Min</div><div className="font-bold">{t.metrics.minScore}%</div></div>
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Median</div><div className="font-bold">{t.metrics.median}%</div></div>
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Max</div><div className="font-bold">{t.metrics.maxScore}%</div></div>
-                          <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. EC</div><div className="font-bold">{t.metrics.avgEc}%</div></div>
-                          <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. BV</div><div className="font-bold">{t.metrics.avgBv}%</div></div>
+                          <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Avg. EC</div><div className="font-bold">{t.metrics.avgEc}%</div></div>
+                          <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Avg. BV</div><div className="font-bold">{t.metrics.avgBv}%</div></div>
                           <div className="border rounded p-2 text-center"><div className="text-xs text-muted-foreground">Ср. время</div><div className="font-bold">{formatDurationShort(t.metrics.avgTime)}</div></div>
                         </div>
 
@@ -167,7 +167,7 @@ export default function TaskDetailPage() {
                                 </div>
                               ))
                             ) : (
-                              <p className="text-sm text-muted-foreground">Нет данных</p>
+                              <p className="text-sm text-muted-foreground">No data</p>
                             )}
                           </div>
                         </div>
@@ -196,9 +196,9 @@ export default function TaskDetailPage() {
                               <thead>
                                 <tr className="border-b">
                                   <th className="text-left p-1">Студент</th>
-                                  <th className="text-left p-1">Группа</th>
-                                  <th className="text-right p-1">Ср. балл</th>
-                                  <th className="text-right p-1">Попытки</th>
+                                  <th className="text-left p-1">Group</th>
+                                  <th className="text-right p-1">Avg. score</th>
+                                  <th className="text-right p-1">Attempts</th>
                                 </tr>
                               </thead>
                               <tbody>

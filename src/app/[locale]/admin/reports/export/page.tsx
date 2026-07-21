@@ -196,7 +196,7 @@ export default function AdminExportPage() {
         if (Array.isArray(data)) setGroups(data);
       })
       .catch((error) => {
-        logger.warn("Failed to fetch groups for export filter", { error });
+        logger.warn("Failed to fetch groups for export filter", { error: error instanceof Error ? error.message : String(error) });
       });
   }, []);
 
@@ -212,7 +212,7 @@ export default function AdminExportPage() {
         setHistoryPage(data.pagination?.page || 1);
       })
       .catch((error) => {
-        logger.warn("Failed to fetch export history", { error });
+        logger.warn("Failed to fetch export history", { error: error instanceof Error ? error.message : String(error) });
       });
   };
 
@@ -222,7 +222,7 @@ export default function AdminExportPage() {
 
   const handleExport = async (reportType: string, format: "csv" | "json" = "csv") => {
     if (reportType === "group-detailed" && !selectedGroup) {
-      toast.error("Выберите группу для экспорта");
+      toast.error("Select a group to export");
       return;
     }
 
@@ -242,7 +242,7 @@ export default function AdminExportPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error || "Ошибка экспорта");
+        toast.error(err.error || "Export error");
         return;
       }
 
@@ -262,8 +262,8 @@ export default function AdminExportPage() {
       URL.revokeObjectURL(url);
       fetchHistory(1);
     } catch (e) {
-      logger.error("Export failed", { reportType, error: e });
-      toast.error("Ошибка при экспорте");
+      logger.error("Export failed", { reportType, error: e instanceof Error ? e.message : String(e) });
+      toast.error("Export error");
     } finally {
       setExporting(null);
     }
@@ -296,10 +296,10 @@ export default function AdminExportPage() {
                 <label className="text-xs text-muted-foreground mb-1 block">Группа</label>
                 <Select value={selectedGroup} onValueChange={setSelectedGroup}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Все группы" />
+                    <SelectValue placeholder="All groups" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все группы</SelectItem>
+                    <SelectItem value="">All groups</SelectItem>
                     {groups.map((g) => (
                       <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
                     ))}
@@ -328,7 +328,7 @@ export default function AdminExportPage() {
                   <rt.icon className={`h-5 w-5 ${rt.color}`} />
                   <CardTitle className="text-base">{rt.title}</CardTitle>
                   {rt.requiresGroup && (
-                    <Badge variant="secondary" className="text-xs">Нужна группа</Badge>
+                    <Badge variant="secondary" className="text-xs">Group required</Badge>
                   )}
                 </div>
                 <CardDescription className="text-xs">{rt.description}</CardDescription>
@@ -379,7 +379,7 @@ export default function AdminExportPage() {
           </CardHeader>
           <CardContent className="p-0">
             {exportHistory.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Нет выгрузок</p>
+              <p className="text-sm text-muted-foreground text-center py-8">No uploads</p>
             ) : (
               <>
                 <div className="divide-y">

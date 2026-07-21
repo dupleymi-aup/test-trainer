@@ -44,19 +44,24 @@ export async function GET(req: Request) {
     }
 
     if (table) {
-      const allowedTables = [
-        "user", "group", "attempt", "notification", "deadline",
-        "reminder", "message", "activityLog", "grade", "favoriteTask",
-      ];
-      if (!allowedTables.includes(table)) {
+      const modelMap = {
+        user: db.user,
+        group: db.group,
+        attempt: db.attempt,
+        notification: db.notification,
+        deadline: db.deadline,
+        reminder: db.reminder,
+        message: db.message,
+        activityLog: db.activityLog,
+        grade: db.grade,
+        favoriteTask: db.favoriteTask,
+      } as const;
+
+      const model = modelMap[table as keyof typeof modelMap];
+      if (!model) {
         return NextResponse.json({ error: `Unknown table: ${table}` }, { status: 400 });
       }
-      const dbAny = db as unknown as Record<string, unknown>;
-      const model = dbAny[table] as { findMany: (args: Record<string, unknown>) => Promise<unknown[]> } | undefined;
-      if (!model || typeof model.findMany !== "function") {
-        return NextResponse.json({ error: `Unknown table: ${table}` }, { status: 400 });
-      }
-      const rows = await model.findMany({});
+      const rows = await (model as unknown as { findMany: (args: Record<string, unknown>) => Promise<unknown[]> }).findMany({});
       return NextResponse.json({ table, rows, count: rows.length, exportedAt: new Date().toISOString() });
     }
 

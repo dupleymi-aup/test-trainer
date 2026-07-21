@@ -74,8 +74,8 @@ export default function AdminAlertsPage() {
 
   const { data, isLoading, mutate } = useSWRApi<AlertsData>("/api/admin/alerts");
 
-  if (isLoading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (isLoading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const filtered = severityFilter === "all"
     ? data.alerts

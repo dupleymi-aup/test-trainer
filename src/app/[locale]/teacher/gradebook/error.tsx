@@ -9,5 +9,5 @@ export default function GradebookError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Журнал оценок" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Gradebook" />;
 }

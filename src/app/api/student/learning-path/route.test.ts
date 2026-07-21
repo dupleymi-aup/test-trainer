@@ -74,6 +74,10 @@ vi.mock("@/lib/analytics-cache", () => ({
 
 import { GET } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/student/learning-path");
+}
+
 function setAuthorized() {
   mocks.guardResult = { session: { userId: "student-1", role: "STUDENT" } };
 }
@@ -92,13 +96,13 @@ describe("GET /api/student/learning-path", () => {
 
   it("returns 403 when not authenticated", async () => {
     setUnauthorized();
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(403);
   });
 
   it("returns empty when user has no groups", async () => {
     mocks.findManyUserGroup.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.assignments).toEqual([]);
@@ -128,7 +132,7 @@ describe("GET /api/student/learning-path", () => {
       { taskId: "3", score: 90 },
     ]);
 
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
 
@@ -144,7 +148,7 @@ describe("GET /api/student/learning-path", () => {
 
   it("queries groups by current user", async () => {
     mocks.findManyUserGroup.mockResolvedValue([]);
-    await GET();
+    await GET(makeGetRequest());
     expect(mocks.findManyUserGroup).toHaveBeenCalledWith({
       where: { userId: "student-1" },
       select: { groupId: true },
@@ -155,7 +159,7 @@ describe("GET /api/student/learning-path", () => {
     mocks.findManyUserGroup.mockResolvedValue([{ groupId: "g1" }, { groupId: "g2" }]);
     mocks.findManyAssignment.mockResolvedValue([]);
     mocks.findManyAttempt.mockResolvedValue([]);
-    await GET();
+    await GET(makeGetRequest());
     expect(mocks.findManyAssignment).toHaveBeenCalledWith({
       where: { groupId: { in: ["g1", "g2"] } },
       include: expect.objectContaining({ template: expect.anything() }),
@@ -169,7 +173,7 @@ describe("GET /api/student/learning-path", () => {
       { id: "a1", assignedAt: new Date().toISOString(), template: { id: "t1", name: "Test", description: "", taskIds: JSON.stringify([1]), topics: [], estimatedHours: 1 }, group: { id: "g1", name: "G" } },
     ]);
     mocks.findManyAttempt.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.progress["t1"].completedTasks).toBe(0);
   });
@@ -180,7 +184,7 @@ describe("GET /api/student/learning-path", () => {
       { id: "a1", assignedAt: new Date().toISOString(), template: { id: "t1", name: "Test", description: "", taskIds: "not-json", topics: [], estimatedHours: 1 }, group: { id: "g1", name: "G" } },
     ]);
     mocks.findManyAttempt.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.progress["t1"].totalTasks).toBe(0);
     expect(body.progress["t1"].completedTasks).toBe(0);
@@ -188,7 +192,8 @@ describe("GET /api/student/learning-path", () => {
 
   it("handles db error gracefully", async () => {
     mocks.findManyUserGroup.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 });
+

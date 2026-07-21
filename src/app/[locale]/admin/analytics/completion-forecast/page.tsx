@@ -94,8 +94,8 @@ export default function CompletionForecastPage() {
   const [filter, setFilter] = useState<string>("all");
   const { data, loading, error } = useFetchData<ForecastData>("/api/admin/analytics/completion-forecast");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const filtered = filter === "all"
@@ -127,7 +127,7 @@ export default function CompletionForecastPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Студенты</span></div>
+              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Students</span></div>
               <p className="text-2xl font-bold">{data.summary.totalStudents}</p>
             </CardContent>
           </Card>
@@ -201,11 +201,11 @@ export default function CompletionForecastPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Студент</TableHead>
+                    <TableHead>Student</TableHead>
                     <TableHead className="text-center">Завершение</TableHead>
                     <TableHead className="text-center">Скорость</TableHead>
                     <TableHead className="text-center">Осталось недель</TableHead>
-                    <TableHead className="text-center">Тренд</TableHead>
+                    <TableHead className="text-center">Trend</TableHead>
                     <TableHead className="text-center">Послед. активность</TableHead>
                     <TableHead className="text-center">В графике</TableHead>
                     <TableHead className="text-center">Риск</TableHead>
@@ -216,7 +216,7 @@ export default function CompletionForecastPage() {
                   {filtered.map((f) => {
                     const rc = riskConfig[f.riskLevel];
                     const TrendIcon = trendIcons[f.trend];
-                    const trendLabel = f.trend === "improving" ? "Улучшение" : f.trend === "declining" ? "Снижение" : f.trend === "none" ? "Нет данных" : "Стабильно";
+                    const trendLabel = f.trend === "improving" ? "Улучшение" : f.trend === "declining" ? "Снижение" : f.trend === "none" ? "No data" : "Стабильно";
                     return (
                       <TableRow key={f.id}>
                         <TableCell className="font-medium">

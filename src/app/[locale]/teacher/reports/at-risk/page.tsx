@@ -114,7 +114,7 @@ export default function AtRiskStudentsPage() {
             <h2 className="text-xl font-bold">Студенты группы риска</h2>
             <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
               <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Выберите группу" />
+                <SelectValue placeholder="Select group" />
               </SelectTrigger>
               <SelectContent>
                 {groups.map((g) => (
@@ -143,8 +143,8 @@ export default function AtRiskStudentsPage() {
                   <TableRow>
                     <TableHead>Студент</TableHead>
                     <TableHead>Факторы риска</TableHead>
-                    <TableHead className="text-right">Лучший балл</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
+                    <TableHead className="text-right">Best score</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
                     <TableHead>Рекомендации</TableHead>
                     <TableHead></TableHead>
                   </TableRow>

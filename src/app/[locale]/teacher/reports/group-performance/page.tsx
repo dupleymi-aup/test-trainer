@@ -112,7 +112,7 @@ export default function GroupPerformancePage() {
           <h2 className="text-xl font-bold">Прогресс по группам</h2>
           <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
             <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Выберите группу" />
+              <SelectValue placeholder="Select group" />
             </SelectTrigger>
             <SelectContent>
               {teacherGroups.map((g) => (
@@ -125,7 +125,7 @@ export default function GroupPerformancePage() {
         {groups.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center text-muted-foreground">
-              Нет данных о студентах
+              No data о студентах
             </CardContent>
           </Card>
         )}

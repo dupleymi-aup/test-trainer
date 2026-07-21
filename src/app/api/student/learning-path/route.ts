@@ -4,8 +4,8 @@ import { db } from "@/lib/db";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { getCache, setCache } from "@/lib/analytics-cache";
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const auth = unwrapGuard(await requireStudent());
 
     const cacheKey = `student-learning-path:${auth.userId}`;

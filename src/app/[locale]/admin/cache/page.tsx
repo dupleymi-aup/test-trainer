@@ -34,13 +34,13 @@ export default function AdminCachePage() {
         body: JSON.stringify({ pattern }),
       });
       if (res.ok) {
-        toast.success("Кэш очищен успешно");
+        toast.success("Cache cleared successfully");
         fetchStats();
       } else {
-        toast.error("Не удалось очистить кэш");
+        toast.error("Failed to clear cache");
       }
     } catch {
-      toast.error("Ошибка при очистке кэша");
+      toast.error("Error clearing cache");
     }
     setInvalidating(false);
   };

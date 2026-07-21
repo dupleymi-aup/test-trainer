@@ -90,19 +90,19 @@ export default function ForecastingPage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h2 className="text-xl font-bold flex items-center gap-2"><LineChartIcon className="h-5 w-5" /> Прогнозирование успеваемости</h2>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
         <AnalyticsFilterBar onFilterChange={(filters) => fetchData(filters)} />
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Error: {error}</p></CardContent></Card>
         )}
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {!loading && !data && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No data</CardContent></Card>
         )}
 
         {!loading && data && (
@@ -123,17 +123,17 @@ export default function ForecastingPage() {
                   <ResponsiveContainer width="100%" height={300}>
                     <ScatterChart>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="current" type="number" name="Текущий" className="text-xs" domain={[0, 100]} />
-                      <YAxis dataKey="predicted" type="number" name="Прогноз" className="text-xs" domain={[0, 100]} />
+                      <XAxis dataKey="current" type="number" name="Current" className="text-xs" domain={[0, 100]} />
+                      <YAxis dataKey="predicted" type="number" name="Predicted" className="text-xs" domain={[0, 100]} />
                       <Tooltip cursor={{ strokeDasharray: "3 3" }} />
                       <Legend />
-                      <ReferenceLine x={75} stroke="#ef4444" strokeDasharray="5 5" label="Цель 75%" />
+                      <ReferenceLine x={75} stroke="#ef4444" strokeDasharray="5 5" label="Target 75%" />
                       <ReferenceLine y={75} stroke="#ef4444" strokeDasharray="5 5" />
-                      <Scatter name="Студенты" data={chartData} fill="hsl(var(--primary))" />
+                      <Scatter name="Students" data={chartData} fill="hsl(var(--primary))" />
                     </ScatterChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+                  <p className="text-center text-muted-foreground py-8">No data</p>
                 )}
               </CardContent>
             </Card>
@@ -161,12 +161,12 @@ export default function ForecastingPage() {
                     <thead>
                       <tr className="border-b bg-muted/50 sticky top-0">
                         <th className="text-left p-2">Студент</th>
-                        <th className="text-left p-2">Группа</th>
+                        <th className="text-left p-2">Group</th>
                         <th className="text-right p-2">Текущий</th>
                         <th className="text-right p-2">Прогноз</th>
                         <th className="text-right p-2">Изменение</th>
                         <th className="text-right p-2">Уверенность</th>
-                        <th className="text-right p-2">Тренд</th>
+                        <th className="text-right p-2">Trend</th>
                       </tr>
                     </thead>
                     <tbody>

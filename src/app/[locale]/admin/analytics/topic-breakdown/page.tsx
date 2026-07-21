@@ -88,19 +88,19 @@ export default function TopicBreakdownPage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h1 className="text-xl font-bold">Анализ тем</h1>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
         <AnalyticsFilterBar onFilterChange={(filters) => fetchData(filters)} />
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>
         )}
 
         {!loading && !data && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No data</CardContent></Card>
         )}
 
         {!loading && data && (
@@ -114,12 +114,12 @@ export default function TopicBreakdownPage() {
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-2 w-8"></th>
                       <th className="text-left p-2">Тема</th>
-                      <th className="text-right p-2">Ср. балл</th>
+                      <th className="text-right p-2">Avg. score</th>
                       <th className="text-right p-2">EC</th>
                       <th className="text-right p-2">BV</th>
                       <th className="text-right p-2">Ср. время</th>
-                      <th className="text-right p-2">Попытки</th>
-                      <th className="text-right p-2">Тренд</th>
+                      <th className="text-right p-2">Attempts</th>
+                      <th className="text-right p-2">Trend</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -181,11 +181,11 @@ export default function TopicBreakdownPage() {
                       <YAxis className="text-xs" />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="totalTime" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Время (мин)" />
+                      <Bar dataKey="totalTime" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Time (min)" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+                  <p className="text-center text-muted-foreground py-8">No data</p>
                 )}
               </CardContent>
             </Card>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, Mail, MailOpen, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ interface Message {
 }
 
 export default function StudentMessagesPage() {
+  const t = useTranslations();
   const { status } = useSession();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,7 +70,7 @@ export default function StudentMessagesPage() {
       setUnreadCount((prev) => Math.max(0, prev - messageIds.filter((id) => messages.find((m) => m.id === id)?.read === false).length));
     } catch (err) {
       logger.error("Failed to mark messages read", err instanceof Error ? err : undefined);
-      toast.error("Не удалось отметить как прочитанное");
+      toast.error("Failed to mark as read");
     }
   };
 
@@ -88,7 +90,7 @@ export default function StudentMessagesPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-4">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">Сообщения</h1>
         {unreadCount > 0 && (
           <Badge variant="destructive" className="animate-pulse">{unreadCount} нов.</Badge>

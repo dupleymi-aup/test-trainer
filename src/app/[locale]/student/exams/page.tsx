@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, FileText, Clock, Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface ExamRecord {
@@ -26,6 +27,7 @@ interface ExamsData {
 }
 
 export default function StudentExamHistoryPage() {
+  const t = useTranslations();
   const { status } = useSession();
   const router = useRouter();
 
@@ -47,7 +49,7 @@ export default function StudentExamHistoryPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">История экзаменов</h1>
       </div>
 

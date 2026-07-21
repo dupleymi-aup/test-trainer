@@ -9,5 +9,5 @@ export default function AnalyticsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Аналитика" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Analytics" />;
 }

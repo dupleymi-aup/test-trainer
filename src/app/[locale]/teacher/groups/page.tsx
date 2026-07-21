@@ -52,12 +52,12 @@ export default function TeacherGroupsPage() {
   const createGroup = async () => {
     if (!name.trim()) return;
     const res = await apiFetch("/api/teacher/groups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description: desc }) });
-    if (res.ok) { toast.success("Группа создана"); setName(""); setDesc(""); swrMutate("/api/teacher/groups"); }
+    if (res.ok) { toast.success("Group created"); setName(""); setDesc(""); swrMutate("/api/teacher/groups"); }
   };
 
   const deleteGroup = async (id: string) => {
     const res = await apiFetch(`/api/teacher/groups/${id}`, { method: "DELETE" });
-    if (res.ok) { toast.success("Группа удалена"); swrMutate("/api/teacher/groups"); }
+    if (res.ok) { toast.success("Group deleted"); swrMutate("/api/teacher/groups"); }
   };
 
   const openMembersModal = async (group: Group) => {
@@ -77,7 +77,7 @@ export default function TeacherGroupsPage() {
       const memberIds = new Set((membersData.members || []).map((m: { id: string }) => m.id));
       setAvailableStudents((studentsData.students || []).filter((s: { id: string }) => !memberIds.has(s.id)));
     } catch {
-      toast.error("Ошибка при загрузке данных");
+      toast.error("Error loading data");
     } finally {
       setMembersLoading(false);
     }
@@ -93,15 +93,15 @@ export default function TeacherGroupsPage() {
         body: JSON.stringify({ userId: addStudentId }),
       });
       if (res.ok) {
-        toast.success("Студент добавлен");
+        toast.success("Student added");
         setAddStudentId("");
         openMembersModal(selectedGroup);
       } else {
         const data = await res.json();
-        toast.error(data.error || "Ошибка при добавлении");
+        toast.error(data.error || "Error adding");
       }
     } catch {
-      toast.error("Ошибка при добавлении");
+      toast.error("Error adding");
     } finally {
       setAddingStudent(false);
     }
@@ -111,12 +111,12 @@ export default function TeacherGroupsPage() {
     if (!selectedGroup) return;
     const res = await apiFetch(`/api/teacher/groups/${selectedGroup.id}/members?userId=${userId}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Студент удалён");
+      toast.success("Student removed");
       openMembersModal(selectedGroup);
     }
   };
 
-  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Loading...</div></TeacherLayout>;
 
   return (
     <TeacherLayout>
@@ -124,16 +124,16 @@ export default function TeacherGroupsPage() {
         <Card>
           <CardHeader><CardTitle className="text-sm">Создать группу</CardTitle></CardHeader>
           <CardContent className="flex gap-2">
-            <Input placeholder="Название" value={name} onChange={(e) => setName(e.target.value)} className="flex-1" />
-            <Input placeholder="Описание" value={desc} onChange={(e) => setDesc(e.target.value)} className="flex-1" />
+            <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className="flex-1" />
+            <Input placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} className="flex-1" />
             <Button onClick={createGroup}><Plus className="h-4 w-4 mr-1" /> Создать</Button>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm">Группы</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Groups</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Название</TableHead><TableHead>Описание</TableHead><TableHead><Users className="h-4 w-4" /></TableHead><TableHead>Дата</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Название</TableHead><TableHead>Описание</TableHead><TableHead><Users className="h-4 w-4" /></TableHead><TableHead>Date</TableHead><TableHead className="w-12"></TableHead></TableRow></TableHeader>
               <TableBody>
                 {groups.map((g) => (
                   <TableRow key={g.id}>
@@ -146,7 +146,7 @@ export default function TeacherGroupsPage() {
                         <Button variant="outline" size="sm" onClick={() => openMembersModal(g)}>
                           <Users className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => deleteGroup(g.id)}>Удалить</Button>
+                        <Button variant="ghost" size="sm" onClick={() => deleteGroup(g.id)}>Delete</Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -170,7 +170,7 @@ export default function TeacherGroupsPage() {
           {membersLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Загрузка...</span>
+              <span className="ml-2 text-muted-foreground">Loading...</span>
             </div>
           ) : (
             <>

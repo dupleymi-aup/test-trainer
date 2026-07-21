@@ -116,7 +116,7 @@ export default function AdminActivityPage() {
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Пользователь, сущность..."
+                    placeholder="User, entity..."
                     className="pl-8"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -127,9 +127,9 @@ export default function AdminActivityPage() {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Тип действия</label>
                 <Select value={actionFilter} onValueChange={setActionFilter}>
-                  <SelectTrigger><SelectValue placeholder="Все действия" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="All actions" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Все действия</SelectItem>
+                    <SelectItem value="">All actions</SelectItem>
                     {uniqueActions.map((a) => (
                       <SelectItem key={a} value={a}>{actionLabels[a] || a}</SelectItem>
                     ))}
@@ -167,12 +167,12 @@ export default function AdminActivityPage() {
                   <TableHead>Пользователь</TableHead>
                   <TableHead>Сущность</TableHead>
                   <TableHead>Детали</TableHead>
-                  <TableHead>Дата</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Записи не найдены</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Records not found</TableCell></TableRow>
                 ) : logs.map((log) => {
                   const roleColor = log.user.role === "ADMIN" ? "bg-rose-100 text-rose-800" : log.user.role === "TEACHER" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800";
                   return (

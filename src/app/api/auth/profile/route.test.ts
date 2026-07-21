@@ -43,6 +43,10 @@ vi.mock("@/lib/rate-limit", () => ({
 
 import { GET, PUT } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/auth/profile");
+}
+
 const authedSession = { session: { userId: "user-1", role: "STUDENT" } };
 const testUser = {
   id: "user-1",
@@ -75,7 +79,7 @@ describe("GET /api/auth/profile", () => {
 
   describe("success", () => {
     it("returns user profile", async () => {
-      const res = await GET();
+      const res = await GET(makeGetRequest());
       const json = await res.json();
 
       expect(res.status).toBe(200);
@@ -86,7 +90,7 @@ describe("GET /api/auth/profile", () => {
     });
 
     it("returns all expected profile fields", async () => {
-      const res = await GET();
+      const res = await GET(makeGetRequest());
       const json = await res.json();
 
       expect(json.user).toHaveProperty("id");
@@ -109,7 +113,7 @@ describe("GET /api/auth/profile", () => {
         response: new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
       });
 
-      const res = await GET();
+      const res = await GET(makeGetRequest());
       expect(res.status).toBe(401);
     });
   });
@@ -118,7 +122,7 @@ describe("GET /api/auth/profile", () => {
     it("returns 404 when user does not exist", async () => {
       mocks.userFindUnique.mockResolvedValue(null);
 
-      const res = await GET();
+      const res = await GET(makeGetRequest());
       const json = await res.json();
 
       expect(res.status).toBe(404);
@@ -289,3 +293,4 @@ describe("PUT /api/auth/profile", () => {
     });
   });
 });
+

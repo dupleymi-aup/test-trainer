@@ -66,7 +66,7 @@ export default function GradebookMatrixPage() {
 
   const saveAllChanges = async () => {
     const changes = Object.values(pendingChanges);
-    if (changes.length === 0) { toast.info("Нет изменений для сохранения"); return; }
+    if (changes.length === 0) { toast.info("No changes to save"); return; }
     setSaving(true);
     let saved = 0, failed = 0;
     for (const ch of changes) {
@@ -135,9 +135,9 @@ export default function GradebookMatrixPage() {
             <div className="flex items-center gap-4">
               <CardTitle className="text-sm">Студенты × Задания</CardTitle>
               <Select value={selectedGroup} onValueChange={handleGroupChange}>
-                <SelectTrigger className="w-[220px]"><SelectValue placeholder="Все группы" /></SelectTrigger>
+                <SelectTrigger className="w-[220px]"><SelectValue placeholder="All groups" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все группы</SelectItem>
+                  <SelectItem value="">All groups</SelectItem>
                   {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -213,7 +213,7 @@ export default function GradebookMatrixPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-sm">Легенда</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Legend</CardTitle></CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 text-xs">
               <span><span className="inline-block w-3 h-3 bg-emerald-600 rounded mr-1" /> ≥80% — Отлично</span>

@@ -9,5 +9,5 @@ export default function LearningPathError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Учебный план" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Learning Path" />;
 }

@@ -9,5 +9,5 @@ export default function ExamsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Экзамены" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Exams" />;
 }

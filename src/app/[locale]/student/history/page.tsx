@@ -17,6 +17,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { formatDuration } from "@/lib/format-time";
+import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface TaskHistoryItem {
@@ -72,6 +73,7 @@ function formatDate(dateStr: string) {
 }
 
 export default function StudentHistoryPage() {
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -136,7 +138,7 @@ export default function StudentHistoryPage() {
           <div className="grid grid-cols-3 gap-4">
             <Card>
               <CardContent className="pt-4 text-center">
-                <div className="text-xs text-muted-foreground">Лучший балл</div>
+                <div className="text-xs text-muted-foreground">Best score</div>
                 <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {Math.max(...selectedTask.attempts.map((a) => a.score))}%
                 </div>
@@ -227,7 +229,7 @@ export default function StudentHistoryPage() {
         <div className="max-w-4xl mx-auto px-4 py-4 sm:py-5">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/student" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Link>
+              <Link href="/student" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Link>
             </Button>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
               <FileText className="h-5 w-5" />

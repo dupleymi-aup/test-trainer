@@ -28,7 +28,7 @@ export default function AdminDeadlineCompliancePage() {
   const report = resp?.deadlines || resp?.report || [];
 
   const exportCSV = () => {
-    const headers = ["Дедлайн", "Тип", "Дата", "Студентов", "Соблюли", "Нарушили", "Показатель"];
+    const headers = ["Дедлайн", "Тип", "Date", "Students", "Соблюли", "Нарушили", "Показатель"];
     const rows = report.map((d) => [d.title, d.type, new Date(d.dueDate).toLocaleDateString("ru-RU"), d.totalStudents, d.complied, d.missed, `${d.complianceRate}%`].join(","));
     const csv = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -66,8 +66,8 @@ export default function AdminDeadlineCompliancePage() {
                 <TableRow>
                   <TableHead>Дедлайн</TableHead>
                   <TableHead>Тип</TableHead>
-                  <TableHead>Дата</TableHead>
-                  <TableHead className="text-right">Студентов</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Students</TableHead>
                   <TableHead className="text-right">Соблюли</TableHead>
                   <TableHead className="text-right">Нарушили</TableHead>
                   <TableHead>Соблюдение</TableHead>

@@ -13,8 +13,8 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
  * - Tasks already completed (score >= 60)
  * - Historical trend
  */
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("completion-forecast");

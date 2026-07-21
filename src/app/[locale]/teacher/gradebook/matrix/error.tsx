@@ -9,5 +9,5 @@ export default function MatrixError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Матрица оценок" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Grade Matrix" />;
 }

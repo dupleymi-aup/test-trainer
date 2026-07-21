@@ -85,8 +85,8 @@ export default function TimeScoreCorrelationPage() {
   const [showAllTasks, setShowAllTasks] = useState(false);
   const { data, loading, error } = useFetchData<CorrelationData>("/api/admin/analytics/time-score-correlation");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const { globalCorrelation, medianTimeSeconds, medianScore, segmentAnalysis, behavioralSegments, scatterData } = data;
@@ -134,7 +134,7 @@ export default function TimeScoreCorrelationPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-indigo-600" /><span className="text-xs text-muted-foreground">Попыток</span></div>
+              <div className="flex items-center gap-2 mb-1"><Users className="h-4 w-4 text-indigo-600" /><span className="text-xs text-muted-foreground">Attempts</span></div>
               <p className="text-2xl font-bold">{data.totalAttempts}</p>
             </CardContent>
           </Card>
@@ -167,7 +167,7 @@ export default function TimeScoreCorrelationPage() {
                     <Progress value={seg.pct} className="h-2" />
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <p className="text-muted-foreground">Ср. балл</p>
+                        <p className="text-muted-foreground">Avg. score</p>
                         <p className="font-bold text-lg">{seg.avgScore}%</p>
                       </div>
                       <div>
@@ -193,8 +193,8 @@ export default function TimeScoreCorrelationPage() {
             <ResponsiveContainer width="100%" height={350}>
               <ScatterChart>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="timeSpent" name="Время (мин)" tickFormatter={(v: number) => `${v}м`} />
-                <YAxis dataKey="score" name="Балл" domain={[0, 100]} />
+                <XAxis dataKey="timeSpent" name="Time (min)" tickFormatter={(v: number) => `${v}m`} />
+                <YAxis dataKey="score" name="Score" domain={[0, 100]} />
                 <Tooltip
                   cursor={{ strokeDasharray: "3 3" }}
                   content={({ active, payload }) => {
@@ -231,8 +231,8 @@ export default function TimeScoreCorrelationPage() {
                 <YAxis yAxisId="right" orientation="right" domain={[0, 100]} className="text-xs" />
                 <Tooltip />
                 <Legend />
-                <Bar yAxisId="left" dataKey="count" fill="hsl(var(--primary))" name="Кол-во попыток" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="avgScore" fill="#10b981" name="Ср. балл %" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="left" dataKey="count" fill="hsl(var(--primary))" name="Attempt Count" radius={[4, 4, 0, 0]} />
+                <Bar yAxisId="right" dataKey="avgScore" fill="#10b981" name="Avg. Score %" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -249,9 +249,9 @@ export default function TimeScoreCorrelationPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Задание</TableHead>
-                    <TableHead className="text-center">Попыток</TableHead>
-                    <TableHead className="text-center">Ср. балл</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="text-center">Attempts</TableHead>
+                    <TableHead className="text-center">Avg. score</TableHead>
                     <TableHead className="text-center">Ср. время</TableHead>
                     <TableHead className="text-center">Корреляция</TableHead>
                     <TableHead className="text-center">Оптимальное время</TableHead>

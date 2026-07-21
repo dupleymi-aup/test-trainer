@@ -9,5 +9,5 @@ export default function StudentReportsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Студенты" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Students" />;
 }

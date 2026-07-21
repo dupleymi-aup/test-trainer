@@ -9,5 +9,5 @@ export default function AchievementsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Достижения" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Achievements" />;
 }

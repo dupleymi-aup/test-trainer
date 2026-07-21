@@ -80,8 +80,8 @@ export default function StudentReturnPage() {
   const [filter, setFilter] = useState<string>("all");
   const { data, loading, error } = useFetchData<ReturnData>("/api/admin/analytics/student-return");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const filtered = filter === "all"
@@ -165,7 +165,7 @@ export default function StudentReturnPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-sm">Тренд после возврата</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">Trend после возврата</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={trendChartData}>
@@ -204,7 +204,7 @@ export default function StudentReturnPage() {
                   <TableHead className="text-center">Балл до</TableHead>
                   <TableHead className="text-center">Балл после</TableHead>
                   <TableHead className="text-center">Изменение</TableHead>
-                  <TableHead className="text-center">Тренд</TableHead>
+                  <TableHead className="text-center">Trend</TableHead>
                   <TableHead className="text-center">Догоняемость</TableHead>
                   <TableHead className="text-center">Статус</TableHead>
                   <TableHead></TableHead>

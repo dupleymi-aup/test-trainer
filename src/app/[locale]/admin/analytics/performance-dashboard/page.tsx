@@ -80,17 +80,17 @@ export default function PerformanceDashboardPage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h1 className="text-xl font-bold">Успеваемость студентов</h1>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>
         )}
 
         {!loading && !data && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No data</CardContent></Card>
         )}
 
         {!loading && data && (
@@ -98,7 +98,7 @@ export default function PerformanceDashboardPage() {
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Всего</div><div className="text-2xl font-bold">{data.summary.totalStudents}</div></CardContent></Card>
-              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Ср. балл</div><div className="text-2xl font-bold">{data.summary.avgScore}%</div></CardContent></Card>
+              <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Avg. score</div><div className="text-2xl font-bold">{data.summary.avgScore}%</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-emerald-600">Низкий риск</div><div className="text-2xl font-bold text-emerald-600">{data.summary.lowRisk}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-amber-600 dark:text-amber-400">Средний риск</div><div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{data.summary.mediumRisk}</div></CardContent></Card>
               <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground text-rose-600">Высокий риск</div><div className="text-2xl font-bold text-rose-600">{data.summary.highRisk}</div></CardContent></Card>
@@ -110,13 +110,13 @@ export default function PerformanceDashboardPage() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Поиск по имени/email..."
+                placeholder="Search by name/email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="flex-1 border rounded px-3 py-2 text-sm"
               />
-              <Button onClick={fetchData}>Найти</Button>
-              <Button variant="outline" onClick={() => { setSearch(""); setFilterRisk(""); }}>Сброс</Button>
+              <Button onClick={fetchData}>Search</Button>
+              <Button variant="outline" onClick={() => { setSearch(""); setFilterRisk(""); }}>Reset</Button>
             </div>
 
             {/* Table */}
@@ -129,9 +129,9 @@ export default function PerformanceDashboardPage() {
                         <th className="text-left p-2">
                           <button onClick={() => handleSort("name")} className="flex items-center gap-1">Студент <ArrowUpDown className="h-3 w-3" /></button>
                         </th>
-                        <th className="text-left p-2">Группа</th>
+                        <th className="text-left p-2">Group</th>
                         <th className="text-right p-2">
-                          <button onClick={() => handleSort("avgScore")} className="flex items-center gap-1 ml-auto">Ср. балл <ArrowUpDown className="h-3 w-3" /></button>
+                          <button onClick={() => handleSort("avgScore")} className="flex items-center gap-1 ml-auto">Avg. score <ArrowUpDown className="h-3 w-3" /></button>
                         </th>
                         <th className="text-right p-2">
                           <button onClick={() => handleSort("bestScore")} className="flex items-center gap-1 ml-auto">Лучший <ArrowUpDown className="h-3 w-3" /></button>
@@ -148,7 +148,7 @@ export default function PerformanceDashboardPage() {
                         <th className="text-right p-2">
                           <button onClick={() => handleSort("attemptsLast7Days")} className="flex items-center gap-1 ml-auto">7 дней <ArrowUpDown className="h-3 w-3" /></button>
                         </th>
-                        <th className="text-right p-2">Тренд</th>
+                        <th className="text-right p-2">Trend</th>
                         <th className="text-right p-2">Риск</th>
                       </tr>
                     </thead>

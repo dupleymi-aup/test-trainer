@@ -13,8 +13,8 @@ export default function AdminError({
     <PageError
       error={error}
       reset={reset}
-      title="Ошибка в панели администратора"
-      description="Произошла непредвиденная ошибка. Попробуйте обновить страницу."
+      title="Admin panel error"
+      description="An unexpected error occurred. Please try refreshing the page."
       logPrefix="AdminError"
     />
   );

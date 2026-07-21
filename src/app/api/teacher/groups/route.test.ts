@@ -57,6 +57,10 @@ vi.mock("@/lib/rate-limit", () => ({
 
 import { GET, POST } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/teacher/groups");
+}
+
 function makePostRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/teacher/groups", {
     method: "POST",
@@ -91,7 +95,7 @@ describe("GET /api/teacher/groups", () => {
   });
 
   it("returns teacher's own groups", async () => {
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.groups).toHaveLength(1);
@@ -102,7 +106,7 @@ describe("GET /api/teacher/groups", () => {
 
   it("returns all groups for admin", async () => {
     setAuthorized("ADMIN");
-    await GET();
+    await GET(makeGetRequest());
     expect(mocks.mockGroupFindMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: {} })
     );
@@ -110,20 +114,20 @@ describe("GET /api/teacher/groups", () => {
 
   it("returns 403 when unauthorized", async () => {
     setUnauthorized();
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(403);
   });
 
   it("returns empty list when teacher has no groups", async () => {
     mocks.mockGroupFindMany.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.groups).toEqual([]);
   });
 
   it("handles db error gracefully", async () => {
     mocks.mockGroupFindMany.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 });
@@ -189,3 +193,4 @@ describe("POST /api/teacher/groups", () => {
     expect(res.status).toBe(500);
   });
 });
+

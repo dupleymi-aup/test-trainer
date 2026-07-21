@@ -80,7 +80,7 @@ export default function StudentComparisonPage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h1 className="text-xl font-bold">Сравнение студентов</h1>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
         {/* Input */}
@@ -89,7 +89,7 @@ export default function StudentComparisonPage() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Введите ID студентов через запятую (2-5)"
+                placeholder="Enter student IDs, comma-separated (2-5)"
                 value={studentIds}
                 onChange={(e) => setStudentIds(e.target.value)}
                 className="flex-1 border rounded px-3 py-2 text-sm"
@@ -102,10 +102,10 @@ export default function StudentComparisonPage() {
           </CardContent>
         </Card>
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Error: {error}</p></CardContent></Card>
         )}
 
         {!loading && !data && !error && (
@@ -200,7 +200,7 @@ export default function StudentComparisonPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+                  <p className="text-center text-muted-foreground py-8">No data</p>
                 )}
               </CardContent>
             </Card>

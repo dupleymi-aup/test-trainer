@@ -77,11 +77,11 @@ interface CohortRetentionData {
 export default function AdminCohortRetentionPage() {
   const { data, loading, error } = useFetchData<CohortRetentionData>("/api/admin/analytics/cohort-retention");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
-  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
 
-  if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center">No data</div></AdminLayout>;
 
   const { cohortChartData, weeklyTrends, groupData, totalStudents, totalCohorts } = data;
 
@@ -170,7 +170,7 @@ export default function AdminCohortRetentionPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Когорта</TableHead>
-                  <TableHead className="text-right">Студентов</TableHead>
+                  <TableHead className="text-right">Students</TableHead>
                   <TableHead className="text-center">День 1</TableHead>
                   <TableHead className="text-center">День 7</TableHead>
                   <TableHead className="text-center">День 30</TableHead>
@@ -212,7 +212,7 @@ export default function AdminCohortRetentionPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Группа</TableHead>
+                  <TableHead>Group</TableHead>
                   <TableHead className="text-right">Всего</TableHead>
                   <TableHead className="text-right">Активные</TableHead>
                   <TableHead className="text-right">Неактивные</TableHead>

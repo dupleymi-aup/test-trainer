@@ -100,6 +100,10 @@ vi.mock("@/lib/api-error-handler", () => ({
 
 import { GET, POST, DELETE } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/student/favorites");
+}
+
 function setAuthorized() {
   mocks.guardResult = { session: { userId: "student-1", role: "STUDENT" } };
 }
@@ -157,13 +161,13 @@ describe("GET /api/student/favorites", () => {
 
   it("returns 403 when not authenticated", async () => {
     setUnauthorized();
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(403);
   });
 
   it("returns empty favorites list", async () => {
     mocks.findMany.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.favorites).toEqual([]);
@@ -175,7 +179,7 @@ describe("GET /api/student/favorites", () => {
       { id: "fav-2", taskId: 5, createdAt: new Date("2026-01-02").toISOString() },
     ];
     mocks.findMany.mockResolvedValue(favorites);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.favorites).toHaveLength(2);
     expect(body.favorites[0].taskId).toBe(1);
@@ -183,7 +187,7 @@ describe("GET /api/student/favorites", () => {
 
   it("queries by current user id", async () => {
     mocks.findMany.mockResolvedValue([]);
-    await GET();
+    await GET(makeGetRequest());
     expect(mocks.findMany).toHaveBeenCalledWith({
       where: { userId: "student-1" },
       orderBy: { createdAt: "desc" },
@@ -193,7 +197,7 @@ describe("GET /api/student/favorites", () => {
 
   it("handles db error gracefully", async () => {
     mocks.findMany.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 });
@@ -322,3 +326,4 @@ describe("DELETE /api/student/favorites", () => {
     expect(res.status).toBe(500);
   });
 });
+

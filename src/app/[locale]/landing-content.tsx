@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import { useEffect, useState, useRef, useMemo, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/accordion";
 
 const TOTAL_TASKS = 30;
+const STAR_COUNT = [0, 1, 2, 3, 4] as const;
 
 const difficultyKeyMap: Record<string, string> = {
   "Easy": "easy",
@@ -349,17 +350,38 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
     return () => controller.abort();
   }, []);
 
-  const demoTask = {
+  const demoTask = useMemo(() => ({
     name: t("tryYourself"),
     difficulty: "Easy" as const,
     description: t("heroDescription"),
     topics: [t("methodEquivalence"), t("methodBoundary")],
     params: [{ name: "n", type: "number", description: "Non-negative integer" }],
     returnType: "number",
-  };
+  }), [t]);
 
   const typedPrefix = t("heroTypedPrefix");
   const typedSuffix = t("heroTypedSuffix");
+
+  const benefitItems = useMemo(() => [
+    { icon: CheckCircle2, title: t("featureAutoCheck"), desc: t("featureAutoCheckDesc") },
+    { icon: TrendingUp, title: t("featureProgress"), desc: t("featureProgressDesc") },
+    { icon: Award, title: t("featureGamification"), desc: t("featureGamificationDesc") },
+  ], [t]);
+
+  const testimonialItems = useMemo(() => [
+    { text: t("testimonial1Text"), name: t("testimonial1Name"), role: t("testimonial1Role"), initials: "AK" },
+    { text: t("testimonial2Text"), name: t("testimonial2Name"), role: t("testimonial2Role"), initials: "DS" },
+    { text: t("testimonial3Text"), name: t("testimonial3Name"), role: t("testimonial3Role"), initials: "LW" },
+  ], [t]);
+
+  const faqItems = useMemo(() => [
+    { q: t("faqQ1"), a: t("faqA1") },
+    { q: t("faqQ2"), a: t("faqA2") },
+    { q: t("faqQ3"), a: t("faqA3") },
+    { q: t("faqQ4"), a: t("faqA4") },
+    { q: t("faqQ5"), a: t("faqA5") },
+    { q: t("faqQ6"), a: t("faqA6") },
+  ], [t]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20 overflow-hidden">
@@ -543,11 +565,7 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
                 <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">{t("featuresTitle")}</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[
-                  { icon: CheckCircle2, title: t("featureAutoCheck"), desc: t("featureAutoCheckDesc") },
-                  { icon: TrendingUp, title: t("featureProgress"), desc: t("featureProgressDesc") },
-                  { icon: Award, title: t("featureGamification"), desc: t("featureGamificationDesc") },
-                ].map((f, i) => (
+                {benefitItems.map((f, i) => (
                   <div key={i} className="text-center">
                     <div className="flex justify-center mb-4">
                       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
@@ -572,14 +590,10 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
                 <p className="text-muted-foreground max-w-2xl mx-auto">{t("testimonialsSubtitle")}</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { text: t("testimonial1Text"), name: t("testimonial1Name"), role: t("testimonial1Role"), initials: "AK" },
-                  { text: t("testimonial2Text"), name: t("testimonial2Name"), role: t("testimonial2Role"), initials: "DS" },
-                  { text: t("testimonial3Text"), name: t("testimonial3Name"), role: t("testimonial3Role"), initials: "LW" },
-                ].map((item, i) => (
+                {testimonialItems.map((item, i) => (
                   <div key={i} className="rounded-xl border bg-card p-6 shadow-sm">
                     <div className="flex gap-1 mb-3">
-                      {[...Array(5)].map((_, s) => (
+                      {STAR_COUNT.map((s) => (
                         <Star key={s} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
@@ -633,14 +647,7 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
                 <p className="text-muted-foreground max-w-2xl mx-auto">{t("faqSubtitle")}</p>
               </div>
               <Accordion type="single" collapsible className="space-y-3">
-                {[
-                  { q: t("faqQ1"), a: t("faqA1") },
-                  { q: t("faqQ2"), a: t("faqA2") },
-                  { q: t("faqQ3"), a: t("faqA3") },
-                  { q: t("faqQ4"), a: t("faqA4") },
-                  { q: t("faqQ5"), a: t("faqA5") },
-                  { q: t("faqQ6"), a: t("faqA6") },
-                ].map((faq, i) => (
+                {faqItems.map((faq, i) => (
                   <AccordionItem key={i} value={`item-${i}`} className="rounded-lg border bg-card px-4 data-[state=open]:border-emerald-200 dark:data-[state=open]:border-emerald-800">
                     <AccordionTrigger className="text-sm font-medium">{faq.q}</AccordionTrigger>
                     <AccordionContent className="text-sm text-muted-foreground">{faq.a}</AccordionContent>

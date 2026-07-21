@@ -60,7 +60,7 @@ export default function MessagesPage() {
       }
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
-      logger.warn("Failed to load messages", { error: e });
+      logger.warn("Failed to load messages", { error: e instanceof Error ? e.message : String(e) });
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function MessagesPage() {
 
   const sendMessage = async () => {
     if (!toUserId || !subject.trim() || !content.trim()) {
-      toast.error("Заполните все поля");
+      toast.error("Fill in all fields");
       return;
     }
     setSending(true);
@@ -96,7 +96,7 @@ export default function MessagesPage() {
         body: JSON.stringify({ toUserId, subject: subject.trim(), content: content.trim() }),
       });
       if (res.ok) {
-        toast.success("Сообщение отправлено");
+        toast.success("Message sent");
         setShowCompose(false);
         setToUserId("");
         setSubject("");
@@ -104,10 +104,10 @@ export default function MessagesPage() {
         loadMessages();
       } else {
         const err = await res.json();
-        toast.error(err.error || "Ошибка отправки");
+        toast.error(err.error || "Error sending");
       }
     } catch {
-      toast.error("Не удалось отправить сообщение");
+      toast.error("Failed to send message");
     } finally {
       setSending(false);
     }
@@ -157,7 +157,7 @@ export default function MessagesPage() {
                 <Label>Получатель</Label>
                 <Select value={toUserId} onValueChange={setToUserId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите студента..." />
+                    <SelectValue placeholder="Select student..." />
                   </SelectTrigger>
                   <SelectContent>
                     {students.map((s) => (
@@ -171,7 +171,7 @@ export default function MessagesPage() {
               <div className="space-y-2">
                 <Label>Тема</Label>
                 <Input
-                  placeholder="Тема сообщения"
+                  placeholder="Message subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                 />
@@ -179,7 +179,7 @@ export default function MessagesPage() {
               <div className="space-y-2">
                 <Label>Содержание</Label>
                 <Textarea
-                  placeholder="Текст сообщения..."
+                  placeholder="Message text..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={6}

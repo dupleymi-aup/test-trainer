@@ -74,13 +74,13 @@ export default function AdminNotificationsPage() {
         body: JSON.stringify({ ids: [] }),
       });
       if (res.ok) {
-        toast.success("Все уведомления отмечены как прочитанные");
+        toast.success("All notifications marked as read");
         fetchData();
       } else {
-        toast.error("Ошибка при обновлении");
+        toast.error("Error updating");
       }
     } catch {
-      toast.error("Ошибка при обновлении");
+      toast.error("Error updating");
     } finally {
       setUpdating(false);
     }
@@ -100,22 +100,22 @@ export default function AdminNotificationsPage() {
   };
 
   const deleteRead = async () => {
-    if (!confirm("Удалить все прочитанные уведомления?")) return;
+    if (!confirm("Delete all read notifications?")) return;
     try {
       const res = await apiFetch("/api/admin/notifications", { method: "DELETE" });
       if (res.ok) {
-        toast.success("Прочитанные уведомления удалены");
+        toast.success("Read notifications deleted");
         fetchData();
       } else {
-        toast.error("Ошибка при удалении");
+        toast.error("Error deleting");
       }
     } catch {
-      toast.error("Ошибка при удалении");
+      toast.error("Error deleting");
     }
   };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Error: {error}</p></div></AdminLayout>;
 
   return (
     <AdminLayout>

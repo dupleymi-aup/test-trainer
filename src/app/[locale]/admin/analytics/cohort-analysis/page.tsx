@@ -62,8 +62,8 @@ export default function CohortAnalysisPage() {
   const [selectedCohort, setSelectedCohort] = useState<string | null>(null);
   const { data, loading, error } = useFetchData<CohortData>("/api/admin/analytics/cohort-analysis");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const selected = selectedCohort ? data.cohorts.find((c) => c.cohort === selectedCohort) : null;
@@ -165,10 +165,10 @@ export default function CohortAnalysisPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Когорта</TableHead>
-                  <TableHead className="text-center">Студенты</TableHead>
-                  <TableHead className="text-center">Попытки</TableHead>
-                  <TableHead className="text-center">Попыток/студ</TableHead>
-                  <TableHead className="text-center">Ср. балл</TableHead>
+                  <TableHead className="text-center">Students</TableHead>
+                  <TableHead className="text-center">Attempts</TableHead>
+                  <TableHead className="text-center">Attempts/student</TableHead>
+                  <TableHead className="text-center">Avg. score</TableHead>
                   <TableHead className="text-center">Активные</TableHead>
                   <TableHead className="text-center">Отток</TableHead>
                   <TableHead className="text-center">Завершение</TableHead>
@@ -226,7 +226,7 @@ export default function CohortAnalysisPage() {
                   <XAxis dataKey="week" label={{ value: "Неделя", position: "insideBottom", offset: -5 }} />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} name="Активные студенты" />
+                  <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} name="Active Students" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>

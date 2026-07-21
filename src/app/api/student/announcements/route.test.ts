@@ -64,6 +64,10 @@ vi.mock("@/lib/api-error-handler", () => ({
 
 import { GET } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/student/announcements");
+}
+
 function setAuthorized() {
   mocks.guardResult = { session: { userId: "student-1", role: "STUDENT" } };
 }
@@ -82,14 +86,14 @@ describe("GET /api/student/announcements", () => {
 
   it("returns 403 when not authenticated", async () => {
     setUnauthorized();
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(403);
   });
 
   it("returns empty announcements list", async () => {
     mocks.findManyUserGroup.mockResolvedValue([]);
     mocks.findManyAnnouncement.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.announcements).toEqual([]);
@@ -102,7 +106,7 @@ describe("GET /api/student/announcements", () => {
       { id: "a2", title: "Group", group: { id: "g-1", name: "Group A" }, creator: { id: "t1", name: "Teacher", role: "TEACHER" } },
     ];
     mocks.findManyAnnouncement.mockResolvedValue(announcements);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.announcements).toHaveLength(2);
     expect(body.announcements[0].title).toBe("System");
@@ -112,7 +116,7 @@ describe("GET /api/student/announcements", () => {
   it("queries announcements for user groups and system-wide", async () => {
     mocks.findManyUserGroup.mockResolvedValue([{ groupId: "g-1" }, { groupId: "g-2" }]);
     mocks.findManyAnnouncement.mockResolvedValue([]);
-    await GET();
+    await GET(makeGetRequest());
     expect(mocks.findManyAnnouncement).toHaveBeenCalledWith({
       where: {
         OR: [
@@ -134,7 +138,8 @@ describe("GET /api/student/announcements", () => {
 
   it("handles db error gracefully", async () => {
     mocks.findManyUserGroup.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 });
+

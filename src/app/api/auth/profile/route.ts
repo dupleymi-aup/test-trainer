@@ -16,8 +16,8 @@ const profileUpdateSchema = z.object({
   avatar: z.string().url().max(500).optional().nullable(),
 });
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const auth = unwrapGuard(await requireAuth());
 
     const user = await db.user.findUnique({

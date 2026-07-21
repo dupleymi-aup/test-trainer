@@ -9,5 +9,5 @@ export default function AlertsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Оповещения" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Alerts" />;
 }

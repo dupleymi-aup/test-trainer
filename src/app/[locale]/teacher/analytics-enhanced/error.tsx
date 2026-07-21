@@ -9,5 +9,5 @@ export default function AnalyticsEnhancedError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Расширенная аналитика" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Enhanced Analytics" />;
 }

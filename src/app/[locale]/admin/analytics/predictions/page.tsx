@@ -79,8 +79,8 @@ export default function PredictionsPage() {
   const url = `/api/admin/analytics/predictions${qs ? `?${qs}` : ""}`;
   const { data, loading, error } = useFetchData<PredictionsData>(url);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
 
@@ -147,7 +147,7 @@ export default function PredictionsPage() {
                 <XAxis dataKey="factor" className="text-xs" />
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip />
-                <Bar dataKey="count" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Студенты" />
+                <Bar dataKey="count" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Students" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -155,11 +155,11 @@ export default function PredictionsPage() {
 
         {/* At-Risk Students Table */}
         <Card>
-          <CardHeader><CardTitle className="text-sm">Студенты с рисками</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Students с рисками</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow><TableHead>Студент</TableHead><TableHead>Группа</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Попытки</TableHead><TableHead>Факторы риска</TableHead><TableHead>Риск ухода</TableHead></TableRow>
+                <TableRow><TableHead>Student</TableHead><TableHead>Group</TableHead><TableHead className="text-right">Avg. score</TableHead><TableHead className="text-right">Attempts</TableHead><TableHead>Факторы риска</TableHead><TableHead>Риск ухода</TableHead></TableRow>
               </TableHeader>
               <TableBody>
                 {data.atRiskStudents.map((s, _i) => (
@@ -202,7 +202,7 @@ export default function PredictionsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Задача</TableHead><TableHead className="text-right">Отказы</TableHead><TableHead className="text-right">Ср. балл</TableHead></TableRow>
+                  <TableRow><TableHead>Task</TableHead><TableHead className="text-right">Отказы</TableHead><TableHead className="text-right">Avg. score</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.systemInsights.tasksByFailRate.map((t) => (
@@ -222,7 +222,7 @@ export default function PredictionsPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Тема</TableHead><TableHead className="text-right">Ср. балл</TableHead></TableRow>
+                  <TableRow><TableHead>Тема</TableHead><TableHead className="text-right">Avg. score</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.systemInsights.weakTopics.map((t) => (
@@ -254,7 +254,7 @@ export default function PredictionsPage() {
                         <p className="text-sm text-muted-foreground">{g.recommendation}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm">Ср. балл: {g.avgScore}%</p>
+                        <p className="text-sm">Avg. score: {g.avgScore}%</p>
                         <p className="text-sm text-rose-600">Риски: {g.atRiskStudents}</p>
                       </div>
                     </div>

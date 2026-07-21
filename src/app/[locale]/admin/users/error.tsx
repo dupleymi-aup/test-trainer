@@ -9,5 +9,5 @@ export default function UsersError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Пользователи" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Users" />;
 }

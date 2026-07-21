@@ -9,5 +9,5 @@ export default function MessagesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Сообщения" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Messages" />;
 }

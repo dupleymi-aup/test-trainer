@@ -64,10 +64,10 @@ export default function TeacherStudentsPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-4">
-            <CardTitle className="text-sm">Студенты</CardTitle>
+            <CardTitle className="text-sm">Students</CardTitle>
             <Select value={effectiveGroupId} onValueChange={setSelectedGroupId}>
               <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Выберите группу" />
+                <SelectValue placeholder="Select group" />
               </SelectTrigger>
               <SelectContent>
                 {groups.map((g) => (
@@ -78,7 +78,7 @@ export default function TeacherStudentsPage() {
           </div>
           <div className="relative max-w-xs mt-3">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Поиск по имени или email..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input placeholder="Search by name or email..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -100,7 +100,7 @@ export default function TeacherStudentsPage() {
                       <p className="font-bold text-sm">{s.avgBv}%</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-muted-foreground">Лучший</p>
+                      <p className="text-xs text-muted-foreground">Best</p>
                       <Badge variant={s.bestScore >= 75 ? "default" : "secondary"}>{s.bestScore}%</Badge>
                     </div>
                     <span className="text-xs text-muted-foreground">{s.attemptsCount} попыток</span>
@@ -108,7 +108,7 @@ export default function TeacherStudentsPage() {
                 </div>
               </Link>
             ))}
-            {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">Студенты не найдены</p>}
+            {filtered.length === 0 && <p className="p-8 text-center text-muted-foreground">Students не найдены</p>}
           </div>
         </CardContent>
       </Card>

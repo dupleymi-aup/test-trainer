@@ -10,10 +10,15 @@ const GLOBAL_NOTES_KEY = "test-trainer-global-notes";
 const MAX_HISTORY_ENTRIES = 50;
 const MAX_MARATHON_RECORDS = 20;
 
+function isClient(): boolean {
+  return typeof window !== "undefined";
+}
+
 /**
  * Save global notes
  */
 export function saveGlobalNotes(content: string): void {
+  if (!isClient()) return;
   try {
     localStorage.setItem(GLOBAL_NOTES_KEY, content);
   } catch {
@@ -25,6 +30,7 @@ export function saveGlobalNotes(content: string): void {
  * Load global notes
  */
 export function loadGlobalNotes(): string {
+  if (!isClient()) return "";
   try {
     return localStorage.getItem(GLOBAL_NOTES_KEY) ?? "";
   } catch {
@@ -51,6 +57,7 @@ export function saveProgress(
   score: number,
   testCases: TestCase[]
 ): void {
+  if (!isClient()) return;
   try {
     const progress = loadProgress();
     const existing = progress[String(taskId)];
@@ -68,6 +75,7 @@ export function saveProgress(
  * Load all saved progress
  */
 export function loadProgress(): Record<string, TaskProgress> {
+  if (!isClient()) return {};
   try {
     const raw = localStorage.getItem(PROGRESS_KEY);
     if (!raw) return {};
@@ -84,6 +92,7 @@ export function saveCurrentSession(
   taskId: number,
   testCases: TestCase[]
 ): void {
+  if (!isClient()) return;
   try {
     localStorage.setItem(
       SESSION_PREFIX + taskId,
@@ -98,6 +107,7 @@ export function saveCurrentSession(
  * Load saved session for a task
  */
 export function loadCurrentSession(taskId: number): TestCase[] | null {
+  if (!isClient()) return null;
   try {
     const raw = localStorage.getItem(SESSION_PREFIX + taskId);
     if (!raw) return null;
@@ -111,6 +121,7 @@ export function loadCurrentSession(taskId: number): TestCase[] | null {
  * Export all progress as JSON string
  */
 export function exportAllProgress(): string {
+  if (!isClient()) return "{}";
   try {
     const data: Record<string, string> = {};
     for (let i = 0; i < localStorage.length; i++) {
@@ -129,6 +140,7 @@ export function exportAllProgress(): string {
  * Import progress from JSON string
  */
 export function importAllProgress(jsonString: string): boolean {
+  if (!isClient()) return false;
   try {
     const data = JSON.parse(jsonString);
     if (typeof data !== "object" || data === null) return false;
@@ -148,6 +160,7 @@ export function importAllProgress(jsonString: string): boolean {
  * Clear all progress
  */
 export function clearAllProgress(): void {
+  if (!isClient()) return;
   try {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -180,6 +193,7 @@ export interface AttemptRecord {
  * Save an attempt to history
  */
 export function saveAttempt(record: AttemptRecord): void {
+  if (!isClient()) return;
   try {
     const history = loadAttemptHistory();
     history.push(record);
@@ -195,6 +209,7 @@ export function saveAttempt(record: AttemptRecord): void {
  * Load attempt history
  */
 export function loadAttemptHistory(): AttemptRecord[] {
+  if (!isClient()) return [];
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     if (!raw) return [];
@@ -226,6 +241,7 @@ export function getTaskBestCoverage(taskId: number): { bestEc: number; bestBv: n
  * Save a note for a task
  */
 export function saveTaskNote(taskId: number, note: string): void {
+  if (!isClient()) return;
   try {
     localStorage.setItem(NOTE_PREFIX + taskId, note);
   } catch {
@@ -237,6 +253,7 @@ export function saveTaskNote(taskId: number, note: string): void {
  * Load a note for a task
  */
 export function loadTaskNote(taskId: number): string {
+  if (!isClient()) return "";
   try {
     return localStorage.getItem(NOTE_PREFIX + taskId) || "";
   } catch {
@@ -276,6 +293,7 @@ export function _resetStreakSaveLock(): void {
  * Uses a lock to prevent race conditions from rapid concurrent submissions.
  */
 export async function saveStreak(): Promise<StreakData> {
+  if (!isClient()) return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
   // If a save is already in progress, queue behind it and retry after
   if (streakSaveLock) {
     const existingLock = streakSaveLock;
@@ -323,6 +341,7 @@ export async function saveStreak(): Promise<StreakData> {
  * Load streak data from localStorage
  */
 export function loadStreak(): StreakData {
+  if (!isClient()) return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
   try {
     const raw = localStorage.getItem(STREAK_KEY);
     if (!raw) return { currentStreak: 0, longestStreak: 0, lastActiveDate: "" };
@@ -347,6 +366,7 @@ export interface MarathonRecord {
  * Save a marathon completion record
  */
 export function saveMarathonRecord(record: MarathonRecord): void {
+  if (!isClient()) return;
   try {
     const records = loadMarathonRecords();
     records.push(record);
@@ -362,6 +382,7 @@ export function saveMarathonRecord(record: MarathonRecord): void {
  * Load all marathon records
  */
 export function loadMarathonRecords(): MarathonRecord[] {
+  if (!isClient()) return [];
   try {
     const raw = localStorage.getItem(MARATHON_KEY);
     if (!raw) return [];
@@ -391,6 +412,7 @@ export function getBestMarathonAvgScore(): number {
  * Mark a theory section as viewed
  */
 export function markTheorySectionViewed(sectionId: string): void {
+  if (!isClient()) return;
   try {
     const viewed = loadTheorySectionsViewed();
     if (!viewed.includes(sectionId)) {
@@ -406,6 +428,7 @@ export function markTheorySectionViewed(sectionId: string): void {
  * Load viewed theory section IDs
  */
 export function loadTheorySectionsViewed(): string[] {
+  if (!isClient()) return [];
   try {
     const raw = localStorage.getItem(THEORY_VIEWED_KEY);
     if (!raw) return [];
@@ -426,6 +449,7 @@ export function isTheorySectionViewed(sectionId: string): boolean {
  * Reset theory progress (called by clearAllProgress)
  */
 export function clearTheoryProgress(): void {
+  if (!isClient()) return;
   try {
     localStorage.removeItem(THEORY_VIEWED_KEY);
   } catch {

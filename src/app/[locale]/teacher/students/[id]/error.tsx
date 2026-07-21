@@ -9,5 +9,5 @@ export default function StudentProfileError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Профиль студента" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Student Profile" />;
 }

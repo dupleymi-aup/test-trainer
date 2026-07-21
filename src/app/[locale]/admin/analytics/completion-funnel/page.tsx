@@ -74,12 +74,12 @@ const funnelColors = [
 export default function CompletionFunnelPage() {
   const { data, loading, error } = useFetchData<FunnelData>("/api/admin/analytics/completion-funnel");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки</div></AdminLayout>;
 
   const funnelChartData = data.funnel.map((step, i) => ({
-    name: `Задание ${step.order}`,
+    name: `Task ${step.order}`,
     value: step.uniqueStudents,
     fill: funnelColors[i % funnelColors.length],
   }));
@@ -157,7 +157,7 @@ export default function CompletionFunnelPage() {
 
         {/* Funnel bar chart (works better for many tasks) */}
         <Card>
-          <CardHeader><CardTitle className="text-sm">Студенты по заданиям</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Students по заданиям</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.funnel}>
@@ -171,16 +171,16 @@ export default function CompletionFunnelPage() {
                     return (
                       <div className="bg-background border rounded-lg p-2 shadow-sm text-xs">
                         <p className="font-bold">{d.taskName}</p>
-                        <p>Студентов: {d.uniqueStudents}</p>
+                        <p>Students: {d.uniqueStudents}</p>
                         <p>Попыток: {d.totalAttempts}</p>
-                        <p>Ср. балл: {d.avgScore}%</p>
+                        <p>Avg. score: {d.avgScore}%</p>
                         <p>Проход: {d.passRate}%</p>
                         <p>Отток: {d.dropOff}%</p>
                       </div>
                     );
                   }}
                 />
-                <Bar dataKey="uniqueStudents" fill="hsl(var(--primary))" name="Студенты" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="uniqueStudents" fill="hsl(var(--primary))" name="Students" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -209,11 +209,11 @@ export default function CompletionFunnelPage() {
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                       <div>
-                        <p className="text-muted-foreground">Студентов</p>
+                        <p className="text-muted-foreground">Students</p>
                         <p className="font-bold">{b.uniqueStudents}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Ср. балл</p>
+                        <p className="text-muted-foreground">Avg. score</p>
                         <p className="font-bold">{b.avgScore}%</p>
                       </div>
                       <div>
@@ -242,7 +242,7 @@ export default function CompletionFunnelPage() {
                 <XAxis dataKey="bucket" className="text-xs" />
                 <YAxis allowDecimals={false} className="text-xs" />
                 <Tooltip />
-                <Bar dataKey="count" fill="hsl(var(--chart-2))" name="Студенты" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="hsl(var(--chart-2))" name="Students" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -257,11 +257,11 @@ export default function CompletionFunnelPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>#</TableHead>
-                    <TableHead>Задание</TableHead>
-                    <TableHead className="text-center">Студенты</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="text-center">Students</TableHead>
                     <TableHead className="text-center">Окончание %</TableHead>
-                    <TableHead className="text-center">Попытки</TableHead>
-                    <TableHead className="text-center">Ср. балл</TableHead>
+                    <TableHead className="text-center">Attempts</TableHead>
+                    <TableHead className="text-center">Avg. score</TableHead>
                     <TableHead className="text-center">Проход %</TableHead>
                     <TableHead className="text-center">Отток %</TableHead>
                     <TableHead className="text-center">Ср. попыток</TableHead>

@@ -26,7 +26,7 @@ function VerifyEmailContent() {
     const token = searchParams.get("token");
     if (!token) {
       setStatus("error");
-      toast.error("Отсутствует токен подтверждения");
+      toast.error("Missing verification token");
       return;
     }
 
@@ -43,13 +43,13 @@ function VerifyEmailContent() {
           toast.success("Email подтверждён");
         } else {
           setStatus("error");
-          toast.error(json.error || "Ошибка при подтверждении");
+          toast.error(json.error || "Error verifying email");
         }
       })
       .catch(() => {
         if (controller.signal.aborted) return;
         setStatus("error");
-        toast.error("Ошибка при подтверждении email");
+        toast.error("Error verifying email");
       });
     return () => controller.abort();
   }, [searchParams]);
@@ -100,7 +100,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<Card className="w-full max-w-md"><CardHeader><CardTitle>Загрузка...</CardTitle></CardHeader></Card>}>
+    <Suspense fallback={<Card className="w-full max-w-md"><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>}>
       <VerifyEmailContent />
     </Suspense>
   );

@@ -112,14 +112,14 @@ export default function StudentReportCardPage({
   if (loading)
     return (
       <TeacherLayout>
-        <div className="p-8 text-center">Загрузка...</div>
+        <div className="p-8 text-center">Loading...</div>
       </TeacherLayout>
     );
 
   if (!data)
     return (
       <TeacherLayout>
-        <div className="p-8 text-center">Не найдено</div>
+        <div className="p-8 text-center">Not found</div>
       </TeacherLayout>
     );
 
@@ -165,10 +165,10 @@ export default function StudentReportCardPage({
                 </h2>
                 <div className="space-y-1 text-sm text-muted-foreground">
                   {data.student.group && (
-                    <p>Группа: {data.student.group}</p>
+                    <p>Group: {data.student.group}</p>
                   )}
                   {data.student.university && (
-                    <p>Университет: {data.student.university}</p>
+                    <p>University: {data.student.university}</p>
                   )}
                   <p>
                     Дата регистрации:{" "}
@@ -211,13 +211,13 @@ export default function StudentReportCardPage({
           <Card>
             <CardContent className="pt-6 text-center">
               <p className="text-3xl font-bold">{data.stats.avgEc}%</p>
-              <p className="text-xs text-muted-foreground mt-1">Ср. EC</p>
+              <p className="text-xs text-muted-foreground mt-1">Avg. EC</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <p className="text-3xl font-bold">{data.stats.avgBv}%</p>
-              <p className="text-xs text-muted-foreground mt-1">Ср. BV</p>
+              <p className="text-xs text-muted-foreground mt-1">Avg. BV</p>
             </CardContent>
           </Card>
         </div>
@@ -271,7 +271,7 @@ export default function StudentReportCardPage({
                     dataKey="score"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
-                    name="Балл"
+                    name="Score"
                     dot={{ r: 4 }}
                   />
                   <Line
@@ -305,12 +305,12 @@ export default function StudentReportCardPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Задание</TableHead>
-                  <TableHead className="text-right">Лучший балл</TableHead>
-                  <TableHead className="text-right">Попытки</TableHead>
-                  <TableHead className="text-right">Ср. EC</TableHead>
-                  <TableHead className="text-right">Ср. BV</TableHead>
-                  <TableHead>Тренд</TableHead>
+                  <TableHead>Task</TableHead>
+                  <TableHead className="text-right">Best score</TableHead>
+                  <TableHead className="text-right">Attempts</TableHead>
+                  <TableHead className="text-right">Avg. EC</TableHead>
+                  <TableHead className="text-right">Avg. BV</TableHead>
+                  <TableHead>Trend</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -400,7 +400,7 @@ export default function StudentReportCardPage({
                 ))}
                 {data.strongAreas.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Нет данных
+                    No data
                   </p>
                 )}
               </div>
@@ -448,7 +448,7 @@ export default function StudentReportCardPage({
               ))}
               {data.recommendations.length === 0 && (
                 <li className="text-sm text-muted-foreground">
-                  Студент показывает отличные результаты!
+                  Student показывает отличные результаты!
                 </li>
               )}
             </ul>

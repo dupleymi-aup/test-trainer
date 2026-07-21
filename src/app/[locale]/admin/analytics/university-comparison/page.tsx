@@ -54,8 +54,8 @@ export default function UniversityComparisonPage() {
   const url = `/api/admin/analytics/university-comparison${qs ? `?${qs}` : ""}`;
   const { data, loading, error } = useFetchData<UniversityData>(url);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
   const barData = data.universities.slice(0, 10).map((u) => ({
@@ -81,7 +81,7 @@ export default function UniversityComparisonPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Университеты</span></div>
+              <div className="flex items-center gap-2 mb-2"><GraduationCap className="h-4 w-4 text-blue-600 dark:text-blue-400" /><span className="text-xs text-muted-foreground">Universityы</span></div>
               <p className="text-2xl font-bold">{data.universities.length}</p>
             </CardContent>
           </Card>
@@ -99,7 +99,7 @@ export default function UniversityComparisonPage() {
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-2"><Badge className="text-xs">Ср. балл</Badge><span className="text-xs text-muted-foreground ml-1">лучший</span></div>
+              <div className="flex items-center gap-2 mb-2"><Badge className="text-xs">Avg. score</Badge><span className="text-xs text-muted-foreground ml-1">лучший</span></div>
               <p className="text-2xl font-bold">{data.universities.length > 0 ? data.universities[0].avgScore : 0}%</p>
             </CardContent>
           </Card>
@@ -117,7 +117,7 @@ export default function UniversityComparisonPage() {
                   <YAxis domain={[0, 100]} className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="avgScore" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Балл" />
+                  <Bar dataKey="avgScore" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Score" />
                   <Bar dataKey="avgEc" fill="hsl(var(--chart-2))" radius={[2, 2, 0, 0]} name="EC" />
                   <Bar dataKey="avgBv" fill="hsl(var(--chart-3))" radius={[2, 2, 0, 0]} name="BV" />
                 </BarChart>
@@ -133,7 +133,7 @@ export default function UniversityComparisonPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>#</TableHead><TableHead>Университет</TableHead><TableHead className="text-right">Студенты</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Тренд</TableHead></TableRow>
+                  <TableRow><TableHead>#</TableHead><TableHead>University</TableHead><TableHead className="text-right">Students</TableHead><TableHead className="text-right">Avg. score</TableHead><TableHead className="text-right">Trend</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.universities.map((u, i) => (
@@ -146,7 +146,7 @@ export default function UniversityComparisonPage() {
                     </TableRow>
                   ))}
                   {data.universities.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">Нет данных</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No data</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
@@ -158,7 +158,7 @@ export default function UniversityComparisonPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Университет</TableHead><TableHead className="text-right">EC</TableHead><TableHead className="text-right">BV</TableHead><TableHead className="text-right">Попытки</TableHead></TableRow>
+                  <TableRow><TableHead>University</TableHead><TableHead className="text-right">EC</TableHead><TableHead className="text-right">BV</TableHead><TableHead className="text-right">Attempts</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.universities.map((u) => (

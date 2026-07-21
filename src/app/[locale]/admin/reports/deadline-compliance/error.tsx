@@ -9,5 +9,5 @@ export default function DeadlineComplianceError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Соблюдение дедлайнов" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Deadline Compliance" />;
 }

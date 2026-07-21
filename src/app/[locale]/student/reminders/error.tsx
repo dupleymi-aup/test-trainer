@@ -9,5 +9,5 @@ export default function RemindersError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Напоминания" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Reminders" />;
 }

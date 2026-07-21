@@ -9,5 +9,5 @@ export default function FavoritesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Избранное" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Favorites" />;
 }

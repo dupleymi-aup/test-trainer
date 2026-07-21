@@ -42,6 +42,10 @@ vi.mock("@/lib/logger", () => ({
 
 import { GET, PATCH } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/student/preferences");
+}
+
 const mockSession = { userId: "student-1", role: "STUDENT" };
 
 function makeRequest(method: string, body?: unknown) {
@@ -62,7 +66,7 @@ describe("GET /api/student/preferences", () => {
   });
 
   it("returns stored preferences", async () => {
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.preferences).toEqual({ email: true, sms: true, inApp: false });
@@ -70,14 +74,14 @@ describe("GET /api/student/preferences", () => {
 
   it("returns defaults when no preferences stored", async () => {
     mocks.userFindUnique.mockResolvedValue({ notificationPreferences: null });
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.preferences).toEqual({ email: true, sms: false, inApp: true });
   });
 
   it("returns defaults on corrupt JSON", async () => {
     mocks.userFindUnique.mockResolvedValue({ notificationPreferences: "not-json" });
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.preferences).toEqual({ email: true, sms: false, inApp: true });
   });
@@ -86,13 +90,13 @@ describe("GET /api/student/preferences", () => {
     mocks.requireStudent.mockResolvedValue({
       response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
     });
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(401);
   });
 
   it("handles db error gracefully", async () => {
     mocks.userFindUnique.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 });
@@ -169,3 +173,4 @@ describe("PATCH /api/student/preferences", () => {
     expect(res.status).toBe(500);
   });
 });
+

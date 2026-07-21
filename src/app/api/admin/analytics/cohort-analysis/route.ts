@@ -14,8 +14,8 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
  * - Drop-off rate (no attempts after first week)
  * - Week-by-week retention curve
  */
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("cohort-analysis");

@@ -1,5 +1,5 @@
 import { SubpageLoading } from "@/components/subpage-loading";
 
 export default function Loading() {
-  return <SubpageLoading pageName="Соблюдение дедлайнов" />;
+  return <SubpageLoading pageName="Deadline Compliance" />;
 }

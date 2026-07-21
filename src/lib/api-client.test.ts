@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { APIError, apiFetch, apiFetchJson, apiFetchJsonSafe, apiFetchSafe } from "./api-client";
+import { APIError, apiFetch, apiFetchJson } from "./api-client";
 
 describe("apiFetch", () => {
   beforeEach(() => {
@@ -87,78 +87,5 @@ describe("apiFetchJson", () => {
       apiFetchJson("/api/fail", { onError })
     ).rejects.toThrow(APIError);
     expect(onError).toHaveBeenCalledOnce();
-  });
-});
-
-describe("apiFetchJsonSafe", () => {
-  beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it("returns data on success", async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      new Response(JSON.stringify({ ok: true }), { status: 200 })
-    );
-
-    const result = await apiFetchJsonSafe<{ ok: boolean }>("/api/test");
-    expect(result).toEqual({ ok: true });
-  });
-
-  it("returns null on failure instead of throwing", async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      new Response("error", { status: 500 })
-    );
-
-    const result = await apiFetchJsonSafe("/api/fail");
-    expect(result).toBeNull();
-  });
-});
-
-describe("apiFetchSafe", () => {
-  beforeEach(() => {
-    vi.stubGlobal("fetch", vi.fn());
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it("returns { ok: true, data } on success", async () => {
-    const mockResponse = new Response("{}", { status: 200 });
-    vi.mocked(fetch).mockResolvedValue(mockResponse);
-
-    const result = await apiFetchSafe("/api/test");
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.data).toBe(mockResponse);
-    }
-  });
-
-  it("returns { ok: false, error } on HTTP error", async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      new Response(JSON.stringify({ error: "fail" }), { status: 403 })
-    );
-
-    const result = await apiFetchSafe("/api/fail");
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toBeInstanceOf(APIError);
-      expect(result.error.status).toBe(403);
-    }
-  });
-
-  it("returns { ok: false, error } on network error", async () => {
-    vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
-
-    const result = await apiFetchSafe("/api/offline");
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toBeInstanceOf(APIError);
-      expect(result.error.status).toBe(0);
-    }
   });
 });

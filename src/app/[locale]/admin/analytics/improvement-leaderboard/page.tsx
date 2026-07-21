@@ -18,9 +18,9 @@ interface ImprovementData {
 export default function ImprovementLeaderboardPage() {
   const { data, loading, error } = useFetchData<ImprovementData>("/api/admin/analytics/improvement-leaderboard");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const improving = data.studentImprovement.filter((s) => s.scoreDelta > 0).length;
   const declining = data.studentImprovement.filter((s) => s.scoreDelta < 0).length;
@@ -43,7 +43,7 @@ export default function ImprovementLeaderboardPage() {
           <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Trophy className="h-4 w-4 text-amber-500" /> Топ улучшений по студентам</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader><TableRow><TableHead className="w-10">#</TableHead><TableHead>Студент</TableHead><TableHead>Группа</TableHead><TableHead className="text-right">Было</TableHead><TableHead className="text-right">Стало</TableHead><TableHead className="text-right">Дельта</TableHead><TableHead className="text-right">% изм.</TableHead><TableHead className="text-right">Попытки</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead className="w-10">#</TableHead><TableHead>Студент</TableHead><TableHead>Group</TableHead><TableHead className="text-right">Before</TableHead><TableHead className="text-right">After</TableHead><TableHead className="text-right">Delta</TableHead><TableHead className="text-right">% change</TableHead><TableHead className="text-right">Attempts</TableHead></TableRow></TableHeader>
               <TableBody>
                 {data.studentImprovement.slice(0, 20).map((s, i) => (
                   <TableRow key={s.studentId}>

@@ -104,7 +104,7 @@ export default function AdminCompletionMatrixPage() {
           </CardHeader>
           <CardContent>
             <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-              <SelectTrigger className="max-w-xs"><SelectValue placeholder="Выберите группу" /></SelectTrigger>
+              <SelectTrigger className="max-w-xs"><SelectValue placeholder="Select group" /></SelectTrigger>
               <SelectContent>
                 {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
               </SelectContent>
@@ -112,9 +112,9 @@ export default function AdminCompletionMatrixPage() {
           </CardContent>
         </Card>
 
-        {loading && <div className="p-8 text-center">Загрузка...</div>}
+        {loading && <div className="p-8 text-center">Loading...</div>}
 
-        {error && !loading && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card>)}
+        {error && !loading && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>)}
 
         {!loading && data && data.students.length > 0 && (
           <Card>

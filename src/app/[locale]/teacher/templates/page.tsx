@@ -81,7 +81,7 @@ export default function TemplatesPage() {
 
   const saveTemplate = async () => {
     if (!name.trim() || selectedTasks.length === 0) {
-      toast.error("Введите название и выберите хотя бы одно задание");
+      toast.error("Enter a name and select at least one task");
       return;
     }
     setSaving(true);
@@ -105,25 +105,25 @@ export default function TemplatesPage() {
         swrMutate("/api/teacher/templates");
       } else {
         const err = await res.json();
-        toast.error(err.error || "Ошибка сохранения");
+        toast.error(err.error || "Error saving");
       }
     } catch {
-      toast.error("Не удалось сохранить шаблон");
+      toast.error("Failed to save template");
     } finally {
       setSaving(false);
     }
   };
 
   const deleteTemplate = async (id: string) => {
-    if (!confirm("Удалить шаблон?")) return;
+    if (!confirm("Delete template?")) return;
     try {
       const res = await fetch(`/api/teacher/templates/${id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("Шаблон удалён");
+        toast.success("Template deleted");
         swrMutate("/api/teacher/templates");
       }
     } catch {
-      toast.error("Не удалось удалить");
+      toast.error("Failed to delete");
     }
   };
 
@@ -184,7 +184,7 @@ export default function TemplatesPage() {
         swrMutate("/api/teacher/templates");
       }
     } catch {
-      toast.error("Ошибка создания");
+      toast.error("Creation error");
     } finally {
       setSaving(false);
     }
@@ -365,12 +365,12 @@ export default function TemplatesPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Название</Label>
-              <Input placeholder="Название шаблона" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input placeholder="Template name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Описание</Label>
               <Textarea
-                placeholder="Краткое описание программы..."
+                placeholder="Brief description..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}

@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
         })
         .catch((err) => {
           if ((err as DOMException)?.name === "AbortError") return;
-          toast.error("Не удалось загрузить список пользователей");
+          toast.error("Failed to load user list");
           setLoading(false);
         });
     },
@@ -233,11 +233,11 @@ export default function AdminUsersPage() {
         fetchUsers();
       } else {
         const data = await res.json();
-        toast.error(data.error || "Ошибка при изменении роли");
+        toast.error(data.error || "Error changing role");
       }
     } catch (e) {
       logger.error("Admin users: role change failed", { error: e instanceof Error ? e.message : String(e) });
-      toast.error("Ошибка при изменении роли");
+      toast.error("Error changing role");
     } finally {
       setIsSubmitting(false);
     }
@@ -245,11 +245,11 @@ export default function AdminUsersPage() {
 
   const handleImportCSV = async () => {
     if (!csvContent.trim()) {
-      toast.error("Вставьте содержимое CSV");
+      toast.error("Paste CSV content");
       return;
     }
     if (!importPassword || importPassword.length < 8) {
-      toast.error("Пароль должен содержать минимум 8 символов");
+      toast.error("Password must be at least 8 characters");
       return;
     }
     setImporting(true);
@@ -269,10 +269,10 @@ export default function AdminUsersPage() {
         toast.success(`Импортировано: ${json.created}, пропущено: ${json.skipped}`);
         fetchUsers();
       } else {
-        toast.error(json.error || "Ошибка при импорте");
+        toast.error(json.error || "Import error");
       }
     } catch {
-      toast.error("Ошибка при импорте");
+      toast.error("Import error");
     } finally {
       setImporting(false);
     }
@@ -287,17 +287,17 @@ export default function AdminUsersPage() {
         body: JSON.stringify(data),
       });
       if (res.ok) {
-        toast.success("Пользователь создан");
+        toast.success("User created");
         setShowCreateModal(false);
         createForm.reset();
         fetchUsers();
       } else {
         const json = await res.json();
-        toast.error(json.error || "Ошибка при создании пользователя");
+        toast.error(json.error || "Error creating user");
       }
     } catch (e) {
       logger.error("Admin users: user creation failed", { error: e instanceof Error ? e.message : String(e) });
-      toast.error("Ошибка при создании пользователя");
+      toast.error("Error creating user");
     } finally {
       setIsSubmitting(false);
     }
@@ -309,17 +309,17 @@ export default function AdminUsersPage() {
     try {
       const res = await apiFetch(`/api/admin/users/${selectedUser.id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("Пользователь удален");
+        toast.success("User deleted");
         setShowDeleteConfirm(false);
         setSelectedUser(null);
         fetchUsers();
       } else {
         const data = await res.json();
-        toast.error(data.error || "Ошибка при удалении");
+        toast.error(data.error || "Error deleting");
       }
     } catch (e) {
       logger.error("Admin users: user deletion failed", { error: e instanceof Error ? e.message : String(e) });
-      toast.error("Ошибка при удалении");
+      toast.error("Error deleting");
     } finally {
       setIsSubmitting(false);
     }
@@ -328,7 +328,7 @@ export default function AdminUsersPage() {
   const handleRestoreUser = async (user: User) => {
     const res = await apiFetch(`/api/admin/users/${user.id}/restore`, { method: "PATCH" });
     if (res.ok) {
-      toast.success("Пользователь восстановлен");
+      toast.success("User restored");
       fetchUsers();
     } else {
       const data = await res.json();
@@ -373,7 +373,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
   return (
     <AdminLayout>
@@ -415,7 +415,7 @@ export default function AdminUsersPage() {
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск..."
+                placeholder="Search..."
                 className="pl-8"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -423,7 +423,7 @@ export default function AdminUsersPage() {
             </div>
             <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(1); }}>
               <SelectTrigger className="w-44">
-                <SelectValue placeholder="Роль" />
+                <SelectValue placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Все роли</SelectItem>
@@ -482,17 +482,17 @@ export default function AdminUsersPage() {
                 </TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Роль</TableHead>
-                <TableHead className="hidden lg:table-cell">Университет</TableHead>
-                <TableHead className="hidden lg:table-cell">Группа</TableHead>
+                <TableHead className="hidden lg:table-cell">University</TableHead>
+                <TableHead className="hidden lg:table-cell">Group</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead>
                   <button onClick={() => handleSort("attempts")} className="flex items-center font-medium">
-                    Попытки <SortIcon field="attempts" sortBy={sortBy} sortDir={sortDir} />
+                    Attempts <SortIcon field="attempts" sortBy={sortBy} sortDir={sortDir} />
                   </button>
                 </TableHead>
                 <TableHead>
                   <button onClick={() => handleSort("createdAt")} className="flex items-center font-medium">
-                    Дата регистрации <SortIcon field="createdAt" sortBy={sortBy} sortDir={sortDir} />
+                    Date регистрации <SortIcon field="createdAt" sortBy={sortBy} sortDir={sortDir} />
                   </button>
                 </TableHead>
                 <TableHead className="w-12"></TableHead>
@@ -551,7 +551,7 @@ export default function AdminUsersPage() {
                         )}
                         <DropdownMenuItem onClick={() => { setSelectedUser(user); setShowDeleteConfirm(true); }}>
                           <Trash2 className="h-4 w-4 mr-2 text-red-600" />
-                          <span className="text-red-600">Удалить</span>
+                          <span className="text-red-600">Delete</span>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -649,7 +649,7 @@ export default function AdminUsersPage() {
                 <Input
                   value={importPassword}
                   onChange={(e) => setImportPassword(e.target.value)}
-                  placeholder="Минимум 8 символов"
+                  placeholder="Minimum 8 characters"
                   type="password"
                 />
                 {importPassword && importPassword.length < 8 && (
@@ -695,7 +695,7 @@ export default function AdminUsersPage() {
                 <Input
                   id="create-name"
                   {...createForm.register("name")}
-                  placeholder="Иван Иванов"
+                  placeholder="John Doe"
                 />
                 {createForm.formState.errors.name && (
                   <p className="text-sm text-red-600">{createForm.formState.errors.name.message}</p>
@@ -743,7 +743,7 @@ export default function AdminUsersPage() {
                 defaultValue={createForm.getValues("role")}
               >
                 <SelectTrigger id="create-role">
-                  <SelectValue placeholder="Выберите роль" />
+                  <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="STUDENT">Студент</SelectItem>
@@ -754,19 +754,19 @@ export default function AdminUsersPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="create-university">Университет</Label>
+                <Label htmlFor="create-university">University</Label>
                 <Input
                   id="create-university"
                   {...createForm.register("university")}
-                  placeholder="МГУ"
+                  placeholder="University"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="create-group">Группа</Label>
+                <Label htmlFor="create-group">Group</Label>
                 <Input
                   id="create-group"
                   {...createForm.register("group")}
-                  placeholder="ИТ-101"
+                  placeholder="IT-101"
                 />
               </div>
             </div>
@@ -879,28 +879,28 @@ export default function AdminUsersPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground text-xs">Университет</Label>
+                  <Label className="text-muted-foreground text-xs">University</Label>
                   <p className="text-sm">{selectedUser.university || "—"}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground text-xs">Группа</Label>
+                  <Label className="text-muted-foreground text-xs">Group</Label>
                   <p className="text-sm">{selectedUser.group || "—"}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pt-4 border-t">
                 <div className="text-center">
                   <p className="text-2xl font-bold">{selectedUser._count.attempts}</p>
-                  <p className="text-xs text-muted-foreground">Попытки</p>
+                  <p className="text-xs text-muted-foreground">Attempts</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold">{selectedUser._count.groups}</p>
-                  <p className="text-xs text-muted-foreground">Группы</p>
+                  <p className="text-xs text-muted-foreground">Groups</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold">
                     {new Date(selectedUser.createdAt).toLocaleDateString("ru-RU")}
                   </p>
-                  <p className="text-xs text-muted-foreground">Дата регистрации</p>
+                  <p className="text-xs text-muted-foreground">Date регистрации</p>
                 </div>
               </div>
             </div>

@@ -76,9 +76,9 @@ export default function AdminStudentReportPage() {
     return () => controller.abort();
   }, [id]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Студент не найден или нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Student не найден или нет данных</div></AdminLayout>;
 
   const { student, stats, scoresOverTime, taskPerformance, weakAreas, strongAreas, groupPercentile, groupRanking, timeAnalysis, recommendations, attempts } = data;
 
@@ -103,13 +103,13 @@ export default function AdminStudentReportPage() {
           <span className="text-xs text-muted-foreground">
             Регистрация: {new Date(student.createdAt).toLocaleDateString("ru-RU")}
           </span>
-          <PrintButton label="Печать отчёта" />
+          <PrintButton label="Print report" />
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Лучший балл</div><div className="text-2xl font-bold"><ScoreBadge score={stats.bestScore} /></div></CardContent></Card>
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Средний балл</div><div className="text-2xl font-bold"><ScoreBadge score={stats.avgScore} /></div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Best score</div><div className="text-2xl font-bold"><ScoreBadge score={stats.bestScore} /></div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Average score</div><div className="text-2xl font-bold"><ScoreBadge score={stats.avgScore} /></div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><BarChart3 className="h-3 w-3" /> Попыток</div><div className="text-2xl font-bold">{stats.totalAttempts}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> Ср. время</div><div className="text-2xl font-bold">{formatDuration(stats.avgTimeSpent)}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Users className="h-3 w-3" /> Перцентиль</div><div className="text-2xl font-bold">{groupPercentile}%</div></CardContent></Card>
@@ -128,13 +128,13 @@ export default function AdminStudentReportPage() {
                   <YAxis className="text-xs" />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} name="Балл" dot={false} />
+                  <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} name="Score" dot={false} />
                   <Line type="monotone" dataKey="ecCoverage" stroke="#10b981" strokeWidth={1.5} name="EC" dot={false} />
                   <Line type="monotone" dataKey="bvCoverage" stroke="#f59e0b" strokeWidth={1.5} name="BV" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-center text-muted-foreground py-8">Нет данных</p>
+              <p className="text-center text-muted-foreground py-8">No data</p>
             )}
           </CardContent>
         </Card>
@@ -148,10 +148,10 @@ export default function AdminStudentReportPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Задача</TableHead>
-                    <TableHead className="text-right">Лучший</TableHead>
-                    <TableHead className="text-right">Попытки</TableHead>
-                    <TableHead className="text-right">Тренд</TableHead>
+                    <TableHead>Task</TableHead>
+                    <TableHead className="text-right">Best</TableHead>
+                    <TableHead className="text-right">Attempts</TableHead>
+                    <TableHead className="text-right">Trend</TableHead>
                     <TableHead className="text-right">Ср. время</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -274,8 +274,8 @@ export default function AdminStudentReportPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Дата</TableHead>
-                    <TableHead>Задача</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Task</TableHead>
                     <TableHead className="text-right">Балл</TableHead>
                     <TableHead className="text-right">EC</TableHead>
                     <TableHead className="text-right">BV</TableHead>
@@ -285,7 +285,7 @@ export default function AdminStudentReportPage() {
                 </TableHeader>
                 <TableBody>
                   {[...attempts].reverse().map((a) => {
-                    const taskName = taskPerformance.find((tp) => tp.taskId === a.taskId)?.taskName || `Задание ${a.taskId}`;
+                    const taskName = taskPerformance.find((tp) => tp.taskId === a.taskId)?.taskName || `Task ${a.taskId}`;
                     return (
                       <TableRow key={a.id}>
                         <TableCell className="text-sm">{new Date(a.createdAt).toLocaleDateString("ru-RU")}</TableCell>

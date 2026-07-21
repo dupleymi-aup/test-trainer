@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { StickyNote, Eye, Pencil, Save } from "lucide-react";
 import { saveGlobalNotes, loadGlobalNotes } from "@/lib/storage";
 import { MarkdownPreview } from "@/components/markdown-preview";
+import { useTranslations } from "next-intl";
 
 const MAX_LENGTH = 5000;
 
 export function GlobalNotesDialog() {
+  const t = useTranslations("trainer");
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
   const [viewMode, setViewMode] = useState(false);
@@ -78,7 +80,7 @@ export function GlobalNotesDialog() {
                 onClick={() => setViewMode(false)}
               >
                 <Pencil className="h-3 w-3" />
-                Редактирование
+                {t("resultsTab")}
               </Button>
             </div>
             {!viewMode && !saved && (
@@ -89,7 +91,7 @@ export function GlobalNotesDialog() {
                 onClick={handleSave}
               >
                 <Save className="h-3 w-3" />
-                Сохранить
+                {t("save")}
               </Button>
             )}
           </div>
@@ -101,7 +103,7 @@ export function GlobalNotesDialog() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground py-8 text-center">
-                Заметка пуста. Переключитесь в режим редактирования.
+                {t("nothingFound")}
               </p>
             )
           ) : (
@@ -123,9 +125,9 @@ export function GlobalNotesDialog() {
               <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>{note.length}/{MAX_LENGTH}</span>
                 {saved ? (
-                  <span className="text-emerald-600">Сохранено</span>
+                  <span className="text-emerald-600">{t("saved")}</span>
                 ) : (
-                  <span className="text-amber-600 dark:text-amber-400">Не сохранено</span>
+                  <span className="text-amber-600 dark:text-amber-400">{t("nothingFound")}</span>
                 )}
               </div>
             </>

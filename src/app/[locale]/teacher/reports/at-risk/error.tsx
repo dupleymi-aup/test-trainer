@@ -9,5 +9,5 @@ export default function AtRiskError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Риски" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="At Risk" />;
 }

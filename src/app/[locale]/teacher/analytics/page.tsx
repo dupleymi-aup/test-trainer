@@ -15,7 +15,7 @@ interface Analytics {
 export default function TeacherAnalyticsPage() {
   const { data, isLoading } = useSWRApi<Analytics>("/api/teacher/analytics");
 
-  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Загрузка...</div></TeacherLayout>;
+  if (isLoading) return <TeacherLayout><div className="p-8 text-center">Loading...</div></TeacherLayout>;
   if (!data) return <TeacherLayout><div className="p-8 text-center">Ошибка</div></TeacherLayout>;
 
   return (

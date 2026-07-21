@@ -9,6 +9,7 @@ import { tasks, type Task } from "@/lib/tasks";
 import { getTaskHistory, type TaskProgress } from "@/lib/storage";
 import type { DifficultyFilter, SortMode } from "@/hooks/use-trainer-state";
 import { pageVariants } from "@/lib/constants";
+import { useTranslations } from "next-intl";
 
 interface TaskListTabProps {
   filteredTasks: Task[];
@@ -41,6 +42,8 @@ export function TaskListTab({
   onRandomTask,
   onStudyTheory,
 }: TaskListTabProps) {
+  const t = useTranslations("trainer");
+  const tProgress = useTranslations("progress");
   return (
     <motion.div
       key="tasks"
@@ -51,10 +54,9 @@ export function TaskListTab({
       transition={{ duration: 0.3 }}
     >
       <div className="mb-4 sm:mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold mb-1">Выберите задание</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-1">{t("chooseTask")}</h2>
         <p className="text-sm text-muted-foreground">
-          Выберите функцию для тестирования. Каждое задание содержит описание, классы
-          эквивалентности и граничные значения.
+          {t("chooseTaskDescription")}
         </p>
       </div>
 
@@ -63,7 +65,7 @@ export function TaskListTab({
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по названию или описанию..."
+            placeholder={tProgress("searchByNameOrDescription")}
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
             className="pl-9 h-9 text-sm"
@@ -104,7 +106,7 @@ export function TaskListTab({
         </div>
 
         <div className="text-xs text-muted-foreground ml-auto">
-          {filteredTasks.length}/{tasks.length} заданий
+          {t("tasksCount", { count: `${filteredTasks.length}/${tasks.length}` })}
         </div>
 
         <Button
@@ -123,9 +125,9 @@ export function TaskListTab({
       {filteredTasks.length === 0 ? (
         <div className="text-center py-16">
           <Search className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground font-medium">Ничего не найдено</p>
+          <p className="text-muted-foreground font-medium">{t("nothingFound")}</p>
           <p className="text-sm text-muted-foreground mt-1">
-            Попробуйте изменить поисковый запрос или фильтры
+            {t("tryChangingSearch")}
           </p>
         </div>
       ) : (

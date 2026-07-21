@@ -26,12 +26,12 @@ export default function AdminTemplatesPage() {
   const templates = templatesData?.templates || [];
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Удалить шаблон?")) return;
+    if (!confirm("Delete template?")) return;
     try {
       const res = await apiFetch(`/api/teacher/templates/${id}`, { method: "DELETE" });
-      if (res.ok) { toast.success("Удалён"); swrMutate("/api/teacher/templates"); }
-      else toast.error("Ошибка");
-    } catch { toast.error("Ошибка"); }
+      if (res.ok) { toast.success("Deleted"); swrMutate("/api/teacher/templates"); }
+      else toast.error("Error");
+    } catch { toast.error("Error"); }
   };
 
   if (loading) return <AdminLayout><div className="p-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div></AdminLayout>;

@@ -12,8 +12,8 @@ import { getCache, setCache, makeCacheKey, DEFAULT_TTL } from "@/lib/analytics-c
  * - Average score, best score
  * - Comparison with platform average
  */
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     const cacheKey = makeCacheKey("group-task-matrix");

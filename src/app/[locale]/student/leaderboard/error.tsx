@@ -9,5 +9,5 @@ export default function LeaderboardError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <StudentSubpageError error={error} reset={reset} pageName="Таблица лидеров" />;
+  return <StudentSubpageError error={error} reset={reset} pageName="Leaderboard" />;
 }

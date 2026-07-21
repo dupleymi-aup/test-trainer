@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Ошибка при отправке");
+        toast.error(json.error || "Error sending");
       } else {
         toast.success(json.message);
         startCooldown();
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
         }
       }
     } catch {
-      toast.error("Ошибка при отправке");
+      toast.error("Error sending");
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Ошибка при отправке");
+        toast.error(json.error || "Error sending");
       } else {
         toast.success(json.message);
         startCooldown();
@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
         router.push(`/reset-password?method=phone&phone=${encodeURIComponent(data.phone)}`);
       }
     } catch {
-      toast.error("Ошибка при отправке");
+      toast.error("Error sending");
     } finally {
       setIsLoading(false);
     }

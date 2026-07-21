@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,39 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, Sparkles, ListChecks, Dumbbell, BarChart3, BookOpen } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const ONBOARDING_KEY = "test-trainer-onboarding-done";
 const REPLAY_EVENT = "replay-onboarding";
 
-const steps = [
-  {
-    icon: <Sparkles className="h-8 w-8 text-emerald-600" />,
-    title: "Добро пожаловать!",
-    description: "Тренажёр тестирования поможет вам освоить методы чёрного ящика на практике. Вы будете создавать тест-кейсы для реальных функций и получать мгновенную обратную связь.",
-  },
-  {
-    icon: <ListChecks className="h-8 w-8 text-teal-600" />,
-    title: "Выберите задание",
-    description: "Начните с выбора функции из списка заданий. Каждое задание содержит описание, классы эквивалентности и граничные значения, которые нужно покрыть.",
-  },
-  {
-    icon: <Dumbbell className="h-8 w-8 text-amber-600 dark:text-amber-400" />,
-    title: "Создавайте тесты",
-    description: "Добавляйте тест-кейсы с входными значениями и ожидаемым результатом. Используйте кнопку «Подсказка», если застряли. Нажмите «Проверить» для оценки.",
-  },
-  {
-    icon: <BarChart3 className="h-8 w-8 text-purple-600" />,
-    title: "Анализируйте результаты",
-    description: "Получите детальную оценку по трём критериям: покрытие классов эквивалентности (40%), граничных значений (30%) и корректность ожиданий (30%).",
-  },
-  {
-    icon: <BookOpen className="h-8 w-8 text-blue-600 dark:text-blue-400" />,
-    title: "Учитесь и растите",
-    description: "Раздел «Теория» содержит пояснения методов тестирования. Раздел «Статистика» отслеживает ваш прогресс. Попробуйте «Режим экзамена» для вызова!",
-  },
-];
-
 export function Onboarding() {
+  const t = useTranslations("onboarding");
   const [_forcedOpen, setForcedOpen] = useState(false);
   const [open, setOpen] = useState(() => {
     try {
@@ -53,6 +27,34 @@ export function Onboarding() {
     }
   });
   const [step, setStep] = useState(0);
+
+  const steps = useMemo(() => [
+    {
+      icon: <Sparkles className="h-8 w-8 text-emerald-600" />,
+      title: t("step1Title"),
+      description: t("step1Desc"),
+    },
+    {
+      icon: <ListChecks className="h-8 w-8 text-teal-600" />,
+      title: t("step2Title"),
+      description: t("step2Desc"),
+    },
+    {
+      icon: <Dumbbell className="h-8 w-8 text-amber-600 dark:text-amber-400" />,
+      title: t("step3Title"),
+      description: t("step3Desc"),
+    },
+    {
+      icon: <BarChart3 className="h-8 w-8 text-purple-600" />,
+      title: t("step4Title"),
+      description: t("step4Desc"),
+    },
+    {
+      icon: <BookOpen className="h-8 w-8 text-blue-600 dark:text-blue-400" />,
+      title: t("step5Title"),
+      description: t("step5Desc"),
+    },
+  ], [t]);
 
   useEffect(() => {
     const handler = () => {
@@ -128,13 +130,13 @@ export function Onboarding() {
                 className="flex-1"
                 onClick={handleSkip}
               >
-                Пропустить
+                {t("skip")}
               </Button>
               <Button
                 className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={handleNext}
               >
-                {isLast ? "Начать" : "Далее"}
+                {isLast ? t("start") : t("next")}
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>

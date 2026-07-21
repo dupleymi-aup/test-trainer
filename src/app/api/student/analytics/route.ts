@@ -9,8 +9,8 @@ import { getCache, setCache, DEFAULT_TTL } from "@/lib/analytics-cache";
 
 const cacheKey = "student-analytics";
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const session = unwrapGuard(await requireStudent());
 
     // Check cache

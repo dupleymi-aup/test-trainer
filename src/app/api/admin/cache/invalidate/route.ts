@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
   });
 }
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
     return NextResponse.json(getCacheStats());
   });

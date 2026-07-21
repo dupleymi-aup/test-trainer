@@ -7,10 +7,12 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Bell, Mail, Smartphone, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function NotificationPreferencesPage() {
+  const t = useTranslations();
   const { status } = useSession();
   const router = useRouter();
   const [prefs, setPrefs] = useState({ email: false, sms: false, inApp: true });
@@ -43,9 +45,9 @@ export default function NotificationPreferencesPage() {
         body: JSON.stringify(prefs),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      toast.success("Настройки сохранены");
+      toast.success("Settings saved");
     } catch {
-      toast.error("Не удалось сохранить настройки");
+      toast.error("Failed to save settings");
     } finally {
       setSaving(false);
     }
@@ -56,7 +58,7 @@ export default function NotificationPreferencesPage() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h1 className="text-xl font-bold">Уведомления</h1>
       </div>
 

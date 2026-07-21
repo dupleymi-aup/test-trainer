@@ -50,7 +50,7 @@ export async function apiFetch(url: string, init?: RequestInit): Promise<Respons
 /**
  * Configuration for retry behavior on failed requests.
  */
-export interface RetryConfig {
+interface RetryConfig {
   /** Maximum number of retry attempts (default: 3) */
   maxRetries?: number;
   /** Initial delay in milliseconds before first retry (default: 500) */
@@ -102,7 +102,7 @@ function isRetryableStatus(status: number, config: Required<RetryConfig>): boole
   return config.retryableStatuses.includes(status);
 }
 
-export interface ApiFetchJsonOptions {
+interface ApiFetchJsonOptions {
   init?: RequestInit;
   /** Called when the request fails with an APIError or network error */
   onError?: (error: APIError) => void;
@@ -233,42 +233,6 @@ export async function apiFetchJson<T>(
     if (externalSignal) {
       externalSignal.removeEventListener("abort", abortHandler);
     }
-  }
-}
-
-/**
- * Safe JSON fetch that returns data or null on error, with optional onError callback.
- * Useful for non-critical data fetching where you don't want to handle try/catch.
- */
-export async function apiFetchJsonSafe<T>(
-  url: string,
-  options?: ApiFetchJsonOptions
-): Promise<T | null> {
-  try {
-    return await apiFetchJson<T>(url, options);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Safe fetch that returns a result object instead of throwing.
- */
-export async function apiFetchSafe(
-  url: string,
-  init?: RequestInit
-): Promise<{ ok: true; data: Response } | { ok: false; error: APIError }> {
-  try {
-    const res = await apiFetch(url, init);
-    if (!res.ok) {
-      return { ok: false, error: await parseApiError(res) };
-    }
-    return { ok: true, data: res };
-  } catch (err) {
-    return {
-      ok: false,
-      error: err instanceof APIError ? err : new APIError("Network error", 0, err),
-    };
   }
 }
 

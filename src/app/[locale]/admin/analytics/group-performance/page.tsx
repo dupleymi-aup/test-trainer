@@ -43,8 +43,8 @@ export default function AdminGroupPerformancePage() {
 
   const groups = groupsData?.groups || [];
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Ошибка: {error}</p></div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error) return <AdminLayout><div className="p-8 text-center"><p className="text-destructive">Error: {error}</p></div></AdminLayout>;
 
   const toggleGroup = (groupName: string) => {
     const newExpanded = new Set(expandedGroups);
@@ -59,7 +59,7 @@ export default function AdminGroupPerformancePage() {
         <h1 className="text-xl font-bold">Успеваемость групп</h1>
 
         {groups.length === 0 && (
-          <Card><CardContent className="p-8 text-center text-muted-foreground">Нет данных о студентах</CardContent></Card>
+          <Card><CardContent className="p-8 text-center text-muted-foreground">No data о студентах</CardContent></Card>
         )}
 
         {groups.map((group) => (
@@ -83,12 +83,12 @@ export default function AdminGroupPerformancePage() {
                   <p className="font-bold">{group.avgBestScore}%</p>
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground">Ср. EC</span>
+                  <span className="text-xs text-muted-foreground">Avg. EC</span>
                   <Progress value={group.avgEc} className="h-1.5 mt-1" />
                   <span className="text-xs">{group.avgEc}%</span>
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground">Ср. BV</span>
+                  <span className="text-xs text-muted-foreground">Avg. BV</span>
                   <Progress value={group.avgBv} className="h-1.5 mt-1" />
                   <span className="text-xs">{group.avgBv}%</span>
                 </div>
@@ -127,8 +127,8 @@ export default function AdminGroupPerformancePage() {
                     <p className="font-bold mb-2">{group.groupName}</p>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between"><span className="text-muted-foreground">Ср. лучший:</span><span className="font-bold">{group.avgBestScore}%</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Ср. EC:</span><span>{group.avgEc}%</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Ср. BV:</span><span>{group.avgBv}%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Avg. EC:</span><span>{group.avgEc}%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Avg. BV:</span><span>{group.avgBv}%</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Активные:</span><span>{group.activeStudents}/{group.studentCount}</span></div>
                     </div>
                   </div>

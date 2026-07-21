@@ -1,4 +1,4 @@
-export interface WorkedStep {
+interface WorkedStep {
   stepNumber: number;
   title: string;
   action: string;

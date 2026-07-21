@@ -74,7 +74,7 @@ const reportCards = [
   { href: "/admin/analytics/teacher-comparison", title: "Сравнение преподавателей", description: "Рейтинг, композитный score эффективности, динамика студентов", icon: Award, color: "text-amber-500" },
   { href: "/admin/analytics/university-comparison", title: "Университеты", description: "Сравнение успеваемости между университетами", icon: BookOpen, color: "text-purple-600" },
   { href: "/admin/analytics/task-insights", title: "Анализ задач", description: "Сложность, типичные ошибки, покрытие EC/BV", icon: BarChart3, color: "text-emerald-600" },
-  { href: "/admin/analytics/predictions", title: "Прогнозы и рекомендации", description: "Студенты с рисками, автоматические рекомендации", icon: AlertTriangle, color: "text-rose-600" },
+  { href: "/admin/analytics/predictions", title: "Прогнозы и рекомендации", description: "Students с рисками, автоматические рекомендации", icon: AlertTriangle, color: "text-rose-600" },
   { href: "/admin/analytics/time-trends", title: "Временные тренды", description: "Помесячные тренды, сезонность, когортный анализ", icon: Clock, color: "text-indigo-600" },
   { href: "/admin/analytics/time-activity", title: "Активность по времени", description: "Heatmap по часам/дням, пики активности, периоды суток", icon: Clock, color: "text-sky-600" },
   { href: "/admin/analytics/compare-periods", title: "Сравнение периодов", description: "Сравнение метрик за два произвольных периода", icon: GitCompare, color: "text-cyan-600" },
@@ -82,10 +82,10 @@ const reportCards = [
   { href: "/admin/analytics/group-performance", title: "Успеваемость групп", description: "Сравнение групп с drill-down до студентов", icon: FolderKanban, color: "text-teal-600" },
   { href: "/admin/analytics/ec-bv-gaps", title: "Анализ покрытия EC/BV", description: "Пропускаемые классы эквивалентности и граничные значения", icon: AlertTriangle, color: "text-red-600" },
   { href: "/admin/analytics/ec-bv-heatmap", title: "Тепловая карта EC/BV", description: "Визуальная карта пропусков конкретных EC и BV по заданиям", icon: Crosshair, color: "text-violet-600" },
-  { href: "/admin/analytics/improvement-leaderboard", title: "Лидеры улучшений", description: "Студенты и группы с наибольшим прогрессом", icon: Trophy, color: "text-amber-500" },
-  { href: "/admin/analytics/velocity", title: "Скорость обучения", description: "Попытки в неделю, еженедельные тренды активности", icon: Zap, color: "text-yellow-600" },
+  { href: "/admin/analytics/improvement-leaderboard", title: "Лидеры улучшений", description: "Students и группы с наибольшим прогрессом", icon: Trophy, color: "text-amber-500" },
+  { href: "/admin/analytics/velocity", title: "Скорость обучения", description: "Attempts в неделю, еженедельные тренды активности", icon: Zap, color: "text-yellow-600" },
   { href: "/admin/analytics/learning-path", title: "Путь обучения", description: "Типичные последовательности задач и точки схода", icon: Route, color: "text-violet-600" },
-  { href: "/admin/analytics/at-risk", title: "Студенты группы риска", description: "Фильтрация, пагинация, уровень риска и тренд каждого студента", icon: UsersRound, color: "text-red-500" },
+  { href: "/admin/analytics/at-risk", title: "Students группы риска", description: "Фильтрация, пагинация, уровень риска и тренд каждого студента", icon: UsersRound, color: "text-red-500" },
   { href: "/admin/analytics/topic-heatmap", title: "Тепловая карта тем", description: "Матрица тема × группа, проблемные темы, усвоение заданий", icon: Grid3X3, color: "text-pink-600" },
   { href: "/admin/analytics/cohort-retention", title: "Когортный анализ", description: "Кривые удержания, еженедельные тренды, анализ по группам", icon: Calendar, color: "text-blue-500" },
   { href: "/admin/analytics/recommendations", title: "Рекомендации", description: "Персональные рекомендации заданий на основе пробелов в знаниях", icon: Lightbulb, color: "text-amber-500" },
@@ -106,8 +106,8 @@ const reportCards = [
   { href: "/admin/analytics/completion-forecast", title: "Прогноз завершения", description: "Кто завершит курс, скорость, недели до завершения, уровень риска", icon: Calendar, color: "text-teal-600" },
   { href: "/admin/analytics/teacher-effectiveness", title: "Эффективность преподавателей", description: "Композитный score, рейтинг, влияние на прогресс студентов, радар", icon: GraduationCap, color: "text-amber-600 dark:text-amber-400" },
   { href: "/admin/analytics/cohort-analysis", title: "Анализ когорт", description: "Кривые удержения по месяцам регистрации, сравнение когорт", icon: Users, color: "text-indigo-600" },
-  { href: "/admin/analytics/student-return", title: "Анализ возврата", description: "Студенты после перерыва: прогресс до/после, догоняют ли", icon: RotateCcw, color: "text-cyan-600" },
-  { href: "/admin/analytics/group-task-matrix", title: "Группы × Задачи", description: "Матрица сравнения групп по заданиям, Δ от платформы", icon: FolderKanban, color: "text-teal-600" },
+  { href: "/admin/analytics/student-return", title: "Анализ возврата", description: "Students после перерыва: прогресс до/после, догоняют ли", icon: RotateCcw, color: "text-cyan-600" },
+  { href: "/admin/analytics/group-task-matrix", title: "Groups × Задачи", description: "Матрица сравнения групп по заданиям, Δ от платформы", icon: FolderKanban, color: "text-teal-600" },
   { href: "/admin/alerts", title: "Системные алерты", description: "Авто-обнаружение рисков: студенты, группы, задания", icon: Siren, color: "text-red-600" },
   { href: "/admin/deadlines", title: "Дедлайны и напоминания", description: "Управление сроками экзаменов, зачётов, заданий", icon: CalendarClock, color: "text-orange-600" },
   { href: "/admin/reports/export", title: "Экспорт отчётов", description: "Централизованный экспорт всех отчётов в CSV/JSON/PDF", icon: Download, color: "text-cyan-600" },
@@ -116,8 +116,8 @@ const reportCards = [
 export default function AdminAnalyticsHubPage() {
   const { data, isLoading, error } = useSWRApi<AnalyticsData>("/api/admin/analytics");
 
-  if (isLoading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !isLoading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error.message}</p></CardContent></Card></AdminLayout>;
+  if (isLoading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !isLoading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error.message}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
   return (
@@ -199,7 +199,7 @@ export default function AdminAnalyticsHubPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Группа</TableHead><TableHead className="text-right">Студенты</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Попытки</TableHead></TableRow>
+                  <TableRow><TableHead>Group</TableHead><TableHead className="text-right">Students</TableHead><TableHead className="text-right">Avg. score</TableHead><TableHead className="text-right">Attempts</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.groupPerformance.map((g) => (
@@ -225,7 +225,7 @@ export default function AdminAnalyticsHubPage() {
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow><TableHead>Преподаватель</TableHead><TableHead className="text-right">Группы</TableHead><TableHead className="text-right">Студенты</TableHead></TableRow>
+                  <TableRow><TableHead>Преподаватель</TableHead><TableHead className="text-right">Groups</TableHead><TableHead className="text-right">Students</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.teacherActivity.map((t) => (

@@ -6,8 +6,8 @@ import { z } from "zod";
 import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const session = unwrapGuard(await requireTeacherOrAdmin());
 
     const where = session.role === "ADMIN" ? {} : { createdByUserId: session.userId };

@@ -9,5 +9,5 @@ export default function ExecutiveError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <AdminSubpageError error={error} reset={reset} pageName="Руководство" />;
+  return <AdminSubpageError error={error} reset={reset} pageName="Executive" />;
 }

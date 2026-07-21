@@ -117,10 +117,10 @@ function ResetPasswordContent() {
       } else {
         setResetToken(json.token);
         setOtpVerified(true);
-        toast.success("Код подтверждён");
+        toast.success("Code confirmed");
       }
     } catch {
-      toast.error("Ошибка при проверке кода");
+      toast.error("Error verifying code");
     } finally {
       setIsLoading(false);
     }
@@ -138,13 +138,13 @@ function ResetPasswordContent() {
 
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || "Ошибка при отправке");
+        toast.error(json.error || "Error sending");
       } else {
-        toast.success("Код отправлен повторно");
+        toast.success("Code resent");
         startCooldown();
       }
     } catch {
-      toast.error("Ошибка при отправке");
+      toast.error("Error sending");
     } finally {
       setIsLoading(false);
     }
@@ -168,13 +168,13 @@ function ResetPasswordContent() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Ошибка при сбросе пароля");
+        toast.error(json.error || "Error resetting password");
       } else {
-        toast.success("Пароль успешно изменён");
+        toast.success("Password changed successfully");
         router.push("/login");
       }
     } catch {
-      toast.error("Ошибка при сбросе пароля");
+      toast.error("Error resetting password");
     } finally {
       setIsLoading(false);
     }
@@ -381,7 +381,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<Card className="w-full max-w-md"><CardHeader><CardTitle>Загрузка...</CardTitle></CardHeader></Card>}>
+    <Suspense fallback={<Card className="w-full max-w-md"><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>}>
       <ResetPasswordContent />
     </Suspense>
   );

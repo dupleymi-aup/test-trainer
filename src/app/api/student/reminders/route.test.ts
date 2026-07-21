@@ -86,6 +86,10 @@ vi.mock("@/lib/api-error-handler", () => ({
 
 import { GET, PATCH } from "./route";
 
+function makeGetRequest() {
+  return new Request("http://localhost:3000/api/student/reminders");
+}
+
 function makeReminder(id: string, overrides: Partial<{
   read: boolean; dueDate: Date; title: string; description: string; type: string; taskId: number | null; groupName: string;
 }> = {}) {
@@ -157,13 +161,13 @@ describe("GET /api/student/reminders", () => {
 
   it("returns 403 when not authenticated", async () => {
     setUnauthorized();
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(403);
   });
 
   it("returns empty reminders with zero counts", async () => {
     mocks.findMany.mockResolvedValue([]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.reminders).toEqual([]);
@@ -181,7 +185,7 @@ describe("GET /api/student/reminders", () => {
       makeReminder("r3", { dueDate: nextWeekDate }),
     ]);
 
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.reminders).toHaveLength(3);
     expect(body.upcoming).toHaveLength(2);
@@ -195,7 +199,7 @@ describe("GET /api/student/reminders", () => {
     mocks.findMany.mockResolvedValue([
       makeReminder("r1", { dueDate: future, read: true }),
     ]);
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
     expect(body.upcoming).toHaveLength(0);
     expect(body.counts.unread).toBe(0);
@@ -203,7 +207,7 @@ describe("GET /api/student/reminders", () => {
 
   it("queries by current user id", async () => {
     mocks.findMany.mockResolvedValue([]);
-    await GET();
+    await GET(makeGetRequest());
     expect(mocks.findMany).toHaveBeenCalledWith({
       where: { userId: "student-1" },
       include: expect.objectContaining({ deadline: expect.anything() }),
@@ -213,7 +217,7 @@ describe("GET /api/student/reminders", () => {
 
   it("handles db error gracefully", async () => {
     mocks.findMany.mockRejectedValue(new Error("DB down"));
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     expect(res.status).toBe(500);
   });
 });
@@ -284,3 +288,4 @@ describe("PATCH /api/student/reminders", () => {
     expect(res.status).toBe(500);
   });
 });
+

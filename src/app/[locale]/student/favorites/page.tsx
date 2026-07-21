@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Star, ArrowLeft, Bookmark, Trash2 } from "lucide-react";
 import { tasks } from "@/lib/tasks";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 import { swrMutateFetcher } from "@/lib/swr-fetcher";
 
@@ -29,6 +30,7 @@ const difficultyColors: Record<string, string> = {
 };
 
 export default function FavoritesPage() {
+  const t = useTranslations();
   const { status } = useSession();
   const router = useRouter();
 
@@ -60,10 +62,10 @@ export default function FavoritesPage() {
 
     try {
       await swrMutateFetcher("DELETE", `/api/student/favorites?taskId=${taskId}`);
-      toast.success("Удалено из избранного");
+      toast.success("Removed from favorites");
     } catch {
       await mutate({ favorites: prevFavorites }, { revalidate: false });
-      toast.error("Не удалось удалить");
+      toast.error("Failed to remove");
     }
   };
 
@@ -79,7 +81,7 @@ export default function FavoritesPage() {
       <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild aria-label="Назад">
+            <Button variant="ghost" size="icon" asChild aria-label={t("common.back")}>
               <Link href="/student"><ArrowLeft className="h-5 w-5" /></Link>
             </Button>
             <div className="flex items-center gap-2">

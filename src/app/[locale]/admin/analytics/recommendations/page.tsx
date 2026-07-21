@@ -107,9 +107,9 @@ export default function RecommendationsPage() {
     fetchData(filters);
   }, [filters]);
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const { summary } = data;
 
@@ -177,7 +177,7 @@ export default function RecommendationsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Задание</TableHead>
+                    <TableHead>Task</TableHead>
                     <TableHead className="text-right">Кол-во студентов</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -230,7 +230,7 @@ export default function RecommendationsPage() {
                   {summary.topGaps.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={2} className="text-center text-muted-foreground py-6">
-                        Нет данных
+                        No data
                       </TableCell>
                     </TableRow>
                   )}
@@ -253,10 +253,10 @@ export default function RecommendationsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-8"></TableHead>
-                  <TableHead>Студент</TableHead>
-                  <TableHead>Группа</TableHead>
-                  <TableHead>Ср. балл</TableHead>
-                  <TableHead>Тренд</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Group</TableHead>
+                  <TableHead>Avg. score</TableHead>
+                  <TableHead>Trend</TableHead>
                   <TableHead>Риск</TableHead>
                   <TableHead className="text-right">Пробелы</TableHead>
                   <TableHead className="text-right">Рекомендации</TableHead>

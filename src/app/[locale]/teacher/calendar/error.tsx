@@ -9,5 +9,5 @@ export default function CalendarError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Календарь" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Calendar" />;
 }

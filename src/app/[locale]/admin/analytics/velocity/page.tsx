@@ -24,9 +24,9 @@ interface VelocityData {
 export default function VelocityPage() {
   const { data, loading, error } = useFetchData<VelocityData>("/api/admin/analytics/velocity");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
-  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">Нет данных</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center text-rose-600">No data</div></AdminLayout>;
 
   const avgVelocity = data.studentVelocity.length > 0
     ? Math.round(data.studentVelocity.reduce((s, v) => s + v.attemptsPerWeek, 0) / data.studentVelocity.length * 10) / 10
@@ -39,7 +39,7 @@ export default function VelocityPage() {
         <h1 className="text-xl font-bold">Скорость обучения</h1>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Студентов</div><div className="text-2xl font-bold">{data.studentVelocity.length}</div></CardContent></Card>
+          <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Students</div><div className="text-2xl font-bold">{data.studentVelocity.length}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="flex items-center gap-1 text-xs text-muted-foreground"><Zap className="h-3 w-3" /> Ср. скорость</div><div className="text-2xl font-bold">{avgVelocity}/нед</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Улучшают</div><div className="text-2xl font-bold text-emerald-600">{improving}</div></CardContent></Card>
           <Card><CardContent className="pt-4"><div className="text-xs text-muted-foreground">Макс. скорость</div><div className="text-2xl font-bold">{data.studentVelocity.reduce((max, v) => Math.max(max, v.attemptsPerWeek), 0)}/нед</div></CardContent></Card>
@@ -53,7 +53,7 @@ export default function VelocityPage() {
           <CardHeader><CardTitle className="text-sm">Скорость по студентам</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader><TableRow><TableHead>Студент</TableHead><TableHead>Группа</TableHead><TableHead className="text-right">Попыток/нед</TableHead><TableHead className="text-right">Всего попыток</TableHead><TableHead className="text-right">Недель</TableHead><TableHead className="text-right">Ср. балл</TableHead><TableHead className="text-right">Тренд</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Student</TableHead><TableHead>Group</TableHead><TableHead className="text-right">Попыток/нед</TableHead><TableHead className="text-right">Всего попыток</TableHead><TableHead className="text-right">Недель</TableHead><TableHead className="text-right">Avg. score</TableHead><TableHead className="text-right">Trend</TableHead></TableRow></TableHeader>
               <TableBody>
                 {data.studentVelocity.map((v) => (
                   <TableRow key={v.studentId}>

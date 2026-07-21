@@ -12,6 +12,7 @@ import {
   Timer,
   ClipboardList,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { TestCase, EvaluationResult } from "@/lib/evaluator";
 import { tasks, type Task as TaskType, type TestCaseCategory } from "@/lib/tasks";
 import type { TaskProgress, AttemptRecord } from "@/lib/storage";
@@ -96,6 +97,7 @@ export function TabContent({
   onRandomTask,
   onStudyTheory,
 }: TabContentProps) {
+  const t = useTranslations("trainer");
   const achievementContext = useMemo<AchievementContext>(() => ({
     completedTasks: Object.keys(savedProgress).length,
     totalTasks: tasks.length,
@@ -115,8 +117,8 @@ export function TabContent({
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <ListChecks className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Задания</span>
-          <span className="sm:hidden">Зад</span>
+          <span className="hidden sm:inline">{t("resultsTab")}</span>
+          <span className="sm:hidden">{t("resultsTabShort")}</span>
         </TabsTrigger>
         <TabsTrigger
           value="trainer"
@@ -124,8 +126,8 @@ export function TabContent({
           disabled={!selectedTask}
         >
           <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Тренажёр</span>
-          <span className="sm:hidden">Тр</span>
+          <span className="hidden sm:inline">{t("trainerTab")}</span>
+          <span className="sm:hidden">{t("trainerTabShort")}</span>
         </TabsTrigger>
         <TabsTrigger
           value="results"
@@ -133,40 +135,40 @@ export function TabContent({
           disabled={!evaluationResult}
         >
           <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Результаты</span>
-          <span className="sm:hidden">Рез</span>
+          <span className="hidden sm:inline">{t("resultsTab")}</span>
+          <span className="sm:hidden">{t("resultsTabShort")}</span>
         </TabsTrigger>
         <TabsTrigger
           value="statistics"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Статистика</span>
-          <span className="sm:hidden">Ст</span>
+          <span className="hidden sm:inline">{t("statsTab")}</span>
+          <span className="sm:hidden">{t("statsTabShort")}</span>
         </TabsTrigger>
         <TabsTrigger
           value="exam"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <Timer className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Экзамен</span>
-          <span className="sm:hidden">Эк</span>
+          <span className="hidden sm:inline">{t("examTab")}</span>
+          <span className="sm:hidden">{t("examTabShort")}</span>
         </TabsTrigger>
         <TabsTrigger
           value="theory"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Теория</span>
-          <span className="sm:hidden">Т</span>
+          <span className="hidden sm:inline">{t("theoryTab")}</span>
+          <span className="sm:hidden">{t("theoryTabShort")}</span>
         </TabsTrigger>
         <TabsTrigger
           value="quiz"
           className="text-xs sm:text-sm py-2 data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
         >
           <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">Опросник</span>
-          <span className="sm:hidden">Опр</span>
+          <span className="hidden sm:inline">{t("quizTab")}</span>
+          <span className="sm:hidden">{t("quizTabShort")}</span>
         </TabsTrigger>
       </TabsList>
 
@@ -219,9 +221,9 @@ export function TabContent({
             transition={{ duration: 0.3 }}
           >
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-1">Результаты проверки</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-1">{t("resultsTitle")}</h2>
               <p className="text-sm text-muted-foreground">
-                Подробная оценка ваших тест-кейсов с покрытием и рекомендациями.
+                {t("resultsDescription")}
               </p>
             </div>
             <div className="w-full">
@@ -246,9 +248,9 @@ export function TabContent({
             transition={{ duration: 0.3 }}
           >
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-1">Теория тестирования</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-1">{t("theoryTitle")}</h2>
               <p className="text-sm text-muted-foreground">
-                Изучите основные методы тестирования «чёрного ящика» перед выполнением заданий.
+                {t("theoryDescription")}
               </p>
             </div>
             <div className="w-full">
@@ -267,9 +269,9 @@ export function TabContent({
             transition={{ duration: 0.3 }}
           >
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-1">Опросник для самопроверки</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-1">{t("quizTab")}</h2>
               <p className="text-sm text-muted-foreground">
-                Проверьте свои знания методов тестирования с помощью 40 вопросов.
+                {t("quizDescription")}
               </p>
             </div>
             <div className="w-full">
@@ -288,9 +290,9 @@ export function TabContent({
             transition={{ duration: 0.3 }}
           >
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-1">Статистика и достижения</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-1">{t("statsTitle")}</h2>
               <p className="text-sm text-muted-foreground">
-                Обзор результатов и полученные достижения.
+                {t("resultsDescription")}
               </p>
             </div>
             <div className="w-full space-y-6">
@@ -310,9 +312,9 @@ export function TabContent({
             transition={{ duration: 0.3 }}
           >
             <div className="mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold mb-1">Режим экзамена</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-1">{t("examTitle")}</h2>
               <p className="text-sm text-muted-foreground">
-                Пройдите задания на время без подсказок.
+                {t("examDescription")}
               </p>
             </div>
             <ExamMode />

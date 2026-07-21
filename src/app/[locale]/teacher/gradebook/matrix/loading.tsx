@@ -1,5 +1,5 @@
 import { SubpageLoading } from "@/components/subpage-loading";
 
 export default function Loading() {
-  return <SubpageLoading pageName="Матрица оценок" />;
+  return <SubpageLoading pageName="Grade Matrix" />;
 }

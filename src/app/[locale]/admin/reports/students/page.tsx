@@ -31,7 +31,7 @@ export default function AdminStudentsReportPage() {
   const report = resp?.students || resp?.report || [];
 
   const exportCSV = () => {
-    const headers = ["Имя", "Email", "Университет", "Попыток", "Ср. балл", "Ср. EC", "Ср. BV", "Лучший", "Заданий", "Завершено", "Активность", "Тренд"];
+    const headers = ["Имя", "Email", "Университет", "Attempts", "Avg. score", "Avg. EC", "Avg. BV", "Лучший", "Заданий", "Завершено", "Активность", "Trend"];
     const rows = report.map((s) => [s.name, s.email, s.university, s.totalAttempts, `${s.avgScore}%`, `${s.avgEc}%`, `${s.avgBv}%`, `${s.bestScore}%`, s.tasksAttempted, s.tasksCompleted, s.lastActivity || "-", s.trend].join(","));
     const csv = "\uFEFF" + headers.join(",") + "\n" + rows.join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -58,8 +58,8 @@ export default function AdminStudentsReportPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Users className="h-8 w-8 text-blue-600 dark:text-blue-400" /><div><p className="text-2xl font-bold">{report.length}</p><p className="text-xs text-muted-foreground">Студентов</p></div></div></CardContent></Card>
-          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><BarChart3 className="h-8 w-8 text-emerald-600" /><div><p className="text-2xl font-bold">{avgScore}%</p><p className="text-xs text-muted-foreground">Средний балл</p></div></div></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Users className="h-8 w-8 text-blue-600 dark:text-blue-400" /><div><p className="text-2xl font-bold">{report.length}</p><p className="text-xs text-muted-foreground">Students</p></div></div></CardContent></Card>
+          <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><BarChart3 className="h-8 w-8 text-emerald-600" /><div><p className="text-2xl font-bold">{avgScore}%</p><p className="text-xs text-muted-foreground">Average score</p></div></div></CardContent></Card>
           <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-amber-600 dark:text-amber-400" /><div><p className="text-2xl font-bold">{report.filter((s) => s.trend === "improving").length}</p><p className="text-xs text-muted-foreground">Растут</p></div></div></CardContent></Card>
           <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingDown className="h-8 w-8 text-rose-600" /><div><p className="text-2xl font-bold">{report.filter((s) => s.trend === "declining").length}</p><p className="text-xs text-muted-foreground">Снижаются</p></div></div></CardContent></Card>
         </div>
@@ -69,13 +69,13 @@ export default function AdminStudentsReportPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Студент</TableHead>
-                  <TableHead className="text-right">Попыток</TableHead>
-                  <TableHead className="text-right">Ср. балл</TableHead>
-                  <TableHead className="text-right">Ср. EC</TableHead>
-                  <TableHead className="text-right">Ср. BV</TableHead>
-                  <TableHead className="text-right">Лучший</TableHead>
-                  <TableHead>Тренд</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead className="text-right">Attempts</TableHead>
+                  <TableHead className="text-right">Avg. score</TableHead>
+                  <TableHead className="text-right">Avg. EC</TableHead>
+                  <TableHead className="text-right">Avg. BV</TableHead>
+                  <TableHead className="text-right">Best</TableHead>
+                  <TableHead>Trend</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

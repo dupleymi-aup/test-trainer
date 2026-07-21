@@ -9,5 +9,5 @@ export default function TemplatesError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Шаблоны" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Templates" />;
 }

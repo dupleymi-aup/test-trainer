@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/lib/tasks";
 import { Trophy, Circle, BookOpen, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   FunctionSquare,
   Hash,
@@ -58,6 +59,7 @@ const difficultyBorderColors: Record<string, string> = {
 };
 
 export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, bestEcCoverage, bestBvCoverage, attemptCount, isFavorite, onClick, onStudyTheory, onToggleFavorite }: TaskCardProps) {
+  const t = useTranslations("trainer");
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
@@ -95,7 +97,7 @@ export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, be
                   <button
                     onClick={(e) => { e.stopPropagation(); onToggleFavorite(task.id); }}
                     className="p-0.5 hover:opacity-80 transition-opacity"
-                    aria-label={isFavorite ? "Удалить из избранного" : "Добавить в избранное"}
+                    aria-label={isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
                   >
                     <Star className={`h-4 w-4 ${isFavorite ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />
                   </button>
@@ -115,7 +117,7 @@ export const TaskCard = memo(function TaskCard({ task, isSelected, bestScore, be
               ) : (attemptCount === undefined || attemptCount === 0) && (
                 <Badge variant="outline" className="text-[10px] text-muted-foreground">
                   <Circle className="h-2.5 w-2.5 mr-0.5" />
-                  Новое
+                  {t("new")}
                 </Badge>
               )}
               {attemptCount !== undefined && attemptCount > 0 && (

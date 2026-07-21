@@ -9,5 +9,5 @@ export default function AnnouncementsError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Объявления" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Announcements" />;
 }

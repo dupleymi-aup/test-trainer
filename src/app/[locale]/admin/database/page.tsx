@@ -18,7 +18,7 @@ interface HealthStatus {
 export default function AdminDatabasePage() {
   const { data: health, loading, refetch } = useFetchData<HealthStatus>("/api/admin/database/health");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
   return (
     <AdminLayout>

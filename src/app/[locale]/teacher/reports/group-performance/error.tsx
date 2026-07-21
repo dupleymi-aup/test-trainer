@@ -9,5 +9,5 @@ export default function GroupPerformanceError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Успеваемость групп" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Group Performance" />;
 }

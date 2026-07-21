@@ -10,10 +10,10 @@ const { mocks } = vi.hoisted(() => ({
       | { session: { userId: string; role: string } }
       | { response: NextResponse }
       | null,
-    parseSearchParamsResult: {
-      success: true,
-      data: { page: 1, limit: 20, action: undefined, userId: undefined },
-    } as any,
+    parseSearchParamsResult: null as
+      | { success: true; data: { page: number; limit: number; action: string | undefined; userId: string | undefined } }
+      | { success: false; errorResponse: NextResponse }
+      | null,
   },
 }));
 

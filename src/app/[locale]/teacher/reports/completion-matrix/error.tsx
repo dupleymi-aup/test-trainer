@@ -9,5 +9,5 @@ export default function CompletionMatrixError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Матрица выполнения" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Completion Matrix" />;
 }

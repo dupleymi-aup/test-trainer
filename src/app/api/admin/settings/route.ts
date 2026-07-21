@@ -22,8 +22,8 @@ const updateSettingSchema = z.object({
   value: z.union([z.string(), z.number(), z.boolean(), z.null()]),
 });
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     unwrapGuard(await requireAdmin());
 
     // Seed default settings only if none exist yet

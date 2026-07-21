@@ -7,8 +7,8 @@ import { parseRequestBody, withErrorHandler, unwrapGuard } from "@/lib/api-error
 import { checkRateLimit, createRateLimitResponse, rateLimits, getClientIp } from "@/lib/rate-limit";
 import { getCache, setCache } from "@/lib/analytics-cache";
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const auth = unwrapGuard(await requireStudent());
 
     const cacheKey = `student-favorites:${auth.userId}`;

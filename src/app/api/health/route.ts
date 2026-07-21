@@ -18,8 +18,8 @@ async function getVersion(): Promise<string> {
   return cachedVersion;
 }
 
-export async function GET() {
-  return withErrorHandler(undefined, async () => {
+export async function GET(request: Request) {
+  return withErrorHandler(request, async () => {
     const [dbHealth, mongoHealth, version] = await Promise.all([
       healthCheck(),
       checkMongoHealth(),

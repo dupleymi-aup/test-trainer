@@ -94,7 +94,7 @@ export default function GroupComparisonPage() {
 
   const chartData = data?.groups.map((g) => ({
     name: g.groupName,
-    "Ср. балл": g.metrics.avgScore,
+    "Avg. score": g.metrics.avgScore,
     "EC": g.metrics.avgEc,
     "BV": g.metrics.avgBv,
   })) || [];
@@ -107,17 +107,17 @@ export default function GroupComparisonPage() {
             <Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4 mr-1" /> Назад</Button>
           </Link>
           <h2 className="text-xl font-bold flex items-center gap-2"><GitCompare className="h-5 w-5" /> Сравнение групп</h2>
-          <PrintButton label="Печать" />
+          <PrintButton label="Print" />
         </div>
 
         {error && !loading && (
-          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка: {error}</p></CardContent></Card>
+          <Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Error: {error}</p></CardContent></Card>
         )}
 
-        {loading && <div className="text-center py-8">Загрузка...</div>}
+        {loading && <div className="text-center py-8">Loading...</div>}
 
         {!loading && !data && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">Нет данных</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No data</CardContent></Card>
         )}
 
         {!loading && data && (
@@ -134,13 +134,13 @@ export default function GroupComparisonPage() {
                       <YAxis className="text-xs" domain={[0, 100]} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="Ср. балл" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Avg. score" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="EC" fill="#10b981" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="BV" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Нет данных</p>
+                  <p className="text-center text-muted-foreground py-8">No data</p>
                 )}
               </CardContent>
             </Card>
@@ -153,14 +153,14 @@ export default function GroupComparisonPage() {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-2 w-8"></th>
-                      <th className="text-left p-2">Группа</th>
-                      <th className="text-right p-2">Ср. балл</th>
+                      <th className="text-left p-2">Group</th>
+                      <th className="text-right p-2">Avg. score</th>
                       <th className="text-right p-2">EC</th>
                       <th className="text-right p-2">BV</th>
                       <th className="text-right p-2">Ср. время</th>
-                      <th className="text-right p-2">Попытки</th>
-                      <th className="text-right p-2">Студенты</th>
-                      <th className="text-right p-2">Тренд</th>
+                      <th className="text-right p-2">Attempts</th>
+                      <th className="text-right p-2">Students</th>
+                      <th className="text-right p-2">Trend</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -188,9 +188,9 @@ export default function GroupComparisonPage() {
                                   <table className="w-full text-xs">
                                     <thead>
                                       <tr className="border-b">
-                                        <th className="text-left p-1">Студент</th>
-                                        <th className="text-right p-1">Ср. балл</th>
-                                        <th className="text-right p-1">Попытки</th>
+                                        <th className="text-left p-1">Student</th>
+                                        <th className="text-right p-1">Avg. score</th>
+                                        <th className="text-right p-1">Attempts</th>
                                       </tr>
                                     </thead>
                                     <tbody>

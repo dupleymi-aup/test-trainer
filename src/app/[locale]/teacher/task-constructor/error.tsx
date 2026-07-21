@@ -9,5 +9,5 @@ export default function TaskConstructorError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  return <TeacherSubpageError error={error} reset={reset} pageName="Конструктор заданий" />;
+  return <TeacherSubpageError error={error} reset={reset} pageName="Task Constructor" />;
 }

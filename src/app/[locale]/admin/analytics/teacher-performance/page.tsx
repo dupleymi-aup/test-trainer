@@ -103,8 +103,8 @@ export default function TeacherPerformancePage() {
     setExpandedGroups(next);
   };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
-  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (error && !loading) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
   if (!data) return <AdminLayout><div className="p-8 text-center">Ошибка загрузки данных</div></AdminLayout>;
 
 
@@ -174,11 +174,11 @@ export default function TeacherPerformancePage() {
                 <TableRow>
                   <TableHead className="w-8"></TableHead>
                   <TableHead>Преподаватель</TableHead>
-                  <TableHead className="text-right">Группы</TableHead>
-                  <TableHead className="text-right">Студенты</TableHead>
-                  <TableHead className="text-right">Ср. балл</TableHead>
+                  <TableHead className="text-right">Groups</TableHead>
+                  <TableHead className="text-right">Students</TableHead>
+                  <TableHead className="text-right">Avg. score</TableHead>
                   <TableHead className="text-right">Активность</TableHead>
-                  <TableHead className="text-right">Тренд</TableHead>
+                  <TableHead className="text-right">Trend</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

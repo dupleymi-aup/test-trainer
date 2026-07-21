@@ -114,7 +114,7 @@ export default function AdminDeadlinesPage() {
       .then((d) => { setDeadlines(d.deadlines || []); setLoading(false); })
       .catch((_error) => {
         if (_error instanceof DOMException && _error.name === "AbortError") return;
-        toast.error("Не удалось загрузить дедлайны");
+        toast.error("Failed to load deadlines");
         setLoading(false);
       });
   }, [showPast]);
@@ -174,7 +174,7 @@ export default function AdminDeadlinesPage() {
         fetchDeadlines();
       }
     } catch {
-      toast.error("Ошибка при сохранении");
+      toast.error("Error saving");
     } finally {
       setIsSubmitting(false);
     }
@@ -183,7 +183,7 @@ export default function AdminDeadlinesPage() {
   const handleDelete = async (id: string) => {
     const res = await apiFetch(`/api/admin/deadlines?id=${id}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Дедлайн удалён");
+      toast.success("Deadline deleted");
       fetchDeadlines();
     }
   };
@@ -197,7 +197,7 @@ export default function AdminDeadlinesPage() {
         toast.success(`Отправлено ${data.sentCount} напоминаний`);
       }
     } catch {
-      toast.error("Ошибка при отправке");
+      toast.error("Error sending");
     } finally {
       setSendingReminders(false);
     }
@@ -219,7 +219,7 @@ export default function AdminDeadlinesPage() {
     setShowCreateModal(true);
   };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
   const now = new Date();
   const upcoming = deadlines.filter((d) => new Date(d.dueDate) >= now);
@@ -289,7 +289,7 @@ export default function AdminDeadlinesPage() {
                   <TableHead>Название</TableHead>
                   <TableHead>Тип</TableHead>
                   <TableHead>Срок</TableHead>
-                  <TableHead>Группа</TableHead>
+                  <TableHead>Group</TableHead>
                   <TableHead className="text-right">Напоминания</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead className="w-24"></TableHead>
@@ -420,11 +420,11 @@ export default function AdminDeadlinesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dl-group">Группа (необязательно)</Label>
+                <Label htmlFor="dl-group">Group (необязательно)</Label>
                 <Select onValueChange={(v) => form.setValue("groupId", v === "all" ? "" : v)} defaultValue={form.getValues("groupId") || "all"}>
-                  <SelectTrigger><SelectValue placeholder="Все студенты" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="All students" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все студенты</SelectItem>
+                    <SelectItem value="all">All students</SelectItem>
                     {groups.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -432,7 +432,7 @@ export default function AdminDeadlinesPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="dl-task">Задание (необязательно)</Label>
-                <Input id="dl-task" type="number" min="1" placeholder="Номер задания" {...form.register("taskId")} />
+                <Input id="dl-task" type="number" min="1" placeholder="Task number" {...form.register("taskId")} />
               </div>
 
               <div className="space-y-2">
@@ -478,9 +478,9 @@ export default function AdminDeadlinesPage() {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => { setShowCreateModal(false); setEditingDeadline(null); }}>Отмена</Button>
+                <Button variant="outline" onClick={() => { setShowCreateModal(false); setEditingDeadline(null); }}>Cancel</Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Сохранение..." : editingDeadline ? "Обновить" : "Создать"}
+                  {isSubmitting ? "Saving..." : editingDeadline ? "Update" : "Create"}
                 </Button>
               </DialogFooter>
             </form>

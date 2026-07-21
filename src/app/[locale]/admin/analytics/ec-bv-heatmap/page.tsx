@@ -67,11 +67,11 @@ interface HeatmapData {
 export default function AdminEcBvHeatmapPage() {
   const { data, loading, error } = useFetchData<HeatmapData>("/api/admin/analytics/ec-bv-heatmap");
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Загрузка...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
 
-  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Ошибка загрузки: {error}</p></CardContent></Card></AdminLayout>;
+  if (error) return <AdminLayout><Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card></AdminLayout>;
 
-  if (!data) return <AdminLayout><div className="p-8 text-center">Нет данных</div></AdminLayout>;
+  if (!data) return <AdminLayout><div className="p-8 text-center">No data</div></AdminLayout>;
 
   const { ecHeatmap, bvHeatmap, byTaskEc, byTaskBv, summary } = data;
 
@@ -147,7 +147,7 @@ export default function AdminEcBvHeatmapPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>EC</TableHead>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead>Сложность</TableHead>
                       <TableHead className="text-right">Покрыто</TableHead>
                       <TableHead className="text-right">Пропущено</TableHead>
@@ -191,7 +191,7 @@ export default function AdminEcBvHeatmapPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Граничное значение</TableHead>
-                      <TableHead>Задание</TableHead>
+                      <TableHead>Task</TableHead>
                       <TableHead>Сложность</TableHead>
                       <TableHead className="text-right">Покрыто</TableHead>
                       <TableHead className="text-right">Пропущено</TableHead>

@@ -113,7 +113,7 @@ export default function CompletionMatrixPage() {
           <CardContent>
             <Select value={selectedGroup} onValueChange={setSelectedGroup}>
               <SelectTrigger className="max-w-xs">
-                <SelectValue placeholder="Выберите группу" />
+                <SelectValue placeholder="Select group" />
               </SelectTrigger>
               <SelectContent>
                 {groups.map((g) => (
@@ -127,7 +127,7 @@ export default function CompletionMatrixPage() {
         </Card>
 
         {loading && (
-          <div className="p-8 text-center">Загрузка...</div>
+          <div className="p-8 text-center">Loading...</div>
         )}
 
         {!loading && data && data.students.length > 0 && (

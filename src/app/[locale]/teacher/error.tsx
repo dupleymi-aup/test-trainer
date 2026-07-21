@@ -13,8 +13,8 @@ export default function TeacherError({
     <PageError
       error={error}
       reset={reset}
-      title="Ошибка в панели преподавателя"
-      description="Произошла непредвиденная ошибка. Попробуйте обновить страницу."
+      title="Teacher panel error"
+      description="An unexpected error occurred. Please try refreshing the page."
       logPrefix="TeacherError"
     />
   );

@@ -31,6 +31,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
+import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 
 
@@ -75,6 +76,7 @@ const chartColors = [
 ];
 
 export default function StudentAnalyticsPage() {
+  const t = useTranslations();
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -110,7 +112,7 @@ export default function StudentAnalyticsPage() {
         <Card className="max-w-md">
           <CardContent className="pt-8 text-center">
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-semibold mb-2">Нет данных</h2>
+            <h2 className="text-xl font-semibold mb-2">No data</h2>
             <p className="text-muted-foreground mb-4">
               Начните выполнять задания в тренажёре, чтобы увидеть аналитику
             </p>
@@ -157,7 +159,7 @@ export default function StudentAnalyticsPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 sm:py-5">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/student" aria-label="Назад"><ArrowLeft className="h-4 w-4" /></Link>
+              <Link href="/student" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Link>
             </Button>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
               <BarChart3 className="h-5 w-5" />
@@ -232,9 +234,9 @@ export default function StudentAnalyticsPage() {
                       }}
                     />
                     <Legend />
-                    <Line type="monotone" dataKey="score" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 3 }} name="Балл" />
-                    <Line type="monotone" dataKey="ec" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} name="ЭК" />
-                    <Line type="monotone" dataKey="bv" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} name="ГЗ" />
+                    <Line type="monotone" dataKey="score" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 3 }} name="Score" />
+                    <Line type="monotone" dataKey="ec" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} name="EC" />
+                    <Line type="monotone" dataKey="bv" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} name="BV" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -264,7 +266,7 @@ export default function StudentAnalyticsPage() {
                         fontSize: "12px",
                       }}
                     />
-                    <Bar dataKey="score" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Средний балл" />
+                    <Bar dataKey="score" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} name="Average Score" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
