@@ -27,6 +27,7 @@ import { BookOpen, Loader2, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { tasks } from "@/lib/tasks";
+import { logClientError } from "@/lib/logger";
 
 interface Student {
   id: string;
@@ -75,7 +76,7 @@ export default function TeacherGradebookPage() {
         setGroups(groupData.groups || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[TeacherGradebook] Failed to load data", err); setLoading(false); });
   };
 
   useEffect(() => {

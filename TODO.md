@@ -155,3 +155,9 @@
 - [x] 6. Обновить global-notes-dialog.tsx: редактирование, сохранить, статус
 - [x] 7. Добавить 13 exam-специфичных i18n ключей в en/ru/zh
 - [x] 8. Обновить exam-mode.tsx: toast-сообщения, кнопки навигации, aria-labels
+
+# Plan — v28: Silent catch logging, logClientError helper
+
+- [x] 1. Добавить logClientError() хелпер в logger.ts для клиентских компонентов
+- [x] 2. Заменить 14 silent .catch(() => setLoading(false)) блоков на logClientError в client pages
+- [x] 3. TypeScript 0 ошибок, ESLint 0 ошибок, 1237 тестов проходят

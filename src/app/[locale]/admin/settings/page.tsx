@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { logClientError } from "@/lib/logger";
 
 interface Setting {
   key: string;
@@ -48,7 +49,7 @@ export default function AdminSettingsPage() {
         setLocalValues(locals);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[AdminSettings] Failed to load settings", err); setLoading(false); });
   }, []);
 
   useEffect(() => { fetchSettings(); }, [fetchSettings]);

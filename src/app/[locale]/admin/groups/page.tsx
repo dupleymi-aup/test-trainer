@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiFetch } from "@/lib/api-client";
 import { logger } from "@/lib/logger";
+import { logClientError } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -100,7 +101,7 @@ export default function AdminGroupsPage() {
         setGroups(data.groups);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[AdminGroups] Failed to load groups", err); setLoading(false); });
   };
 
   useEffect(() => {

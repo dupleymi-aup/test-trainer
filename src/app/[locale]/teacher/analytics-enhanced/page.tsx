@@ -10,6 +10,7 @@ import { TopicPerformanceChart } from "@/components/teacher/analytics/topic-perf
 import { TimeTrendsChart } from "@/components/teacher/analytics/time-trends-chart";
 import { CategoryDistributionChart } from "@/components/teacher/analytics/category-distribution-chart";
 import { GroupComparisonTable } from "@/components/teacher/analytics/group-comparison-table";
+import { logClientError } from "@/lib/logger";
 
 interface AnalyticsData {
   scoreDistribution: Array<{ range: string; count: number }>;
@@ -81,7 +82,7 @@ export default function EnhancedAnalyticsPage() {
         setData(d);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[EnhancedAnalytics] Failed to load data", err); setLoading(false); });
   }, [filters]);
 
   useEffect(() => {

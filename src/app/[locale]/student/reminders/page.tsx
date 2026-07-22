@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { MS_PER_DAY } from "@/lib/time-constants";
+import { logClientError } from "@/lib/logger";
 
 interface Reminder {
   id: string;
@@ -104,7 +105,7 @@ export default function StudentRemindersPage() {
     fetch("/api/student/reminders")
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[StudentReminders] Failed to load reminders", err); setLoading(false); });
   };
 
   useEffect(() => {

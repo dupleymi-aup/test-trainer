@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
+import { logClientError } from "@/lib/logger";
 
 interface Log {
   id: string;
@@ -89,7 +90,7 @@ export default function AdminActivityPage() {
         setPagination(data.pagination);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[AdminActivity] Failed to load logs", err); setLoading(false); });
   }, [pagination.page, pagination.limit, actionFilter, userId, search]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);

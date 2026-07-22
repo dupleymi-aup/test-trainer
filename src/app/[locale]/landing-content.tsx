@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { logClientError } from "@/lib/logger";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -346,7 +347,7 @@ export function LandingContent({ isAuthenticated, userRole }: { isAuthenticated:
     fetch("/api/stats", { signal: controller.signal })
       .then((res) => res.ok ? res.json() : Promise.reject())
       .then((data) => setUserCount(data.userCount))
-      .catch(() => { if (!controller.signal.aborted) setUserCount(null); });
+      .catch((err) => { if (!controller.signal.aborted) { logClientError("[Landing] Failed to load user count", err); setUserCount(null); } });
     return () => controller.abort();
   }, []);
 

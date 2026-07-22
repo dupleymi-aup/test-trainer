@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { logger } from "@/lib/logger";
+import { logClientError } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -95,7 +96,7 @@ export default function ComparePeriodsPage() {
     fetch(`/api/teacher/reports/compare-periods?${params}`)
       .then(async (r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((d) => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[ComparePeriods] Failed to load comparison", err); setLoading(false); });
   };
 
   const ChangeIndicator = ({ value }: { value: number }) => {

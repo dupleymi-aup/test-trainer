@@ -10,6 +10,7 @@ import { Loader2, Save, Download } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { tasks } from "@/lib/tasks";
+import { logClientError } from "@/lib/logger";
 
 interface Student {
   id: string; name: string | null; email: string | null; group: string | null;
@@ -43,7 +44,7 @@ export default function GradebookMatrixPage() {
         setGroups(groupData.groups || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[GradebookMatrix] Failed to load data", err); setLoading(false); });
   };
 
   useEffect(() => {

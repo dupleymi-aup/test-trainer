@@ -86,13 +86,14 @@ export async function parseRequestBody<T>(
     if (contentLength) {
       const len = parseInt(contentLength, 10);
       if (Number.isFinite(len) && len > MAX_BODY_SIZE) {
-      return {
-        success: false,
-        errorResponse: NextResponse.json(
-          { error: "Request body too large (max 1MB)" },
-          { status: 413 }
-        ),
-      };
+        return {
+          success: false,
+          errorResponse: NextResponse.json(
+            { error: "Request body too large (max 1MB)" },
+            { status: 413 }
+          ),
+        };
+      }
     }
     const json = await req.json();
     // Post-check: serialize to catch oversized payloads that bypassed Content-Length

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Save, Bell, User, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { logClientError } from "@/lib/logger";
 
 export default function TeacherSettingsPage() {
   const [profile, setProfile] = useState({ name: "", email: "", phone: "", university: "", bio: "" });
@@ -20,7 +21,7 @@ export default function TeacherSettingsPage() {
     apiFetch("/api/auth/profile", { signal: controller.signal })
       .then(async (r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then((d) => { setProfile({ name: d.name || "", email: d.email || "", phone: d.phone || "", university: d.university || "", bio: d.bio || "" }); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[TeacherSettings] Failed to load profile", err); setLoading(false); });
     return () => controller.abort();
   }, []);
 

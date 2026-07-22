@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Bell, Mail, Smartphone, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { logClientError } from "@/lib/logger";
 
 export default function NotificationPreferencesPage() {
   const t = useTranslations();
@@ -32,7 +33,7 @@ export default function NotificationPreferencesPage() {
         }
         if (!controller.signal.aborted) setLoading(false);
       })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((err) => { if (!controller.signal.aborted) { logClientError("[StudentPreferences] Failed to load preferences", err); setLoading(false); } });
     return () => controller.abort();
   }, [status, router]);
 

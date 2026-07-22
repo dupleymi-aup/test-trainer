@@ -1,14 +1,16 @@
 /**
- * Lightweight structured logger for server-side API routes.
+ * Structured logger for server-side API routes and client-side error logging.
  *
  * Provides timestamped JSON-structured log output.
  * In production, replace with a proper logger (pino, winston, Sentry).
  *
- * Usage:
+ * Usage (server):
  *   import { logger } from "@/lib/logger";
  *   logger.error("Failed to fetch users", { userId, error });
- *   logger.warn("Rate limit approaching", { ip, remaining });
- *   logger.info("User created", { userId });
+ *
+ * Usage (client):
+ *   import { logClientError } from "@/lib/logger";
+ *   logClientError("[ComponentName]", error);
  */
 
 type LogLevel = "debug" | "info" | "warn" | "error";
@@ -107,3 +109,12 @@ export const logger = {
     console.error(formatLog("error", message, context));
   },
 };
+
+/**
+ * Client-side error logger. Wraps console.error with structured output.
+ * Use in React components where the server logger is not available.
+ */
+export function logClientError(tag: string, error?: unknown) {
+  const context = error instanceof Error ? extractErrorContext(error) : error ? { error: String(error) } : undefined;
+  console.error(formatLog("error", tag, context));
+}

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Clock, Plus, Trash2, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
+import { logClientError } from "@/lib/logger";
 
 interface Deadline {
   id: string; title: string; description: string | null; dueDate: string; type: string;
@@ -57,7 +58,7 @@ export default function TeacherCalendarPage() {
         setGroups(groupData.groups || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => { logClientError("[TeacherCalendar] Failed to load data", err); setLoading(false); });
   };
 
   useEffect(() => {

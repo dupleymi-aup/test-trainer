@@ -23,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Database, Users, FileText, Activity, Clock } from "lucide-react";
+import { logClientError } from "@/lib/logger";
 
 interface DBAnalytics {
   database: {
@@ -73,7 +74,7 @@ export default function AdminDatabaseAnalyticsPage() {
         setData(d);
         setLoading(false);
       })
-      .catch(() => { if (!controller.signal.aborted) setLoading(false); });
+      .catch((err) => { if (!controller.signal.aborted) { logClientError("[AdminDBAnalytics] Failed to load analytics", err); setLoading(false); } });
     return () => controller.abort();
   }, []);
 
