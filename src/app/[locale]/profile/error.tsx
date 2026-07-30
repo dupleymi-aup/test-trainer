@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { logger } from "@/lib/logger";
@@ -12,6 +13,7 @@ export default function ProfileError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("profileError");
   useEffect(() => {
     logger.error("[ProfileError]", { error: error.message });
   }, [error]);
@@ -21,10 +23,10 @@ export default function ProfileError({
       <AlertTriangle className="h-10 w-10 text-destructive" />
       <div>
         <h3 className="text-lg font-semibold text-destructive">
-          Ошибка загрузки профиля
+          {t("loadError")}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Не удалось загрузить страницу. Попробуйте обновить.
+          {t("loadErrorDescription")}
         </p>
         {process.env.NODE_ENV === "development" && error.message && (
           <pre className="mt-3 max-w-full overflow-auto rounded bg-muted p-3 text-left text-xs text-muted-foreground">
@@ -34,11 +36,10 @@ export default function ProfileError({
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={reset}>
-          Попробовать снова
+          {t("tryAgain")}
         </Button>
         <Button variant="destructive" size="sm" onClick={() => window.location.reload()}>
-          <RefreshCw className="mr-1 h-3 w-3" />
-          Обновить страницу
+          <RefreshCw className="mr-1 h-3 w-3" /> {t("refreshPage")}
         </Button>
       </div>
     </div>

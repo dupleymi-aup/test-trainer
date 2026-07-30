@@ -647,6 +647,18 @@
     "backToHome": "Back to Home",
     "search": "Search..."
   },
+  "helpError": {
+    "loadError": "Error loading help",
+    "loadErrorDescription": "Failed to load the page. Please try refreshing.",
+    "tryAgain": "Try again",
+    "refreshPage": "Refresh page"
+  },
+  "profileError": {
+    "loadError": "Error loading profile",
+    "loadErrorDescription": "Failed to load the page. Please try refreshing.",
+    "tryAgain": "Try again",
+    "refreshPage": "Refresh page"
+  },
   "help": {
     "title": "Testing Methods Reference",
     "subtitle": "Complete guide to Equivalence Partitioning and Boundary Value Analysis",
@@ -737,5 +749,13 @@
     "table.activity_logs": "Activity Logs",
     "table.system_settings": "Settings",
     "table.verification_codes": "Verification Codes"
+  },
+  "authError": {
+    "error": "Error",
+    "loginError": "Login error",
+    "registerError": "Registration error",
+    "verifyEmailError": "Email verification error",
+    "loadError": "An error occurred while loading the page.",
+    "tryAgain": "Try again"
   }
 }

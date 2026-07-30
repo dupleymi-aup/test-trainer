@@ -644,6 +644,18 @@
     "backToHome": "返回首页",
     "search": "搜索..."
   },
+  "helpError": {
+    "loadError": "加载帮助时出错",
+    "loadErrorDescription": "无法加载页面。请尝试刷新。",
+    "tryAgain": "重试",
+    "refreshPage": "刷新页面"
+  },
+  "profileError": {
+    "loadError": "加载配置文件时出错",
+    "loadErrorDescription": "无法加载页面。请尝试刷新。",
+    "tryAgain": "重试",
+    "refreshPage": "刷新页面"
+  },
   "help": {
     "title": "测试方法参考手册",
     "subtitle": "等价类划分和边界值分析完整指南",
@@ -734,5 +746,13 @@
     "table.activity_logs": "活动日志",
     "table.system_settings": "设置",
     "table.verification_codes": "验证码"
+  },
+  "authError": {
+    "error": "错误",
+    "loginError": "登录错误",
+    "registerError": "注册错误",
+    "verifyEmailError": "邮箱验证错误",
+    "loadError": "加载页面时发生错误。",
+    "tryAgain": "重试"
   }
 }
