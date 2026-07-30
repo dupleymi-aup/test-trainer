@@ -3,6 +3,7 @@ import { requireStudent } from "@/lib/admin-guard";
 import { db } from "@/lib/db";
 import { withErrorHandler, unwrapGuard } from "@/lib/api-error-handler";
 import { getCache, setCache } from "@/lib/analytics-cache";
+import { safeJsonParse } from "@/lib/utils";
 
 export async function GET(request: Request) {
   return withErrorHandler(request, async () => {
@@ -32,9 +33,7 @@ export async function GET(request: Request) {
       orderBy: { assignedAt: "desc" },
     });
 
-    const allTaskIds = assignments.flatMap((a) => {
-      try { return JSON.parse(a.template.taskIds) as number[]; } catch { return []; }
-    });
+    const allTaskIds = assignments.flatMap((a) => safeJsonParse(a.template.taskIds, [] as number[]));
 
     const completedAttempts = allTaskIds.length > 0
       ? await db.attempt.findMany({
@@ -56,7 +55,7 @@ export async function GET(request: Request) {
 
     const progress: Record<string, { templateId: string; completedTasks: number; totalTasks: number }> = {};
     for (const assignment of assignments) {
-      const taskIds: number[] = (() => { try { return JSON.parse(assignment.template.taskIds); } catch { return []; } })();
+      const taskIds = safeJsonParse(assignment.template.taskIds, [] as number[]);
       const completed = taskIds.filter((tid) => (bestScores[String(tid)] || 0) >= 60).length;
       progress[assignment.template.id] = { templateId: assignment.template.id, completedTasks: completed, totalTasks: taskIds.length };
     }

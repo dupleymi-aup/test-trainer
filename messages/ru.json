@@ -719,5 +719,25 @@
     "next": "Далее",
     "hintPrefix": "Подсказка:",
     "testAdded": "Добавлен тест для"
+  },
+  "adminDatabase": {
+    "loading": "Загрузка...",
+    "databaseTitle": "Состояние базы данных",
+    "downloadDb": "Скачать БД",
+    "jsonStats": "Статистика JSON",
+    "refresh": "Обновить",
+    "healthy": "В норме",
+    "error": "Ошибка",
+    "checkedAt": "Проверено",
+    "tables": "Таблицы",
+    "totalRecords": "Всего записей",
+    "records": "записей",
+    "table.users": "Пользователи",
+    "table.attempts": "Попытки",
+    "table.groups": "Группы",
+    "table.group_tasks": "Задания групп",
+    "table.activity_logs": "Журнал действий",
+    "table.system_settings": "Настройки",
+    "table.verification_codes": "Коды верификации"
   }
 }

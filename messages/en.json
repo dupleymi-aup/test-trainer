@@ -717,5 +717,25 @@
     "next": "Next",
     "hintPrefix": "Hint:",
     "testAdded": "Test added for"
+  },
+  "adminDatabase": {
+    "loading": "Loading...",
+    "databaseTitle": "Database Status",
+    "downloadDb": "Download DB",
+    "jsonStats": "JSON Stats",
+    "refresh": "Refresh",
+    "healthy": "Healthy",
+    "error": "Error",
+    "checkedAt": "Checked at",
+    "tables": "Tables",
+    "totalRecords": "Total records",
+    "records": "records",
+    "table.users": "Users",
+    "table.attempts": "Attempts",
+    "table.groups": "Groups",
+    "table.group_tasks": "Group Tasks",
+    "table.activity_logs": "Activity Logs",
+    "table.system_settings": "Settings",
+    "table.verification_codes": "Verification Codes"
   }
 }

@@ -226,7 +226,6 @@ describe("POST /api/auth/verify-email", () => {
     it("rejects empty token with 400", async () => {
       const req = makeRequest({ token: "" });
       const res = await POST(req);
-      const _json = await res.json();
 
       expect(res.status).toBe(400);
     });

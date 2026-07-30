@@ -714,5 +714,25 @@
     "next": "下一步",
     "hintPrefix": "提示：",
     "testAdded": "已添加测试"
+  },
+  "adminDatabase": {
+    "loading": "加载中...",
+    "databaseTitle": "数据库状态",
+    "downloadDb": "下载数据库",
+    "jsonStats": "JSON 统计",
+    "refresh": "刷新",
+    "healthy": "正常",
+    "error": "错误",
+    "checkedAt": "检查于",
+    "tables": "表",
+    "totalRecords": "总记录数",
+    "records": "条记录",
+    "table.users": "用户",
+    "table.attempts": "尝试",
+    "table.groups": "组",
+    "table.group_tasks": "组任务",
+    "table.activity_logs": "活动日志",
+    "table.system_settings": "设置",
+    "table.verification_codes": "验证码"
   }
 }

@@ -68,9 +68,9 @@ export async function GET(req: Request) {
     const csv = "\uFEFF" + csvRows.join("\n");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-      db.activityLog.create({
-        data: {
-          userId: session.userId,
+    db.activityLog.create({
+      data: {
+        userId: session.userId,
         action: "EXPORT_REPORT",
         entity: "User",
         details: JSON.stringify({ reportType: "user-list", format, count: users.length }),
