@@ -97,7 +97,7 @@ export async function DELETE(
       where: { userId_groupId: { userId, groupId: id } },
     });
 
-      await db.activityLog.create({
+    await db.activityLog.create({
       data: {
         userId: session.userId,
         action: "GROUP_MEMBER_REMOVE",

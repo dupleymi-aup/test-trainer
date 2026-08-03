@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
     let result;
 
-    if (forceSend) {
+    if (forceSend === "true") {
       // Force-send ALL unsent reminders regardless of schedule (legacy behavior)
       result = await forceSendAllReminders(hoursAhead);
     } else {

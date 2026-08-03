@@ -47,38 +47,36 @@ export function AnalyticsFilterBar({
   const [universities, setUniversities] = useState<string[]>([]);
 
   useEffect(() => {
-    if (showGroupFilter) {
-      const controller = new AbortController();
-      fetch("/api/admin/groups", { signal: controller.signal })
-        .then(async (r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          return r.json();
-        })
-        .then((d) => setGroups(d.groups || []))
-        .catch((err) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch admin groups", { error: err instanceof Error ? err.message : String(err) }); });
-      return () => controller.abort();
-    }
+    if (!showGroupFilter) return;
+    const controller = new AbortController();
+    fetch("/api/admin/groups", { signal: controller.signal })
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => setGroups(d.groups || []))
+      .catch((err) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch admin groups", { error: err instanceof Error ? err.message : String(err) }); });
+    return () => controller.abort();
   }, [showGroupFilter]);
 
   useEffect(() => {
-    if (showUniversityFilter) {
-      const controller = new AbortController();
-      fetch("/api/admin/analytics/comprehensive", { signal: controller.signal })
-        .then(async (r) => {
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          return r.json();
-        })
-        .then((d: { universityPerformance?: Array<{ university: string }> }) => {
-          if (d.universityPerformance) {
-            const unis = (d.universityPerformance as Array<{ university: string }>).map(
-              (u) => u.university
-            );
-            setUniversities([...new Set(unis)].filter(Boolean) as string[]);
-          }
-        })
-        .catch((err) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch university performance", { error: err instanceof Error ? err.message : String(err) }); });
-      return () => controller.abort();
-    }
+    if (!showUniversityFilter) return;
+    const controller = new AbortController();
+    fetch("/api/admin/analytics/comprehensive", { signal: controller.signal })
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d: { universityPerformance?: Array<{ university: string }> }) => {
+        if (d.universityPerformance) {
+          const unis = (d.universityPerformance as Array<{ university: string }>).map(
+            (u) => u.university
+          );
+          setUniversities([...new Set(unis)].filter(Boolean) as string[]);
+        }
+      })
+      .catch((err) => { if (controller.signal.aborted) return; logger.warn("Failed to fetch university performance", { error: err instanceof Error ? err.message : String(err) }); });
+    return () => controller.abort();
   }, [showUniversityFilter]);
 
   const handleApply = () => {
