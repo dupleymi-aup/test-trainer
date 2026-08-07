@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 import { swrMutateFetcher } from "@/lib/swr-fetcher";
+import { logClientError } from "@/lib/logger";
 
 interface Favorite {
   id: string;
@@ -30,7 +31,8 @@ const difficultyColors: Record<string, string> = {
 };
 
 export default function FavoritesPage() {
-  const t = useTranslations();
+  const t = useTranslations("favorites");
+  const tc = useTranslations("common");
   const { status } = useSession();
   const router = useRouter();
 
@@ -62,10 +64,11 @@ export default function FavoritesPage() {
 
     try {
       await swrMutateFetcher("DELETE", `/api/student/favorites?taskId=${taskId}`);
-      toast.success("Removed from favorites");
-    } catch {
+      toast.success(t("removed"));
+    } catch (e) {
+      logClientError("Failed to remove favorite", e);
       await mutate({ favorites: prevFavorites }, { revalidate: false });
-      toast.error("Failed to remove");
+      toast.error(t("removeFailed"));
     }
   };
 
@@ -81,15 +84,15 @@ export default function FavoritesPage() {
       <header className="border-b bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild aria-label={t("common.back")}>
+            <Button variant="ghost" size="icon" asChild aria-label={tc("back")}>
               <Link href="/student"><ArrowLeft className="h-5 w-5" /></Link>
             </Button>
             <div className="flex items-center gap-2">
               <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
-              <h1 className="text-xl font-bold">Избранные задания</h1>
+              <h1 className="text-xl font-bold">{t("title")}</h1>
             </div>
           </div>
-          <Badge variant="secondary">{favoriteTasks.length} заданий</Badge>
+          <Badge variant="secondary">{t("count", { count: favoriteTasks.length })}</Badge>
         </div>
       </header>
 
@@ -98,12 +101,12 @@ export default function FavoritesPage() {
           <Card>
             <CardContent className="py-16 text-center">
               <Bookmark className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
-              <h3 className="text-lg font-semibold mb-2">Нет избранных заданий</h3>
+              <h3 className="text-lg font-semibold mb-2">{t("emptyTitle")}</h3>
               <p className="text-muted-foreground mb-6">
-                Добавляйте задания в избранное, чтобы быстро находить их позже
+                {t("emptySubtitle")}
               </p>
               <Button asChild>
-                <Link href="/trainer">Перейти к заданиям</Link>
+                <Link href="/trainer">{t("goToTasks")}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -133,7 +136,7 @@ export default function FavoritesPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Button size="sm" variant="outline" asChild>
-                        <Link href={`/trainer?task=${fav.task.id}`}>Открыть</Link>
+                        <Link href={`/trainer?task=${fav.task.id}`}>{t("open")}</Link>
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => removeFavorite(fav.taskId)}>
                         <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />

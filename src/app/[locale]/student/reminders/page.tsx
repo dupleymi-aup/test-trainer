@@ -16,6 +16,7 @@ import {
   GraduationCap, FileText, ChevronRight, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
 import { MS_PER_DAY } from "@/lib/time-constants";
 import { logClientError } from "@/lib/logger";
 
@@ -55,17 +56,19 @@ interface RemindersData {
   counts: Counts;
 }
 
-const typeConfig: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
-  EXAM: { label: "Экзамен", icon: <GraduationCap className="h-4 w-4" />, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30 border-rose-200" },
-  TEST: { label: "Зачёт", icon: <FileText className="h-4 w-4" />, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30 border-amber-200" },
-  ASSIGNMENT: { label: "Задание", icon: <BookOpen className="h-4 w-4" />, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200" },
-  COURSE_END: { label: "Окончание курса", icon: <CalendarClock className="h-4 w-4" />, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200" },
-  REGISTRATION_END: { label: "Окончание регистрации", icon: <Clock className="h-4 w-4" />, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200" },
-};
+function getTypeConfig(t: (key: string) => string): Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> {
+  return {
+    EXAM: { label: t("typeExam"), icon: <GraduationCap className="h-4 w-4" />, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-950/30 border-rose-200" },
+    TEST: { label: t("typeTest"), icon: <FileText className="h-4 w-4" />, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30 border-amber-200" },
+    ASSIGNMENT: { label: t("typeAssignment"), icon: <BookOpen className="h-4 w-4" />, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30 border-blue-200" },
+    COURSE_END: { label: t("typeCourseEnd"), icon: <CalendarClock className="h-4 w-4" />, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-950/30 border-purple-200" },
+    REGISTRATION_END: { label: t("typeRegistrationEnd"), icon: <Clock className="h-4 w-4" />, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/30 border-orange-200" },
+  };
+}
 
-function formatDate(dateStr: string) {
+function formatDate(dateStr: string, locale: string) {
   const date = new Date(dateStr);
-  return date.toLocaleString("ru-RU", {
+  return date.toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -74,31 +77,34 @@ function formatDate(dateStr: string) {
   });
 }
 
-function getTimeRemaining(dueDateStr: string) {
+function getTimeRemaining(dueDateStr: string, t: (key: string, params?: Record<string, number>) => string) {
   const now = new Date();
   const due = new Date(dueDateStr);
   const diffMs = due.getTime() - now.getTime();
 
   if (diffMs < 0) {
     const daysOverdue = Math.floor(Math.abs(diffMs) / MS_PER_DAY);
-    return { text: `Просрочен на ${daysOverdue} дн.`, isOverdue: true, color: "text-rose-600 dark:text-rose-400" };
+    return { text: t("overdueBy", { days: daysOverdue }), isOverdue: true, color: "text-rose-600 dark:text-rose-400" };
   }
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const days = Math.floor(diffMs / MS_PER_DAY);
 
-  if (hours < 24) return { text: `Осталось ${hours} ч.`, isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
-  if (days === 1) return { text: "Остался 1 день", isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
-  if (days <= 7) return { text: `Осталось ${days} дн.`, isOverdue: false, color: "text-blue-600 dark:text-blue-400" };
-  return { text: `Осталось ${days} дн.`, isOverdue: false, color: "text-muted-foreground" };
+  if (hours < 24) return { text: t("hoursLeft", { hours }), isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
+  if (days === 1) return { text: t("oneDayLeft"), isOverdue: false, color: "text-amber-600 dark:text-amber-400" };
+  if (days <= 7) return { text: t("daysLeft", { days }), isOverdue: false, color: "text-blue-600 dark:text-blue-400" };
+  return { text: t("daysLeft", { days }), isOverdue: false, color: "text-muted-foreground" };
 }
 
 export default function StudentRemindersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations("reminders");
   const [data, setData] = useState<RemindersData | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
+  const typeConfig = getTypeConfig(t);
 
   const fetchReminders = () => {
     setLoading(true);
@@ -125,7 +131,7 @@ export default function StudentRemindersPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Bell className="h-8 w-8 mx-auto mb-4 animate-pulse text-muted-foreground" />
-          <p className="text-muted-foreground">Загрузка напоминаний...</p>
+          <p className="text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
@@ -137,12 +143,12 @@ export default function StudentRemindersPage() {
         <Card className="max-w-md">
           <CardContent className="pt-8 text-center">
             <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-            <h2 className="text-xl font-semibold mb-2">Нет напоминаний</h2>
+            <h2 className="text-xl font-semibold mb-2">{t("emptyTitle")}</h2>
             <p className="text-muted-foreground mb-4">
-              У вас нет активных напоминаний о дедлайнах
+              {t("emptySubtitle")}
             </p>
             <Button onClick={fetchReminders} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" /> Обновить
+              <RefreshCw className="h-4 w-4 mr-2" /> {t("refresh")}
             </Button>
           </CardContent>
         </Card>
@@ -169,13 +175,13 @@ export default function StudentRemindersPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Bell className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              Напоминания
+              {t("title")}
             </h1>
-            <p className="text-muted-foreground mt-1">Сроки экзаменов, зачётов и заданий</p>
+            <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={fetchReminders} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-1" /> Обновить
+              <RefreshCw className="h-4 w-4 mr-1" /> {t("refresh")}
             </Button>
             {data.counts.unread > 0 && (
               <Button
@@ -186,15 +192,15 @@ export default function StudentRemindersPage() {
                     body: JSON.stringify({ action: "mark_all_read" }),
                   })
                     .then(() => {
-                      toast.success("All reminders marked as read");
+                      toast.success(t("markAllReadSuccess"));
                       fetchReminders();
                     })
-                    .catch((e) => { logClientError("Failed to mark all reminders as read", e); toast.error("Error updating"); });
+                    .catch((e) => { logClientError("Failed to mark all reminders as read", e); toast.error(t("updateError")); });
                 }}
                 variant="outline"
                 size="sm"
               >
-                <CheckCircle className="h-4 w-4 mr-1" /> Прочитать всё
+                <CheckCircle className="h-4 w-4 mr-1" /> {t("markAllRead")}
               </Button>
             )}
           </div>
@@ -205,7 +211,7 @@ export default function StudentRemindersPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Bell className="h-3 w-3" /> Всего
+                <Bell className="h-3 w-3" /> {t("total")}
               </div>
               <div className="text-2xl font-bold">{data.counts.total}</div>
             </CardContent>
@@ -213,7 +219,7 @@ export default function StudentRemindersPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Bell className="h-3 w-3 text-amber-600 dark:text-amber-400" /> Непрочитанные
+                <Bell className="h-3 w-3 text-amber-600 dark:text-amber-400" /> {t("unread")}
               </div>
               <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{data.counts.unread}</div>
             </CardContent>
@@ -221,7 +227,7 @@ export default function StudentRemindersPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3 text-rose-600 dark:text-rose-400" /> Просроченные
+                <AlertTriangle className="h-3 w-3 text-rose-600 dark:text-rose-400" /> {t("overdue")}
               </div>
               <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">{data.counts.overdue}</div>
             </CardContent>
@@ -229,7 +235,7 @@ export default function StudentRemindersPage() {
           <Card>
             <CardContent className="pt-4">
               <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" /> Ближайшие 7 дн.
+                <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" /> {t("next7Days")}
               </div>
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{data.counts.nextWeek}</div>
             </CardContent>
@@ -239,45 +245,45 @@ export default function StudentRemindersPage() {
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4">
-            <TabsTrigger value="all">Все ({data.reminders.length})</TabsTrigger>
-            <TabsTrigger value="overdue">Просроченные ({data.counts.overdue})</TabsTrigger>
-            <TabsTrigger value="upcoming">Ближайшие ({data.counts.nextWeek})</TabsTrigger>
-            <TabsTrigger value="read">Прочитанные ({data.reminders.filter((r) => r.read).length})</TabsTrigger>
+            <TabsTrigger value="all">{t("tabAll", { count: data.reminders.length })}</TabsTrigger>
+            <TabsTrigger value="overdue">{t("tabOverdue", { count: data.counts.overdue })}</TabsTrigger>
+            <TabsTrigger value="upcoming">{t("tabUpcoming", { count: data.counts.nextWeek })}</TabsTrigger>
+            <TabsTrigger value="read">{t("tabRead", { count: data.reminders.filter((r) => r.read).length })}</TabsTrigger>
           </TabsList>
 
           <TabsContent value={tab}>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Список напоминаний</CardTitle>
+                <CardTitle className="text-sm">{t("listTitle")}</CardTitle>
                 <CardDescription>
-                  {tab === "overdue" && "Просроченные дедлайны — требуют немедленного внимания"}
-                  {tab === "upcoming" && "Дедлайны в ближайшие 7 дней"}
-                  {tab === "read" && "Прочитанные напоминания"}
-                  {tab === "all" && "Все ваши напоминания о дедлайнах"}
+                  {tab === "overdue" && t("tabDescOverdue")}
+                  {tab === "upcoming" && t("tabDescUpcoming")}
+                  {tab === "read" && t("tabDescRead")}
+                  {tab === "all" && t("tabDescAll")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {reminders.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500 dark:text-green-400" />
-                    Нет напоминаний в этой категории
+                    {t("categoryEmpty")}
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Тип</TableHead>
-                        <TableHead>Название</TableHead>
-                        <TableHead>Срок</TableHead>
-                        <TableHead>Осталось</TableHead>
-                        <TableHead>Статус</TableHead>
+                        <TableHead>{t("colType")}</TableHead>
+                        <TableHead>{t("colName")}</TableHead>
+                        <TableHead>{t("colDue")}</TableHead>
+                        <TableHead>{t("colRemaining")}</TableHead>
+                        <TableHead>{t("colStatus")}</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {reminders.map((reminder) => {
                         const config = typeConfig[reminder.deadline.type] || typeConfig.ASSIGNMENT;
-                        const timeRemaining = getTimeRemaining(reminder.deadline.dueDate);
+                        const timeRemaining = getTimeRemaining(reminder.deadline.dueDate, t);
 
                         return (
                           <TableRow
@@ -299,17 +305,17 @@ export default function StudentRemindersPage() {
                               )}
                               {reminder.deadline.group && (
                                 <div className="text-xs text-muted-foreground">
-                                  Группа: {reminder.deadline.group.name}
+                                  {t("groupLabel", { name: reminder.deadline.group.name })}
                                 </div>
                               )}
                               {reminder.deadline.taskId && (
                                 <div className="text-xs text-muted-foreground">
-                                  Задание #{reminder.deadline.taskId}
+                                  {t("taskLabel", { id: reminder.deadline.taskId })}
                                 </div>
                               )}
                             </TableCell>
                             <TableCell className="whitespace-nowrap">
-                              {formatDate(reminder.deadline.dueDate)}
+                              {formatDate(reminder.deadline.dueDate, locale)}
                             </TableCell>
                             <TableCell>
                               <span className={`font-medium ${timeRemaining.color}`}>
@@ -319,11 +325,11 @@ export default function StudentRemindersPage() {
                             <TableCell>
                               {reminder.read ? (
                                 <Badge variant="outline" className="text-green-600 dark:text-green-400">
-                                  <CheckCircle className="h-3 w-3 mr-1" /> Прочитано
+                                  <CheckCircle className="h-3 w-3 mr-1" /> {t("read")}
                                 </Badge>
                               ) : (
                                 <Badge variant="secondary" className="text-amber-600 dark:text-amber-400">
-                                  <Bell className="h-3 w-3 mr-1" /> Новое
+                                  <Bell className="h-3 w-3 mr-1" /> {t("new")}
                                 </Badge>
                               )}
                             </TableCell>
@@ -339,7 +345,7 @@ export default function StudentRemindersPage() {
                                       body: JSON.stringify({ reminderId: reminder.id, action: "mark_read" }),
                                     })
                                       .then(() => fetchReminders())
-                                      .catch((e) => { logClientError("Failed to mark reminder as read", e); toast.error("Error"); });
+                                      .catch((e) => { logClientError("Failed to mark reminder as read", e); toast.error(t("markReadError")); });
                                   }}
                                 >
                                   <CheckCircle className="h-4 w-4" />
@@ -360,7 +366,7 @@ export default function StudentRemindersPage() {
         {/* Back to main page link */}
         <div className="mt-6 text-center">
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-1">
-            <ChevronRight className="h-4 w-4 rotate-180" /> На главную
+            <ChevronRight className="h-4 w-4 rotate-180" /> {t("backHome")}
           </Link>
         </div>
       </div>

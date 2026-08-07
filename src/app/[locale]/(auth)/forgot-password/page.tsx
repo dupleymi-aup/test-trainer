@@ -7,7 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/api-client";
+import { logClientError } from "@/lib/logger";
 import { Beaker, Loader2, Mail, Phone, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,32 +31,37 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const emailSchema = z.object({
-  email: z.string().email("Неверный формат email"),
-});
-
-const phoneSchema = z.object({
-  phone: z.string().min(10, "Номер телефона должен быть не менее 10 символов"),
-});
-
-type EmailForm = z.infer<typeof emailSchema>;
-type PhoneForm = z.infer<typeof phoneSchema>;
+type EmailForm = z.infer<ReturnType<typeof getEmailSchema>>;
+type PhoneForm = z.infer<ReturnType<typeof getPhoneSchema>>;
 
 const RESEND_COOLDOWN = 60;
 
+function getEmailSchema(t: (key: string) => string) {
+  return z.object({
+    email: z.string().email(t("invalidEmail")),
+  });
+}
+
+function getPhoneSchema(t: (key: string) => string) {
+  return z.object({
+    phone: z.string().min(10, t("phoneMinLength")),
+  });
+}
+
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const t = useTranslations("forgotPassword");
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [lastMethod, setLastMethod] = useState<"email" | "phone" | null>(null);
 
   const emailForm = useForm<EmailForm>({
-    resolver: zodResolver(emailSchema),
+    resolver: zodResolver(getEmailSchema(t)),
     defaultValues: { email: "" },
   });
 
   const phoneForm = useForm<PhoneForm>({
-    resolver: zodResolver(phoneSchema),
+    resolver: zodResolver(getPhoneSchema(t)),
     defaultValues: { phone: "" },
   });
 
@@ -80,7 +87,7 @@ export default function ForgotPasswordPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Error sending");
+        toast.error(json.error || t("sendError"));
       } else {
         toast.success(json.message);
         startCooldown();
@@ -89,8 +96,9 @@ export default function ForgotPasswordPage() {
           router.push(`/reset-password?token=${json.token}`);
         }
       }
-    } catch {
-      toast.error("Error sending");
+    } catch (e) {
+      logClientError("Failed to request email recovery code", e);
+      toast.error(t("sendError"));
     } finally {
       setIsLoading(false);
     }
@@ -108,15 +116,16 @@ export default function ForgotPasswordPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Error sending");
+        toast.error(json.error || t("sendError"));
       } else {
         toast.success(json.message);
         startCooldown();
         setLastMethod("phone");
         router.push(`/reset-password?method=phone&phone=${encodeURIComponent(data.phone)}`);
       }
-    } catch {
-      toast.error("Error sending");
+    } catch (e) {
+      logClientError("Failed to request phone password code", e);
+      toast.error(t("sendError"));
     } finally {
       setIsLoading(false);
     }
@@ -148,10 +157,8 @@ export default function ForgotPasswordPage() {
             <Beaker className="h-6 w-6" />
           </div>
         </div>
-        <CardTitle className="text-2xl">Восстановление пароля</CardTitle>
-        <CardDescription>
-          Выберите способ получения кода восстановления
-        </CardDescription>
+        <CardTitle className="text-2xl">{t("title")}</CardTitle>
+        <CardDescription>{t("subtitle")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="email">
@@ -162,7 +169,7 @@ export default function ForgotPasswordPage() {
             </TabsTrigger>
             <TabsTrigger value="phone">
               <Phone className="mr-2 h-4 w-4" />
-              Телефон
+              {t("phone")}
             </TabsTrigger>
           </TabsList>
 
@@ -193,7 +200,7 @@ export default function ForgotPasswordPage() {
                   {isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Отправить ссылку
+                  {t("sendLink")}
                 </Button>
               </form>
             </Form>
@@ -210,7 +217,7 @@ export default function ForgotPasswordPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Телефон</FormLabel>
+                      <FormLabel>{t("phone")}</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="+79991234567" />
                       </FormControl>
@@ -222,7 +229,7 @@ export default function ForgotPasswordPage() {
                   {isLoading && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Отправить код
+                  {t("sendCode")}
                 </Button>
               </form>
             </Form>
@@ -233,7 +240,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-4 text-center">
             {isCooldown ? (
               <p className="text-sm text-muted-foreground">
-                Отправить повторно через {countdown} сек.
+                {t("resendIn", { countdown })}
               </p>
             ) : (
               <Button
@@ -243,7 +250,7 @@ export default function ForgotPasswordPage() {
                 className="text-sm"
               >
                 <RefreshCw className="mr-1 h-3 w-3" />
-                Отправить повторно
+                {t("resend")}
               </Button>
             )}
           </div>
@@ -254,7 +261,7 @@ export default function ForgotPasswordPage() {
             href="/login"
             className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
           >
-            Вернуться ко входу
+            {t("backToLogin")}
           </Link>
         </div>
       </CardContent>

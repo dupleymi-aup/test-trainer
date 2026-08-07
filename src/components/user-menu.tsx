@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { User, LogOut, BarChart3, Shield, GraduationCap, Beaker } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,10 +18,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-const roleLabels: Record<string, string> = {
-  STUDENT: "Студент",
-  TEACHER: "Преподаватель",
-  ADMIN: "Администратор",
+const roleKeys: Record<string, string> = {
+  STUDENT: "roleStudent",
+  TEACHER: "roleTeacher",
+  ADMIN: "roleAdmin",
 };
 
 const roleColors: Record<string, string> = {
@@ -31,21 +32,22 @@ const roleColors: Record<string, string> = {
 
 export function UserMenu() {
   const { data: session } = useSession();
+  const t = useTranslations("userMenu");
 
   if (!session?.user) {
     return (
       <div className="flex items-center gap-2">
         <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-auto text-muted-foreground border-dashed">
-          Демо
+          {t("demo")}
         </Badge>
         <Button asChild variant="default" size="sm">
-          <Link href="/login">Войти</Link>
+          <Link href="/login">{t("signIn")}</Link>
         </Button>
       </div>
     );
   }
 
-  const name = session.user.name || "Пользователь";
+  const name = session.user.name || t("user");
   const email = session.user.email || "";
   const role = session.user.role || "STUDENT";
   const initials = name
@@ -58,7 +60,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label="Меню пользователя">
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label={t("menuLabel")}>
           <Avatar className="h-8 w-8">
             <AvatarFallback className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
               {initials}
@@ -72,7 +74,7 @@ export function UserMenu() {
             <div className="flex items-center gap-2">
               <span className="font-medium truncate">{name}</span>
               <Badge className={`${roleColors[role]} text-[10px] px-1 py-0 h-auto`}>
-                {roleLabels[role]}
+                {t(roleKeys[role] || "roleStudent")}
               </Badge>
             </div>
             <span className="text-xs text-muted-foreground truncate">{email}</span>
@@ -84,7 +86,7 @@ export function UserMenu() {
             <DropdownMenuItem asChild>
               <Link href="/admin" className="cursor-pointer">
                 <Shield className="mr-2 h-4 w-4" />
-                Панель администратора
+                {t("adminPanel")}
               </Link>
             </DropdownMenuItem>
           )}
@@ -92,7 +94,7 @@ export function UserMenu() {
             <DropdownMenuItem asChild>
               <Link href="/teacher" className="cursor-pointer">
                 <GraduationCap className="mr-2 h-4 w-4" />
-                Панель преподавателя
+                {t("teacherPanel")}
               </Link>
             </DropdownMenuItem>
           )}
@@ -100,26 +102,26 @@ export function UserMenu() {
             <DropdownMenuItem asChild>
               <Link href="/student" className="cursor-pointer">
                 <BarChart3 className="mr-2 h-4 w-4" />
-                Мой кабинет
+                {t("myDashboard")}
               </Link>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem asChild>
             <Link href="/trainer" className="cursor-pointer">
               <Beaker className="mr-2 h-4 w-4" />
-              Тренажёр
+              {t("trainer")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/profile" className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
-              Профиль
+              {t("profile")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/profile?tab=stats" className="cursor-pointer">
               <BarChart3 className="mr-2 h-4 w-4" />
-              Статистика
+              {t("statistics")}
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -129,7 +131,7 @@ export function UserMenu() {
           className="cursor-pointer text-red-600 focus:text-red-600"
         >
           <LogOut className="mr-2 h-4 w-4" />
-          Выйти
+          {t("logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

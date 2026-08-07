@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
+import { logClientError } from "@/lib/logger";
 import {
   Mail,
   Phone,
@@ -56,40 +58,44 @@ import { AchievementsPanel } from "@/components/achievements-panel";
 import { loadAttemptHistory, exportAllProgress, importAllProgress, clearAllProgress } from "@/lib/storage";
 import { apiFetch } from "@/lib/api-client";
 
-const roleLabels: Record<string, string> = {
-  student: "Студент",
-  STUDENT: "Студент",
-  teacher: "Преподаватель",
-  TEACHER: "Преподаватель",
-  admin: "Администратор",
-  ADMIN: "Администратор",
+const roleKeys: Record<string, string> = {
+  student: "roleStudent",
+  STUDENT: "roleStudent",
+  teacher: "roleTeacher",
+  TEACHER: "roleTeacher",
+  admin: "roleAdmin",
+  ADMIN: "roleAdmin",
 };
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Имя должно быть не менее 2 символов").optional(),
-  phone: z
-    .string()
-    .min(10, "Номер телефона должен быть не менее 10 символов")
-    .optional()
-    .or(z.literal("")),
-  bio: z.string().optional(),
-  university: z.string().optional(),
-  group: z.string().optional(),
-});
-
-const passwordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Обязательное поле"),
-    newPassword: z.string().min(8, "Пароль должен быть не менее 8 символов"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Пароли не совпадают",
-    path: ["confirmPassword"],
+function getProfileSchema(t: (key: string) => string) {
+  return z.object({
+    name: z.string().min(2, t("nameMinLength")).optional(),
+    phone: z
+      .string()
+      .min(10, t("phoneMinLength"))
+      .optional()
+      .or(z.literal("")),
+    bio: z.string().optional(),
+    university: z.string().optional(),
+    group: z.string().optional(),
   });
+}
 
-type ProfileForm = z.infer<typeof profileSchema>;
-type PasswordForm = z.infer<typeof passwordSchema>;
+function getPasswordSchema(t: (key: string) => string) {
+  return z
+    .object({
+      currentPassword: z.string().min(1, t("requiredField")),
+      newPassword: z.string().min(8, t("passwordMinLength")),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
+}
+
+type ProfileForm = z.infer<ReturnType<typeof getProfileSchema>>;
+type PasswordForm = z.infer<ReturnType<typeof getPasswordSchema>>;
 
 interface UserProfile {
   id: string;
@@ -121,6 +127,8 @@ function ProfileContent() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const t = useTranslations("profile");
   const initialTab = searchParams.get("tab") || "profile";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +141,7 @@ function ProfileContent() {
   const [activeTab, setActiveTab] = useState(initialTab);
 
   const profileForm = useForm<ProfileForm>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(getProfileSchema(t)),
     defaultValues: {
       name: "",
       phone: "",
@@ -144,7 +152,7 @@ function ProfileContent() {
   });
 
   const passwordForm = useForm<PasswordForm>({
-    resolver: zodResolver(passwordSchema),
+    resolver: zodResolver(getPasswordSchema(t)),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -172,16 +180,17 @@ function ProfileContent() {
               group: json.user.group || "",
             });
           } else {
-            toast.error(json.error || "Error loading profile");
+            toast.error(json.error || t("profileLoadError"));
           }
-        } catch {
-          toast.error("Error loading profile");
+        } catch (e) {
+          logClientError("Failed to load profile", e);
+          toast.error(t("profileLoadError"));
         } finally {
           setLoading(false);
         }
       })();
     }
-  }, [status, router, profileForm]);
+  }, [status, router, profileForm, t]);
 
   const onProfileSubmit = async (data: ProfileForm) => {
     setSaving(true);
@@ -196,12 +205,13 @@ function ProfileContent() {
       if (res.ok) {
         setProfile(json.user);
         setEditing(false);
-        toast.success("Profile updated");
+        toast.success(t("profileUpdated"));
       } else {
-        toast.error(json.error || "Error updating profile");
+        toast.error(json.error || t("profileUpdateError"));
       }
-    } catch {
-      toast.error("Error updating profile");
+    } catch (e) {
+      logClientError("Failed to update profile", e);
+      toast.error(t("profileUpdateError"));
     } finally {
       setSaving(false);
     }
@@ -221,14 +231,15 @@ function ProfileContent() {
 
       const json = await res.json();
       if (res.ok) {
-        toast.success("Password changed");
+        toast.success(t("passwordChanged"));
         passwordForm.reset();
         setNewPasswordValue("");
       } else {
-        toast.error(json.error || "Error changing password");
+        toast.error(json.error || t("passwordChangeError"));
       }
-    } catch {
-      toast.error("Error changing password");
+    } catch (e) {
+      logClientError("Failed to change password", e);
+      toast.error(t("passwordChangeError"));
     } finally {
       setIsSavingPassword(false);
     }
@@ -253,17 +264,18 @@ function ProfileContent() {
       });
       const json = await res.json();
       if (res.ok) {
-        toast.success("Verification email sent");
+        toast.success(t("verificationEmailSent"));
         setVerifyCooldown(60);
       } else {
-        toast.error(json.error || "Error sending email");
+        toast.error(json.error || t("sendEmailError"));
       }
-    } catch {
-      toast.error("Error sending email");
+    } catch (e) {
+      logClientError("Failed to resend verification email", e);
+      toast.error(t("sendEmailError"));
     } finally {
       setIsSendingVerification(false);
     }
-  }, [verifyCooldown]);
+  }, [verifyCooldown, t]);
 
   const handleExportProgress = useCallback(() => {
     const json = exportAllProgress();
@@ -274,8 +286,8 @@ function ProfileContent() {
     a.download = `test-trainer-progress-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Progress exported");
-  }, []);
+    toast.success(t("progressExported"));
+  }, [t]);
 
   const handleImportProgress = useCallback(() => {
     const input = document.createElement("input");
@@ -288,23 +300,23 @@ function ProfileContent() {
       reader.onload = (ev) => {
         const content = ev.target?.result;
         if (typeof content === "string" && importAllProgress(content)) {
-          toast.success("Progress imported");
+          toast.success(t("progressImported"));
           // Refresh the page to show updated stats
           window.location.reload();
         } else {
-          toast.error("Import error");
+          toast.error(t("importError"));
         }
       };
       reader.readAsText(file);
     };
     input.click();
-  }, []);
+  }, [t]);
 
   const handleResetProgress = useCallback(() => {
     clearAllProgress();
-    toast.success("Progress reset");
+    toast.success(t("progressReset"));
     window.location.reload();
-  }, []);
+  }, [t]);
 
   if (status === "loading" || loading) {
     return (
@@ -337,16 +349,16 @@ function ProfileContent() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Профиль студента
+                  {t("title")}
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Управление аккаунтом и настройками
+                  {t("subtitle")}
                 </p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              Выйти
+              {t("logout")}
             </Button>
           </div>
         </div>
@@ -365,26 +377,26 @@ function ProfileContent() {
                     </AvatarFallback>
                   </Avatar>
                 </div>
-                <CardTitle className="mt-4">{profile.name || "Пользователь"}</CardTitle>
+                <CardTitle className="mt-4">{profile.name || t("user")}</CardTitle>
                 <CardDescription className="break-all">{profile.email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-start gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <span className="truncate">{profile.email || "Не указан"}</span>
+                    <span className="truncate">{profile.email || t("notSet")}</span>
                     {profile.emailVerified ? (
                       <Badge variant="secondary" className="ml-2 text-xs">
-                        Подтверждён
+                        {t("verified")}
                       </Badge>
                     ) : (
                       <div className="mt-1">
                         <Badge variant="destructive" className="text-[10px] mb-1">
-                          Не подтверждён
+                          {t("notVerified")}
                         </Badge>
                         {verifyCooldown > 0 ? (
                           <p className="text-[11px] text-muted-foreground">
-                            Отправить повторно через {verifyCooldown} сек.
+                            {t("resendIn", { countdown: verifyCooldown })}
                           </p>
                         ) : (
                           <Button
@@ -399,7 +411,7 @@ function ProfileContent() {
                             ) : (
                               <RefreshCw className="mr-1 h-3 w-3" />
                             )}
-                            Подтвердить email
+                            {t("verifyEmail")}
                           </Button>
                         )}
                       </div>
@@ -408,7 +420,7 @@ function ProfileContent() {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span>{profile.phone || "Не указан"}</span>
+                  <span>{profile.phone || t("notSet")}</span>
                 </div>
                 {profile.university && (
                   <div className="flex items-center gap-2 text-sm">
@@ -425,10 +437,10 @@ function ProfileContent() {
                 <Separator />
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <ShieldCheck className="h-4 w-4" />
-                  <span>{roleLabels[profile.role] || profile.role}</span>
+                  <span>{roleKeys[profile.role] ? t(roleKeys[profile.role]) : profile.role}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Аккаунт создан: {new Date(profile.createdAt).toLocaleDateString("ru-RU")}
+                  {t("accountCreated", { date: new Date(profile.createdAt).toLocaleDateString(locale) })}
                 </div>
               </CardContent>
             </Card>
@@ -438,11 +450,11 @@ function ProfileContent() {
           <div className="md:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="profile">Профиль</TabsTrigger>
-                <TabsTrigger value="security">Безопасность</TabsTrigger>
+                <TabsTrigger value="profile">{t("tabProfile")}</TabsTrigger>
+                <TabsTrigger value="security">{t("tabSecurity")}</TabsTrigger>
                 <TabsTrigger value="stats">
                   <BarChart3 className="mr-1 h-3.5 w-3.5" />
-                  Статистика
+                  {t("tabStats")}
                 </TabsTrigger>
               </TabsList>
 
@@ -451,9 +463,9 @@ function ProfileContent() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle>Редактирование профиля</CardTitle>
+                        <CardTitle>{t("editProfileTitle")}</CardTitle>
                         <CardDescription>
-                          Обновите ваши личные данные
+                          {t("editProfileSubtitle")}
                         </CardDescription>
                       </div>
                       {!editing && (
@@ -463,7 +475,7 @@ function ProfileContent() {
                           onClick={() => setEditing(true)}
                         >
                           <Pencil className="mr-2 h-4 w-4" />
-                          Редактировать
+                          {t("edit")}
                         </Button>
                       )}
                     </div>
@@ -479,7 +491,7 @@ function ProfileContent() {
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Имя</FormLabel>
+                              <FormLabel>{t("name")}</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -496,7 +508,7 @@ function ProfileContent() {
                           name="phone"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Телефон</FormLabel>
+                              <FormLabel>{t("phone")}</FormLabel>
                               <FormControl>
                                 <Input
                                   {...field}
@@ -513,7 +525,7 @@ function ProfileContent() {
                           name="bio"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>О себе</FormLabel>
+                              <FormLabel>{t("bio")}</FormLabel>
                               <FormControl>
                                 <Textarea
                                   {...field}
@@ -532,7 +544,7 @@ function ProfileContent() {
                             name="university"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>University</FormLabel>
+                                <FormLabel>{t("university")}</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
@@ -549,7 +561,7 @@ function ProfileContent() {
                             name="group"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Group</FormLabel>
+                                <FormLabel>{t("group")}</FormLabel>
                                 <FormControl>
                                   <Input
                                     {...field}
@@ -569,7 +581,7 @@ function ProfileContent() {
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               )}
                               <Check className="mr-2 h-4 w-4" />
-                              Сохранить
+                              {t("save")}
                             </Button>
                             <Button
                               type="button"
@@ -586,7 +598,7 @@ function ProfileContent() {
                               }}
                             >
                               <X className="mr-2 h-4 w-4" />
-                              Отмена
+                              {t("cancel")}
                             </Button>
                           </div>
                         )}
@@ -600,9 +612,9 @@ function ProfileContent() {
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Смена пароля</CardTitle>
+                      <CardTitle>{t("changePasswordTitle")}</CardTitle>
                       <CardDescription>
-                        Обновите пароль для вашего аккаунта
+                        {t("changePasswordSubtitle")}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -616,7 +628,7 @@ function ProfileContent() {
                             name="currentPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Текущий пароль</FormLabel>
+                                <FormLabel>{t("currentPassword")}</FormLabel>
                                 <FormControl>
                                   <PasswordInput {...field} placeholder="••••••••" />
                                 </FormControl>
@@ -629,7 +641,7 @@ function ProfileContent() {
                             name="newPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Новый пароль</FormLabel>
+                                <FormLabel>{t("newPassword")}</FormLabel>
                                 <FormControl>
                                   <PasswordInput
                                     {...field}
@@ -650,7 +662,7 @@ function ProfileContent() {
                             name="confirmPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Подтвердите пароль</FormLabel>
+                                <FormLabel>{t("confirmPassword")}</FormLabel>
                                 <FormControl>
                                   <PasswordInput {...field} placeholder="••••••••" />
                                 </FormControl>
@@ -663,7 +675,7 @@ function ProfileContent() {
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             )}
                             <KeyRound className="mr-2 h-4 w-4" />
-                            Сменить пароль
+                            {t("changePassword")}
                           </Button>
                         </form>
                       </Form>
@@ -677,24 +689,24 @@ function ProfileContent() {
                   {/* Data Management */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Управление данными</CardTitle>
+                      <CardTitle className="text-base">{t("dataManagement")}</CardTitle>
                       <CardDescription>
-                        Экспорт, импорт и сброс прогресса
+                        {t("dataManagementSubtitle")}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <Button variant="outline" onClick={handleExportProgress} className="flex items-center gap-2">
                           <Download className="h-4 w-4" />
-                          Экспорт
+                          {t("export")}
                         </Button>
                         <Button variant="outline" onClick={handleImportProgress} className="flex items-center gap-2">
                           <Upload className="h-4 w-4" />
-                          Импорт
+                          {t("import")}
                         </Button>
                         <Button variant="destructive" onClick={handleResetProgress} className="flex items-center gap-2">
                           <Trash2 className="h-4 w-4" />
-                          Сброс
+                          {t("reset")}
                         </Button>
                       </div>
                     </CardContent>
@@ -703,7 +715,7 @@ function ProfileContent() {
                   <StatisticsPanel attempts={loadAttemptHistory()} />
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Достижения</CardTitle>
+                      <CardTitle className="text-base">{t("achievements")}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <AchievementsPanel />

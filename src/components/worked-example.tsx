@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ import { categoryColors } from "@/lib/constants";
 import type { TestCaseCategory } from "@/lib/tasks";
 
 function StepCard({ step }: { step: WorkedExample["steps"][number] }) {
+  const t = useTranslations("workedExample");
   const [isOpen, setIsOpen] = useState(step.stepNumber <= 2);
 
   return (
@@ -37,22 +39,22 @@ function StepCard({ step }: { step: WorkedExample["steps"][number] }) {
         <div className="pl-10 pr-3 pb-3 space-y-3">
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
             <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1 flex items-center gap-1">
-              <Lightbulb className="h-3.5 w-3.5" /> Рассуждение
+              <Lightbulb className="h-3.5 w-3.5" /> {t("reasoning")}
             </p>
             <p className="text-xs text-blue-700 dark:text-blue-400">{step.reasoning}</p>
           </div>
           {step.example && (
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                <Code className="h-3.5 w-3.5" /> Тест-кейс
+                <Code className="h-3.5 w-3.5" /> {t("testCase")}
               </p>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                  <p className="text-muted-foreground mb-0.5">Вход:</p>
+                  <p className="text-muted-foreground mb-0.5">{t("input")}</p>
                   <code className="font-mono bg-background px-2 py-1 rounded text-sm block">{step.example.input}</code>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-0.5">Ожидание:</p>
+                  <p className="text-muted-foreground mb-0.5">{t("expected")}</p>
                   <code className={`font-mono bg-background px-2 py-1 rounded text-sm block ${
                     step.example.expectedOutput.startsWith("Ошибка")
                       ? "text-rose-600 dark:text-rose-400"
@@ -74,6 +76,7 @@ function StepCard({ step }: { step: WorkedExample["steps"][number] }) {
 }
 
 export function WorkedExampleViewer({ taskId }: { taskId: number }) {
+  const t = useTranslations("workedExample");
   const example = getWorkedExample(taskId);
   const [showAll, setShowAll] = useState(false);
 
@@ -86,7 +89,7 @@ export function WorkedExampleViewer({ taskId }: { taskId: number }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-          Разбор эксперта: {example.taskName}
+          {t("expertBreakdown", { taskName: example.taskName })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -105,14 +108,14 @@ export function WorkedExampleViewer({ taskId }: { taskId: number }) {
             className="w-full text-xs"
             onClick={() => setShowAll(true)}
           >
-            Показать все {example.steps.length} шагов
+            {t("showAllSteps", { count: example.steps.length })}
             <ChevronDown className="h-3.5 w-3.5 ml-1" />
           </Button>
         )}
 
         <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
           <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Ключевые выводы
+            <CheckCircle2 className="h-3.5 w-3.5" /> {t("keyTakeaways")}
           </p>
           <ul className="space-y-1">
             {example.keyTakeaways.map((takeaway, i) => (

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, FileText, Clock, Trophy } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSWRApi } from "@/hooks/use-swr-api";
 
 interface ExamRecord {
@@ -27,7 +27,9 @@ interface ExamsData {
 }
 
 export default function StudentExamHistoryPage() {
-  const t = useTranslations();
+  const t = useTranslations("exams");
+  const tc = useTranslations("common");
+  const locale = useLocale();
   const { status } = useSession();
   const router = useRouter();
 
@@ -49,14 +51,14 @@ export default function StudentExamHistoryPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/student"><Button variant="ghost" size="icon" aria-label={t("common.back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
-        <h1 className="text-xl font-bold">История экзаменов</h1>
+        <Link href="/student"><Button variant="ghost" size="icon" aria-label={tc("back")}><ArrowLeft className="h-4 w-4" /></Button></Link>
+        <h1 className="text-xl font-bold">{t("title")}</h1>
       </div>
 
       {exams.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-          <p>Нет сохранённых результатов экзаменов</p>
+          <p>{t("empty")}</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
@@ -67,18 +69,18 @@ export default function StudentExamHistoryPage() {
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Badge variant={exam.mode === "exam" ? "default" : "secondary"}>{exam.mode === "exam" ? "Экзамен" : "Тренировка"}</Badge>
-                      <span className="text-sm text-muted-foreground">{new Date(exam.createdAt).toLocaleString("ru-RU")}</span>
+                      <Badge variant={exam.mode === "exam" ? "default" : "secondary"}>{exam.mode === "exam" ? t("modeExam") : t("modePractice")}</Badge>
+                      <span className="text-sm text-muted-foreground">{new Date(exam.createdAt).toLocaleString(locale)}</span>
                     </div>
                     <div className="flex gap-4 mt-2 text-sm">
                       <span className="flex items-center gap-1"><Trophy className="h-3 w-3 text-amber-600 dark:text-amber-400" /> {exam.avgScore}%</span>
-                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round(exam.timeSpent / 60)}мин</span>
-                      <span className="text-muted-foreground">{taskIds.length} заданий</span>
+                      <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {t("minutes", { count: Math.round(exam.timeSpent / 60) })}</span>
+                      <span className="text-muted-foreground">{t("tasksCount", { count: taskIds.length })}</span>
                     </div>
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
-                    <p>Лучшее: {exam.bestTaskScore}%</p>
-                    <p>Худшее: {exam.worstTaskScore}%</p>
+                    <p>{t("best", { score: exam.bestTaskScore })}</p>
+                    <p>{t("worst", { score: exam.worstTaskScore })}</p>
                   </div>
                 </CardContent>
               </Card>

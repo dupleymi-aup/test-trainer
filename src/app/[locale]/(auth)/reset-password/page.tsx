@@ -7,7 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/api-client";
+import { logClientError } from "@/lib/logger";
 import { Beaker, Loader2, Eye, EyeOff, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,30 +36,33 @@ import {
 } from "@/components/ui/input-otp";
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator";
 
-const resetSchema = z
-  .object({
-    newPassword: z
-      .string()
-      .min(8, "Пароль должен быть не менее 8 символов"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Пароли не совпадают",
-    path: ["confirmPassword"],
+function getResetSchema(t: (key: string) => string) {
+  return z
+    .object({
+      newPassword: z.string().min(8, t("passwordMinLength")),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
+}
+
+function getOtpSchema(t: (key: string) => string) {
+  return z.object({
+    code: z.string().length(6, t("codeLength")),
   });
+}
 
-const otpSchema = z.object({
-  code: z.string().length(6, "Код должен состоять из 6 цифр"),
-});
-
-type ResetForm = z.infer<typeof resetSchema>;
-type OtpForm = z.infer<typeof otpSchema>;
+type ResetForm = z.infer<ReturnType<typeof getResetSchema>>;
+type OtpForm = z.infer<ReturnType<typeof getOtpSchema>>;
 
 const RESEND_COOLDOWN = 60;
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("resetPassword");
   const [isLoading, setIsLoading] = useState(false);
   const [method, setMethod] = useState<"token" | "phone">("token");
   const [otpVerified, setOtpVerified] = useState(false);
@@ -91,12 +96,12 @@ function ResetPasswordContent() {
   }, []);
 
   const resetForm = useForm<ResetForm>({
-    resolver: zodResolver(resetSchema),
+    resolver: zodResolver(getResetSchema(t)),
     defaultValues: { newPassword: "", confirmPassword: "" },
   });
 
   const otpForm = useForm<OtpForm>({
-    resolver: zodResolver(otpSchema),
+    resolver: zodResolver(getOtpSchema(t)),
     defaultValues: { code: "" },
   });
 
@@ -113,14 +118,15 @@ function ResetPasswordContent() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Неверный код");
+        toast.error(json.error || t("invalidCode"));
       } else {
         setResetToken(json.token);
         setOtpVerified(true);
-        toast.success("Code confirmed");
+        toast.success(t("codeConfirmed"));
       }
-    } catch {
-      toast.error("Error verifying code");
+    } catch (e) {
+      logClientError("Failed to verify OTP", e);
+      toast.error(t("verifyCodeError"));
     } finally {
       setIsLoading(false);
     }
@@ -138,13 +144,14 @@ function ResetPasswordContent() {
 
       const json = await res.json();
       if (!res.ok) {
-        toast.error(json.error || "Error sending");
+        toast.error(json.error || t("sendError"));
       } else {
-        toast.success("Code resent");
+        toast.success(t("codeResent"));
         startCooldown();
       }
-    } catch {
-      toast.error("Error sending");
+    } catch (e) {
+      logClientError("Failed to resend OTP", e);
+      toast.error(t("sendError"));
     } finally {
       setIsLoading(false);
     }
@@ -168,13 +175,14 @@ function ResetPasswordContent() {
       const json = await res.json();
 
       if (!res.ok) {
-        toast.error(json.error || "Error resetting password");
+        toast.error(json.error || t("resetError"));
       } else {
-        toast.success("Password changed successfully");
+        toast.success(t("passwordChangedToast"));
         router.push("/login");
       }
-    } catch {
-      toast.error("Error resetting password");
+    } catch (e) {
+      logClientError("Failed to reset password", e);
+      toast.error(t("resetError"));
     } finally {
       setIsLoading(false);
     }
@@ -189,10 +197,8 @@ function ResetPasswordContent() {
               <Beaker className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Подтверждение кода</CardTitle>
-          <CardDescription>
-            Введите код из SMS, отправленный на {phone}
-          </CardDescription>
+          <CardTitle className="text-2xl">{t("otpTitle")}</CardTitle>
+          <CardDescription>{t("otpSubtitle", { phone: phone ?? "" })}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...otpForm}>
@@ -233,7 +239,7 @@ function ResetPasswordContent() {
                 {isLoading && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Подтвердить
+                {t("confirm")}
               </Button>
             </form>
           </Form>
@@ -241,7 +247,7 @@ function ResetPasswordContent() {
           <div className="mt-4 text-center">
             {countdown > 0 ? (
               <p className="text-sm text-muted-foreground">
-                Отправить повторно через {countdown} сек.
+                {t("resendIn", { countdown })}
               </p>
             ) : (
               <Button
@@ -252,7 +258,7 @@ function ResetPasswordContent() {
                 className="text-sm"
               >
                 <RefreshCw className="mr-1 h-3 w-3" />
-                Отправить код повторно
+                {t("resendCode")}
               </Button>
             )}
           </div>
@@ -262,7 +268,7 @@ function ResetPasswordContent() {
               href="/forgot-password"
               className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
             >
-              Вернуться назад
+              {t("back")}
             </Link>
           </div>
         </CardContent>
@@ -278,8 +284,8 @@ function ResetPasswordContent() {
             <Beaker className="h-6 w-6" />
           </div>
         </div>
-        <CardTitle className="text-2xl">Новый пароль</CardTitle>
-        <CardDescription>Введите новый пароль для вашего аккаунта</CardDescription>
+        <CardTitle className="text-2xl">{t("newPasswordTitle")}</CardTitle>
+        <CardDescription>{t("newPasswordSubtitle")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...resetForm}>
@@ -292,7 +298,7 @@ function ResetPasswordContent() {
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Новый пароль</FormLabel>
+                  <FormLabel>{t("newPasswordLabel")}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -310,7 +316,7 @@ function ResetPasswordContent() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         tabIndex={-1}
-                        aria-label={showNewPassword ? "Скрыть пароль" : "Показать пароль"}
+                        aria-label={showNewPassword ? t("hidePassword") : t("showPassword")}
                       >
                         {showNewPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -330,7 +336,7 @@ function ResetPasswordContent() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Подтвердите пароль</FormLabel>
+                  <FormLabel>{t("confirmPasswordLabel")}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -344,7 +350,7 @@ function ResetPasswordContent() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         tabIndex={-1}
-                        aria-label={showConfirmPassword ? "Скрыть пароль" : "Показать пароль"}
+                        aria-label={showConfirmPassword ? t("hidePassword") : t("showPassword")}
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -362,7 +368,7 @@ function ResetPasswordContent() {
               {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Сохранить пароль
+              {t("savePassword")}
             </Button>
           </form>
         </Form>
@@ -371,7 +377,7 @@ function ResetPasswordContent() {
             href="/login"
             className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium"
           >
-            Вернуться ко входу
+            {t("backToLogin")}
           </Link>
         </div>
       </CardContent>
