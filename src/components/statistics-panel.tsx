@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -39,7 +39,7 @@ interface StatisticsPanelProps {
   attempts: AttemptRecord[];
 }
 
-export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
+export const StatisticsPanel = memo(function StatisticsPanel({ attempts }: StatisticsPanelProps) {
   const locale = useLocale();
   const t = useTranslations("stats");
   const [streak] = useState<StreakData>(() => loadStreak());
@@ -635,4 +635,4 @@ export function StatisticsPanel({ attempts }: StatisticsPanelProps) {
       )}
     </motion.div>
   );
-}
+});

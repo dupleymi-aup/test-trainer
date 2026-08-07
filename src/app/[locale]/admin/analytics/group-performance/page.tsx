@@ -2,6 +2,7 @@
 
 import { AdminLayout } from "@/components/admin/admin-layout";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useFetchData } from "@/hooks/use-fetch-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -38,6 +39,7 @@ interface GroupData {
 }
 
 export default function AdminGroupPerformancePage() {
+  const t = useTranslations("adminNav");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { data: groupsData, loading, error } = useFetchData<{ groups: GroupData[] }>("/api/admin/analytics/group-performance");
 
@@ -56,10 +58,10 @@ export default function AdminGroupPerformancePage() {
   return (
     <AdminLayout>
       <div className="space-y-4">
-        <h1 className="text-xl font-bold">Успеваемость групп</h1>
+        <h1 className="text-xl font-bold">{t("groupPerformance")}</h1>
 
         {groups.length === 0 && (
-          <Card><CardContent className="p-8 text-center text-muted-foreground">No data о студентах</CardContent></Card>
+          <Card><CardContent className="p-8 text-center text-muted-foreground">{t("common.noResults")}</CardContent></Card>
         )}
 
         {groups.map((group) => (
@@ -71,15 +73,15 @@ export default function AdminGroupPerformancePage() {
                   <CardTitle className="text-sm">{group.groupName}</CardTitle>
                 </div>
                 <div className="flex gap-4 text-xs text-muted-foreground">
-                  <span>{group.studentCount} студ.</span>
-                  <span>{group.totalAttempts} попыток</span>
-                  <span className="text-emerald-600">{group.activeStudents} актив.</span>
-                  <span className="text-rose-600">{group.inactiveStudents} неактив.</span>
+                  <span>{group.studentCount} students</span>
+                  <span>{group.totalAttempts} attempts</span>
+                  <span className="text-emerald-600">{group.activeStudents} active</span>
+                  <span className="text-rose-600">{group.inactiveStudents} inactive</span>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 mt-2">
                 <div>
-                  <span className="text-xs text-muted-foreground">Ср. лучший балл</span>
+                  <span className="text-xs text-muted-foreground">Avg. Best Score</span>
                   <p className="font-bold">{group.avgBestScore}%</p>
                 </div>
                 <div>
@@ -107,7 +109,7 @@ export default function AdminGroupPerformancePage() {
                       <div className="flex items-center gap-3">
                         <TrendIndicator trend={student.trend} compact />
                         <ScoreBadge score={student.bestScore} />
-                        <span className="text-xs text-muted-foreground">{student.attemptsCount} попыток</span>
+                        <span className="text-xs text-muted-foreground">{student.attemptsCount} attempts</span>
                       </div>
                     </Link>
                   ))}
@@ -119,17 +121,17 @@ export default function AdminGroupPerformancePage() {
 
         {groups.length > 1 && (
           <Card>
-            <CardHeader><CardTitle className="text-sm">Сравнение групп</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm">Group Comparison</CardTitle></CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {groups.map((group) => (
                   <div key={group.groupName} className="p-3 border rounded">
                     <p className="font-bold mb-2">{group.groupName}</p>
                     <div className="space-y-1 text-sm">
-                      <div className="flex justify-between"><span className="text-muted-foreground">Ср. лучший:</span><span className="font-bold">{group.avgBestScore}%</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Avg. Best:</span><span className="font-bold">{group.avgBestScore}%</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Avg. EC:</span><span>{group.avgEc}%</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Avg. BV:</span><span>{group.avgBv}%</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Активные:</span><span>{group.activeStudents}/{group.studentCount}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Active:</span><span>{group.activeStudents}/{group.studentCount}</span></div>
                     </div>
                   </div>
                 ))}

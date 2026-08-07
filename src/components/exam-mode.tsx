@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useTranslations } from "next-intl";
+import { logClientError } from "@/lib/logger";
 import {
   Select,
   SelectContent,
@@ -175,7 +176,8 @@ export function ExamMode() {
       }),
     }).then((r) => {
       if (!r.ok) toast.error(t("saveResultsServerFailed"));
-    }).catch(() => {
+    }).catch((err) => {
+      logClientError("Failed to save exam results", err);
       toast.error(t("saveResultsFailed"));
     });
   }, [timeLimit, practiceMode, t]);

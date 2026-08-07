@@ -123,11 +123,12 @@ export default function AdminGroupsPage() {
         }
         const data = await res.json();
         counts[g.id] = data.tasks?.filter((t: GroupTask) => t.isAssigned).length || 0;
-      } catch {
+      } catch (e) {
+        logClientError("Failed to fetch group task count", e);
         counts[g.id] = 0;
       }
     });
-    Promise.all(promises).then(() => setTaskCount(counts)).catch(() => setTaskCount(counts));
+    Promise.all(promises).then(() => setTaskCount(counts)).catch((e) => { logClientError("Failed to fetch task counts", e); setTaskCount(counts); });
     return () => controller.abort();
   }, [groups]);
 

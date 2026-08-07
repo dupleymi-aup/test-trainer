@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -98,7 +98,7 @@ function TheorySectionCard({
   );
 }
 
-export function TheoryPanel({ task }: { task?: Task }) {
+export const TheoryPanel = memo(function TheoryPanel({ task }: { task?: Task }) {
   const [viewedSections, setViewedSections] = useState<Set<string>>(() => new Set(loadTheorySectionsViewed()));
 
   // Compute relevant sections based on current task topics
@@ -1295,4 +1295,4 @@ export function TheoryPanel({ task }: { task?: Task }) {
       {task && <WorkedExampleViewer taskId={task.id} />}
     </motion.div>
   );
-}
+});

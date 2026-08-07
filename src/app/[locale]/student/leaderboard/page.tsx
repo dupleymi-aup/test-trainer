@@ -78,7 +78,7 @@ export default function LeaderboardPage() {
             </Button>
             <div className="flex items-center gap-2">
               <Trophy className="h-6 w-6 text-amber-500" />
-              <h1 className="text-xl font-bold">Таблица лидеров</h1>
+              <h1 className="text-xl font-bold">{t("student.leaderboard")}</h1>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function LeaderboardPage() {
               {leaderboard.length === 0 && (
                 <div className="p-12 text-center text-muted-foreground">
                   <Trophy className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>No data за выбранный период</p>
+                  <p>{t("common.noResults")}</p>
                 </div>
               )}
             </div>

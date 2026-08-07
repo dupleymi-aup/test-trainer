@@ -189,7 +189,7 @@ export default function StudentRemindersPage() {
                       toast.success("All reminders marked as read");
                       fetchReminders();
                     })
-                    .catch(() => toast.error("Error updating"));
+                    .catch((e) => { logClientError("Failed to mark all reminders as read", e); toast.error("Error updating"); });
                 }}
                 variant="outline"
                 size="sm"
@@ -339,7 +339,7 @@ export default function StudentRemindersPage() {
                                       body: JSON.stringify({ reminderId: reminder.id, action: "mark_read" }),
                                     })
                                       .then(() => fetchReminders())
-                                      .catch(() => toast.error("Error"));
+                                      .catch((e) => { logClientError("Failed to mark reminder as read", e); toast.error("Error"); });
                                   }}
                                 >
                                   <CheckCircle className="h-4 w-4" />

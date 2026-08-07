@@ -41,10 +41,10 @@ interface RiskStudent {
 interface Pagination { page: number; limit: number; total: number; totalPages: number; }
 
 const riskLevelConfig: Record<string, { label: string; variant: "destructive" | "default" | "secondary" | "outline" }> = {
-  high: { label: "Высокий", variant: "destructive" },
-  medium: { label: "Средний", variant: "default" },
-  low: { label: "Низкий", variant: "secondary" },
-  none: { label: "Нет риска", variant: "outline" },
+  high: { label: "High", variant: "destructive" },
+  medium: { label: "Medium", variant: "default" },
+  low: { label: "Low", variant: "secondary" },
+  none: { label: "No risk", variant: "outline" },
 };
 
 export default function AdminAtRiskPage() {
@@ -84,28 +84,28 @@ export default function AdminAtRiskPage() {
 
   const handleSearch = () => { fetchStudents(); };
 
-  if (loading) return <AdminLayout><div className="p-8 text-center">Loading...</div></AdminLayout>;
+  if (loading) return <AdminLayout><div className="p-8 text-center text-muted-foreground">Loading...</div></AdminLayout>;
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         {error && (<Card><CardContent className="py-6 text-center"><p className="text-sm text-destructive">Load error: {error}</p></CardContent></Card>)}
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold">Students группы риска</h1>
-          <Badge variant="destructive">{pagination.total} студентов</Badge>
+          <h1 className="text-xl font-bold">At-Risk Students</h1>
+          <Badge variant="destructive">{pagination.total} students</Badge>
         </div>
 
         {/* Filters */}
         <Card>
-          <CardHeader><CardTitle className="text-sm">Фильтры</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Filters</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Поиск</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Search</label>
                 <Input placeholder="Name or email" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Уровень риска</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Risk Level</label>
                 <Select value={riskLevel} onValueChange={setRiskLevel}>
                   <SelectTrigger><SelectValue placeholder="All levels" /></SelectTrigger>
                   <SelectContent>
@@ -134,7 +134,7 @@ export default function AdminAtRiskPage() {
           <Card>
             <CardContent className="p-8 text-center">
               <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-emerald-600" />
-              <p className="text-muted-foreground">Students группы риска не найдены</p>
+              <p className="text-muted-foreground">No at-risk students found</p>
             </CardContent>
           </Card>
         ) : (
@@ -144,7 +144,7 @@ export default function AdminAtRiskPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Student</TableHead>
-                    <TableHead>Уровень риска</TableHead>
+                    <TableHead>Risk Level</TableHead>
                     <TableHead>Trend</TableHead>
                     <TableHead className="text-right">Best score</TableHead>
                     <TableHead className="text-right">Avg. score</TableHead>
@@ -180,7 +180,7 @@ export default function AdminAtRiskPage() {
                         <TableCell className="text-right">{s.stats.attemptsCount}</TableCell>
                         <TableCell>
                           <Link href={`/admin/analytics/student/${s.id}`} className="text-xs text-primary hover:underline">
-                            Подробнее
+                            Details
                           </Link>
                         </TableCell>
                       </TableRow>
@@ -196,14 +196,14 @@ export default function AdminAtRiskPage() {
         {pagination.totalPages > 1 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Страница {pagination.page} из {pagination.totalPages} ({pagination.total} записей)
+              Page {pagination.page} of {pagination.totalPages} ({pagination.total} records)
             </p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled={pagination.page <= 1} onClick={() => setPagination({ ...pagination, page: pagination.page - 1 })}>
-                <ChevronLeft className="h-4 w-4 mr-1" /> Назад
+                <ChevronLeft className="h-4 w-4 mr-1" /> Back
               </Button>
               <Button variant="outline" size="sm" disabled={pagination.page >= pagination.totalPages} onClick={() => setPagination({ ...pagination, page: pagination.page + 1 })}>
-                Вперёд <ChevronRight className="h-4 w-4 ml-1" />
+                Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>
